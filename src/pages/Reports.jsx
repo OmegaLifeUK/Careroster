@@ -2,7 +2,6 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Tabs, TabsList, TabsTrigger, TabsContent } from "@/components/ui/tabs";
 import { 
   FileText, 
   Users, 
@@ -77,6 +76,23 @@ export default function Reports() {
     },
   ];
 
+  const renderReport = () => {
+    switch (activeTab) {
+      case "carer-hours":
+        return <CarerHoursReport shifts={shifts} carers={carers} isLoading={isLoading} />;
+      case "client-visits":
+        return <ClientVisitsReport shifts={shifts} clients={clients} carers={carers} isLoading={isLoading} />;
+      case "shift-fill":
+        return <ShiftFillRateReport shifts={shifts} carers={carers} clients={clients} isLoading={isLoading} />;
+      case "mileage":
+        return <MileageReport shifts={shifts} carers={carers} clients={clients} isLoading={isLoading} />;
+      case "payroll":
+        return <PayrollReport shifts={shifts} carers={carers} isLoading={isLoading} />;
+      default:
+        return null;
+    }
+  };
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -105,27 +121,7 @@ export default function Reports() {
           ))}
         </div>
 
-        <Tabs value={activeTab} onValueChange={setActiveTab}>
-          <TabsContent value="carer-hours">
-            <CarerHoursReport shifts={shifts} carers={carers} isLoading={isLoading} />
-          </TabsContent>
-
-          <TabsContent value="client-visits">
-            <ClientVisitsReport shifts={shifts} clients={clients} carers={carers} isLoading={isLoading} />
-          </TabsContent>
-
-          <TabsContent value="shift-fill">
-            <ShiftFillRateReport shifts={shifts} carers={carers} clients={clients} isLoading={isLoading} />
-          </TabsContent>
-
-          <TabsContent value="mileage">
-            <MileageReport shifts={shifts} carers={carers} clients={clients} isLoading={isLoading} />
-          </TabsContent>
-
-          <TabsContent value="payroll">
-            <PayrollReport shifts={shifts} carers={carers} isLoading={isLoading} />
-          </TabsContent>
-        </Tabs>
+        {renderReport()}
       </div>
     </div>
   );
