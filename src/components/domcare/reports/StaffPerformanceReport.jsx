@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Printer, Users, Clock, MapPin, Star, TrendingUp } from "lucide-react";
 import { format, parseISO, isWithinInterval, differenceInMinutes } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 export default function StaffPerformanceReport({ visits, staff, clients, isLoading }) {
   const [dateFrom, setDateFrom] = useState(format(new Date(new Date().setDate(1)), "yyyy-MM-dd"));
@@ -158,49 +156,6 @@ export default function StaffPerformanceReport({ visits, staff, clients, isLoadi
     link.click();
   };
 
-  const exportToPDF = () => {
-    const stats = calculateStaffStats();
-    const doc = new jsPDF();
-
-    // Title
-    doc.setFontSize(18);
-    doc.text("Staff Performance Report", 14, 20);
-    
-    // Date range
-    doc.setFontSize(10);
-    doc.text(`Period: ${format(parseISO(dateFrom), "MMM d, yyyy")} - ${format(parseISO(dateTo), "MMM d, yyyy")}`, 14, 28);
-    
-    // Summary stats
-    doc.setFontSize(12);
-    doc.text("Summary Statistics", 14, 38);
-    doc.setFontSize(10);
-    doc.text(`Total Staff: ${stats.length}`, 14, 45);
-    doc.text(`Total Completed Visits: ${stats.reduce((sum, s) => sum + s.completedVisits, 0)}`, 14, 51);
-    doc.text(`Average Completion Rate: ${stats.length > 0 ? (stats.reduce((sum, s) => sum + parseFloat(s.completionRate), 0) / stats.length).toFixed(1) : 0}%`, 14, 57);
-
-    // Table
-    const tableData = stats.map(stat => [
-      stat.name,
-      stat.completedVisits,
-      `${stat.totalHours}h`,
-      `${stat.travelHours}h`,
-      stat.uniqueClients,
-      `${stat.completionRate}%`,
-      `${stat.onTimeRate}%`,
-      stat.averageFeedback
-    ]);
-
-    doc.autoTable({
-      startY: 65,
-      head: [["Staff", "Visits", "Hours", "Travel", "Clients", "Completion", "On-Time", "Feedback"]],
-      body: tableData,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
-    });
-
-    doc.save(`staff-performance-report-${dateFrom}-to-${dateTo}.pdf`);
-  };
-
   const stats = calculateStaffStats();
 
   return (
@@ -218,11 +173,7 @@ export default function StaffPerformanceReport({ visits, staff, clients, isLoadi
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportToCSV}>
                 <Download className="w-4 h-4 mr-2" />
-                CSV
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportToPDF}>
-                <Download className="w-4 h-4 mr-2" />
-                PDF
+                Export CSV
               </Button>
               <Button variant="outline" size="sm" onClick={() => window.print()}>
                 <Printer className="w-4 h-4 mr-2" />

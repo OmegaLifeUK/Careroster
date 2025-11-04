@@ -7,8 +7,6 @@ import { Badge } from "@/components/ui/badge";
 import { Download, Printer, UserCircle, Calendar, Clock, MapPin, FileText } from "lucide-react";
 import { format, parseISO, isWithinInterval, isFuture } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import jsPDF from "jspdf";
-import "jspdf-autotable";
 
 const STATUS_COLORS = {
   draft: "bg-gray-100 text-gray-800",
@@ -104,52 +102,6 @@ export default function ClientVisitHistory({ visits, staff, clients, isLoading }
     link.click();
   };
 
-  const exportToPDF = () => {
-    const doc = new jsPDF();
-
-    // Title
-    doc.setFontSize(18);
-    doc.text("Client Visit History Report", 14, 20);
-    
-    // Client info
-    doc.setFontSize(12);
-    doc.text(`Client: ${selectedClientData?.full_name}`, 14, 30);
-    doc.setFontSize(10);
-    doc.text(`Address: ${selectedClientData?.address?.street}, ${selectedClientData?.address?.city}, ${selectedClientData?.address?.postcode}`, 14, 37);
-    doc.text(`Period: ${format(parseISO(dateFrom), "MMM d, yyyy")} - ${format(parseISO(dateTo), "MMM d, yyyy")}`, 14, 43);
-    
-    // Summary
-    doc.setFontSize(12);
-    doc.text("Summary", 14, 53);
-    doc.setFontSize(10);
-    doc.text(`Total Visits: ${clientVisits.length}`, 14, 60);
-    doc.text(`Completed: ${completedVisits}`, 14, 66);
-    doc.text(`Missed: ${missedVisits}`, 14, 72);
-    doc.text(`Upcoming: ${upcomingVisits.length}`, 14, 78);
-
-    // Table
-    const tableData = clientVisits.map(visit => {
-      const staffMember = staff.find(s => s.id === visit.assigned_staff_id);
-      return [
-        format(parseISO(visit.scheduled_start), "MMM d"),
-        format(parseISO(visit.scheduled_start), "HH:mm"),
-        staffMember?.full_name || "Unassigned",
-        visit.status,
-        visit.tasks?.length || 0
-      ];
-    });
-
-    doc.autoTable({
-      startY: 85,
-      head: [["Date", "Time", "Staff", "Status", "Tasks"]],
-      body: tableData,
-      theme: "grid",
-      headStyles: { fillColor: [59, 130, 246] },
-    });
-
-    doc.save(`client-visit-history-${selectedClientData?.full_name}-${dateFrom}-to-${dateTo}.pdf`);
-  };
-
   return (
     <div className="space-y-6">
       <Card>
@@ -165,11 +117,7 @@ export default function ClientVisitHistory({ visits, staff, clients, isLoading }
             <div className="flex gap-2">
               <Button variant="outline" size="sm" onClick={exportToCSV} disabled={!selectedClient}>
                 <Download className="w-4 h-4 mr-2" />
-                CSV
-              </Button>
-              <Button variant="outline" size="sm" onClick={exportToPDF} disabled={!selectedClient}>
-                <Download className="w-4 h-4 mr-2" />
-                PDF
+                Export CSV
               </Button>
               <Button variant="outline" size="sm" onClick={() => window.print()}>
                 <Printer className="w-4 h-4 mr-2" />
