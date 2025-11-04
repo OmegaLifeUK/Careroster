@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -156,6 +157,13 @@ export default function LeaveRequests() {
     rejected: leaveRequests.filter(r => r.status === 'rejected').length,
   };
 
+  const statusButtons = [
+    { value: "all", label: "All", count: filteredRequests.length },
+    { value: "pending", label: "Pending", count: leaveRequests.filter(r => r.status === 'pending').length },
+    { value: "approved", label: "Approved", count: leaveRequests.filter(r => r.status === 'approved').length },
+    { value: "rejected", label: "Rejected", count: leaveRequests.filter(r => r.status === 'rejected').length },
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -237,22 +245,18 @@ export default function LeaveRequests() {
 
         <Card className="mb-6">
           <CardContent className="p-4">
-            <Tabs value={statusFilter} onValueChange={setStatusFilter}>
-              <TabsList>
-                <TabsTrigger value="all">
-                  All ({filteredRequests.length})
-                </TabsTrigger>
-                <TabsTrigger value="pending">
-                  Pending ({leaveRequests.filter(r => r.status === 'pending').length})
-                </TabsTrigger>
-                <TabsTrigger value="approved">
-                  Approved ({leaveRequests.filter(r => r.status === 'approved').length})
-                </TabsTrigger>
-                <TabsTrigger value="rejected">
-                  Rejected ({leaveRequests.filter(r => r.status === 'rejected').length})
-                </TabsTrigger>
-              </TabsList>
-            </Tabs>
+            <div className="flex gap-2">
+              {statusButtons.map(btn => (
+                <Button
+                  key={btn.value}
+                  variant={statusFilter === btn.value ? "default" : "outline"}
+                  size="sm"
+                  onClick={() => setStatusFilter(btn.value)}
+                >
+                  {btn.label} ({btn.value === "all" ? filteredRequests.length : btn.count})
+                </Button>
+              ))}
+            </div>
           </CardContent>
         </Card>
 
