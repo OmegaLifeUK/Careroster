@@ -5,6 +5,7 @@ import Carers from './pages/Carers';
 import Clients from './pages/Clients';
 import Notifications from './pages/Notifications';
 import StaffPortal from './pages/StaffPortal';
+import LeaveRequests from './pages/LeaveRequests';
 import Layout from './Layout.jsx';
 
 
@@ -16,6 +17,7 @@ export const PAGES = {
     "Clients": Clients,
     "Notifications": Notifications,
     "StaffPortal": StaffPortal,
+    "LeaveRequests": LeaveRequests,
 }
 
 export const pagesConfig = {
