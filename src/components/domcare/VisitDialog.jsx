@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Clock, MapPin, User } from "lucide-react";
+import { X, Clock, MapPin, User, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
@@ -45,10 +45,21 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
     e.preventDefault();
     
     const visitData = {
-      ...formData,
+      client_id: formData.client_id,
       scheduled_start: new Date(formData.scheduled_start).toISOString(),
       scheduled_end: new Date(formData.scheduled_end).toISOString(),
+      status: formData.assigned_staff_id ? "published" : "draft",
+      visit_notes: formData.visit_notes,
+      tasks: formData.tasks,
     };
+
+    // Only include these fields if they have values
+    if (formData.assigned_staff_id) {
+      visitData.assigned_staff_id = formData.assigned_staff_id;
+    }
+    if (formData.run_id) {
+      visitData.run_id = formData.run_id;
+    }
 
     if (visit) {
       updateVisitMutation.mutate({ id: visit.id, data: visitData });
@@ -84,52 +95,37 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
         </div>
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="client_id" className="flex items-center gap-2 mb-2">
-                <MapPin className="w-4 h-4 text-blue-600" />
-                Client *
-              </Label>
-              <Select
-                value={formData.client_id}
-                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-                required
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Select client" />
-                </SelectTrigger>
-                <SelectContent>
-                  {activeClients.map(client => (
-                    <SelectItem key={client.id} value={client.id}>
-                      {client.full_name} - {client.address?.postcode}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+          <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <AlertCircle className="w-4 h-4 text-blue-600 mt-0.5" />
+              <div className="text-sm text-blue-800">
+                <p className="font-medium">Create visit first, assign staff later</p>
+                <p className="text-xs mt-1">You can leave the staff unassigned and allocate it from the schedule view using drag & drop</p>
+              </div>
             </div>
+          </div>
 
-            <div>
-              <Label htmlFor="assigned_staff_id" className="flex items-center gap-2 mb-2">
-                <User className="w-4 h-4 text-green-600" />
-                Assigned Staff
-              </Label>
-              <Select
-                value={formData.assigned_staff_id}
-                onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Unassigned" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>Unassigned</SelectItem>
-                  {activeStaff.map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.full_name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
+          <div>
+            <Label htmlFor="client_id" className="flex items-center gap-2 mb-2">
+              <MapPin className="w-4 h-4 text-blue-600" />
+              Client *
+            </Label>
+            <Select
+              value={formData.client_id}
+              onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+              required
+            >
+              <SelectTrigger>
+                <SelectValue placeholder="Select client" />
+              </SelectTrigger>
+              <SelectContent>
+                {activeClients.map(client => (
+                  <SelectItem key={client.id} value={client.id}>
+                    {client.full_name} - {client.address?.postcode}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -156,47 +152,6 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                 onChange={(e) => setFormData({ ...formData, scheduled_end: e.target.value })}
                 required
               />
-            </div>
-          </div>
-
-          <div className="grid grid-cols-2 gap-4">
-            <div>
-              <Label htmlFor="status" className="mb-2 block">Status</Label>
-              <Select
-                value={formData.status}
-                onValueChange={(value) => setFormData({ ...formData, status: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="draft">Draft</SelectItem>
-                  <SelectItem value="published">Published</SelectItem>
-                  <SelectItem value="in_progress">In Progress</SelectItem>
-                  <SelectItem value="completed">Completed</SelectItem>
-                  <SelectItem value="cancelled">Cancelled</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="run_id" className="mb-2 block">Run (Optional)</Label>
-              <Select
-                value={formData.run_id}
-                onValueChange={(value) => setFormData({ ...formData, run_id: value })}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="No run" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value={null}>No run</SelectItem>
-                  {runs.map(run => (
-                    <SelectItem key={run.id} value={run.id}>
-                      {run.run_name} - {run.run_date}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
             </div>
           </div>
 
@@ -234,6 +189,55 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                   </button>
                 </div>
               ))}
+            </div>
+          </div>
+
+          <div className="border-t pt-4">
+            <h3 className="font-medium text-sm text-gray-700 mb-3">Optional: Assign Now</h3>
+            
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label htmlFor="assigned_staff_id" className="flex items-center gap-2 mb-2">
+                  <User className="w-4 h-4 text-green-600" />
+                  Assigned Staff
+                </Label>
+                <Select
+                  value={formData.assigned_staff_id}
+                  onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Unassigned" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>Unassigned</SelectItem>
+                    {activeStaff.map(member => (
+                      <SelectItem key={member.id} value={member.id}>
+                        {member.full_name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="run_id" className="mb-2 block">Run (Optional)</Label>
+                <Select
+                  value={formData.run_id}
+                  onValueChange={(value) => setFormData({ ...formData, run_id: value })}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="No run" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value={null}>No run</SelectItem>
+                    {runs.map(run => (
+                      <SelectItem key={run.id} value={run.id}>
+                        {run.run_name} - {run.run_date}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
           </div>
 

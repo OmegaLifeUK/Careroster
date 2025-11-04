@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { format, parseISO, addDays, isSameDay } from "date-fns";
-import { ChevronRight, MapPin, Clock, User } from "lucide-react";
+import { ChevronRight, MapPin, Clock, User, AlertTriangle } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const HOURS = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
@@ -29,6 +29,19 @@ export default function DomCareTimeline({
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
   const activeStaff = staff.filter(s => s.is_active);
+
+  // Separate unallocated and allocated visits
+  const unallocatedVisits = visits.filter(v => !v.assigned_staff_id && v.status !== 'cancelled');
+  
+  const getUnallocatedVisitsForDate = (date) => {
+    return unallocatedVisits.filter(v => {
+      try {
+        return isSameDay(parseISO(v.scheduled_start), date);
+      } catch {
+        return false;
+      }
+    });
+  };
 
   const getVisitsForStaffAndDate = (staffId, date) => {
     return visits.filter(v => {
@@ -120,137 +133,205 @@ export default function DomCareTimeline({
   }
 
   return (
-    <div className="flex h-[calc(100vh-250px)] bg-white border rounded-lg overflow-hidden shadow-lg">
-      {/* Left Sidebar - Staff List */}
-      <div className="w-56 border-r bg-gray-50 overflow-y-auto flex-shrink-0">
-        <div className="sticky top-0 bg-gray-100 border-b p-4 z-10">
-          <h3 className="font-semibold text-gray-900 text-sm">Care Staff</h3>
-          <p className="text-xs text-gray-500 mt-1">{activeStaff.length} active</p>
+    <div className="space-y-4">
+      {/* Unallocated Visits Section */}
+      <div className="bg-orange-50 border-2 border-orange-200 rounded-lg overflow-hidden">
+        <div className="bg-orange-100 border-b border-orange-200 p-4">
+          <div className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-orange-600" />
+            <h3 className="font-semibold text-orange-900">
+              Unallocated Visits ({unallocatedVisits.length})
+            </h3>
+          </div>
+          <p className="text-sm text-orange-700 mt-1">
+            Drag visits below onto staff members to assign
+          </p>
         </div>
-        <div className="p-2">
-          {activeStaff.map(member => (
-            <div
-              key={member.id}
-              className="p-3 mb-2 bg-white border rounded-lg hover:shadow-md transition-all"
-            >
-              <div className="flex items-center gap-2">
-                <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
-                  {member.full_name?.charAt(0)}
-                </div>
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-sm text-gray-900 truncate">
-                    {member.full_name}
-                  </p>
-                  <p className="text-xs text-gray-500 truncate">
-                    {member.vehicle_type || 'N/A'}
-                  </p>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
-      {/* Right Panel - Timeline Grid */}
-      <div className="flex-1 overflow-auto">
-        {/* Date Headers */}
-        <div className="sticky top-0 bg-white border-b z-20 flex">
-          {weekDays.map(day => (
-            <div key={day.toString()} className="flex-1 min-w-[600px]">
-              <div className="p-3 text-center border-r">
-                <p className="font-semibold text-gray-900">{format(day, "EEE")}</p>
-                <p className="text-sm text-gray-500">{format(day, "MMM d")}</p>
-              </div>
-              {/* Hour Headers */}
-              <div className="flex border-t">
-                {HOURS.map(hour => (
-                  <div 
-                    key={hour} 
-                    className="w-[50px] flex-shrink-0 border-r border-gray-200 p-1 text-center"
-                  >
-                    <span className="text-[9px] text-gray-500">{hour}</span>
-                  </div>
-                ))}
-              </div>
-            </div>
-          ))}
-        </div>
-
-        {/* Staff Rows */}
-        {activeStaff.map(member => (
-          <div key={member.id} className="flex border-b hover:bg-gray-50">
-            {/* Day Columns */}
+        
+        <div className="p-4">
+          <div className="flex overflow-x-auto gap-3">
             {weekDays.map(day => {
-              const staffVisits = getVisitsForStaffAndDate(member.id, day);
+              const dayVisits = getUnallocatedVisitsForDate(day);
               
               return (
-                <div 
-                  key={day.toString()} 
-                  className="flex-1 min-w-[600px] border-r relative"
-                  style={{ minHeight: '70px' }}
-                >
-                  {/* Hour Grid */}
-                  <div className="flex h-full">
-                    {HOURS.map(hour => {
-                      const slotKey = `${member.id}-${format(day, 'yyyy-MM-dd')}-${hour}`;
-                      
-                      return (
-                        <div
-                          key={hour}
-                          className={`w-[50px] flex-shrink-0 border-r border-gray-100 relative ${
-                            hoveredSlot === slotKey ? 'bg-blue-100' : ''
-                          }`}
-                          onDragOver={handleDragOver}
-                          onDrop={(e) => handleDrop(e, member.id, day, hour)}
-                          onDragEnter={() => setHoveredSlot(slotKey)}
-                          onDragLeave={() => setHoveredSlot(null)}
-                        />
-                      );
-                    })}
+                <div key={day.toString()} className="flex-shrink-0 w-64">
+                  <div className="text-center mb-3 pb-2 border-b border-orange-200">
+                    <p className="font-semibold text-gray-900">{format(day, "EEE")}</p>
+                    <p className="text-sm text-gray-500">{format(day, "MMM d")}</p>
                   </div>
-
-                  {/* Visits Overlay */}
-                  {staffVisits.map(visit => {
-                    const { left, width } = getVisitPosition(visit);
-                    const statusColor = STATUS_COLORS[visit.status] || STATUS_COLORS.draft;
-                    
-                    return (
-                      <div
-                        key={visit.id}
-                        draggable
-                        onDragStart={(e) => handleDragStart(e, visit)}
-                        onDragEnd={handleDragEnd}
-                        onClick={() => onVisitClick(visit)}
-                        className={`absolute top-1 h-[calc(100%-8px)] border-l-4 rounded cursor-move ${statusColor} ${
-                          draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md'
-                        }`}
-                        style={{
-                          left: `${left}px`,
-                          width: `${width}px`,
-                          zIndex: 5
-                        }}
-                      >
-                        <div className="p-1 h-full overflow-hidden">
-                          <p className="text-[9px] font-semibold truncate flex items-center gap-1">
-                            <Clock className="w-2.5 h-2.5" />
-                            {format(parseISO(visit.scheduled_start), "HH:mm")}
-                          </p>
-                          <p className="text-[9px] truncate mt-0.5 flex items-center gap-1">
-                            <MapPin className="w-2.5 h-2.5" />
+                  
+                  <div className="space-y-2">
+                    {dayVisits.length === 0 ? (
+                      <p className="text-center text-sm text-gray-400 py-4">No unallocated visits</p>
+                    ) : (
+                      dayVisits.map(visit => (
+                        <div
+                          key={visit.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, visit)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => onVisitClick(visit)}
+                          className={`p-3 border-2 border-orange-300 rounded-lg cursor-move bg-white hover:shadow-md transition-all ${
+                            draggedVisit?.id === visit.id ? 'opacity-50' : ''
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 mb-2">
+                            <Clock className="w-3 h-3 text-gray-500" />
+                            <span className="text-sm font-semibold">
+                              {format(parseISO(visit.scheduled_start), "HH:mm")}
+                            </span>
+                          </div>
+                          <p className="text-sm font-medium text-gray-900 mb-1">
                             {getClientName(visit.client_id)}
                           </p>
-                          <p className="text-[8px] text-gray-600 truncate">
+                          <p className="text-xs text-gray-500 flex items-center gap-1">
+                            <MapPin className="w-3 h-3" />
                             {getClientAddress(visit.client_id)}
                           </p>
                         </div>
-                      </div>
-                    );
-                  })}
+                      ))
+                    )}
+                  </div>
                 </div>
               );
             })}
           </div>
-        ))}
+        </div>
+      </div>
+
+      {/* Main Schedule Grid */}
+      <div className="flex h-[calc(100vh-450px)] bg-white border rounded-lg overflow-hidden shadow-lg">
+        {/* Left Sidebar - Staff List */}
+        <div className="w-56 border-r bg-gray-50 overflow-y-auto flex-shrink-0">
+          <div className="sticky top-0 bg-gray-100 border-b p-4 z-10">
+            <h3 className="font-semibold text-gray-900 text-sm">Care Staff</h3>
+            <p className="text-xs text-gray-500 mt-1">{activeStaff.length} active</p>
+          </div>
+          <div className="p-2">
+            {activeStaff.map(member => (
+              <div
+                key={member.id}
+                className="p-3 mb-2 bg-white border rounded-lg hover:shadow-md transition-all"
+              >
+                <div className="flex items-center gap-2">
+                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-500 flex items-center justify-center text-white font-medium text-sm flex-shrink-0">
+                    {member.full_name?.charAt(0)}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-sm text-gray-900 truncate">
+                      {member.full_name}
+                    </p>
+                    <p className="text-xs text-gray-500 truncate">
+                      {member.vehicle_type || 'N/A'}
+                    </p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Right Panel - Timeline Grid */}
+        <div className="flex-1 overflow-auto">
+          {/* Date Headers */}
+          <div className="sticky top-0 bg-white border-b z-20 flex">
+            {weekDays.map(day => (
+              <div key={day.toString()} className="flex-1 min-w-[600px]">
+                <div className="p-3 text-center border-r">
+                  <p className="font-semibold text-gray-900">{format(day, "EEE")}</p>
+                  <p className="text-sm text-gray-500">{format(day, "MMM d")}</p>
+                </div>
+                {/* Hour Headers */}
+                <div className="flex border-t">
+                  {HOURS.map(hour => (
+                    <div 
+                      key={hour} 
+                      className="w-[50px] flex-shrink-0 border-r border-gray-200 p-1 text-center"
+                    >
+                      <span className="text-[9px] text-gray-500">{hour}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+
+          {/* Staff Rows */}
+          {activeStaff.map(member => (
+            <div key={member.id} className="flex border-b hover:bg-gray-50">
+              {/* Day Columns */}
+              {weekDays.map(day => {
+                const staffVisits = getVisitsForStaffAndDate(member.id, day);
+                
+                return (
+                  <div 
+                    key={day.toString()} 
+                    className="flex-1 min-w-[600px] border-r relative"
+                    style={{ minHeight: '70px' }}
+                  >
+                    {/* Hour Grid */}
+                    <div className="flex h-full">
+                      {HOURS.map(hour => {
+                        const slotKey = `${member.id}-${format(day, 'yyyy-MM-dd')}-${hour}`;
+                        
+                        return (
+                          <div
+                            key={hour}
+                            className={`w-[50px] flex-shrink-0 border-r border-gray-100 relative ${
+                              hoveredSlot === slotKey ? 'bg-blue-100' : ''
+                            }`}
+                            onDragOver={handleDragOver}
+                            onDrop={(e) => handleDrop(e, member.id, day, hour)}
+                            onDragEnter={() => setHoveredSlot(slotKey)}
+                            onDragLeave={() => setHoveredSlot(null)}
+                          />
+                        );
+                      })}
+                    </div>
+
+                    {/* Visits Overlay */}
+                    {staffVisits.map(visit => {
+                      const { left, width } = getVisitPosition(visit);
+                      const statusColor = STATUS_COLORS[visit.status] || STATUS_COLORS.draft;
+                      
+                      return (
+                        <div
+                          key={visit.id}
+                          draggable
+                          onDragStart={(e) => handleDragStart(e, visit)}
+                          onDragEnd={handleDragEnd}
+                          onClick={() => onVisitClick(visit)}
+                          className={`absolute top-1 h-[calc(100%-8px)] border-l-4 rounded cursor-move ${statusColor} ${
+                            draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md'
+                          }`}
+                          style={{
+                            left: `${left}px`,
+                            width: `${width}px`,
+                            zIndex: 5
+                          }}
+                        >
+                          <div className="p-1 h-full overflow-hidden">
+                            <p className="text-[9px] font-semibold truncate flex items-center gap-1">
+                              <Clock className="w-2.5 h-2.5" />
+                              {format(parseISO(visit.scheduled_start), "HH:mm")}
+                            </p>
+                            <p className="text-[9px] truncate mt-0.5 flex items-center gap-1">
+                              <MapPin className="w-2.5 h-2.5" />
+                              {getClientName(visit.client_id)}
+                            </p>
+                            <p className="text-[8px] text-gray-600 truncate">
+                              {getClientAddress(visit.client_id)}
+                            </p>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+          ))}
+        </div>
       </div>
     </div>
   );
