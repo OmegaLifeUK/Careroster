@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Printer, DollarSign, Clock, TrendingUp, FileText } from "lucide-react";
 import { format, parseISO, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -268,56 +267,58 @@ export default function PayrollReport({ shifts, carers, isLoading }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Carer Name</TableHead>
-                  <TableHead className="text-right">Rate/Hr</TableHead>
-                  <TableHead className="text-right">Regular Hrs</TableHead>
-                  <TableHead className="text-right">OT Hrs</TableHead>
-                  <TableHead className="text-right">Total Hrs</TableHead>
-                  <TableHead className="text-right">Regular Pay</TableHead>
-                  <TableHead className="text-right">OT Pay</TableHead>
-                  <TableHead className="text-right">Gross Pay</TableHead>
-                  <TableHead className="text-right">Taxes</TableHead>
-                  <TableHead className="text-right">Net Pay</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {payroll.map((p, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{p.name}</TableCell>
-                    <TableCell className="text-right">${p.hourlyRate.toFixed(2)}</TableCell>
-                    <TableCell className="text-right">{p.regularHours.toFixed(1)}</TableCell>
-                    <TableCell className="text-right">
-                      {p.overtimeHours > 0 && (
-                        <Badge variant="secondary" className="text-xs">
-                          {p.overtimeHours.toFixed(1)}
-                        </Badge>
-                      )}
-                      {p.overtimeHours === 0 && "-"}
-                    </TableCell>
-                    <TableCell className="text-right font-semibold">{p.totalHours.toFixed(1)}</TableCell>
-                    <TableCell className="text-right">${p.regularPay}</TableCell>
-                    <TableCell className="text-right">${p.overtimePay}</TableCell>
-                    <TableCell className="text-right font-semibold text-green-700">
-                      ${p.grossPay}
-                    </TableCell>
-                    <TableCell className="text-right text-red-600">${p.taxes}</TableCell>
-                    <TableCell className="text-right font-bold text-blue-700">
-                      ${p.netPay}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {payroll.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={10} className="text-center py-8 text-gray-500">
-                      No payroll data available for the selected period
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="text-left p-3 font-medium text-gray-900">Carer Name</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Rate/Hr</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Regular Hrs</th>
+                    <th className="text-right p-3 font-medium text-gray-900">OT Hrs</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Hrs</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Regular Pay</th>
+                    <th className="text-right p-3 font-medium text-gray-900">OT Pay</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Gross Pay</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Taxes</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Net Pay</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {payroll.map((p, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{p.name}</td>
+                      <td className="p-3 text-right">${p.hourlyRate.toFixed(2)}</td>
+                      <td className="p-3 text-right">{p.regularHours.toFixed(1)}</td>
+                      <td className="p-3 text-right">
+                        {p.overtimeHours > 0 && (
+                          <Badge variant="secondary" className="text-xs">
+                            {p.overtimeHours.toFixed(1)}
+                          </Badge>
+                        )}
+                        {p.overtimeHours === 0 && "-"}
+                      </td>
+                      <td className="p-3 text-right font-semibold">{p.totalHours.toFixed(1)}</td>
+                      <td className="p-3 text-right">${p.regularPay}</td>
+                      <td className="p-3 text-right">${p.overtimePay}</td>
+                      <td className="p-3 text-right font-semibold text-green-700">
+                        ${p.grossPay}
+                      </td>
+                      <td className="p-3 text-right text-red-600">${p.taxes}</td>
+                      <td className="p-3 text-right font-bold text-blue-700">
+                        ${p.netPay}
+                      </td>
+                    </tr>
+                  ))}
+                  {payroll.length === 0 && (
+                    <tr>
+                      <td colSpan={10} className="text-center py-8 text-gray-500">
+                        No payroll data available for the selected period
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>

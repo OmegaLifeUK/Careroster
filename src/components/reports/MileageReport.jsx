@@ -3,7 +3,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Printer, Navigation, Clock, MapPin } from "lucide-react";
 import { format, parseISO, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -231,39 +230,41 @@ export default function MileageReport({ shifts, carers, clients, isLoading }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Carer Name</TableHead>
-                  <TableHead className="text-right">Total Miles</TableHead>
-                  <TableHead className="text-right">Total Trips</TableHead>
-                  <TableHead className="text-right">Avg Miles/Trip</TableHead>
-                  <TableHead className="text-right">Travel Hours</TableHead>
-                  <TableHead className="text-right">Reimbursement</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.map((stat, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{stat.name}</TableCell>
-                    <TableCell className="text-right font-semibold">{stat.totalMiles.toFixed(1)}</TableCell>
-                    <TableCell className="text-right">{stat.totalTrips}</TableCell>
-                    <TableCell className="text-right">{stat.averageMilesPerTrip}</TableCell>
-                    <TableCell className="text-right">{stat.totalHours.toFixed(1)}h</TableCell>
-                    <TableCell className="text-right font-semibold text-green-700">
-                      ${stat.reimbursement}
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {stats.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      No travel data available for the selected period
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="text-left p-3 font-medium text-gray-900">Carer Name</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Miles</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Trips</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Avg Miles/Trip</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Travel Hours</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Reimbursement</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.map((stat, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{stat.name}</td>
+                      <td className="p-3 text-right font-semibold">{stat.totalMiles.toFixed(1)}</td>
+                      <td className="p-3 text-right">{stat.totalTrips}</td>
+                      <td className="p-3 text-right">{stat.averageMilesPerTrip}</td>
+                      <td className="p-3 text-right">{stat.totalHours.toFixed(1)}h</td>
+                      <td className="p-3 text-right font-semibold text-green-700">
+                        ${stat.reimbursement}
+                      </td>
+                    </tr>
+                  ))}
+                  {stats.length === 0 && (
+                    <tr>
+                      <td colSpan={6} className="text-center py-8 text-gray-500">
+                        No travel data available for the selected period
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>

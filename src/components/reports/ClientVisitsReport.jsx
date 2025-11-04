@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Download, Printer, UserCircle, Heart, Calendar } from "lucide-react";
 import { format, parseISO, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -229,64 +228,66 @@ export default function ClientVisitsReport({ shifts, clients, carers, isLoading 
           </div>
 
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Client Name</TableHead>
-                  <TableHead>Care Needs</TableHead>
-                  <TableHead className="text-right">Total Visits</TableHead>
-                  <TableHead className="text-right">Completed</TableHead>
-                  <TableHead className="text-right">Missed</TableHead>
-                  <TableHead className="text-right">Total Hours</TableHead>
-                  <TableHead className="text-right">Unique Carers</TableHead>
-                  <TableHead className="text-right">Completion Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.map((stat, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{stat.name}</TableCell>
-                    <TableCell>
-                      <div className="flex flex-wrap gap-1">
-                        {stat.careNeeds.slice(0, 2).map((need, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {need}
-                          </Badge>
-                        ))}
-                        {stat.careNeeds.length > 2 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{stat.careNeeds.length - 2}
-                          </Badge>
-                        )}
-                      </div>
-                    </TableCell>
-                    <TableCell className="text-right">{stat.totalVisits}</TableCell>
-                    <TableCell className="text-right">{stat.completedVisits}</TableCell>
-                    <TableCell className="text-right">{stat.missedVisits}</TableCell>
-                    <TableCell className="text-right font-semibold">{stat.totalHours.toFixed(1)}h</TableCell>
-                    <TableCell className="text-right">{stat.uniqueCarers}</TableCell>
-                    <TableCell className="text-right">
-                      <Badge className={
-                        parseFloat(stat.completionRate) >= 90 
-                          ? "bg-green-100 text-green-800"
-                          : parseFloat(stat.completionRate) >= 70
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }>
-                        {stat.completionRate}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {stats.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={8} className="text-center py-8 text-gray-500">
-                      No data available for the selected period
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="text-left p-3 font-medium text-gray-900">Client Name</th>
+                    <th className="text-left p-3 font-medium text-gray-900">Care Needs</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Visits</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Completed</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Missed</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Hours</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Unique Carers</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Completion Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.map((stat, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{stat.name}</td>
+                      <td className="p-3">
+                        <div className="flex flex-wrap gap-1">
+                          {stat.careNeeds.slice(0, 2).map((need, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {need}
+                            </Badge>
+                          ))}
+                          {stat.careNeeds.length > 2 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{stat.careNeeds.length - 2}
+                            </Badge>
+                          )}
+                        </div>
+                      </td>
+                      <td className="p-3 text-right">{stat.totalVisits}</td>
+                      <td className="p-3 text-right">{stat.completedVisits}</td>
+                      <td className="p-3 text-right">{stat.missedVisits}</td>
+                      <td className="p-3 text-right font-semibold">{stat.totalHours.toFixed(1)}h</td>
+                      <td className="p-3 text-right">{stat.uniqueCarers}</td>
+                      <td className="p-3 text-right">
+                        <Badge className={
+                          parseFloat(stat.completionRate) >= 90 
+                            ? "bg-green-100 text-green-800"
+                            : parseFloat(stat.completionRate) >= 70
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }>
+                          {stat.completionRate}%
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                  {stats.length === 0 && (
+                    <tr>
+                      <td colSpan={8} className="text-center py-8 text-gray-500">
+                        No data available for the selected period
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>
