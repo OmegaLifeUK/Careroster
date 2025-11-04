@@ -3,6 +3,7 @@ import Schedule from './pages/Schedule';
 import Reports from './pages/Reports';
 import Carers from './pages/Carers';
 import Clients from './pages/Clients';
+import Notifications from './pages/Notifications';
 import Layout from './Layout.jsx';
 
 
@@ -12,6 +13,7 @@ export const PAGES = {
     "Reports": Reports,
     "Carers": Carers,
     "Clients": Clients,
+    "Notifications": Notifications,
 }
 
 export const pagesConfig = {
