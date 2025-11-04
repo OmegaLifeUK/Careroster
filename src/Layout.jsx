@@ -14,7 +14,8 @@ import {
   FileText,
   Menu,
   MapPin,
-  Navigation
+  Navigation,
+  MessageSquare // Added MessageSquare import
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -84,6 +85,11 @@ const domCareNav = [
     title: "Runs",
     url: createPageUrl("DomCareRuns"),
     icon: Navigation,
+  },
+  {
+    title: "Communications",
+    url: createPageUrl("CommunicationHub"),
+    icon: MessageSquare,
   },
   {
     title: "Reports",
