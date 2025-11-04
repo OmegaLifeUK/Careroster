@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -163,6 +164,12 @@ export default function Notifications() {
     { value: "general", label: "General", count: notifications.filter(n => n.type === "general").length },
   ].filter(type => type.count > 0);
 
+  const filterButtons = [
+    { value: "all", label: "All", count: notifications.length },
+    { value: "unread", label: "Unread", count: unreadCount },
+    { value: "read", label: "Read", count: notifications.length - unreadCount }
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-5xl mx-auto">
@@ -220,19 +227,18 @@ export default function Notifications() {
           <CardContent className="p-4">
             <div className="flex flex-col md:flex-row gap-4">
               <div className="flex-1">
-                <Tabs value={filter} onValueChange={setFilter}>
-                  <TabsList>
-                    <TabsTrigger value="all">
-                      All ({notifications.length})
-                    </TabsTrigger>
-                    <TabsTrigger value="unread">
-                      Unread ({unreadCount})
-                    </TabsTrigger>
-                    <TabsTrigger value="read">
-                      Read ({notifications.length - unreadCount})
-                    </TabsTrigger>
-                  </TabsList>
-                </Tabs>
+                <div className="flex gap-2">
+                  {filterButtons.map(btn => (
+                    <Button
+                      key={btn.value}
+                      variant={filter === btn.value ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => setFilter(btn.value)}
+                    >
+                      {btn.label} ({btn.count})
+                    </Button>
+                  ))}
+                </div>
               </div>
               <div className="flex gap-2 items-center">
                 <Filter className="w-4 h-4 text-gray-500" />
