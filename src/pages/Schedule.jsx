@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -11,11 +12,15 @@ import ShiftCard from "../components/schedule/ShiftCard";
 import WeekCalendar from "../components/schedule/WeekCalendar";
 import ShiftFilters from "../components/schedule/ShiftFilters";
 import DragDropSchedule from "../components/schedule/DragDropSchedule";
+import AIScheduleGenerator from "../components/schedule/AIScheduleGenerator";
+import ConflictDetector from "../components/schedule/ConflictDetector";
+import SmartAssignButton from "../components/schedule/SmartAssignButton";
 
 export default function Schedule() {
   const [view, setView] = useState("dragdrop");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDialog, setShowDialog] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
   const [filters, setFilters] = useState({
     status: "all",
@@ -86,15 +91,17 @@ export default function Schedule() {
 
   const isLoading = shiftsLoading || carersLoading || clientsLoading;
 
+  const unfilledCount = shifts.filter(s => s.status === 'unfilled').length;
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-[95%] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule</h1>
-            <p className="text-gray-500">Manage shifts and assignments</p>
+            <p className="text-gray-500">Manage shifts and assignments with AI assistance</p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex gap-3 w-full md:w-auto flex-wrap">
             <Button
               variant="outline"
               onClick={() => setShowFilters(!showFilters)}
@@ -102,6 +109,13 @@ export default function Schedule() {
             >
               <Filter className="w-4 h-4 mr-2" />
               Filters
+            </Button>
+            <Button
+              onClick={() => setShowAIGenerator(true)}
+              className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              AI Generate Schedule
             </Button>
             <Button
               onClick={handleCreateShift}
@@ -121,6 +135,10 @@ export default function Schedule() {
             clients={clients}
           />
         )}
+
+        <div className="mb-6">
+          <ConflictDetector shifts={shifts} carers={carers} clients={clients} />
+        </div>
 
         <div className="mb-6">
           <Tabs value={view} onValueChange={setView}>
@@ -165,14 +183,26 @@ export default function Schedule() {
         ) : (
           <div className="grid gap-4">
             {filteredShifts.map((shift) => (
-              <ShiftCard
-                key={shift.id}
-                shift={shift}
-                carers={carers}
-                clients={clients}
-                onEdit={() => handleEditShift(shift)}
-                onDelete={() => handleDeleteShift(shift.id)}
-              />
+              <div key={shift.id} className="relative">
+                <ShiftCard
+                  shift={shift}
+                  carers={carers}
+                  clients={clients}
+                  onEdit={() => handleEditShift(shift)}
+                  onDelete={() => handleDeleteShift(shift.id)}
+                />
+                {shift.status === 'unfilled' && (
+                  <div className="absolute top-4 right-4">
+                    <SmartAssignButton
+                      shift={shift}
+                      carers={carers}
+                      clients={clients}
+                      shifts={shifts}
+                      leaveRequests={leaveRequests}
+                    />
+                  </div>
+                )}
+              </div>
             ))}
             {filteredShifts.length === 0 && !isLoading && (
               <div className="text-center py-12 text-gray-500">
@@ -192,6 +222,16 @@ export default function Schedule() {
             shifts={shifts}
             leaveRequests={leaveRequests}
             onClose={handleCloseDialog}
+          />
+        )}
+
+        {showAIGenerator && (
+          <AIScheduleGenerator
+            carers={carers}
+            clients={clients}
+            shifts={shifts}
+            leaveRequests={leaveRequests}
+            onClose={() => setShowAIGenerator(false)}
           />
         )}
       </div>
