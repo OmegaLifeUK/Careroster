@@ -1,10 +1,11 @@
+
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+// Removed: Table, TableBody, TableCell, TableHead, TableHeader, TableRow
 import { Download, FileText, Printer, Award, Clock, CheckCircle } from "lucide-react";
 import { format, parseISO, isWithinInterval } from "date-fns";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -232,49 +233,51 @@ export default function CarerHoursReport({ shifts, carers, isLoading }) {
           </div>
 
           <div className="border rounded-lg overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-gray-50">
-                  <TableHead>Carer Name</TableHead>
-                  <TableHead className="text-right">Total Hours</TableHead>
-                  <TableHead className="text-right">Completed</TableHead>
-                  <TableHead className="text-right">Scheduled</TableHead>
-                  <TableHead className="text-right">No Shows</TableHead>
-                  <TableHead className="text-right">Avg Hours/Shift</TableHead>
-                  <TableHead className="text-right">Completion Rate</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {stats.map((stat, index) => (
-                  <TableRow key={index}>
-                    <TableCell className="font-medium">{stat.name}</TableCell>
-                    <TableCell className="text-right font-semibold">{stat.totalHours.toFixed(1)}h</TableCell>
-                    <TableCell className="text-right">{stat.completedShifts}</TableCell>
-                    <TableCell className="text-right">{stat.scheduledShifts}</TableCell>
-                    <TableCell className="text-right">{stat.noShows}</TableCell>
-                    <TableCell className="text-right">{stat.averageHoursPerShift}h</TableCell>
-                    <TableCell className="text-right">
-                      <Badge className={
-                        parseFloat(stat.completionRate) >= 90 
-                          ? "bg-green-100 text-green-800"
-                          : parseFloat(stat.completionRate) >= 70
-                          ? "bg-yellow-100 text-yellow-800"
-                          : "bg-red-100 text-red-800"
-                      }>
-                        {stat.completionRate}%
-                      </Badge>
-                    </TableCell>
-                  </TableRow>
-                ))}
-                {stats.length === 0 && (
-                  <TableRow>
-                    <TableCell colSpan={7} className="text-center py-8 text-gray-500">
-                      No data available for the selected period
-                    </TableCell>
-                  </TableRow>
-                )}
-              </TableBody>
-            </Table>
+            <div className="overflow-x-auto">
+              <table className="w-full">
+                <thead>
+                  <tr className="bg-gray-50 border-b">
+                    <th className="text-left p-3 font-medium text-gray-900">Carer Name</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Total Hours</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Completed</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Scheduled</th>
+                    <th className="text-right p-3 font-medium text-gray-900">No Shows</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Avg Hours/Shift</th>
+                    <th className="text-right p-3 font-medium text-gray-900">Completion Rate</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {stats.map((stat, index) => (
+                    <tr key={index} className="border-b hover:bg-gray-50">
+                      <td className="p-3 font-medium">{stat.name}</td>
+                      <td className="p-3 text-right font-semibold">{stat.totalHours.toFixed(1)}h</td>
+                      <td className="p-3 text-right">{stat.completedShifts}</td>
+                      <td className="p-3 text-right">{stat.scheduledShifts}</td>
+                      <td className="p-3 text-right">{stat.noShows}</td>
+                      <td className="p-3 text-right">{stat.averageHoursPerShift}h</td>
+                      <td className="p-3 text-right">
+                        <Badge className={
+                          parseFloat(stat.completionRate) >= 90 
+                            ? "bg-green-100 text-green-800"
+                            : parseFloat(stat.completionRate) >= 70
+                            ? "bg-yellow-100 text-yellow-800"
+                            : "bg-red-100 text-red-800"
+                        }>
+                          {stat.completionRate}%
+                        </Badge>
+                      </td>
+                    </tr>
+                  ))}
+                  {stats.length === 0 && (
+                    <tr>
+                      <td colSpan={7} className="text-center py-8 text-gray-500">
+                        No data available for the selected period
+                      </td>
+                    </tr>
+                  )}
+                </tbody>
+              </table>
+            </div>
           </div>
         </CardContent>
       </Card>
