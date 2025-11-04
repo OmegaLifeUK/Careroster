@@ -68,25 +68,13 @@ export default function DomCareTimeline({
     e.dataTransfer.dropEffect = 'move';
   };
 
-  const handleDrop = (e, staffId, date, hour) => {
+  const handleDrop = (e, staffId, date) => {
     e.preventDefault();
     if (draggedVisit) {
-      const [hourNum] = hour.split(':').map(Number);
-      const newStart = new Date(date);
-      newStart.setHours(hourNum, 0, 0, 0);
-      
-      const duration = draggedVisit.scheduled_end && draggedVisit.scheduled_start
-        ? (new Date(draggedVisit.scheduled_end) - new Date(draggedVisit.scheduled_start)) / (1000 * 60 * 60)
-        : 0.5;
-      
-      const newEnd = new Date(newStart);
-      newEnd.setHours(newStart.getHours() + duration);
-
+      // Keep the original scheduled times, only assign the staff member
       onVisitUpdate(draggedVisit.id, {
         ...draggedVisit,
         assigned_staff_id: staffId,
-        scheduled_start: newStart.toISOString(),
-        scheduled_end: newEnd.toISOString(),
         status: 'published'
       });
     }
@@ -144,7 +132,7 @@ export default function DomCareTimeline({
             </h3>
           </div>
           <p className="text-sm text-orange-700 mt-1">
-            Drag visits below onto staff members to assign
+            Drag visits below onto staff members to assign - visits will keep their original scheduled times
           </p>
         </div>
         
@@ -178,7 +166,7 @@ export default function DomCareTimeline({
                           <div className="flex items-center gap-2 mb-2">
                             <Clock className="w-3 h-3 text-gray-500" />
                             <span className="text-sm font-semibold">
-                              {format(parseISO(visit.scheduled_start), "HH:mm")}
+                              {format(parseISO(visit.scheduled_start), "HH:mm")} - {format(parseISO(visit.scheduled_end), "HH:mm")}
                             </span>
                           </div>
                           <p className="text-sm font-medium text-gray-900 mb-1">
@@ -262,32 +250,38 @@ export default function DomCareTimeline({
               {/* Day Columns */}
               {weekDays.map(day => {
                 const staffVisits = getVisitsForStaffAndDate(member.id, day);
+                const slotKey = `${member.id}-${format(day, 'yyyy-MM-dd')}`;
                 
                 return (
                   <div 
                     key={day.toString()} 
-                    className="flex-1 min-w-[600px] border-r relative"
+                    className={`flex-1 min-w-[600px] border-r relative ${
+                      hoveredSlot === slotKey && draggedVisit ? 'bg-blue-50' : ''
+                    }`}
                     style={{ minHeight: '70px' }}
+                    onDragOver={handleDragOver}
+                    onDrop={(e) => handleDrop(e, member.id, day)}
+                    onDragEnter={() => setHoveredSlot(slotKey)}
+                    onDragLeave={() => setHoveredSlot(null)}
                   >
                     {/* Hour Grid */}
                     <div className="flex h-full">
-                      {HOURS.map(hour => {
-                        const slotKey = `${member.id}-${format(day, 'yyyy-MM-dd')}-${hour}`;
-                        
-                        return (
-                          <div
-                            key={hour}
-                            className={`w-[50px] flex-shrink-0 border-r border-gray-100 relative ${
-                              hoveredSlot === slotKey ? 'bg-blue-100' : ''
-                            }`}
-                            onDragOver={handleDragOver}
-                            onDrop={(e) => handleDrop(e, member.id, day, hour)}
-                            onDragEnter={() => setHoveredSlot(slotKey)}
-                            onDragLeave={() => setHoveredSlot(null)}
-                          />
-                        );
-                      })}
+                      {HOURS.map(hour => (
+                        <div
+                          key={hour}
+                          className="w-[50px] flex-shrink-0 border-r border-gray-100 relative"
+                        />
+                      ))}
                     </div>
+
+                    {/* Drop Zone Indicator */}
+                    {hoveredSlot === slotKey && draggedVisit && (
+                      <div className="absolute inset-0 border-2 border-blue-500 border-dashed rounded bg-blue-100 bg-opacity-20 pointer-events-none flex items-center justify-center">
+                        <div className="bg-blue-500 text-white px-3 py-1 rounded text-sm font-medium">
+                          Drop to assign at {format(parseISO(draggedVisit.scheduled_start), "HH:mm")}
+                        </div>
+                      </div>
+                    )}
 
                     {/* Visits Overlay */}
                     {staffVisits.map(visit => {
