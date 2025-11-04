@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -253,7 +252,7 @@ export default function CarePlanComplianceReport({ visits, staff, clients, isLoa
               <CardContent className="p-4">
                 <div className="flex items-center gap-2 mb-1">
                   <XCircle className="w-4 h-4 text-red-600" />
-                  <p className="text-sm font-medium text-red-900">Low (&lt;75%)</p>
+                  <p className="text-sm font-medium text-red-900">Low (below 75%)</p>
                 </div>
                 <p className="text-2xl font-bold text-red-900">{lowCompliance}</p>
               </CardContent>
