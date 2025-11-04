@@ -12,7 +12,6 @@ import {
   TrendingUp
 } from "lucide-react";
 import { parseISO, isWithinInterval } from "date-fns";
-import { ScrollArea } from "@/components/ui/scroll-area";
 
 export default function CarerSuggestions({
   client,
@@ -167,7 +166,7 @@ export default function CarerSuggestions({
         </div>
       </div>
 
-      <ScrollArea className="h-[500px] pr-4">
+      <div className="h-[500px] overflow-y-auto pr-4">
         <div className="space-y-3">
           {rankedCarers.map((carer, index) => (
             <Card 
@@ -242,7 +241,7 @@ export default function CarerSuggestions({
             </div>
           )}
         </div>
-      </ScrollArea>
+      </div>
     </div>
   );
 }
