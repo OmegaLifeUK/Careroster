@@ -6,6 +6,7 @@ import Clients from './pages/Clients';
 import Notifications from './pages/Notifications';
 import StaffPortal from './pages/StaffPortal';
 import LeaveRequests from './pages/LeaveRequests';
+import DomCareDashboard from './pages/DomCareDashboard';
 import Layout from './Layout.jsx';
 
 
@@ -18,6 +19,7 @@ export const PAGES = {
     "Notifications": Notifications,
     "StaffPortal": StaffPortal,
     "LeaveRequests": LeaveRequests,
+    "DomCareDashboard": DomCareDashboard,
 }
 
 export const pagesConfig = {
