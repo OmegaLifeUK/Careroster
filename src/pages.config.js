@@ -8,6 +8,9 @@ import StaffPortal from './pages/StaffPortal';
 import LeaveRequests from './pages/LeaveRequests';
 import DomCareDashboard from './pages/DomCareDashboard';
 import DomCareSchedule from './pages/DomCareSchedule';
+import DomCareStaff from './pages/DomCareStaff';
+import DomCareClients from './pages/DomCareClients';
+import DomCareRuns from './pages/DomCareRuns';
 import Layout from './Layout.jsx';
 
 
@@ -22,6 +25,9 @@ export const PAGES = {
     "LeaveRequests": LeaveRequests,
     "DomCareDashboard": DomCareDashboard,
     "DomCareSchedule": DomCareSchedule,
+    "DomCareStaff": DomCareStaff,
+    "DomCareClients": DomCareClients,
+    "DomCareRuns": DomCareRuns,
 }
 
 export const pagesConfig = {
