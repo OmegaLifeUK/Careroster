@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -11,7 +12,8 @@ import {
   Download,
   Smile,
   CheckSquare,
-  Activity
+  Activity,
+  DollarSign // Added DollarSign icon
 } from "lucide-react";
 
 import StaffPerformanceReport from "../components/domcare/reports/StaffPerformanceReport";
@@ -19,6 +21,9 @@ import ClientVisitHistory from "../components/domcare/reports/ClientVisitHistory
 import ClientSatisfactionReport from "../components/domcare/reports/ClientSatisfactionReport";
 import VisitComplianceReport from "../components/domcare/reports/VisitComplianceReport";
 import ResourceUtilizationReport from "../components/domcare/reports/ResourceUtilizationReport";
+import CarePlanComplianceReport from "../components/domcare/reports/CarePlanComplianceReport"; // New import
+import IncidentReportSummary from "../components/domcare/reports/IncidentReportSummary"; // New import
+import FinancialSummaryReport from "../components/domcare/reports/FinancialSummaryReport"; // New import
 
 export default function DomCareReports() {
   const [activeTab, setActiveTab] = useState("staff-performance");
@@ -76,6 +81,27 @@ export default function DomCareReports() {
       icon: Activity,
       color: "from-indigo-500 to-indigo-600",
     },
+    {
+      id: "care-plan-compliance", // New report type
+      title: "Care Plan Compliance",
+      description: "Track care task adherence",
+      icon: FileText,
+      color: "from-teal-500 to-teal-600",
+    },
+    {
+      id: "incident-report", // New report type
+      title: "Incident Report",
+      description: "Log and track incidents",
+      icon: TrendingUp,
+      color: "from-red-500 to-red-600",
+    },
+    {
+      id: "financial-summary", // New report type
+      title: "Financial Summary",
+      description: "Billing and cost analysis",
+      icon: DollarSign,
+      color: "from-emerald-500 to-emerald-600",
+    },
   ];
 
   const renderReport = () => {
@@ -90,6 +116,12 @@ export default function DomCareReports() {
         return <VisitComplianceReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
       case "resource-utilization":
         return <ResourceUtilizationReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
+      case "care-plan-compliance": // New case
+        return <CarePlanComplianceReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
+      case "incident-report": // New case
+        return <IncidentReportSummary staff={staff} clients={clients} />;
+      case "financial-summary": // New case
+        return <FinancialSummaryReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
       default:
         return null;
     }
@@ -103,7 +135,7 @@ export default function DomCareReports() {
           <p className="text-gray-500">Comprehensive analytics and reporting for domiciliary care operations</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8"> {/* Changed lg:grid-cols-3 to lg:grid-cols-4 */}
           {reportTypes.map((report) => (
             <Card
               key={report.id}
