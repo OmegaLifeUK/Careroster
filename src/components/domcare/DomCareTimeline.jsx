@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { format, parseISO, addDays, isSameDay } from "date-fns";
-import { ChevronRight, MapPin, Clock, User, AlertTriangle, Star, TrendingUp, Car } from "lucide-react";
+import { format, parseISO, addDays, isSameDay, differenceInMinutes } from "date-fns";
+import { ChevronRight, MapPin, Clock, User, AlertTriangle, Star, TrendingUp, Car, Navigation as NavigationIcon } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 
 const HOURS = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
@@ -12,6 +12,24 @@ const STATUS_COLORS = {
   completed: "bg-purple-200 border-purple-400 text-purple-900",
   cancelled: "bg-red-200 border-red-400 text-red-900",
   missed: "bg-orange-200 border-orange-400 text-orange-900",
+};
+
+// Calculate travel time between two addresses (simplified - in production use Google Distance Matrix API)
+const calculateTravelTime = (fromPostcode, toPostcode, vehicleType) => {
+  // Simple estimation based on postcode area difference
+  // In production, this would call a real mapping API
+  if (!fromPostcode || !toPostcode) return 15; // Default 15 mins
+  
+  const fromArea = fromPostcode.split(' ')[0];
+  const toArea = toPostcode.split(' ')[0];
+  
+  // Same postcode area = nearby
+  if (fromArea === toArea) {
+    return vehicleType === 'car' ? 5 : vehicleType === 'bike' ? 10 : 20;
+  }
+  
+  // Different postcode area = further away
+  return vehicleType === 'car' ? 20 : vehicleType === 'bike' ? 35 : 45;
 };
 
 export default function DomCareTimeline({ 
@@ -26,6 +44,7 @@ export default function DomCareTimeline({
 }) {
   const [draggedVisit, setDraggedVisit] = useState(null);
   const [hoveredSlot, setHoveredSlot] = useState(null);
+  const [conflictWarning, setConflictWarning] = useState(null);
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -62,7 +81,7 @@ export default function DomCareTimeline({
 
     // Proximity/Area preference (25 points)
     if (staffMember.preferred_areas && client.address?.postcode) {
-      const clientPostcode = client.address.postcode.split(' ')[0]; // Get postcode area
+      const clientPostcode = client.address.postcode.split(' ')[0];
       const hasAreaMatch = staffMember.preferred_areas.some(area => 
         area.includes(clientPostcode) || clientPostcode.includes(area)
       );
@@ -75,7 +94,7 @@ export default function DomCareTimeline({
       }
     }
 
-    // Workload balance (15 points) - fewer visits = higher score
+    // Workload balance (15 points)
     const dateStr = format(parseISO(visit.scheduled_start), 'yyyy-MM-dd');
     const staffVisitsToday = visits.filter(v => 
       v.assigned_staff_id === staffMember.id && 
@@ -104,13 +123,69 @@ export default function DomCareTimeline({
       reasons.push({ text: "Using public transport", points: 2 });
     }
 
-    // Normalize score to 0-100
     const normalizedScore = Math.max(0, Math.min(100, score));
     
     return {
       score: normalizedScore,
       reasons: reasons
     };
+  };
+
+  // Check if visit can fit considering travel time
+  const checkVisitConflict = (staffId, date, newVisit) => {
+    const staffVisitsOnDay = visits
+      .filter(v => v.assigned_staff_id === staffId && isSameDay(parseISO(v.scheduled_start), date))
+      .sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
+
+    const staffMember = staff.find(s => s.id === staffId);
+    const newVisitStart = new Date(newVisit.scheduled_start);
+    const newVisitEnd = new Date(newVisit.scheduled_end);
+    const newVisitClient = clients.find(c => c.id === newVisit.client_id);
+
+    // Check each existing visit for conflicts
+    for (const existingVisit of staffVisitsOnDay) {
+      const existingStart = new Date(existingVisit.scheduled_start);
+      const existingEnd = new Date(existingVisit.scheduled_end);
+      const existingClient = clients.find(c => c.id === existingVisit.client_id);
+
+      // Check if new visit would end after existing starts (potential overlap)
+      if (newVisitEnd > existingStart && newVisitStart < existingEnd) {
+        // Calculate required travel time
+        const travelTime = calculateTravelTime(
+          newVisitClient?.address?.postcode,
+          existingClient?.address?.postcode,
+          staffMember?.vehicle_type || 'car'
+        );
+
+        // Check gap before existing visit
+        if (newVisitStart < existingStart) {
+          const gapMinutes = differenceInMinutes(existingStart, newVisitEnd);
+          if (gapMinutes < travelTime) {
+            return {
+              hasConflict: true,
+              message: `Not enough travel time! Need ${travelTime} mins, only ${gapMinutes} mins available before ${format(existingStart, 'HH:mm')} visit`,
+              requiredTime: travelTime,
+              availableTime: gapMinutes
+            };
+          }
+        }
+
+        // Check gap after existing visit
+        if (newVisitStart >= existingEnd) {
+          const gapMinutes = differenceInMinutes(newVisitStart, existingEnd);
+          if (gapMinutes < travelTime) {
+            return {
+              hasConflict: true,
+              message: `Not enough travel time! Need ${travelTime} mins, only ${gapMinutes} mins available after ${format(existingEnd, 'HH:mm')} visit`,
+              requiredTime: travelTime,
+              availableTime: gapMinutes
+            };
+          }
+        }
+      }
+    }
+
+    return { hasConflict: false };
   };
 
   // Sort staff by match score for dragged visit
@@ -147,35 +222,75 @@ export default function DomCareTimeline({
       } catch {
         return false;
       }
-    });
+    }).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
   };
 
   const handleDragStart = (e, visit) => {
     setDraggedVisit(visit);
     e.dataTransfer.effectAllowed = 'move';
+    setConflictWarning(null);
   };
 
   const handleDragEnd = () => {
     setDraggedVisit(null);
     setHoveredSlot(null);
+    setConflictWarning(null);
   };
 
-  const handleDragOver = (e) => {
+  const handleDragOver = (e, staffId, date) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
+    
+    // Check for conflicts while hovering
+    if (draggedVisit) {
+      const conflict = checkVisitConflict(staffId, date, draggedVisit);
+      setConflictWarning(conflict.hasConflict ? conflict : null);
+    }
   };
 
   const handleDrop = (e, staffId, date) => {
     e.preventDefault();
     if (draggedVisit) {
+      // Final conflict check
+      const conflict = checkVisitConflict(staffId, date, draggedVisit);
+      
+      if (conflict.hasConflict) {
+        alert(`Cannot assign visit: ${conflict.message}\n\nPlease adjust visit times to allow for travel.`);
+        setDraggedVisit(null);
+        setHoveredSlot(null);
+        setConflictWarning(null);
+        return;
+      }
+
+      // Calculate travel time to next visit for updating the visit record
+      const staffMember = staff.find(s => s.id === staffId);
+      const staffVisits = getVisitsForStaffAndDate(staffId, date);
+      const draggedClient = clients.find(c => c.id === draggedVisit.client_id);
+      
+      // Find next visit after this one
+      const draggedStart = new Date(draggedVisit.scheduled_start);
+      const nextVisit = staffVisits.find(v => new Date(v.scheduled_start) > draggedStart);
+      
+      let travelToNext = 0;
+      if (nextVisit) {
+        const nextClient = clients.find(c => c.id === nextVisit.client_id);
+        travelToNext = calculateTravelTime(
+          draggedClient?.address?.postcode,
+          nextClient?.address?.postcode,
+          staffMember?.vehicle_type || 'car'
+        );
+      }
+
       onVisitUpdate(draggedVisit.id, {
         ...draggedVisit,
         assigned_staff_id: staffId,
-        status: 'published'
+        status: 'published',
+        estimated_travel_to_next: travelToNext
       });
     }
     setDraggedVisit(null);
     setHoveredSlot(null);
+    setConflictWarning(null);
   };
 
   const getVisitPosition = (visit) => {
@@ -225,6 +340,20 @@ export default function DomCareTimeline({
 
   return (
     <div className="space-y-4">
+      {/* Travel Time Info Banner */}
+      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+        <div className="flex items-start gap-3">
+          <NavigationIcon className="w-5 h-5 text-blue-600 mt-0.5" />
+          <div className="text-sm text-blue-900">
+            <p className="font-medium mb-1">Automatic Travel Time Calculation</p>
+            <p className="text-blue-700">
+              The system automatically calculates travel time between visits based on postcode distance and vehicle type. 
+              You cannot assign visits that don't allow enough travel time between locations.
+            </p>
+          </div>
+        </div>
+      </div>
+
       {/* Unallocated Visits Section */}
       <div className="bg-orange-50 border-2 border-orange-200 rounded-lg overflow-hidden">
         <div className="bg-orange-100 border-b border-orange-200 p-4">
@@ -235,7 +364,7 @@ export default function DomCareTimeline({
             </h3>
           </div>
           <p className="text-sm text-orange-700 mt-1">
-            Drag visits below onto staff members - best matches shown at top when dragging
+            Drag visits below onto staff members - travel time will be automatically calculated
           </p>
         </div>
         
@@ -400,15 +529,16 @@ export default function DomCareTimeline({
                 {weekDays.map(day => {
                   const staffVisits = getVisitsForStaffAndDate(member.id, day);
                   const slotKey = `${member.id}-${format(day, 'yyyy-MM-dd')}`;
+                  const isHovered = hoveredSlot === slotKey;
                   
                   return (
                     <div 
                       key={day.toString()} 
                       className={`flex-1 min-w-[600px] border-r relative ${
-                        hoveredSlot === slotKey && draggedVisit ? 'bg-blue-50' : ''
+                        isHovered && draggedVisit ? (conflictWarning ? 'bg-red-50' : 'bg-blue-50') : ''
                       } ${isTopMatch && draggedVisit ? 'ring-1 ring-green-300 ring-inset' : ''}`}
                       style={{ minHeight: '80px' }}
-                      onDragOver={handleDragOver}
+                      onDragOver={(e) => handleDragOver(e, member.id, day)}
                       onDrop={(e) => handleDrop(e, member.id, day)}
                       onDragEnter={() => setHoveredSlot(slotKey)}
                       onDragLeave={() => setHoveredSlot(null)}
@@ -424,55 +554,109 @@ export default function DomCareTimeline({
                       </div>
 
                       {/* Drop Zone Indicator */}
-                      {hoveredSlot === slotKey && draggedVisit && (
-                        <div className="absolute inset-0 border-2 border-blue-500 border-dashed rounded bg-blue-100 bg-opacity-30 pointer-events-none flex items-center justify-center">
-                          <div className={`${isTopMatch ? 'bg-green-500' : 'bg-blue-500'} text-white px-4 py-2 rounded-lg shadow-lg`}>
-                            <div className="flex items-center gap-2">
-                              {isTopMatch && <Star className="w-4 h-4 fill-white" />}
-                              <span className="text-sm font-bold">
-                                {matchData ? `${Math.round(matchData.score)}% Match - ` : ''}
-                                Drop at {format(parseISO(draggedVisit.scheduled_start), "HH:mm")}
-                              </span>
-                            </div>
+                      {isHovered && draggedVisit && (
+                        <div className={`absolute inset-0 border-2 ${conflictWarning ? 'border-red-500 bg-red-100' : 'border-blue-500 bg-blue-100'} border-dashed rounded bg-opacity-30 pointer-events-none flex items-center justify-center`}>
+                          <div className={`${conflictWarning ? 'bg-red-500' : isTopMatch ? 'bg-green-500' : 'bg-blue-500'} text-white px-4 py-2 rounded-lg shadow-lg max-w-xs`}>
+                            {conflictWarning ? (
+                              <div className="text-center">
+                                <AlertTriangle className="w-5 h-5 mx-auto mb-1" />
+                                <p className="text-xs font-bold">Cannot Assign!</p>
+                                <p className="text-xs mt-1">{conflictWarning.message}</p>
+                              </div>
+                            ) : (
+                              <div className="flex items-center gap-2">
+                                {isTopMatch && <Star className="w-4 h-4 fill-white" />}
+                                <span className="text-sm font-bold">
+                                  {matchData ? `${Math.round(matchData.score)}% Match - ` : ''}
+                                  Drop at {format(parseISO(draggedVisit.scheduled_start), "HH:mm")}
+                                </span>
+                              </div>
+                            )}
                           </div>
                         </div>
                       )}
 
-                      {/* Visits Overlay */}
-                      {staffVisits.map(visit => {
+                      {/* Visits and Travel Time Overlay */}
+                      {staffVisits.map((visit, visitIdx) => {
                         const { left, width } = getVisitPosition(visit);
                         const statusColor = STATUS_COLORS[visit.status] || STATUS_COLORS.draft;
+                        const nextVisit = staffVisits[visitIdx + 1];
                         
                         return (
-                          <div
-                            key={visit.id}
-                            draggable
-                            onDragStart={(e) => handleDragStart(e, visit)}
-                            onDragEnd={handleDragEnd}
-                            onClick={() => onVisitClick(visit)}
-                            className={`absolute top-1 h-[calc(100%-8px)] border-l-4 rounded cursor-move ${statusColor} ${
-                              draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md'
-                            }`}
-                            style={{
-                              left: `${left}px`,
-                              width: `${width}px`,
-                              zIndex: 5
-                            }}
-                          >
-                            <div className="p-1 h-full overflow-hidden">
-                              <p className="text-[9px] font-semibold truncate flex items-center gap-1">
-                                <Clock className="w-2.5 h-2.5" />
-                                {format(parseISO(visit.scheduled_start), "HH:mm")}
-                              </p>
-                              <p className="text-[9px] truncate mt-0.5 flex items-center gap-1">
-                                <MapPin className="w-2.5 h-2.5" />
-                                {getClientName(visit.client_id)}
-                              </p>
-                              <p className="text-[8px] text-gray-600 truncate">
-                                {getClientAddress(visit.client_id)}
-                              </p>
+                          <React.Fragment key={visit.id}>
+                            {/* Visit Block */}
+                            <div
+                              draggable
+                              onDragStart={(e) => handleDragStart(e, visit)}
+                              onDragEnd={handleDragEnd}
+                              onClick={() => onVisitClick(visit)}
+                              className={`absolute top-1 h-[calc(50%-4px)] border-l-4 rounded cursor-move ${statusColor} ${
+                                draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md'
+                              }`}
+                              style={{
+                                left: `${left}px`,
+                                width: `${width}px`,
+                                zIndex: 5
+                              }}
+                            >
+                              <div className="p-1 h-full overflow-hidden">
+                                <p className="text-[9px] font-semibold truncate flex items-center gap-1">
+                                  <Clock className="w-2.5 h-2.5" />
+                                  {format(parseISO(visit.scheduled_start), "HH:mm")}
+                                </p>
+                                <p className="text-[9px] truncate mt-0.5 flex items-center gap-1">
+                                  <MapPin className="w-2.5 h-2.5" />
+                                  {getClientName(visit.client_id)}
+                                </p>
+                                <p className="text-[8px] text-gray-600 truncate">
+                                  {getClientAddress(visit.client_id)}
+                                </p>
+                              </div>
                             </div>
-                          </div>
+
+                            {/* Travel Time Indicator */}
+                            {nextVisit && (
+                              (() => {
+                                const visitEnd = parseISO(visit.scheduled_end);
+                                const nextStart = parseISO(nextVisit.scheduled_start);
+                                const currentClient = clients.find(c => c.id === visit.client_id);
+                                const nextClient = clients.find(c => c.id === nextVisit.client_id);
+                                
+                                const travelTime = calculateTravelTime(
+                                  currentClient?.address?.postcode,
+                                  nextClient?.address?.postcode,
+                                  member.vehicle_type || 'car'
+                                );
+                                
+                                const actualGap = differenceInMinutes(nextStart, visitEnd);
+                                const hasSufficientTime = actualGap >= travelTime;
+                                
+                                const visitEndHour = visitEnd.getHours() + visitEnd.getMinutes() / 60;
+                                const travelStartPos = (visitEndHour - 6) * 60;
+                                const travelWidth = (travelTime / 60) * 60;
+                                
+                                return (
+                                  <div
+                                    className={`absolute bottom-1 h-[calc(50%-4px)] rounded-sm flex items-center justify-center ${
+                                      hasSufficientTime ? 'bg-green-100 border border-green-300' : 'bg-red-100 border border-red-300'
+                                    }`}
+                                    style={{
+                                      left: `${travelStartPos}px`,
+                                      width: `${travelWidth}px`,
+                                      zIndex: 4
+                                    }}
+                                  >
+                                    <div className="flex items-center gap-1">
+                                      <NavigationIcon className={`w-2.5 h-2.5 ${hasSufficientTime ? 'text-green-700' : 'text-red-700'}`} />
+                                      <span className={`text-[9px] font-medium ${hasSufficientTime ? 'text-green-800' : 'text-red-800'}`}>
+                                        {travelTime}min
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })()
+                            )}
+                          </React.Fragment>
                         );
                       })}
                     </div>
