@@ -11,14 +11,16 @@ import {
   Smartphone,
   LogOut,
   FileText,
-  Menu
+  Menu,
+  MapPin,
+  Navigation
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 
-const navigationItems = [
+const residentialCareNav = [
   {
     title: "Dashboard",
     url: createPageUrl("Dashboard"),
@@ -53,6 +55,34 @@ const navigationItems = [
     title: "Leave Requests",
     url: createPageUrl("LeaveRequests"),
     icon: ClipboardList,
+  },
+];
+
+const domCareNav = [
+  {
+    title: "Dom Care Dashboard",
+    url: createPageUrl("DomCareDashboard"),
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Visit Schedule",
+    url: createPageUrl("DomCareSchedule"),
+    icon: MapPin,
+  },
+  {
+    title: "Staff",
+    url: createPageUrl("DomCareStaff"),
+    icon: Users,
+  },
+  {
+    title: "Clients",
+    url: createPageUrl("DomCareClients"),
+    icon: UserCircle,
+  },
+  {
+    title: "Runs",
+    url: createPageUrl("DomCareRuns"),
+    icon: Navigation,
   },
 ];
 
@@ -125,7 +155,7 @@ export default function Layout({ children, currentPageName }) {
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
-          <div className="flex flex-col h-full">
+          <div className="flex flex-col h-full overflow-y-auto">
             {/* Header */}
             <div className="border-b border-gray-200 p-6">
               <div className="flex items-center gap-3">
@@ -134,19 +164,19 @@ export default function Layout({ children, currentPageName }) {
                 </div>
                 <div>
                   <h2 className="font-bold text-lg text-gray-900">CareRoster</h2>
-                  <p className="text-xs text-gray-500">Care Management System</p>
+                  <p className="text-xs text-gray-500">Care Management</p>
                 </div>
               </div>
             </div>
 
             {/* Navigation */}
-            <div className="flex-1 overflow-y-auto p-3">
+            <div className="flex-1 p-3">
               <div className="mb-6">
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                  Management
+                  Residential Care
                 </p>
                 <nav className="space-y-1">
-                  {navigationItems.map((item) => (
+                  {residentialCareNav.map((item) => (
                     <Link
                       key={item.title}
                       to={item.url}
@@ -167,6 +197,29 @@ export default function Layout({ children, currentPageName }) {
                 </nav>
               </div>
 
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                  Domiciliary Care
+                </p>
+                <nav className="space-y-1">
+                  {domCareNav.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                        location.pathname === item.url 
+                          ? 'bg-green-50 text-green-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-sm">{item.title}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
                   Staff Access
@@ -179,8 +232,8 @@ export default function Layout({ children, currentPageName }) {
                       onClick={() => setSidebarOpen(false)}
                       className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
                         location.pathname === item.url 
-                          ? 'bg-green-50 text-green-700 font-medium shadow-sm' 
-                          : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
+                          ? 'bg-purple-50 text-purple-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
