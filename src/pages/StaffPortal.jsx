@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -12,17 +13,20 @@ import {
   Shield,
   LogIn,
   LogOut,
-  CheckCircle
+  CheckCircle,
+  MessageSquare // Added MessageSquare icon
 } from "lucide-react";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 
 import MyShifts from "../components/staff/MyShifts";
 import ClockInOut from "../components/staff/ClockInOut";
 import SOSButton from "../components/staff/SOSButton";
+import StaffMessaging from "../components/staff/StaffMessaging"; // Added StaffMessaging import
 
 export default function StaffPortal() {
   const [user, setUser] = useState(null);
   const [carer, setCarer] = useState(null);
+  const [activeTab, setActiveTab] = useState("overview"); // Added activeTab state
 
   useEffect(() => {
     const loadUser = async () => {
@@ -117,118 +121,146 @@ export default function StaffPortal() {
           <p className="text-gray-500">Your personal care portal</p>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <p className="text-sm text-gray-600">Today's Shifts</p>
-              </div>
-              <p className="text-3xl font-bold text-blue-600">{todayShifts.length}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-green-600" />
-                <p className="text-sm text-gray-600">Upcoming</p>
-              </div>
-              <p className="text-3xl font-bold text-green-600">{upcomingShifts.length}</p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <CheckCircle className="w-4 h-4 text-purple-600" />
-                <p className="text-sm text-gray-600">This Month</p>
-              </div>
-              <p className="text-3xl font-bold text-purple-600">
-                {shifts.filter(s => s.status === 'completed').length}
-              </p>
-            </CardContent>
-          </Card>
+        {/* Tab Navigation */}
+        <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
+          <Button
+            variant={activeTab === "overview" ? "default" : "ghost"}
+            onClick={() => setActiveTab("overview")}
+            className="flex-shrink-0"
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Overview
+          </Button>
+          <Button
+            variant={activeTab === "messages" ? "default" : "ghost"}
+            onClick={() => setActiveTab("messages")}
+            className="flex-shrink-0"
+          >
+            <MessageSquare className="w-4 h-4 mr-2" />
+            Messages
+          </Button>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <div className="lg:col-span-2 space-y-6">
-            {activeShift && (
-              <Card className="border-2 border-green-500 shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
-                  <CardTitle className="flex items-center gap-2">
-                    <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
-                    Active Shift
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ClockInOut 
-                    shift={activeShift} 
-                    carer={carer}
-                    client={clients.find(c => c.id === activeShift.client_id)}
-                    timeAttendance={timeAttendance.find(ta => ta.shift_id === activeShift.id)}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            {nextShift && !activeShift && (
-              <Card className="border-2 border-blue-500 shadow-lg">
-                <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
-                  <CardTitle className="flex items-center gap-2">
-                    <Clock className="w-5 h-5 text-blue-600" />
-                    Next Shift
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ClockInOut 
-                    shift={nextShift} 
-                    carer={carer}
-                    client={clients.find(c => c.id === nextShift.client_id)}
-                    timeAttendance={timeAttendance.find(ta => ta.shift_id === nextShift.id)}
-                  />
-                </CardContent>
-              </Card>
-            )}
-
-            <MyShifts 
-              shifts={shifts}
-              clients={clients}
-              timeAttendance={timeAttendance}
-              isLoading={shiftsLoading}
-            />
-          </div>
-
-          <div className="space-y-6">
-            <SOSButton carer={carer} activeShift={activeShift} />
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-lg">Quick Info</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="p-3 bg-blue-50 rounded-lg">
-                  <p className="text-sm text-blue-700 font-medium mb-1">Employment Type</p>
-                  <p className="text-blue-900">{carer.employment_type?.replace('_', ' ')}</p>
-                </div>
-                <div className="p-3 bg-green-50 rounded-lg">
-                  <p className="text-sm text-green-700 font-medium mb-1">Status</p>
-                  <Badge className="bg-green-100 text-green-800">
-                    {carer.status?.replace('_', ' ')}
-                  </Badge>
-                </div>
-                {carer.qualifications && carer.qualifications.length > 0 && (
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <p className="text-sm text-purple-700 font-medium mb-2">Qualifications</p>
-                    <p className="text-purple-900 text-sm">
-                      {carer.qualifications.length} active qualification{carer.qualifications.length !== 1 ? 's' : ''}
-                    </p>
+        {activeTab === "overview" && (
+          <>
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm text-gray-600">Today's Shifts</p>
                   </div>
+                  <p className="text-3xl font-bold text-blue-600">{todayShifts.length}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-gray-600">Upcoming</p>
+                  </div>
+                  <p className="text-3xl font-bold text-green-600">{upcomingShifts.length}</p>
+                </CardContent>
+              </Card>
+
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-purple-600" />
+                    <p className="text-sm text-gray-600">This Month</p>
+                  </div>
+                  <p className="text-3xl font-bold text-purple-600">
+                    {shifts.filter(s => s.status === 'completed').length}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2 space-y-6">
+                {activeShift && (
+                  <Card className="border-2 border-green-500 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-green-50 to-emerald-50">
+                      <CardTitle className="flex items-center gap-2">
+                        <div className="w-3 h-3 bg-green-500 rounded-full animate-pulse"></div>
+                        Active Shift
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ClockInOut 
+                        shift={activeShift} 
+                        carer={carer}
+                        client={clients.find(c => c.id === activeShift.client_id)}
+                        timeAttendance={timeAttendance.find(ta => ta.shift_id === activeShift.id)}
+                      />
+                    </CardContent>
+                  </Card>
                 )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+
+                {nextShift && !activeShift && (
+                  <Card className="border-2 border-blue-500 shadow-lg">
+                    <CardHeader className="bg-gradient-to-r from-blue-50 to-cyan-50">
+                      <CardTitle className="flex items-center gap-2">
+                        <Clock className="w-5 h-5 text-blue-600" />
+                        Next Shift
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-6">
+                      <ClockInOut 
+                        shift={nextShift} 
+                        carer={carer}
+                        client={clients.find(c => c.id === nextShift.client_id)}
+                        timeAttendance={timeAttendance.find(ta => ta.shift_id === nextShift.id)}
+                      />
+                    </CardContent>
+                  </Card>
+                )}
+
+                <MyShifts 
+                  shifts={shifts}
+                  clients={clients}
+                  timeAttendance={timeAttendance}
+                  isLoading={shiftsLoading}
+                />
+              </div>
+
+              <div className="space-y-6">
+                <SOSButton carer={carer} activeShift={activeShift} />
+
+                <Card>
+                  <CardHeader>
+                    <CardTitle className="text-lg">Quick Info</CardTitle>
+                  </CardHeader>
+                  <CardContent className="space-y-3">
+                    <div className="p-3 bg-blue-50 rounded-lg">
+                      <p className="text-sm text-blue-700 font-medium mb-1">Employment Type</p>
+                      <p className="text-blue-900">{carer.employment_type?.replace('_', ' ')}</p>
+                    </div>
+                    <div className="p-3 bg-green-50 rounded-lg">
+                      <p className="text-sm text-green-700 font-medium mb-1">Status</p>
+                      <Badge className="bg-green-100 text-green-800">
+                        {carer.status?.replace('_', ' ')}
+                      </Badge>
+                    </div>
+                    {carer.qualifications && carer.qualifications.length > 0 && (
+                      <div className="p-3 bg-purple-50 rounded-lg">
+                        <p className="text-sm text-purple-700 font-medium mb-2">Qualifications</p>
+                        <p className="text-purple-900 text-sm">
+                          {carer.qualifications.length} active qualification{carer.qualifications.length !== 1 ? 's' : ''}
+                        </p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          </>
+        )}
+
+        {activeTab === "messages" && (
+          <StaffMessaging carer={carer} />
+        )}
       </div>
     </div>
   );
