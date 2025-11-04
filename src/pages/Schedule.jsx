@@ -2,8 +2,8 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter } from "lucide-react";
-import { startOfWeek, addDays } from "date-fns";
+import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
+import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
 import ShiftCard from "../components/schedule/ShiftCard";
@@ -12,9 +12,10 @@ import ShiftFilters from "../components/schedule/ShiftFilters";
 import AIScheduleGenerator from "../components/schedule/AIScheduleGenerator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import SmartAssignButton from "../components/schedule/SmartAssignButton";
+import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
 
 export default function Schedule() {
-  const [view, setView] = useState("week");
+  const [view, setView] = useState("timeline");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDialog, setShowDialog] = useState(false);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
@@ -55,6 +56,13 @@ export default function Schedule() {
     },
   });
 
+  const updateShiftMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+  });
+
   const handleCreateShift = () => {
     setEditingShift(null);
     setShowDialog(true);
@@ -76,6 +84,10 @@ export default function Schedule() {
     setEditingShift(null);
   };
 
+  const handleShiftUpdate = (shiftId, updatedData) => {
+    updateShiftMutation.mutate({ id: shiftId, data: updatedData });
+  };
+
   const filteredShifts = shifts.filter(shift => {
     if (filters.status !== "all" && shift.status !== filters.status) return false;
     if (filters.carer !== "all" && shift.carer_id !== filters.carer) return false;
@@ -88,15 +100,25 @@ export default function Schedule() {
 
   const isLoading = shiftsLoading || carersLoading || clientsLoading;
 
-  const unfilledCount = shifts.filter(s => s.status === 'unfilled').length;
+  const goToPreviousWeek = () => {
+    setSelectedDate(subWeeks(selectedDate, 1));
+  };
+
+  const goToNextWeek = () => {
+    setSelectedDate(addWeeks(selectedDate, 1));
+  };
+
+  const goToToday = () => {
+    setSelectedDate(new Date());
+  };
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-[95%] mx-auto">
+      <div className="max-w-[98%] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule</h1>
-            <p className="text-gray-500">Manage shifts and assignments with AI assistance</p>
+            <p className="text-gray-500">Drag and drop shifts to manage your care schedule</p>
           </div>
           <div className="flex gap-3 w-full md:w-auto flex-wrap">
             <Button
@@ -137,26 +159,64 @@ export default function Schedule() {
           <ConflictDetector shifts={shifts} carers={carers} clients={clients} />
         </div>
 
-        <div className="mb-6 flex gap-2 bg-white p-2 rounded-lg border shadow-sm">
-          <Button
-            variant={view === "week" ? "default" : "ghost"}
-            onClick={() => setView("week")}
-            className="flex items-center gap-2"
-          >
-            <Calendar className="w-4 h-4" />
-            Week View
-          </Button>
-          <Button
-            variant={view === "list" ? "default" : "ghost"}
-            onClick={() => setView("list")}
-            className="flex items-center gap-2"
-          >
-            <List className="w-4 h-4" />
-            List View
-          </Button>
+        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
+          <div className="flex gap-2">
+            <Button
+              variant={view === "timeline" ? "default" : "ghost"}
+              onClick={() => setView("timeline")}
+              className="flex items-center gap-2"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Timeline
+            </Button>
+            <Button
+              variant={view === "week" ? "default" : "ghost"}
+              onClick={() => setView("week")}
+              className="flex items-center gap-2"
+            >
+              <Calendar className="w-4 h-4" />
+              Week View
+            </Button>
+            <Button
+              variant={view === "list" ? "default" : "ghost"}
+              onClick={() => setView("list")}
+              className="flex items-center gap-2"
+            >
+              <List className="w-4 h-4" />
+              List View
+            </Button>
+          </div>
+
+          {view !== "list" && (
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
+                <ChevronLeft className="w-4 h-4" />
+              </Button>
+              <div className="px-4 py-2 bg-gray-50 rounded-lg min-w-[200px] text-center">
+                <p className="font-semibold text-gray-900">
+                  {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
+                </p>
+              </div>
+              <Button variant="outline" size="sm" onClick={goToNextWeek}>
+                <ChevronRight className="w-4 h-4" />
+              </Button>
+              <Button variant="outline" size="sm" onClick={goToToday}>
+                Today
+              </Button>
+            </div>
+          )}
         </div>
 
-        {view === "week" ? (
+        {view === "timeline" ? (
+          <SplitScreenScheduler
+            shifts={filteredShifts}
+            carers={carers}
+            clients={clients}
+            weekStart={weekStart}
+            onShiftUpdate={handleShiftUpdate}
+            onShiftClick={handleEditShift}
+          />
+        ) : view === "week" ? (
           <WeekCalendar
             weekDays={weekDays}
             shifts={filteredShifts}
