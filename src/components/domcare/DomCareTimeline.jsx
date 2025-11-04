@@ -1,7 +1,8 @@
 import React, { useState } from "react";
-import { format, parseISO, addDays, isSameDay, differenceInMinutes } from "date-fns";
-import { ChevronRight, MapPin, Clock, User, AlertTriangle, Star, TrendingUp, Car, Navigation as NavigationIcon } from "lucide-react";
+import { format, parseISO, addDays, isSameDay, differenceInMinutes, setHours, setMinutes } from "date-fns";
+import { ChevronRight, MapPin, Clock, User, AlertTriangle, Star, TrendingUp, Car, Navigation as NavigationIcon, Bell } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
+import { base44 } from "@/api/base44Client";
 
 const HOURS = Array.from({ length: 18 }, (_, i) => `${(i + 6).toString().padStart(2, '0')}:00`);
 
@@ -45,6 +46,7 @@ export default function DomCareTimeline({
   const [draggedVisit, setDraggedVisit] = useState(null);
   const [hoveredSlot, setHoveredSlot] = useState(null);
   const [conflictWarning, setConflictWarning] = useState(null);
+  const [dragMode, setDragMode] = useState(null); // 'assign' or 'reschedule'
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -132,9 +134,9 @@ export default function DomCareTimeline({
   };
 
   // Check if visit can fit considering travel time
-  const checkVisitConflict = (staffId, date, newVisit) => {
+  const checkVisitConflict = (staffId, date, newVisit, excludeVisitId = null) => {
     const staffVisitsOnDay = visits
-      .filter(v => v.assigned_staff_id === staffId && isSameDay(parseISO(v.scheduled_start), date))
+      .filter(v => v.assigned_staff_id === staffId && isSameDay(parseISO(v.scheduled_start), date) && v.id !== excludeVisitId)
       .sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
 
     const staffMember = staff.find(s => s.id === staffId);
@@ -188,9 +190,45 @@ export default function DomCareTimeline({
     return { hasConflict: false };
   };
 
+  // Send notifications when visit is rescheduled
+  const sendRescheduleNotifications = async (visit, oldStart, newStart, staffMember, client) => {
+    try {
+      const oldTime = format(parseISO(oldStart), "MMM d 'at' HH:mm");
+      const newTime = format(parseISO(newStart), "MMM d 'at' HH:mm");
+      
+      // Notify staff member
+      if (staffMember?.email) {
+        await base44.entities.DomCareNotification.create({
+          recipient_id: staffMember.email,
+          title: "Visit Rescheduled",
+          message: `Your visit to ${client?.full_name || 'a client'} has been rescheduled from ${oldTime} to ${newTime}`,
+          type: "visit_changed",
+          priority: "high",
+          related_entity_id: visit.id,
+          related_entity_type: "visit"
+        });
+      }
+
+      // Notify client
+      if (client?.phone) {
+        await base44.entities.DomCareNotification.create({
+          recipient_id: client.id,
+          title: "Care Visit Rescheduled",
+          message: `Your care visit with ${staffMember?.full_name || 'a staff member'} has been rescheduled from ${oldTime} to ${newTime}`,
+          type: "visit_changed",
+          priority: "high",
+          related_entity_id: visit.id,
+          related_entity_type: "visit"
+        });
+      }
+    } catch (error) {
+      console.error("Error sending reschedule notifications:", error);
+    }
+  };
+
   // Sort staff by match score for dragged visit
   const getSortedStaff = () => {
-    if (!draggedVisit) {
+    if (!draggedVisit || dragMode === 'reschedule') {
       return staff.filter(s => s.is_active);
     }
 
@@ -225,49 +263,114 @@ export default function DomCareTimeline({
     }).sort((a, b) => new Date(a.scheduled_start) - new Date(b.scheduled_start));
   };
 
-  const handleDragStart = (e, visit) => {
+  const handleDragStart = (e, visit, mode = 'assign') => {
     setDraggedVisit(visit);
+    setDragMode(mode);
     e.dataTransfer.effectAllowed = 'move';
     setConflictWarning(null);
   };
 
   const handleDragEnd = () => {
     setDraggedVisit(null);
+    setDragMode(null);
     setHoveredSlot(null);
     setConflictWarning(null);
   };
 
-  const handleDragOver = (e, staffId, date) => {
+  const handleDragOver = (e, staffId, date, hour) => {
     e.preventDefault();
     e.dataTransfer.dropEffect = 'move';
     
     // Check for conflicts while hovering
-    if (draggedVisit) {
+    if (draggedVisit && dragMode === 'reschedule') {
+      // Calculate new visit time based on hover position
+      const [hourNum, minuteNum] = hour.split(':').map(Number);
+      const originalDuration = differenceInMinutes(
+        parseISO(draggedVisit.scheduled_end),
+        parseISO(draggedVisit.scheduled_start)
+      );
+      
+      let newStart = new Date(date);
+      newStart = setHours(newStart, hourNum);
+      newStart = setMinutes(newStart, minuteNum);
+      
+      const newEnd = new Date(newStart.getTime() + originalDuration * 60000);
+      
+      const testVisit = {
+        ...draggedVisit,
+        scheduled_start: newStart.toISOString(),
+        scheduled_end: newEnd.toISOString()
+      };
+      
+      const conflict = checkVisitConflict(staffId, date, testVisit, draggedVisit.id);
+      setConflictWarning(conflict.hasConflict ? conflict : null);
+    } else if (draggedVisit && dragMode === 'assign') {
       const conflict = checkVisitConflict(staffId, date, draggedVisit);
       setConflictWarning(conflict.hasConflict ? conflict : null);
     }
   };
 
-  const handleDrop = (e, staffId, date) => {
+  const handleDrop = async (e, staffId, date, hour) => {
     e.preventDefault();
-    if (draggedVisit) {
+    if (!draggedVisit) return;
+
+    if (dragMode === 'reschedule') {
+      // Reschedule existing visit to new time
+      const [hourNum, minuteNum] = hour.split(':').map(Number);
+      const originalDuration = differenceInMinutes(
+        parseISO(draggedVisit.scheduled_end),
+        parseISO(draggedVisit.scheduled_start)
+      );
+      
+      let newStart = new Date(date);
+      newStart = setHours(newStart, hourNum);
+      newStart = setMinutes(newStart, minuteNum);
+      
+      const newEnd = new Date(newStart.getTime() + originalDuration * 60000);
+      
+      const updatedVisit = {
+        ...draggedVisit,
+        scheduled_start: newStart.toISOString(),
+        scheduled_end: newEnd.toISOString(),
+        assigned_staff_id: staffId // Allow moving to different staff
+      };
+      
       // Final conflict check
-      const conflict = checkVisitConflict(staffId, date, draggedVisit);
+      const conflict = checkVisitConflict(staffId, date, updatedVisit, draggedVisit.id);
       
       if (conflict.hasConflict) {
-        alert(`Cannot assign visit: ${conflict.message}\n\nPlease adjust visit times to allow for travel.`);
+        alert(`Cannot reschedule visit: ${conflict.message}\n\nPlease choose a different time.`);
         setDraggedVisit(null);
+        setDragMode(null);
         setHoveredSlot(null);
         setConflictWarning(null);
         return;
       }
 
-      // Calculate travel time to next visit for updating the visit record
+      // Send notifications
+      const staffMember = staff.find(s => s.id === staffId);
+      const client = clients.find(c => c.id === draggedVisit.client_id);
+      await sendRescheduleNotifications(draggedVisit, draggedVisit.scheduled_start, newStart.toISOString(), staffMember, client);
+      
+      onVisitUpdate(draggedVisit.id, updatedVisit);
+    } else {
+      // Assign unallocated visit to staff
+      const conflict = checkVisitConflict(staffId, date, draggedVisit);
+      
+      if (conflict.hasConflict) {
+        alert(`Cannot assign visit: ${conflict.message}\n\nPlease adjust visit times to allow for travel.`);
+        setDraggedVisit(null);
+        setDragMode(null);
+        setHoveredSlot(null);
+        setConflictWarning(null);
+        return;
+      }
+
+      // Calculate travel time to next visit
       const staffMember = staff.find(s => s.id === staffId);
       const staffVisits = getVisitsForStaffAndDate(staffId, date);
       const draggedClient = clients.find(c => c.id === draggedVisit.client_id);
       
-      // Find next visit after this one
       const draggedStart = new Date(draggedVisit.scheduled_start);
       const nextVisit = staffVisits.find(v => new Date(v.scheduled_start) > draggedStart);
       
@@ -288,7 +391,9 @@ export default function DomCareTimeline({
         estimated_travel_to_next: travelToNext
       });
     }
+    
     setDraggedVisit(null);
+    setDragMode(null);
     setHoveredSlot(null);
     setConflictWarning(null);
   };
@@ -344,13 +449,15 @@ export default function DomCareTimeline({
       <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
         <div className="flex items-start gap-3">
           <NavigationIcon className="w-5 h-5 text-blue-600 mt-0.5" />
-          <div className="text-sm text-blue-900">
-            <p className="font-medium mb-1">Automatic Travel Time Calculation</p>
-            <p className="text-blue-700">
-              The system automatically calculates travel time between visits based on postcode distance and vehicle type. 
-              You cannot assign visits that don't allow enough travel time between locations.
-            </p>
+          <div className="text-sm text-blue-900 flex-1">
+            <p className="font-medium mb-1">Automatic Travel Time & Rescheduling</p>
+            <div className="text-blue-700 space-y-1">
+              <p>• The system automatically calculates travel time between visits based on postcode distance and vehicle type.</p>
+              <p>• Drag unallocated visits to assign them to staff members</p>
+              <p>• <strong>Drag already-assigned visits to reschedule them</strong> - notifications will be sent automatically</p>
+            </div>
           </div>
+          <Bell className="w-5 h-5 text-blue-600 mt-0.5" />
         </div>
       </div>
 
@@ -388,7 +495,7 @@ export default function DomCareTimeline({
                         <div
                           key={visit.id}
                           draggable
-                          onDragStart={(e) => handleDragStart(e, visit)}
+                          onDragStart={(e) => handleDragStart(e, visit, 'assign')}
                           onDragEnd={handleDragEnd}
                           onClick={() => onVisitClick(visit)}
                           className={`p-3 border-2 border-orange-300 rounded-lg cursor-move bg-white hover:shadow-md transition-all ${
@@ -426,13 +533,13 @@ export default function DomCareTimeline({
           <div className="sticky top-0 bg-gray-100 border-b p-4 z-10">
             <h3 className="font-semibold text-gray-900 text-sm">Care Staff</h3>
             <p className="text-xs text-gray-500 mt-1">
-              {activeStaff.length} active {draggedVisit ? "• Sorted by match" : ""}
+              {activeStaff.length} active {draggedVisit && dragMode === 'assign' ? "• Sorted by match" : ""}
             </p>
           </div>
           <div className="p-2">
             {activeStaff.map((member, index) => {
               const matchData = member.matchData;
-              const isTopMatch = draggedVisit && index === 0;
+              const isTopMatch = draggedVisit && dragMode === 'assign' && index === 0;
               
               return (
                 <div
@@ -450,7 +557,7 @@ export default function DomCareTimeline({
                         <p className="font-medium text-sm text-gray-900 truncate">
                           {member.full_name}
                         </p>
-                        {draggedVisit && matchData && (
+                        {draggedVisit && dragMode === 'assign' && matchData && (
                           <Badge className={`${getMatchBadgeColor(matchData.score)} text-xs font-bold`}>
                             {Math.round(matchData.score)}%
                           </Badge>
@@ -462,7 +569,7 @@ export default function DomCareTimeline({
                         <span className="capitalize">{member.vehicle_type || 'N/A'}</span>
                       </div>
 
-                      {draggedVisit && matchData && (
+                      {draggedVisit && dragMode === 'assign' && matchData && (
                         <div className="mt-2 pt-2 border-t">
                           <p className="text-xs font-medium text-gray-700 mb-1 flex items-center gap-1">
                             {isTopMatch && <Star className="w-3 h-3 text-green-600 fill-green-600" />}
@@ -518,7 +625,7 @@ export default function DomCareTimeline({
           {/* Staff Rows */}
           {activeStaff.map((member, index) => {
             const matchData = member.matchData;
-            const isTopMatch = draggedVisit && index === 0;
+            const isTopMatch = draggedVisit && dragMode === 'assign' && index === 0;
             
             return (
               <div 
@@ -536,12 +643,8 @@ export default function DomCareTimeline({
                       key={day.toString()} 
                       className={`flex-1 min-w-[600px] border-r relative ${
                         isHovered && draggedVisit ? (conflictWarning ? 'bg-red-50' : 'bg-blue-50') : ''
-                      } ${isTopMatch && draggedVisit ? 'ring-1 ring-green-300 ring-inset' : ''}`}
+                      } ${isTopMatch && draggedVisit && dragMode === 'assign' ? 'ring-1 ring-green-300 ring-inset' : ''}`}
                       style={{ minHeight: '80px' }}
-                      onDragOver={(e) => handleDragOver(e, member.id, day)}
-                      onDrop={(e) => handleDrop(e, member.id, day)}
-                      onDragEnter={() => setHoveredSlot(slotKey)}
-                      onDragLeave={() => setHoveredSlot(null)}
                     >
                       {/* Hour Grid */}
                       <div className="flex h-full">
@@ -549,6 +652,10 @@ export default function DomCareTimeline({
                           <div
                             key={hour}
                             className="w-[50px] flex-shrink-0 border-r border-gray-100 relative"
+                            onDragOver={(e) => handleDragOver(e, member.id, day, hour)}
+                            onDrop={(e) => handleDrop(e, member.id, day, hour)}
+                            onDragEnter={() => setHoveredSlot(slotKey)}
+                            onDragLeave={() => setHoveredSlot(null)}
                           />
                         ))}
                       </div>
@@ -556,19 +663,19 @@ export default function DomCareTimeline({
                       {/* Drop Zone Indicator */}
                       {isHovered && draggedVisit && (
                         <div className={`absolute inset-0 border-2 ${conflictWarning ? 'border-red-500 bg-red-100' : 'border-blue-500 bg-blue-100'} border-dashed rounded bg-opacity-30 pointer-events-none flex items-center justify-center`}>
-                          <div className={`${conflictWarning ? 'bg-red-500' : isTopMatch ? 'bg-green-500' : 'bg-blue-500'} text-white px-4 py-2 rounded-lg shadow-lg max-w-xs`}>
+                          <div className={`${conflictWarning ? 'bg-red-500' : isTopMatch && dragMode === 'assign' ? 'bg-green-500' : 'bg-blue-500'} text-white px-4 py-2 rounded-lg shadow-lg max-w-xs`}>
                             {conflictWarning ? (
                               <div className="text-center">
                                 <AlertTriangle className="w-5 h-5 mx-auto mb-1" />
-                                <p className="text-xs font-bold">Cannot Assign!</p>
+                                <p className="text-xs font-bold">Cannot {dragMode === 'reschedule' ? 'Reschedule' : 'Assign'}!</p>
                                 <p className="text-xs mt-1">{conflictWarning.message}</p>
                               </div>
                             ) : (
                               <div className="flex items-center gap-2">
-                                {isTopMatch && <Star className="w-4 h-4 fill-white" />}
+                                {isTopMatch && dragMode === 'assign' && <Star className="w-4 h-4 fill-white" />}
+                                {dragMode === 'reschedule' && <Bell className="w-4 h-4" />}
                                 <span className="text-sm font-bold">
-                                  {matchData ? `${Math.round(matchData.score)}% Match - ` : ''}
-                                  Drop at {format(parseISO(draggedVisit.scheduled_start), "HH:mm")}
+                                  {dragMode === 'reschedule' ? 'Drop to reschedule & notify' : matchData ? `${Math.round(matchData.score)}% Match - Drop to assign` : 'Drop to assign'}
                                 </span>
                               </div>
                             )}
@@ -587,17 +694,18 @@ export default function DomCareTimeline({
                             {/* Visit Block */}
                             <div
                               draggable
-                              onDragStart={(e) => handleDragStart(e, visit)}
+                              onDragStart={(e) => handleDragStart(e, visit, 'reschedule')}
                               onDragEnd={handleDragEnd}
                               onClick={() => onVisitClick(visit)}
                               className={`absolute top-1 h-[calc(50%-4px)] border-l-4 rounded cursor-move ${statusColor} ${
-                                draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md'
+                                draggedVisit?.id === visit.id ? 'opacity-50' : 'shadow-sm hover:shadow-md hover:ring-2 hover:ring-blue-400'
                               }`}
                               style={{
                                 left: `${left}px`,
                                 width: `${width}px`,
                                 zIndex: 5
                               }}
+                              title="Drag to reschedule this visit"
                             >
                               <div className="p-1 h-full overflow-hidden">
                                 <p className="text-[9px] font-semibold truncate flex items-center gap-1">
