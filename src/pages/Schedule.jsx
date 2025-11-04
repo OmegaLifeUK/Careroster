@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Calendar, List, Plus, Filter } from "lucide-react";
-import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
+import { startOfWeek, addDays } from "date-fns";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
 import ShiftCard from "../components/schedule/ShiftCard";
@@ -66,7 +66,7 @@ export default function Schedule() {
   };
 
   const handleDeleteShift = (shiftId) => {
-    if (confirm("Are you sure you want to delete this shift?")) {
+    if (window.confirm("Are you sure you want to delete this shift?")) {
       deleteShiftMutation.mutate(shiftId);
     }
   };
@@ -90,11 +90,6 @@ export default function Schedule() {
 
   const unfilledCount = shifts.filter(s => s.status === 'unfilled').length;
 
-  const viewOptions = [
-    { value: "week", label: "Week View", icon: Calendar },
-    { value: "list", label: "List View", icon: List },
-  ];
-
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-[95%] mx-auto">
@@ -117,14 +112,14 @@ export default function Schedule() {
               className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
             >
               <Calendar className="w-4 h-4 mr-2" />
-              AI Generate Schedule
+              AI Generate
             </Button>
             <Button
               onClick={handleCreateShift}
               className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              Create Shift
+              New Shift
             </Button>
           </div>
         </div>
@@ -142,18 +137,23 @@ export default function Schedule() {
           <ConflictDetector shifts={shifts} carers={carers} clients={clients} />
         </div>
 
-        <div className="mb-6 flex gap-2 bg-white p-2 rounded-lg border">
-          {viewOptions.map((option) => (
-            <Button
-              key={option.value}
-              variant={view === option.value ? "default" : "ghost"}
-              onClick={() => setView(option.value)}
-              className="flex items-center gap-2"
-            >
-              <option.icon className="w-4 h-4" />
-              {option.label}
-            </Button>
-          ))}
+        <div className="mb-6 flex gap-2 bg-white p-2 rounded-lg border shadow-sm">
+          <Button
+            variant={view === "week" ? "default" : "ghost"}
+            onClick={() => setView("week")}
+            className="flex items-center gap-2"
+          >
+            <Calendar className="w-4 h-4" />
+            Week View
+          </Button>
+          <Button
+            variant={view === "list" ? "default" : "ghost"}
+            onClick={() => setView("list")}
+            className="flex items-center gap-2"
+          >
+            <List className="w-4 h-4" />
+            List View
+          </Button>
         </div>
 
         {view === "week" ? (
@@ -191,7 +191,7 @@ export default function Schedule() {
               </div>
             ))}
             {filteredShifts.length === 0 && !isLoading && (
-              <div className="text-center py-12 text-gray-500">
+              <div className="text-center py-12 text-gray-500 bg-white rounded-lg border">
                 <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
                 <p className="text-lg font-medium mb-2">No shifts found</p>
                 <p className="text-sm">Create a new shift to get started</p>
