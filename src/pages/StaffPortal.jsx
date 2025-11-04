@@ -14,19 +14,21 @@ import {
   LogIn,
   LogOut,
   CheckCircle,
-  MessageSquare // Added MessageSquare icon
+  MessageSquare,
+  GraduationCap // Added GraduationCap icon
 } from "lucide-react";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 
 import MyShifts from "../components/staff/MyShifts";
 import ClockInOut from "../components/staff/ClockInOut";
 import SOSButton from "../components/staff/SOSButton";
-import StaffMessaging from "../components/staff/StaffMessaging"; // Added StaffMessaging import
+import StaffMessaging from "../components/staff/StaffMessaging";
+import MyTraining from "../components/training/MyTraining";
 
 export default function StaffPortal() {
   const [user, setUser] = useState(null);
   const [carer, setCarer] = useState(null);
-  const [activeTab, setActiveTab] = useState("overview"); // Added activeTab state
+  const [activeTab, setActiveTab] = useState("overview");
 
   useEffect(() => {
     const loadUser = async () => {
@@ -138,6 +140,14 @@ export default function StaffPortal() {
           >
             <MessageSquare className="w-4 h-4 mr-2" />
             Messages
+          </Button>
+          <Button
+            variant={activeTab === "training" ? "default" : "ghost"}
+            onClick={() => setActiveTab("training")}
+            className="flex-shrink-0"
+          >
+            <GraduationCap className="w-4 h-4 mr-2" />
+            Training
           </Button>
         </div>
 
@@ -260,6 +270,10 @@ export default function StaffPortal() {
 
         {activeTab === "messages" && (
           <StaffMessaging carer={carer} />
+        )}
+
+        {activeTab === "training" && (
+          <MyTraining staffMember={carer} />
         )}
       </div>
     </div>
