@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -11,7 +10,7 @@ import {
   ClipboardList,
   Smartphone,
   LogOut,
-  FileText // Added FileText import
+  FileText
 } from "lucide-react";
 import {
   Sidebar,
@@ -26,6 +25,7 @@ import {
   SidebarFooter,
   SidebarProvider,
   SidebarTrigger,
+  SidebarInset,
 } from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
 import { base44 } from "@/api/base44Client";
@@ -53,7 +53,7 @@ const navigationItems = [
     icon: UserCircle,
   },
   {
-    title: "Reports", // Added Reports item
+    title: "Reports",
     url: createPageUrl("Reports"),
     icon: FileText,
   },
@@ -214,7 +214,7 @@ export default function Layout({ children, currentPageName }) {
           </SidebarFooter>
         </Sidebar>
 
-        <main className="flex-1 flex flex-col">
+        <SidebarInset className="flex-1 flex flex-col">
           <header className="bg-white border-b border-gray-200 px-6 py-4 md:hidden sticky top-0 z-10 shadow-sm">
             <div className="flex items-center gap-4">
               <SidebarTrigger className="hover:bg-gray-100 p-2 rounded-lg transition-colors" />
@@ -225,7 +225,7 @@ export default function Layout({ children, currentPageName }) {
           <div className="flex-1 overflow-auto">
             {children}
           </div>
-        </main>
+        </SidebarInset>
       </div>
     </SidebarProvider>
   );
