@@ -11,6 +11,7 @@ import DomCareSchedule from './pages/DomCareSchedule';
 import DomCareStaff from './pages/DomCareStaff';
 import DomCareClients from './pages/DomCareClients';
 import DomCareRuns from './pages/DomCareRuns';
+import DomCareReports from './pages/DomCareReports';
 import Layout from './Layout.jsx';
 
 
@@ -28,6 +29,7 @@ export const PAGES = {
     "DomCareStaff": DomCareStaff,
     "DomCareClients": DomCareClients,
     "DomCareRuns": DomCareRuns,
+    "DomCareReports": DomCareReports,
 }
 
 export const pagesConfig = {
