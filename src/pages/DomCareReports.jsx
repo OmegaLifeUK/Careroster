@@ -8,11 +8,17 @@ import {
   UserCircle, 
   Calendar,
   TrendingUp,
-  Download
+  Download,
+  Smile,
+  CheckSquare,
+  Activity
 } from "lucide-react";
 
 import StaffPerformanceReport from "../components/domcare/reports/StaffPerformanceReport";
 import ClientVisitHistory from "../components/domcare/reports/ClientVisitHistory";
+import ClientSatisfactionReport from "../components/domcare/reports/ClientSatisfactionReport";
+import VisitComplianceReport from "../components/domcare/reports/VisitComplianceReport";
+import ResourceUtilizationReport from "../components/domcare/reports/ResourceUtilizationReport";
 
 export default function DomCareReports() {
   const [activeTab, setActiveTab] = useState("staff-performance");
@@ -49,6 +55,27 @@ export default function DomCareReports() {
       icon: UserCircle,
       color: "from-green-500 to-green-600",
     },
+    {
+      id: "client-satisfaction",
+      title: "Client Satisfaction",
+      description: "Feedback scores and trends",
+      icon: Smile,
+      color: "from-yellow-500 to-yellow-600",
+    },
+    {
+      id: "visit-compliance",
+      title: "Visit Compliance",
+      description: "Adherence to schedules and tasks",
+      icon: CheckSquare,
+      color: "from-purple-500 to-purple-600",
+    },
+    {
+      id: "resource-utilization",
+      title: "Resource Utilization",
+      description: "Staff and vehicle usage patterns",
+      icon: Activity,
+      color: "from-indigo-500 to-indigo-600",
+    },
   ];
 
   const renderReport = () => {
@@ -57,6 +84,12 @@ export default function DomCareReports() {
         return <StaffPerformanceReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
       case "client-history":
         return <ClientVisitHistory visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
+      case "client-satisfaction":
+        return <ClientSatisfactionReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
+      case "visit-compliance":
+        return <VisitComplianceReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
+      case "resource-utilization":
+        return <ResourceUtilizationReport visits={visits} staff={staff} clients={clients} isLoading={isLoading} />;
       default:
         return null;
     }
@@ -70,7 +103,7 @@ export default function DomCareReports() {
           <p className="text-gray-500">Comprehensive analytics and reporting for domiciliary care operations</p>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mb-8">
           {reportTypes.map((report) => (
             <Card
               key={report.id}
