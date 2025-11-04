@@ -10,24 +10,11 @@ import {
   ClipboardList,
   Smartphone,
   LogOut,
-  FileText
+  FileText,
+  Menu
 } from "lucide-react";
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarGroup,
-  SidebarGroupContent,
-  SidebarGroupLabel,
-  SidebarMenu,
-  SidebarMenuButton,
-  SidebarMenuItem,
-  SidebarHeader,
-  SidebarFooter,
-  SidebarProvider,
-  SidebarTrigger,
-  SidebarInset,
-} from "@/components/ui/sidebar";
 import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 
@@ -80,6 +67,7 @@ const staffNavigation = [
 export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [user, setUser] = React.useState(null);
+  const [sidebarOpen, setSidebarOpen] = React.useState(false);
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -122,110 +110,134 @@ export default function Layout({ children, currentPageName }) {
         }
       `}</style>
       
-      <SidebarProvider>
-        <Sidebar className="border-r border-gray-200 bg-white">
-          <SidebarHeader className="border-b border-gray-200 p-6">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                <Calendar className="w-6 h-6 text-white" />
-              </div>
-              <div>
-                <h2 className="font-bold text-lg text-gray-900">CareRoster</h2>
-                <p className="text-xs text-gray-500">Care Management System</p>
+      <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-blue-50">
+        {/* Mobile Sidebar Overlay */}
+        {sidebarOpen && (
+          <div 
+            className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+            onClick={() => setSidebarOpen(false)}
+          />
+        )}
+
+        {/* Sidebar */}
+        <aside 
+          className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
+            sidebarOpen ? 'translate-x-0' : '-translate-x-full'
+          }`}
+        >
+          <div className="flex flex-col h-full">
+            {/* Header */}
+            <div className="border-b border-gray-200 p-6">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                  <Calendar className="w-6 h-6 text-white" />
+                </div>
+                <div>
+                  <h2 className="font-bold text-lg text-gray-900">CareRoster</h2>
+                  <p className="text-xs text-gray-500">Care Management System</p>
+                </div>
               </div>
             </div>
-          </SidebarHeader>
-          
-          <SidebarContent className="p-3">
-            <SidebarGroup>
-              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
-                Management
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {navigationItems.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        className={`hover:bg-blue-50 hover:text-blue-700 transition-all duration-200 rounded-lg mb-1 ${
-                          location.pathname === item.url ? 'bg-blue-50 text-blue-700 font-medium shadow-sm' : ''
-                        }`}
-                      >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-2.5">
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.title}</span>
-                          {item.title === "Notifications" && unreadCount > 0 && (
-                            <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
-                          )}
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
 
-            <SidebarGroup className="mt-4">
-              <SidebarGroupLabel className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
-                Staff Access
-              </SidebarGroupLabel>
-              <SidebarGroupContent>
-                <SidebarMenu>
-                  {staffNavigation.map((item) => (
-                    <SidebarMenuItem key={item.title}>
-                      <SidebarMenuButton 
-                        asChild 
-                        className={`hover:bg-green-50 hover:text-green-700 transition-all duration-200 rounded-lg ${
-                          location.pathname === item.url ? 'bg-green-50 text-green-700 font-medium shadow-sm' : ''
-                        }`}
-                      >
-                        <Link to={item.url} className="flex items-center gap-3 px-3 py-2.5">
-                          <item.icon className="w-5 h-5" />
-                          <span>{item.title}</span>
-                        </Link>
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  ))}
-                </SidebarMenu>
-              </SidebarGroupContent>
-            </SidebarGroup>
-          </SidebarContent>
-
-          <SidebarFooter className="border-t border-gray-200 p-4">
-            <div className="flex items-center gap-3 mb-3">
-              <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
-                <span className="text-white font-semibold text-sm">
-                  {user?.full_name?.charAt(0) || 'U'}
-                </span>
-              </div>
-              <div className="flex-1 min-w-0">
-                <p className="font-medium text-gray-900 text-sm truncate">
-                  {user?.full_name || 'User'}
+            {/* Navigation */}
+            <div className="flex-1 overflow-y-auto p-3">
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                  Management
                 </p>
-                <p className="text-xs text-gray-500 truncate">{user?.role || 'Staff'}</p>
+                <nav className="space-y-1">
+                  {navigationItems.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                        location.pathname === item.url 
+                          ? 'bg-blue-50 text-blue-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.title}</span>
+                      {item.title === "Notifications" && unreadCount > 0 && (
+                        <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
+                      )}
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <div>
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                  Staff Access
+                </p>
+                <nav className="space-y-1">
+                  {staffNavigation.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                        location.pathname === item.url 
+                          ? 'bg-green-50 text-green-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span>{item.title}</span>
+                    </Link>
+                  ))}
+                </nav>
               </div>
             </div>
-            <button
-              onClick={handleLogout}
-              className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
-            >
-              <LogOut className="w-4 h-4" />
-              <span>Logout</span>
-            </button>
-          </SidebarFooter>
-        </Sidebar>
 
-        <SidebarInset>
-          <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 lg:hidden sticky top-0 z-10 shadow-sm">
-            <SidebarTrigger className="hover:bg-gray-100 p-2 rounded-lg transition-colors" />
+            {/* Footer */}
+            <div className="border-t border-gray-200 p-4">
+              <div className="flex items-center gap-3 mb-3">
+                <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
+                  <span className="text-white font-semibold text-sm">
+                    {user?.full_name?.charAt(0) || 'U'}
+                  </span>
+                </div>
+                <div className="flex-1 min-w-0">
+                  <p className="font-medium text-gray-900 text-sm truncate">
+                    {user?.full_name || 'User'}
+                  </p>
+                  <p className="text-xs text-gray-500 truncate">{user?.role || 'Staff'}</p>
+                </div>
+              </div>
+              <button
+                onClick={handleLogout}
+                className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <LogOut className="w-4 h-4" />
+                <span>Logout</span>
+              </button>
+            </div>
+          </div>
+        </aside>
+
+        {/* Main Content */}
+        <div className="flex-1 flex flex-col min-w-0">
+          {/* Mobile Header */}
+          <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 lg:hidden sticky top-0 z-30 shadow-sm">
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSidebarOpen(true)}
+              className="hover:bg-gray-100"
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
             <h1 className="text-xl font-bold text-gray-900">CareRoster</h1>
           </header>
 
-          <main className="flex-1 overflow-auto bg-gradient-to-br from-gray-50 to-blue-50">
+          {/* Page Content */}
+          <main className="flex-1 overflow-auto">
             {children}
           </main>
-        </SidebarInset>
-      </SidebarProvider>
+        </div>
+      </div>
     </>
   );
 }
