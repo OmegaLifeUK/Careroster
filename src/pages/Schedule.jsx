@@ -1,9 +1,7 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Calendar, List, Plus, Filter, Grip } from "lucide-react";
 import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
 
@@ -93,6 +91,12 @@ export default function Schedule() {
 
   const unfilledCount = shifts.filter(s => s.status === 'unfilled').length;
 
+  const viewOptions = [
+    { value: "dragdrop", label: "Drag & Drop", icon: Grip },
+    { value: "week", label: "Week View", icon: Calendar },
+    { value: "list", label: "List View", icon: List },
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-[95%] mx-auto">
@@ -140,23 +144,18 @@ export default function Schedule() {
           <ConflictDetector shifts={shifts} carers={carers} clients={clients} />
         </div>
 
-        <div className="mb-6">
-          <Tabs value={view} onValueChange={setView}>
-            <TabsList>
-              <TabsTrigger value="dragdrop" className="flex items-center gap-2">
-                <Grip className="w-4 h-4" />
-                Drag & Drop
-              </TabsTrigger>
-              <TabsTrigger value="week" className="flex items-center gap-2">
-                <Calendar className="w-4 h-4" />
-                Week View
-              </TabsTrigger>
-              <TabsTrigger value="list" className="flex items-center gap-2">
-                <List className="w-4 h-4" />
-                List View
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+        <div className="mb-6 flex gap-2 bg-white p-2 rounded-lg border">
+          {viewOptions.map((option) => (
+            <Button
+              key={option.value}
+              variant={view === option.value ? "default" : "ghost"}
+              onClick={() => setView(option.value)}
+              className="flex items-center gap-2"
+            >
+              <option.icon className="w-4 h-4" />
+              {option.label}
+            </Button>
+          ))}
         </div>
 
         {view === "dragdrop" ? (

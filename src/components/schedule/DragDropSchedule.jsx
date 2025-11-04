@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Users, UserCircle } from "lucide-react";
 import { format, addDays, parseISO, startOfWeek } from "date-fns";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 import TimeGrid from "./TimeGrid";
 import CarerList from "./CarerList";
@@ -128,18 +127,24 @@ export default function DragDropSchedule({
     <div className="space-y-4">
       <Card className="p-4">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-4">
-          <Tabs value={viewMode} onValueChange={setViewMode}>
-            <TabsList>
-              <TabsTrigger value="carers" className="flex items-center gap-2">
-                <Users className="w-4 h-4" />
-                View by Carers
-              </TabsTrigger>
-              <TabsTrigger value="clients" className="flex items-center gap-2">
-                <UserCircle className="w-4 h-4" />
-                View by Clients
-              </TabsTrigger>
-            </TabsList>
-          </Tabs>
+          <div className="flex gap-2">
+            <Button
+              variant={viewMode === "carers" ? "default" : "outline"}
+              onClick={() => setViewMode("carers")}
+              className="flex items-center gap-2"
+            >
+              <Users className="w-4 h-4" />
+              View by Carers
+            </Button>
+            <Button
+              variant={viewMode === "clients" ? "default" : "outline"}
+              onClick={() => setViewMode("clients")}
+              className="flex items-center gap-2"
+            >
+              <UserCircle className="w-4 h-4" />
+              View by Clients
+            </Button>
+          </div>
 
           <div className="flex items-center gap-3">
             <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
