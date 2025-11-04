@@ -3,16 +3,17 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Calendar, List, Plus, Filter } from "lucide-react";
+import { Calendar, List, Plus, Filter, Grip } from "lucide-react";
 import { format, parseISO, startOfWeek, addDays, isToday } from "date-fns";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
 import ShiftCard from "../components/schedule/ShiftCard";
 import WeekCalendar from "../components/schedule/WeekCalendar";
 import ShiftFilters from "../components/schedule/ShiftFilters";
+import DragDropSchedule from "../components/schedule/DragDropSchedule";
 
 export default function Schedule() {
-  const [view, setView] = useState("week");
+  const [view, setView] = useState("dragdrop");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showDialog, setShowDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
@@ -87,7 +88,7 @@ export default function Schedule() {
 
   return (
     <div className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+      <div className="max-w-[95%] mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule</h1>
@@ -124,6 +125,10 @@ export default function Schedule() {
         <div className="mb-6">
           <Tabs value={view} onValueChange={setView}>
             <TabsList>
+              <TabsTrigger value="dragdrop" className="flex items-center gap-2">
+                <Grip className="w-4 h-4" />
+                Drag & Drop
+              </TabsTrigger>
               <TabsTrigger value="week" className="flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
                 Week View
@@ -136,7 +141,18 @@ export default function Schedule() {
           </Tabs>
         </div>
 
-        {view === "week" ? (
+        {view === "dragdrop" ? (
+          <DragDropSchedule
+            shifts={filteredShifts}
+            carers={carers}
+            clients={clients}
+            leaveRequests={leaveRequests}
+            selectedDate={selectedDate}
+            setSelectedDate={setSelectedDate}
+            onEditShift={handleEditShift}
+            isLoading={isLoading}
+          />
+        ) : view === "week" ? (
           <WeekCalendar
             weekDays={weekDays}
             shifts={filteredShifts}
