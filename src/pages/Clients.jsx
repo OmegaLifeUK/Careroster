@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,12 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2 } from "lucide-react";
 
 import ClientDialog from "../components/clients/ClientDialog";
+import MedicationManagement from "../components/clients/MedicationManagement";
+import ConsentManagement from "../components/clients/ConsentManagement";
+import EmergencyContactsManager from "../components/clients/EmergencyContactsManager";
+import DocumentManager from "../components/clients/DocumentManager";
+import ClientAlertManager from "../components/clients/ClientAlertManager";
+import AlertBanner from "../components/clients/AlertBanner";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDialog, setShowDialog] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
+  const [selectedClient, setSelectedClient] = useState(null);
+  const [activeTab, setActiveTab] = useState("details");
 
   const queryClient = useQueryClient();
 
@@ -56,6 +65,11 @@ export default function Clients() {
     setEditingClient(null);
   };
 
+  const handleViewDetails = (client) => {
+    setSelectedClient(client);
+    setActiveTab("details");
+  };
+
   const stats = {
     total: clients.length,
     active: clients.filter(c => c.status === 'active').length,
@@ -67,6 +81,181 @@ export default function Clients() {
     inactive: "bg-gray-100 text-gray-800",
     archived: "bg-red-100 text-red-800",
   };
+
+  if (selectedClient) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedClient(null)}
+            className="mb-6"
+          >
+            ← Back to Clients List
+          </Button>
+
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
+            <div className="flex items-center gap-2">
+              <Badge className={statusColors[selectedClient.status]}>
+                {selectedClient.status}
+              </Badge>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-500 capitalize">{selectedClient.funding_type?.replace('_', ' ')}</span>
+            </div>
+          </div>
+
+          {/* Alert Banner */}
+          <AlertBanner clientId={selectedClient.id} section={activeTab} compact={true} />
+
+          {/* Tabs */}
+          <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
+            <Button
+              variant={activeTab === "details" ? "default" : "ghost"}
+              onClick={() => setActiveTab("details")}
+              className="flex-shrink-0"
+            >
+              Details
+            </Button>
+            <Button
+              variant={activeTab === "alerts" ? "default" : "ghost"}
+              onClick={() => setActiveTab("alerts")}
+              className="flex-shrink-0"
+            >
+              Alerts
+            </Button>
+            <Button
+              variant={activeTab === "medication" ? "default" : "ghost"}
+              onClick={() => setActiveTab("medication")}
+              className="flex-shrink-0"
+            >
+              Medication
+            </Button>
+            <Button
+              variant={activeTab === "consent" ? "default" : "ghost"}
+              onClick={() => setActiveTab("consent")}
+              className="flex-shrink-0"
+            >
+              Consent
+            </Button>
+            <Button
+              variant={activeTab === "emergency" ? "default" : "ghost"}
+              onClick={() => setActiveTab("emergency")}
+              className="flex-shrink-0"
+            >
+              Emergency
+            </Button>
+            <Button
+              variant={activeTab === "documents" ? "default" : "ghost"}
+              onClick={() => setActiveTab("documents")}
+              className="flex-shrink-0"
+            >
+              Documents
+            </Button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === "details" && (
+            <Card>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <div>
+                    <h3 className="font-semibold mb-4">Client Information</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-600">Full Name</p>
+                        <p className="font-medium">{selectedClient.full_name}</p>
+                      </div>
+                      {selectedClient.date_of_birth && (
+                        <div>
+                          <p className="text-sm text-gray-600">Date of Birth</p>
+                          <p className="font-medium">{selectedClient.date_of_birth}</p>
+                        </div>
+                      )}
+                      {selectedClient.phone && (
+                        <div>
+                          <p className="text-sm text-gray-600">Phone</p>
+                          <p className="font-medium">{selectedClient.phone}</p>
+                        </div>
+                      )}
+                      {selectedClient.address && (
+                        <div>
+                          <p className="text-sm text-gray-600">Address</p>
+                          <p className="font-medium">
+                            {selectedClient.address.street && `${selectedClient.address.street}, `}
+                            {selectedClient.address.city} {selectedClient.address.postcode}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+
+                  <div>
+                    <h3 className="font-semibold mb-4">Care Details</h3>
+                    <div className="space-y-3">
+                      <div>
+                        <p className="text-sm text-gray-600">Funding Type</p>
+                        <p className="font-medium capitalize">{selectedClient.funding_type?.replace('_', ' ')}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-gray-600">Mobility</p>
+                        <p className="font-medium capitalize">{selectedClient.mobility?.replace('_', ' ')}</p>
+                      </div>
+                      {selectedClient.care_needs && selectedClient.care_needs.length > 0 && (
+                        <div>
+                          <p className="text-sm text-gray-600 mb-2">Care Needs</p>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedClient.care_needs.map((need, idx) => (
+                              <Badge key={idx} variant="outline">{need}</Badge>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+                      {selectedClient.medical_notes && (
+                        <div>
+                          <p className="text-sm text-gray-600">Medical Notes</p>
+                          <p className="font-medium">{selectedClient.medical_notes}</p>
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {activeTab === "alerts" && (
+            <ClientAlertManager client={selectedClient} />
+          )}
+
+          {activeTab === "medication" && (
+            <MedicationManagement client={selectedClient} />
+          )}
+
+          {activeTab === "consent" && (
+            <ConsentManagement client={selectedClient} />
+          )}
+
+          {activeTab === "emergency" && (
+            <EmergencyContactsManager 
+              client={selectedClient}
+              onUpdate={(data) => {
+                // Placeholder for handling emergency contact update,
+                // you might want to call a mutation here or update client data in some other way.
+                console.log("Updating client emergency contacts:", selectedClient.id, data);
+                // Example: base44.entities.Client.update(selectedClient.id, { emergency_contacts: data });
+                // Make sure to invalidate queries or refetch to update UI if needed
+              }}
+            />
+          )}
+
+          {activeTab === "documents" && (
+            <DocumentManager client={selectedClient} />
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8">
@@ -215,9 +404,16 @@ export default function Clients() {
                   )}
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(client)} className="flex-1">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={() => handleViewDetails(client)} 
+                      className="flex-1"
+                    >
+                      View Details
+                    </Button>
+                    <Button variant="outline" size="sm" onClick={() => handleEdit(client)}>
+                      <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 

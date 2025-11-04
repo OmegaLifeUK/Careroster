@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -7,9 +8,12 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, MapPin, Heart, Key, Trash2 } from "lucide-react";
 
+import AlertBanner from "../components/clients/AlertBanner";
+
 export default function DomCareClients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [selectedClient, setSelectedClient] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['domcare-clients'],
@@ -20,6 +24,10 @@ export default function DomCareClients() {
     queryKey: ['staff'],
     queryFn: () => base44.entities.Staff.list(),
   });
+
+  const handleViewDetails = (client) => {
+    setSelectedClient(client);
+  };
 
   const filteredClients = clients.filter(client => {
     const matchesSearch = client.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -38,6 +46,103 @@ export default function DomCareClients() {
     inactive: "bg-gray-100 text-gray-800",
     archived: "bg-red-100 text-red-800",
   };
+
+  if (selectedClient) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <Button
+            variant="outline"
+            onClick={() => setSelectedClient(null)}
+            className="mb-6"
+          >
+            ← Back to Clients List
+          </Button>
+
+          <div className="mb-6">
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
+            <div className="flex items-center gap-2">
+              <Badge className={statusColors[selectedClient.status]}>
+                {selectedClient.status}
+              </Badge>
+              <span className="text-gray-500">•</span>
+              <span className="text-gray-500 capitalize">{selectedClient.funding_type?.replace('_', ' ')}</span>
+            </div>
+          </div>
+
+          {/* Alert Banner for Dom Care Clients */}
+          <AlertBanner clientId={selectedClient.id} section="dashboard" compact={true} />
+
+          <Card>
+            <CardContent className="p-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                  <h3 className="font-semibold mb-4">Client Information</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600">Full Name</p>
+                      <p className="font-medium">{selectedClient.full_name}</p>
+                    </div>
+                    {selectedClient.phone && (
+                      <div>
+                        <p className="text-sm text-gray-600">Phone</p>
+                        <p className="font-medium">{selectedClient.phone}</p>
+                      </div>
+                    )}
+                    {selectedClient.address && (
+                      <div>
+                        <p className="text-sm text-gray-600">Address</p>
+                        <p className="font-medium">
+                          {selectedClient.address.street && `${selectedClient.address.street}, `}
+                          {selectedClient.address.city} {selectedClient.address.postcode}
+                        </p>
+                      </div>
+                    )}
+                    {selectedClient.access_instructions && (
+                      <div>
+                        <p className="text-sm text-gray-600">Access Instructions</p>
+                        <p className="font-medium">{selectedClient.access_instructions}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div>
+                  <h3 className="font-semibold mb-4">Care Details</h3>
+                  <div className="space-y-3">
+                    <div>
+                      <p className="text-sm text-gray-600">Funding Type</p>
+                      <p className="font-medium capitalize">{selectedClient.funding_type?.replace('_', ' ')}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Standard Visit Duration</p>
+                      <p className="font-medium">{selectedClient.standard_visit_duration} minutes</p>
+                    </div>
+                    {selectedClient.care_needs && selectedClient.care_needs.length > 0 && (
+                      <div>
+                        <p className="text-sm text-gray-600 mb-2">Care Needs</p>
+                        <div className="flex flex-wrap gap-1">
+                          {selectedClient.care_needs.map((need, idx) => (
+                            <Badge key={idx} variant="outline">{need}</Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {selectedClient.medical_notes && (
+                      <div>
+                        <p className="text-sm text-gray-600">Medical Notes</p>
+                        <p className="font-medium">{selectedClient.medical_notes}</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="p-4 md:p-8">
@@ -115,7 +220,7 @@ export default function DomCareClients() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map((client) => {
-            const preferredStaff = staff.filter(s => 
+            const preferredStaff = staff.filter(s =>
               client.preferred_staff?.includes(s.id)
             );
 
@@ -187,7 +292,15 @@ export default function DomCareClients() {
                   )}
 
                   <div className="flex gap-2">
-                    <Button variant="outline" size="sm" className="flex-1">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      className="flex-1"
+                      onClick={() => handleViewDetails(client)}
+                    >
+                      View Details
+                    </Button>
+                    <Button variant="outline" size="sm">
                       <Edit className="w-4 h-4 mr-2" />
                       Edit
                     </Button>
