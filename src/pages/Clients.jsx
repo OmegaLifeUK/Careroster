@@ -6,7 +6,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles } from "lucide-react";
 
 import ClientDialog from "../components/clients/ClientDialog";
 import MedicationManagement from "../components/clients/MedicationManagement";
@@ -15,6 +15,7 @@ import EmergencyContactsManager from "../components/clients/EmergencyContactsMan
 import DocumentManager from "../components/clients/DocumentManager";
 import ClientAlertManager from "../components/clients/ClientAlertManager";
 import AlertBanner from "../components/clients/AlertBanner";
+import AICareplanGenerator from "../components/clients/AICareplanGenerator";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -23,6 +24,7 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
+  const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -94,15 +96,24 @@ export default function Clients() {
             ← Back to Clients List
           </Button>
 
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
-            <div className="flex items-center gap-2">
-              <Badge className={statusColors[selectedClient.status]}>
-                {selectedClient.status}
-              </Badge>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-500 capitalize">{selectedClient.funding_type?.replace('_', ' ')}</span>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
+              <div className="flex items-center gap-2">
+                <Badge className={statusColors[selectedClient.status]}>
+                  {selectedClient.status}
+                </Badge>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-500 capitalize">{selectedClient.funding_type?.replace('_', ' ')}</span>
+              </div>
             </div>
+            <Button
+              onClick={() => setShowCarePlanGenerator(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Generate Care Plan
+            </Button>
           </div>
 
           {/* Alert Banner */}
@@ -251,6 +262,13 @@ export default function Clients() {
 
           {activeTab === "documents" && (
             <DocumentManager client={selectedClient} />
+          )}
+
+          {showCarePlanGenerator && (
+            <AICareplanGenerator
+              client={selectedClient}
+              onClose={() => setShowCarePlanGenerator(false)}
+            />
           )}
         </div>
       </div>
