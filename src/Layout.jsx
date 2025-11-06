@@ -15,8 +15,8 @@ import {
   Menu,
   MapPin,
   Navigation,
-  MessageSquare, // Added MessageSquare import
-  GraduationCap // Added GraduationCap import
+  MessageSquare,
+  GraduationCap
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -93,7 +93,12 @@ const domCareNav = [
     icon: MessageSquare,
   },
   {
-    title: "Training", // New menu item
+    title: "Client Feedback",
+    url: createPageUrl("ClientFeedback"),
+    icon: MessageSquare,
+  },
+  {
+    title: "Training",
     url: createPageUrl("StaffTraining"),
     icon: GraduationCap,
   },

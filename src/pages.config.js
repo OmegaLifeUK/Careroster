@@ -14,6 +14,7 @@ import DomCareRuns from './pages/DomCareRuns';
 import DomCareReports from './pages/DomCareReports';
 import CommunicationHub from './pages/CommunicationHub';
 import StaffTraining from './pages/StaffTraining';
+import ClientFeedback from './pages/ClientFeedback';
 import Layout from './Layout.jsx';
 
 
@@ -34,6 +35,7 @@ export const PAGES = {
     "DomCareReports": DomCareReports,
     "CommunicationHub": CommunicationHub,
     "StaffTraining": StaffTraining,
+    "ClientFeedback": ClientFeedback,
 }
 
 export const pagesConfig = {
