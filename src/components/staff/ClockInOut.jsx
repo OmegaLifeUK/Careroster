@@ -1,20 +1,27 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
-import { 
-  LogIn, 
-  LogOut, 
-  MapPin, 
-  Clock, 
+import { Textarea } from "@/components/ui/textarea"; // Added Textarea import
+import {
+  LogIn,
+  LogOut,
+  MapPin,
+  Clock,
   User,
   CheckCircle,
   AlertTriangle,
-  Loader2
+  Loader2,
+  CheckSquare, // New import
+  FileText,     // New import
+  Sparkles,     // New import
+  RefreshCw     // New import
 } from "lucide-react";
 import { format } from "date-fns";
+import AINotesAssistant from "./AINotesAssistant"; // New import
 
 // Geo-fencing distance threshold in meters
 const GEO_FENCE_RADIUS = 100; // 100 meters
@@ -22,7 +29,12 @@ const GEO_FENCE_RADIUS = 100; // 100 meters
 export default function ClockInOut({ shift, carer, client, timeAttendance }) {
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
-  
+  const [location, setLocation] = useState(null); // New state
+  const [loadingLocation, setLoadingLocation] = useState(false); // New state
+  const [completionNotes, setCompletionNotes] = useState(""); // New state
+  const [completedTasks, setCompletedTasks] = useState([]); // New state
+  const [showAIAssistant, setShowAIAssistant] = useState(false); // New state
+
   const queryClient = useQueryClient();
 
   // Calculate distance between two coordinates using Haversine formula
@@ -57,8 +69,8 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
     return distance <= GEO_FENCE_RADIUS ? "match" : "mismatch";
   };
 
-  // Get current position
-  const getCurrentPosition = () => {
+  // Get current position (renamed from getCurrentPosition for consistency with outline)
+  const getCurrentLocation = () => {
     return new Promise((resolve, reject) => {
       if (!navigator.geolocation) {
         reject(new Error("Geolocation is not supported by your browser"));
@@ -107,7 +119,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
       setLocationError(null);
 
       try {
-        const position = await getCurrentPosition();
+        const position = await getCurrentLocation(); // Used getCurrentLocation
         const { latitude, longitude } = position.coords;
 
         const locationMatch = checkLocationMatch(latitude, longitude);
@@ -126,7 +138,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
         };
 
         const attendance = await base44.entities.TimeAttendance.create(attendanceData);
-        
+
         // Update shift status
         await base44.entities.Shift.update(shift.id, { status: "in_progress" });
 
@@ -149,13 +161,12 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
   });
 
   const clockOutMutation = useMutation({
-    mutationFn: async () => {
-      setLoading(true);
+    mutationFn: async ({ location, notes, completedTasks }) => { // Modified to accept args
+      setLoading(true); // Retained loading state
       setLocationError(null);
 
       try {
-        const position = await getCurrentPosition();
-        const { latitude, longitude } = position.coords;
+        const { latitude, longitude } = location.coords; // Use passed location
 
         const locationMatch = checkLocationMatch(latitude, longitude);
 
@@ -173,12 +184,14 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
           },
           clock_out_location_match: locationMatch,
           total_hours: totalHours,
+          completion_notes: notes, // Added from outline
+          completed_tasks: completedTasks, // Added from outline
         };
 
         await base44.entities.TimeAttendance.update(timeAttendance.id, updatedAttendance);
-        
+
         // Update shift status
-        await base44.entities.Shift.update(shift.id, { 
+        await base44.entities.Shift.update(shift.id, {
           status: "completed",
           actual_start_time: timeAttendance.clock_in_time,
           actual_end_time: clockOutTime.toISOString(),
@@ -192,7 +205,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
         setLocationError(error.message);
         throw error;
       } finally {
-        setLoading(false);
+        setLoading(false); // Retained loading state
       }
     },
     onSuccess: () => {
@@ -208,10 +221,35 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
     }
   };
 
-  const handleClockOut = () => {
-    if (confirm("Are you sure you want to end your shift?")) {
-      clockOutMutation.mutate();
+  const handleClockOut = async () => { // Modified as per outline
+    setLoadingLocation(true);
+    let currentLocation;
+    try {
+      currentLocation = await getCurrentLocation(); // Used getCurrentLocation
+      setLocation(currentLocation);
+    } catch (error) {
+      setLocationError(error.message);
+      alert("Unable to get your location. Please enable location services. Error: " + error.message);
+      setLoadingLocation(false);
+      return;
+    } finally {
+      setLoadingLocation(false);
     }
+
+    clockOutMutation.mutate({
+      location: currentLocation,
+      notes: completionNotes,
+      completedTasks: completedTasks
+    });
+  };
+
+  // New function from outline
+  const toggleTask = (task) => {
+    setCompletedTasks(prev =>
+      prev.includes(task)
+        ? prev.filter(t => t !== task)
+        : [...prev, task]
+    );
   };
 
   const getLocationMatchBadge = (locationMatch) => {
@@ -235,7 +273,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
   };
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-6"> {/* Changed from space-y-4 to space-y-6 as per outline's top div */}
       <div className="flex items-center gap-4 mb-4">
         <div className="flex-1">
           <div className="flex items-center gap-2 mb-2">
@@ -276,6 +314,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
         </Card>
       )}
 
+      {/* This card is shown when clocked in and not clocked out yet */}
       {timeAttendance?.clock_in_time && !timeAttendance?.clock_out_time && (
         <Card className="p-3 bg-green-50 border-green-200">
           <div className="flex items-center justify-between mb-2">
@@ -291,6 +330,7 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
         </Card>
       )}
 
+      {/* This card is shown after clock out */}
       {timeAttendance?.clock_out_time && (
         <Card className="p-3 bg-blue-50 border-blue-200">
           <div className="flex items-center justify-between mb-2">
@@ -304,72 +344,136 @@ export default function ClockInOut({ shift, carer, client, timeAttendance }) {
             <p>Clocked in: {format(new Date(timeAttendance.clock_in_time), "h:mm a")}</p>
             <p>Clocked out: {format(new Date(timeAttendance.clock_out_time), "h:mm a")}</p>
             <p className="font-medium">Total: {timeAttendance.total_hours?.toFixed(2)}h</p>
+            {timeAttendance.completion_notes && (
+              <div className="mt-2 pt-2 border-t border-blue-100">
+                <p className="font-medium">Notes:</p>
+                <p>{timeAttendance.completion_notes}</p>
+              </div>
+            )}
+            {timeAttendance.completed_tasks && timeAttendance.completed_tasks.length > 0 && (
+              <div className="mt-2 pt-2 border-t border-blue-100">
+                <p className="font-medium">Completed Tasks:</p>
+                <ul className="list-disc list-inside">
+                  {timeAttendance.completed_tasks.map((task, idx) => (
+                    <li key={idx}>{task}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
         </Card>
       )}
 
-      <div className="flex gap-3">
-        {!timeAttendance?.clock_in_time && (
-          <Button
-            onClick={handleClockIn}
-            disabled={loading || clockInMutation.isPending}
-            className="flex-1 bg-green-600 hover:bg-green-700 h-14 text-lg"
-          >
-            {loading || clockInMutation.isPending ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Clocking In...
-              </>
-            ) : (
-              <>
-                <LogIn className="w-5 h-5 mr-2" />
-                Clock In
-              </>
-            )}
-          </Button>
-        )}
+      {/* Show completion form when clocked in and not clocked out */}
+      {timeAttendance?.clock_in_time && !timeAttendance.clock_out_time && (
+        <div className="space-y-4">
+          {/* Tasks checklist */}
+          {shift.tasks && shift.tasks.length > 0 && (
+            <div className="p-4 bg-white border rounded-lg">
+              <h4 className="font-semibold mb-3 flex items-center gap-2">
+                <CheckSquare className="w-4 h-4 text-blue-600" />
+                Visit Tasks
+              </h4>
+              <div className="space-y-2">
+                {shift.tasks.map((task, index) => (
+                  <div key={index} className="flex items-center gap-3">
+                    <input
+                      type="checkbox"
+                      checked={completedTasks.includes(task)}
+                      onChange={() => toggleTask(task)}
+                      className="w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                    />
+                    <label className={`text-sm ${
+                      completedTasks.includes(task) ? 'line-through text-gray-500' : 'text-gray-900'
+                    }`}>
+                      {task}
+                    </label>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
 
-        {timeAttendance?.clock_in_time && !timeAttendance?.clock_out_time && (
+          {/* Visit Notes with AI Assistant */}
+          <div className="p-4 bg-white border rounded-lg">
+            <div className="flex items-center justify-between mb-3">
+              <h4 className="font-semibold flex items-center gap-2">
+                <FileText className="w-4 h-4 text-purple-600" />
+                Visit Notes
+              </h4>
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={() => setShowAIAssistant(!showAIAssistant)}
+                className="bg-gradient-to-r from-purple-50 to-blue-50"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                {showAIAssistant ? 'Hide' : 'Show'} AI Assistant
+              </Button>
+            </div>
+
+            {showAIAssistant && (
+              <div className="mb-4">
+                <AINotesAssistant
+                  visit={shift}
+                  client={client}
+                  completedTasks={completedTasks}
+                  visitNotes={completionNotes}
+                  onNotesChange={setCompletionNotes}
+                />
+              </div>
+            )}
+
+            <Textarea
+              value={completionNotes}
+              onChange={(e) => setCompletionNotes(e.target.value)}
+              placeholder="Describe the visit... (AI can help you write this!)"
+              rows={6}
+              className="resize-none"
+            />
+            <p className="text-xs text-gray-500 mt-2">
+              {completionNotes.length} characters • Use AI Assistant above for suggestions
+            </p>
+          </div>
+
           <Button
             onClick={handleClockOut}
-            disabled={loading || clockOutMutation.isPending}
-            className="flex-1 bg-red-600 hover:bg-red-700 h-14 text-lg"
+            disabled={clockOutMutation.isPending || loadingLocation}
+            className="w-full bg-red-600 hover:bg-red-700 py-6"
           >
-            {loading || clockOutMutation.isPending ? (
-              <>
-                <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                Clocking Out...
-              </>
+            {clockOutMutation.isPending || loadingLocation ? (
+              <RefreshCw className="w-5 h-5 mr-2 animate-spin" />
             ) : (
-              <>
-                <LogOut className="w-5 h-5 mr-2" />
-                Clock Out
-              </>
+              <LogOut className="w-5 h-5 mr-2" />
             )}
+            {loadingLocation ? "Getting Location..." : "Clock Out & Complete Visit"}
           </Button>
-        )}
-      </div>
-
-      {shift.tasks && shift.tasks.length > 0 && (
-        <Card className="p-4 bg-gray-50">
-          <p className="text-sm font-medium text-gray-700 mb-2">Tasks:</p>
-          <ul className="space-y-1">
-            {shift.tasks.map((task, idx) => (
-              <li key={idx} className="text-sm text-gray-600 flex items-center gap-2">
-                <div className="w-1.5 h-1.5 bg-blue-500 rounded-full"></div>
-                {task}
-              </li>
-            ))}
-          </ul>
-        </Card>
+        </div>
       )}
 
-      {shift.notes && (
-        <Card className="p-4 bg-yellow-50 border-yellow-200">
-          <p className="text-sm font-medium text-yellow-900 mb-1">Important Notes:</p>
-          <p className="text-sm text-yellow-800">{shift.notes}</p>
-        </Card>
+      {/* Clock In Button */}
+      {!timeAttendance?.clock_in_time && (
+        <Button
+          onClick={handleClockIn}
+          disabled={loading || clockInMutation.isPending}
+          className="w-full bg-green-600 hover:bg-green-700 h-14 text-lg"
+        >
+          {loading || clockInMutation.isPending ? (
+            <>
+              <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+              Clocking In...
+            </>
+          ) : (
+            <>
+              <LogIn className="w-5 h-5 mr-2" />
+              Clock In
+            </>
+          )}
+        </Button>
       )}
+
+      {/* Old Tasks and Notes cards are removed as they are replaced by the new completion form */}
     </div>
   );
 }
