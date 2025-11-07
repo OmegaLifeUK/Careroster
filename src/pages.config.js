@@ -16,6 +16,7 @@ import CommunicationHub from './pages/CommunicationHub';
 import StaffTraining from './pages/StaffTraining';
 import ClientFeedback from './pages/ClientFeedback';
 import ManagerDashboard from './pages/ManagerDashboard';
+import IncidentManagement from './pages/IncidentManagement';
 import Layout from './Layout.jsx';
 
 
@@ -38,6 +39,7 @@ export const PAGES = {
     "StaffTraining": StaffTraining,
     "ClientFeedback": ClientFeedback,
     "ManagerDashboard": ManagerDashboard,
+    "IncidentManagement": IncidentManagement,
 }
 
 export const pagesConfig = {

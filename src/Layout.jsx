@@ -16,7 +16,8 @@ import {
   MapPin,
   Navigation,
   MessageSquare,
-  GraduationCap
+  GraduationCap,
+  Shield // Added Shield icon
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,6 +49,11 @@ const residentialCareNav = [
     title: "Clients",
     url: createPageUrl("Clients"),
     icon: UserCircle,
+  },
+  {
+    title: "Incident Management",
+    url: createPageUrl("IncidentManagement"),
+    icon: Shield,
   },
   {
     title: "Reports",
