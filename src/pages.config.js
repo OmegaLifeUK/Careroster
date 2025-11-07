@@ -15,6 +15,7 @@ import DomCareReports from './pages/DomCareReports';
 import CommunicationHub from './pages/CommunicationHub';
 import StaffTraining from './pages/StaffTraining';
 import ClientFeedback from './pages/ClientFeedback';
+import ManagerDashboard from './pages/ManagerDashboard';
 import Layout from './Layout.jsx';
 
 
@@ -36,6 +37,7 @@ export const PAGES = {
     "CommunicationHub": CommunicationHub,
     "StaffTraining": StaffTraining,
     "ClientFeedback": ClientFeedback,
+    "ManagerDashboard": ManagerDashboard,
 }
 
 export const pagesConfig = {
