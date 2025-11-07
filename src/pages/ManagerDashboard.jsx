@@ -4,53 +4,37 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import {
-  Users,
-  Bed,
-  AlertTriangle,
-  CheckCircle,
+import { 
+  Users, 
+  UserCircle, 
   Calendar,
+  AlertTriangle,
+  TrendingUp,
+  CheckCircle,
   Clock,
   DollarSign,
-  TrendingUp,
-  MessageSquare,
-  FileText,
-  Settings,
-  Download,
-  Filter,
   Bell,
+  FileText,
+  GraduationCap,
   Activity,
-  Award,
-  Briefcase,
-  PieChart,
+  Home,
+  Download,
+  Settings,
   BarChart3,
-  Eye,
-  EyeOff
+  PieChart as PieChartIcon,
+  MessageSquare,
+  Shield
 } from "lucide-react";
-import { format, parseISO, isAfter, isBefore, addDays, startOfMonth, endOfMonth } from "date-fns";
+import { format, parseISO, isToday, isPast, addDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
 
 export default function ManagerDashboard() {
   const [dateRange, setDateRange] = useState("today");
-  const [selectedDepartment, setSelectedDepartment] = useState("all");
-  const [visibleModules, setVisibleModules] = useState({
-    occupancy: true,
-    staff: true,
-    training: true,
-    incidents: true,
-    finance: true,
-    communication: true,
-  });
+  const [selectedModule, setSelectedModule] = useState("all");
 
-  // Data queries
+  // Fetch all necessary data
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
     queryFn: () => base44.entities.Client.list(),
-  });
-
-  const { data: shifts = [] } = useQuery({
-    queryKey: ['shifts'],
-    queryFn: () => base44.entities.Shift.list('-date'),
   });
 
   const { data: carers = [] } = useQuery({
@@ -58,14 +42,14 @@ export default function ManagerDashboard() {
     queryFn: () => base44.entities.Carer.list(),
   });
 
-  const { data: medications = [] } = useQuery({
-    queryKey: ['medication-logs'],
-    queryFn: () => base44.entities.MedicationLog.list('-administration_time'),
+  const { data: shifts = [] } = useQuery({
+    queryKey: ['shifts'],
+    queryFn: () => base44.entities.Shift.list('-date'),
   });
 
-  const { data: trainingAssignments = [] } = useQuery({
-    queryKey: ['training-assignments'],
-    queryFn: () => base44.entities.TrainingAssignment.list(),
+  const { data: medications = [] } = useQuery({
+    queryKey: ['medications'],
+    queryFn: () => base44.entities.MedicationLog.list('-administration_time'),
   });
 
   const { data: incidents = [] } = useQuery({
@@ -73,9 +57,14 @@ export default function ManagerDashboard() {
     queryFn: () => base44.entities.Incident.list('-incident_date'),
   });
 
-  const { data: alerts = [] } = useQuery({
-    queryKey: ['client-alerts'],
-    queryFn: () => base44.entities.ClientAlert.filter({ status: 'active' }),
+  const { data: trainingAssignments = [] } = useQuery({
+    queryKey: ['training-assignments'],
+    queryFn: () => base44.entities.TrainingAssignment.list('-assigned_date'),
+  });
+
+  const { data: trainingModules = [] } = useQuery({
+    queryKey: ['training-modules'],
+    queryFn: () => base44.entities.TrainingModule.list(),
   });
 
   const { data: feedback = [] } = useQuery({
@@ -83,139 +72,164 @@ export default function ManagerDashboard() {
     queryFn: () => base44.entities.ClientFeedback.list('-created_date'),
   });
 
-  // Calculate KPIs
-  const totalBeds = 50; // Configure based on facility
-  const occupiedBeds = clients.filter(c => c.status === 'active').length;
-  const occupancyRate = ((occupiedBeds / totalBeds) * 100).toFixed(1);
-  
-  const plannedAdmissions = clients.filter(c => c.status === 'inactive').length;
-  
-  const overdueMedications = medications.filter(m => 
-    m.status === 'missed' || (m.status !== 'administered' && isAfter(new Date(), parseISO(m.administration_time)))
-  ).length;
+  const { data: alerts = [] } = useQuery({
+    queryKey: ['client-alerts'],
+    queryFn: () => base44.entities.ClientAlert.filter({ status: 'active' }),
+  });
 
-  const criticalAlerts = alerts.filter(a => a.severity === 'critical' || a.severity === 'high').length;
+  const { data: leaveRequests = [] } = useQuery({
+    queryKey: ['leave-requests'],
+    queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
+  });
 
-  const availableStaff = carers.filter(c => c.status === 'active').length;
-  const onLeaveStaff = carers.filter(c => c.status === 'on_leave').length;
+  // Calculate Occupancy & Compliance Metrics
+  const occupancyStats = {
+    totalBeds: 50, // This would come from settings/config
+    occupied: clients.filter(c => c.status === 'active').length,
+    plannedAdmissions: 3, // This would come from admissions entity
+  };
+  occupancyStats.occupancyRate = ((occupancyStats.occupied / occupancyStats.totalBeds) * 100).toFixed(1);
 
+  // Medication Compliance
+  const todayMeds = medications.filter(m => {
+    try {
+      return isToday(parseISO(m.administration_time));
+    } catch {
+      return false;
+    }
+  });
+  const overdueMeds = todayMeds.filter(m => m.status === 'missed').length;
+  const upcomingMeds = medications.filter(m => {
+    try {
+      const medTime = parseISO(m.administration_time);
+      return medTime > new Date() && medTime < addDays(new Date(), 1);
+    } catch {
+      return false;
+    }
+  }).length;
+
+  // Staff Management Metrics
+  const todayShifts = shifts.filter(shift => {
+    try {
+      return isToday(parseISO(shift.date));
+    } catch {
+      return false;
+    }
+  });
   const unfilledShifts = shifts.filter(s => s.status === 'unfilled').length;
+  const shiftFillRate = todayShifts.length > 0 
+    ? (((todayShifts.length - todayShifts.filter(s => s.status === 'unfilled').length) / todayShifts.length) * 100).toFixed(1)
+    : 100;
 
-  const expiringTraining = trainingAssignments.filter(t => 
-    t.expiry_date && isBefore(parseISO(t.expiry_date), addDays(new Date(), 30)) && t.status === 'completed'
-  ).length;
+  // Training & Certification
+  const expiringCerts = trainingAssignments.filter(a => {
+    if (!a.expiry_date) return false;
+    try {
+      const expiry = parseISO(a.expiry_date);
+      return expiry < addDays(new Date(), 30) && expiry > new Date();
+    } catch {
+      return false;
+    }
+  }).length;
 
-  const overdueTraining = trainingAssignments.filter(t =>
-    t.status === 'overdue' || (t.due_date && isAfter(new Date(), parseISO(t.due_date)) && t.status !== 'completed')
-  ).length;
+  const overdueTraining = trainingAssignments.filter(a => {
+    if (!a.due_date) return false;
+    try {
+      return isPast(parseISO(a.due_date)) && a.status !== 'completed';
+    } catch {
+      return false;
+    }
+  }).length;
 
-  const openIncidents = incidents.filter(i => i.status !== 'closed' && i.status !== 'resolved').length;
-  const urgentIncidents = incidents.filter(i => 
-    i.severity === 'critical' && i.status !== 'closed' && i.status !== 'resolved'
-  ).length;
+  const trainingCompletionRate = trainingAssignments.length > 0
+    ? ((trainingAssignments.filter(a => a.status === 'completed').length / trainingAssignments.length) * 100).toFixed(1)
+    : 0;
 
-  const newFeedback = feedback.filter(f => f.status === 'new').length;
-  const complaints = feedback.filter(f => f.feedback_type === 'complaint' && f.status !== 'closed').length;
+  // Incident Metrics
+  const recentIncidents = incidents.filter(inc => {
+    try {
+      return parseISO(inc.incident_date) > subMonths(new Date(), 1);
+    } catch {
+      return false;
+    }
+  });
+  const unresolvedIncidents = incidents.filter(i => i.status !== 'resolved' && i.status !== 'closed').length;
+  const criticalIncidents = incidents.filter(i => i.severity === 'critical' && i.status !== 'closed').length;
 
-  // Monthly incident trends (mock data - in production, aggregate from actual data)
-  const monthlyIncidents = [
-    { month: 'Jan', count: 12 },
-    { month: 'Feb', count: 8 },
-    { month: 'Mar', count: 15 },
-    { month: 'Apr', count: 10 },
-    { month: 'May', count: 7 },
-    { month: 'Jun', count: 9 },
-    { month: 'Jul', count: 11 },
-    { month: 'Aug', count: 13 },
-    { month: 'Sep', count: 6 },
-    { month: 'Oct', count: 14 },
-    { month: 'Nov', count: 10 },
-    { month: 'Dec', count: 8 },
-  ];
+  // Incident Trends (last 12 months)
+  const incidentTrends = eachMonthOfInterval({
+    start: subMonths(new Date(), 11),
+    end: new Date()
+  }).map(month => {
+    const monthIncidents = incidents.filter(inc => {
+      try {
+        const incDate = parseISO(inc.incident_date);
+        return incDate >= startOfMonth(month) && incDate <= endOfMonth(month);
+      } catch {
+        return false;
+      }
+    });
+    return {
+      month: format(month, 'MMM'),
+      count: monthIncidents.length,
+      critical: monthIncidents.filter(i => i.severity === 'critical').length
+    };
+  });
 
-  const maxIncidents = Math.max(...monthlyIncidents.map(m => m.count));
-
-  // Finance mock data (in production, integrate with finance system)
-  const billingStatus = {
+  // Finance Metrics (Mock data - would come from billing system)
+  const financeStats = {
     overdue: 15,
-    pending: 35,
-    paid: 50,
+    pending: 25,
+    paid: 60,
+    totalRevenue: 125000,
   };
 
-  const toggleModule = (module) => {
-    setVisibleModules(prev => ({ ...prev, [module]: !prev[module] }));
-  };
-
-  const exportDashboard = () => {
-    // Generate CSV or PDF export
-    alert("Dashboard export functionality - integrate with reporting system");
-  };
+  // Communication Metrics
+  const pendingLeave = leaveRequests.filter(r => r.status === 'pending').length;
+  const newFeedback = feedback.filter(f => f.status === 'new').length;
+  const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-[98%] mx-auto">
         {/* Header */}
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-6 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
-            <p className="text-gray-500">Real-time operational overview</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
+              <BarChart3 className="w-8 h-8 text-blue-600" />
+              Manager's Dashboard
+            </h1>
+            <p className="text-gray-500">Real-time operational, clinical, and compliance overview</p>
           </div>
-          <div className="flex gap-3 flex-wrap">
-            <Select value={dateRange} onValueChange={setDateRange}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="today">Today</SelectItem>
-                <SelectItem value="week">This Week</SelectItem>
-                <SelectItem value="month">This Month</SelectItem>
-                <SelectItem value="quarter">This Quarter</SelectItem>
-              </SelectContent>
-            </Select>
-            <Select value={selectedDepartment} onValueChange={setSelectedDepartment}>
-              <SelectTrigger className="w-40">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Departments</SelectItem>
-                <SelectItem value="residential">Residential</SelectItem>
-                <SelectItem value="domiciliary">Domiciliary</SelectItem>
-              </SelectContent>
-            </Select>
-            <Button variant="outline" onClick={exportDashboard}>
+          <div className="flex gap-2">
+            <Button variant="outline" size="sm">
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export Report
             </Button>
-            <Button variant="outline">
+            <Button variant="outline" size="sm">
               <Settings className="w-4 h-4 mr-2" />
               Customize
             </Button>
           </div>
         </div>
 
-        {/* Alert Banner */}
-        {(urgentIncidents > 0 || criticalAlerts > 0 || complaints > 0) && (
-          <Card className="mb-6 bg-red-50 border-red-200">
+        {/* Critical Alerts Banner */}
+        {(criticalAlerts > 0 || criticalIncidents > 0 || overdueMeds > 0) && (
+          <Card className="mb-6 border-l-4 border-red-500 bg-red-50">
             <CardContent className="p-4">
-              <div className="flex items-start gap-3">
-                <Bell className="w-5 h-5 text-red-600 mt-0.5 animate-pulse" />
+              <div className="flex items-center gap-3">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
                 <div className="flex-1">
-                  <h3 className="font-semibold text-red-900 mb-2">Urgent Attention Required</h3>
-                  <div className="flex flex-wrap gap-3 text-sm">
-                    {urgentIncidents > 0 && (
-                      <Badge className="bg-red-600 text-white">
-                        {urgentIncidents} Critical Incident{urgentIncidents !== 1 ? 's' : ''}
-                      </Badge>
-                    )}
+                  <h3 className="font-semibold text-red-900">Critical Attention Required</h3>
+                  <div className="flex flex-wrap gap-4 mt-2 text-sm">
                     {criticalAlerts > 0 && (
-                      <Badge className="bg-orange-600 text-white">
-                        {criticalAlerts} Critical Alert{criticalAlerts !== 1 ? 's' : ''}
-                      </Badge>
+                      <span className="text-red-800">• {criticalAlerts} Critical Client Alert{criticalAlerts !== 1 ? 's' : ''}</span>
                     )}
-                    {complaints > 0 && (
-                      <Badge className="bg-yellow-600 text-white">
-                        {complaints} Open Complaint{complaints !== 1 ? 's' : ''}
-                      </Badge>
+                    {criticalIncidents > 0 && (
+                      <span className="text-red-800">• {criticalIncidents} Critical Incident{criticalIncidents !== 1 ? 's' : ''}</span>
+                    )}
+                    {overdueMeds > 0 && (
+                      <span className="text-red-800">• {overdueMeds} Overdue Medication{overdueMeds !== 1 ? 's' : ''}</span>
                     )}
                   </div>
                 </div>
@@ -224,521 +238,557 @@ export default function ManagerDashboard() {
           </Card>
         )}
 
-        {/* Module Visibility Toggles */}
-        <Card className="mb-6">
-          <CardContent className="p-4">
-            <div className="flex items-center gap-2 flex-wrap">
-              <span className="text-sm font-medium text-gray-700 mr-2">Visible Modules:</span>
-              {Object.entries(visibleModules).map(([key, visible]) => (
-                <Button
-                  key={key}
-                  size="sm"
-                  variant={visible ? "default" : "outline"}
-                  onClick={() => toggleModule(key)}
-                  className="capitalize"
-                >
-                  {visible ? <Eye className="w-3 h-3 mr-1" /> : <EyeOff className="w-3 h-3 mr-1" />}
-                  {key}
-                </Button>
-              ))}
-            </div>
-          </CardContent>
-        </Card>
-
-        {/* OCCUPANCY & COMPLIANCE */}
-        {visibleModules.occupancy && (
-          <Card className="mb-6">
-            <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
-              <CardTitle className="flex items-center gap-2">
-                <Bed className="w-5 h-5 text-blue-600" />
-                Occupancy & Compliance
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Bed className="w-8 h-8 opacity-80" />
-                      <span className="text-3xl font-bold">{occupiedBeds}/{totalBeds}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Beds Occupied</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">Occupancy Rate: {occupancyRate}%</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-green-500 to-green-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Calendar className="w-8 h-8 opacity-80" />
-                      <span className="text-3xl font-bold">{plannedAdmissions}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Planned Admissions</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">This Month</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className={`bg-gradient-to-br ${overdueMedications > 0 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <AlertTriangle className={`w-8 h-8 opacity-80 ${overdueMedications > 0 ? 'animate-pulse' : ''}`} />
-                      <span className="text-3xl font-bold">{overdueMedications}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Medication Alerts</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">Overdue Administration</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className={`bg-gradient-to-br ${criticalAlerts > 0 ? 'from-orange-500 to-orange-600' : 'from-blue-500 to-blue-600'} text-white`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Activity className="w-8 h-8 opacity-80" />
-                      <span className="text-3xl font-bold">{criticalAlerts}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Critical Alerts</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">Require Immediate Action</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* STAFF MANAGEMENT */}
-        {visibleModules.staff && (
-          <Card className="mb-6">
-            <CardHeader className="border-b bg-gradient-to-r from-green-50 to-teal-50">
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5 text-green-600" />
-                Staff Management
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <Users className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{availableStaff}</p>
-                        <p className="text-sm text-gray-600">Available Staff</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      {onLeaveStaff} on leave
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`p-2 ${unfilledShifts > 0 ? 'bg-orange-100' : 'bg-green-100'} rounded-lg`}>
-                        <Calendar className={`w-6 h-6 ${unfilledShifts > 0 ? 'text-orange-600' : 'text-green-600'}`} />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{unfilledShifts}</p>
-                        <p className="text-sm text-gray-600">Unfilled Shifts</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Next 7 days
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <Briefcase className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{shifts.filter(s => s.status === 'completed').length}</p>
-                        <p className="text-sm text-gray-600">Shifts Completed</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      This month
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <FileText className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">12</p>
-                        <p className="text-sm text-gray-600">Performance Reviews</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Due this month
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* TRAINING & CERTIFICATION */}
-        {visibleModules.training && (
-          <Card className="mb-6">
-            <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
-              <CardTitle className="flex items-center gap-2">
-                <Award className="w-5 h-5 text-purple-600" />
-                Training & Certification
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card className="bg-gradient-to-br from-yellow-500 to-orange-500 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <Clock className="w-8 h-8 opacity-80" />
-                      <span className="text-3xl font-bold">{expiringTraining}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Expiring Soon</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">Within 30 days</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className={`bg-gradient-to-br ${overdueTraining > 0 ? 'from-red-500 to-red-600' : 'from-green-500 to-green-600'} text-white`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <AlertTriangle className={`w-8 h-8 opacity-80 ${overdueTraining > 0 ? 'animate-pulse' : ''}`} />
-                      <span className="text-3xl font-bold">{overdueTraining}</span>
-                    </div>
-                    <p className="text-sm opacity-90">Overdue Training</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">Requires immediate attention</p>
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card className="bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-                  <CardContent className="p-4">
-                    <div className="flex items-center justify-between mb-2">
-                      <CheckCircle className="w-8 h-8 opacity-80" />
-                      <span className="text-3xl font-bold">
-                        {((trainingAssignments.filter(t => t.status === 'completed').length / trainingAssignments.length) * 100).toFixed(0)}%
-                      </span>
-                    </div>
-                    <p className="text-sm opacity-90">Completion Rate</p>
-                    <div className="mt-2 pt-2 border-t border-white/20">
-                      <p className="text-xs">{trainingAssignments.filter(t => t.status === 'completed').length} of {trainingAssignments.length} completed</p>
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-            </CardContent>
-          </Card>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-6">
-          {/* INCIDENT REPORTING */}
-          {visibleModules.incidents && (
-            <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
-                <CardTitle className="flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5 text-red-600" />
-                  Incident Reporting
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-2 gap-4 mb-6">
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Activity className="w-5 h-5 text-gray-600" />
-                        <p className="text-sm text-gray-600">Total Incidents</p>
-                      </div>
-                      <p className="text-3xl font-bold text-gray-900">{incidents.length}</p>
-                      <p className="text-xs text-gray-500 mt-1">This month</p>
-                    </CardContent>
-                  </Card>
-
-                  <Card>
-                    <CardContent className="p-4">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Clock className="w-5 h-5 text-orange-600" />
-                        <p className="text-sm text-gray-600">Open</p>
-                      </div>
-                      <p className="text-3xl font-bold text-orange-600">{openIncidents}</p>
-                      <p className="text-xs text-gray-500 mt-1">Require action</p>
-                    </CardContent>
-                  </Card>
-                </div>
-
-                {/* Monthly Trend Chart */}
-                <div>
-                  <h4 className="text-sm font-semibold text-gray-700 mb-3">Monthly Incident Trends</h4>
-                  <div className="flex items-end justify-between gap-2 h-40">
-                    {monthlyIncidents.map((data, idx) => (
-                      <div key={idx} className="flex-1 flex flex-col items-center gap-1">
-                        <div
-                          className="w-full bg-gradient-to-t from-red-500 to-orange-500 rounded-t transition-all hover:opacity-80"
-                          style={{ height: `${(data.count / maxIncidents) * 100}%` }}
-                          title={`${data.month}: ${data.count} incidents`}
-                        />
-                        <span className="text-xs text-gray-600">{data.month}</span>
-                      </div>
-                    ))}
+        {/* Module 1: Occupancy & Compliance */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Home className="w-5 h-5 text-blue-600" />
+            Occupancy & Compliance
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Home className="w-5 h-5 text-blue-600" />
                   </div>
+                  <Badge className="bg-blue-100 text-blue-800">{occupancyStats.occupancyRate}%</Badge>
                 </div>
-
-                <div className="mt-4 pt-4 border-t">
-                  <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Resolution Status</span>
-                    <Badge className="bg-green-100 text-green-800">
-                      {((incidents.filter(i => i.status === 'resolved' || i.status === 'closed').length / incidents.length) * 100).toFixed(0)}% Resolved
-                    </Badge>
-                  </div>
-                </div>
+                <p className="text-sm text-gray-600 mb-1">Beds Occupied</p>
+                <p className="text-2xl font-bold text-gray-900">
+                  {occupancyStats.occupied}/{occupancyStats.totalBeds}
+                </p>
               </CardContent>
             </Card>
-          )}
 
-          {/* FINANCE */}
-          {visibleModules.finance && (
-            <Card>
-              <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-green-50">
-                <CardTitle className="flex items-center gap-2">
-                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                  Finance & Billing
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="flex items-center justify-center mb-6">
-                  <div className="relative w-48 h-48">
-                    {/* Pie Chart Visualization */}
-                    <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-                      {/* Paid - Green */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#10b981"
-                        strokeWidth="20"
-                        strokeDasharray={`${billingStatus.paid * 2.51} 251`}
-                        strokeDashoffset="0"
-                      />
-                      {/* Pending - Yellow */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#f59e0b"
-                        strokeWidth="20"
-                        strokeDasharray={`${billingStatus.pending * 2.51} 251`}
-                        strokeDashoffset={`-${billingStatus.paid * 2.51}`}
-                      />
-                      {/* Overdue - Red */}
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#ef4444"
-                        strokeWidth="20"
-                        strokeDasharray={`${billingStatus.overdue * 2.51} 251`}
-                        strokeDashoffset={`-${(billingStatus.paid + billingStatus.pending) * 2.51}`}
-                      />
-                    </svg>
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <div className="text-center">
-                        <p className="text-2xl font-bold text-gray-900">100%</p>
-                        <p className="text-xs text-gray-500">Total Billing</p>
-                      </div>
-                    </div>
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <TrendingUp className="w-5 h-5 text-green-600" />
                   </div>
                 </div>
-
-                <div className="space-y-3">
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full" />
-                      <span className="text-sm font-medium text-green-900">Paid</span>
-                    </div>
-                    <span className="text-lg font-bold text-green-900">{billingStatus.paid}%</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-yellow-500 rounded-full" />
-                      <span className="text-sm font-medium text-yellow-900">Pending</span>
-                    </div>
-                    <span className="text-lg font-bold text-yellow-900">{billingStatus.pending}%</span>
-                  </div>
-
-                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full" />
-                      <span className="text-sm font-medium text-red-900">Overdue</span>
-                    </div>
-                    <span className="text-lg font-bold text-red-900">{billingStatus.overdue}%</span>
-                  </div>
-                </div>
-
-                <div className="mt-4 pt-4 border-t">
-                  <Button className="w-full" variant="outline">
-                    <FileText className="w-4 h-4 mr-2" />
-                    View Detailed Financial Reports
-                  </Button>
-                </div>
+                <p className="text-sm text-gray-600 mb-1">Planned Admissions</p>
+                <p className="text-2xl font-bold text-green-600">{occupancyStats.plannedAdmissions}</p>
               </CardContent>
             </Card>
-          )}
+
+            <Card className={`hover:shadow-lg transition-shadow ${overdueMeds > 0 ? 'ring-2 ring-red-500' : ''}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`p-2 ${overdueMeds > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg`}>
+                    <Shield className="w-5 h-5" className={overdueMeds > 0 ? 'text-red-600' : 'text-green-600'} />
+                  </div>
+                  {overdueMeds > 0 && <Badge className="bg-red-500 text-white animate-pulse">Alert</Badge>}
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Overdue Meds</p>
+                <p className={`text-2xl font-bold ${overdueMeds > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {overdueMeds}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <Clock className="w-5 h-5 text-orange-600" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Upcoming Meds</p>
+                <p className="text-2xl font-bold text-orange-600">{upcomingMeds}</p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-purple-100 rounded-lg">
+                    <FileText className="w-5 h-5 text-purple-600" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Open Audits</p>
+                <p className="text-2xl font-bold text-purple-600">2</p>
+                <p className="text-xs text-gray-500 mt-1">3 actions pending</p>
+              </CardContent>
+            </Card>
+          </div>
         </div>
 
-        {/* COMMUNICATION */}
-        {visibleModules.communication && (
-          <Card>
-            <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-blue-50">
-              <CardTitle className="flex items-center gap-2">
-                <MessageSquare className="w-5 h-5 text-indigo-600" />
-                Communication & Feedback
-              </CardTitle>
-            </CardHeader>
-            <CardContent className="p-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-blue-100 rounded-lg">
-                        <MessageSquare className="w-6 h-6 text-blue-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{newFeedback}</p>
-                        <p className="text-sm text-gray-600">New Feedback</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Requires response
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className={`p-2 ${complaints > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg`}>
-                        <AlertTriangle className={`w-6 h-6 ${complaints > 0 ? 'text-red-600' : 'text-green-600'}`} />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">{complaints}</p>
-                        <p className="text-sm text-gray-600">Open Complaints</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Require follow-up
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-green-100 rounded-lg">
-                        <TrendingUp className="w-6 h-6 text-green-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">
-                          {feedback.length > 0 
-                            ? (feedback.reduce((sum, f) => sum + (f.rating || 0), 0) / feedback.length).toFixed(1)
-                            : "N/A"
-                          }
-                        </p>
-                        <p className="text-sm text-gray-600">Avg Satisfaction</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Out of 5 stars
-                    </div>
-                  </CardContent>
-                </Card>
-
-                <Card>
-                  <CardContent className="p-4">
-                    <div className="flex items-center gap-3 mb-2">
-                      <div className="p-2 bg-purple-100 rounded-lg">
-                        <Bell className="w-6 h-6 text-purple-600" />
-                      </div>
-                      <div>
-                        <p className="text-2xl font-bold text-gray-900">8</p>
-                        <p className="text-sm text-gray-600">Announcements</p>
-                      </div>
-                    </div>
-                    <div className="text-xs text-gray-500">
-                      Pending distribution
-                    </div>
-                  </CardContent>
-                </Card>
-              </div>
-
-              <div className="mt-6 pt-6 border-t">
-                <h4 className="text-sm font-semibold text-gray-700 mb-3">Recent Activity</h4>
-                <div className="space-y-2">
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <MessageSquare className="w-4 h-4 text-blue-600 mt-1" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">New family inquiry received</p>
-                      <p className="text-xs text-gray-500">2 hours ago</p>
-                    </div>
+        {/* Module 2: Staff Management */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Users className="w-5 h-5 text-green-600" />
+            Staff Management
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
+              <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
+                <CardTitle className="text-lg">Roster & Attendance</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <Calendar className="w-6 h-6 text-blue-600 mb-2" />
+                    <p className="text-xs text-gray-600">Today's Shifts</p>
+                    <p className="text-2xl font-bold text-blue-900">{todayShifts.length}</p>
                   </div>
-                  <div className="flex items-start gap-3 p-3 bg-gray-50 rounded-lg">
-                    <Bell className="w-4 h-4 text-purple-600 mt-1" />
-                    <div className="flex-1">
-                      <p className="text-sm font-medium text-gray-900">Staff meeting reminder sent</p>
-                      <p className="text-xs text-gray-500">5 hours ago</p>
+                  <div className={`p-4 rounded-lg ${unfilledShifts > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
+                    <AlertTriangle className={`w-6 h-6 mb-2 ${unfilledShifts > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                    <p className="text-xs text-gray-600">Unfilled</p>
+                    <p className={`text-2xl font-bold ${unfilledShifts > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                      {unfilledShifts}
+                    </p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <CheckCircle className="w-6 h-6 text-green-600 mb-2" />
+                    <p className="text-xs text-gray-600">Fill Rate</p>
+                    <p className="text-2xl font-bold text-green-900">{shiftFillRate}%</p>
+                  </div>
+                  <div className="p-4 bg-orange-50 rounded-lg">
+                    <Clock className="w-6 h-6 text-orange-600 mb-2" />
+                    <p className="text-xs text-gray-600">On Leave</p>
+                    <p className="text-2xl font-bold text-orange-900">
+                      {carers.filter(c => c.status === 'on_leave').length}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="mt-4 p-3 bg-gray-50 rounded-lg">
+                  <div className="flex items-center justify-between">
+                    <span className="text-sm font-medium text-gray-700">Active Staff</span>
+                    <span className="text-lg font-bold text-gray-900">
+                      {carers.filter(c => c.status === 'active').length}
+                    </span>
+                  </div>
+                  <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
+                    <div 
+                      className="h-full bg-green-500"
+                      style={{ width: `${(carers.filter(c => c.status === 'active').length / carers.length) * 100}%` }}
+                    />
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="text-lg">Performance Reviews</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <p className="text-sm font-medium text-yellow-900 mb-1">Expiring Soon</p>
+                    <p className="text-3xl font-bold text-yellow-900">5</p>
+                    <p className="text-xs text-yellow-700 mt-1">Within next 30 days</p>
+                  </div>
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-1">Logged Notes</p>
+                    <p className="text-3xl font-bold text-blue-900">12</p>
+                    <p className="text-xs text-blue-700 mt-1">This month</p>
+                  </div>
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm font-medium text-green-900 mb-1">Completed</p>
+                    <p className="text-3xl font-bold text-green-900">28</p>
+                    <p className="text-xs text-green-700 mt-1">This quarter</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Module 3: Training & Certification */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <GraduationCap className="w-5 h-5 text-purple-600" />
+            Training & Certification
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+            <Card className={`hover:shadow-lg transition-shadow ${expiringCerts > 0 ? 'ring-2 ring-orange-500' : ''}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-orange-100 rounded-lg">
+                    <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  </div>
+                  {expiringCerts > 0 && <Badge className="bg-orange-500 text-white">Action</Badge>}
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Expiring Certs</p>
+                <p className="text-2xl font-bold text-orange-600">{expiringCerts}</p>
+                <p className="text-xs text-gray-500 mt-1">Next 30 days</p>
+              </CardContent>
+            </Card>
+
+            <Card className={`hover:shadow-lg transition-shadow ${overdueTraining > 0 ? 'ring-2 ring-red-500' : ''}`}>
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className={`p-2 ${overdueTraining > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg`}>
+                    <Clock className={`w-5 h-5 ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Overdue Training</p>
+                <p className={`text-2xl font-bold ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                  {overdueTraining}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-blue-100 rounded-lg">
+                    <Activity className="w-5 h-5 text-blue-600" />
+                  </div>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">In Progress</p>
+                <p className="text-2xl font-bold text-blue-600">
+                  {trainingAssignments.filter(a => a.status === 'in_progress').length}
+                </p>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardContent className="p-4">
+                <div className="flex items-center justify-between mb-2">
+                  <div className="p-2 bg-green-100 rounded-lg">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                  </div>
+                  <Badge className="bg-green-100 text-green-800">{trainingCompletionRate}%</Badge>
+                </div>
+                <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {trainingAssignments.filter(a => a.status === 'completed').length}/{trainingAssignments.length}
+                </p>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Module 4: Incident Reporting */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <Shield className="w-5 h-5 text-red-600" />
+            Incident Reporting
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card className="lg:col-span-2">
+              <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
+                <CardTitle className="text-lg">Monthly Incident Trends</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="h-64 flex items-end justify-between gap-2">
+                  {incidentTrends.map((trend, index) => {
+                    const maxCount = Math.max(...incidentTrends.map(t => t.count), 1);
+                    const height = (trend.count / maxCount) * 100;
+                    return (
+                      <div key={index} className="flex-1 flex flex-col items-center gap-1">
+                        <div className="w-full relative" style={{ height: '200px' }}>
+                          <div 
+                            className="absolute bottom-0 w-full bg-gradient-to-t from-orange-400 to-orange-300 rounded-t-lg hover:from-orange-500 hover:to-orange-400 transition-all cursor-pointer"
+                            style={{ height: `${height}%` }}
+                            title={`${trend.count} incidents (${trend.critical} critical)`}
+                          >
+                            {trend.count > 0 && (
+                              <div className="text-center text-white font-bold text-sm pt-2">
+                                {trend.count}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                        <span className="text-xs text-gray-600 font-medium">{trend.month}</span>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="border-b bg-gradient-to-r from-red-50 to-pink-50">
+                <CardTitle className="text-lg">Summary</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="p-3 bg-blue-50 rounded-lg">
+                    <p className="text-sm font-medium text-blue-900 mb-1">Total (30 days)</p>
+                    <p className="text-3xl font-bold text-blue-900">{recentIncidents.length}</p>
+                  </div>
+                  
+                  <div className={`p-3 rounded-lg ${criticalIncidents > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
+                    <p className="text-sm font-medium mb-1" className={criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}>
+                      Critical
+                    </p>
+                    <p className={`text-3xl font-bold ${criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                      {criticalIncidents}
+                    </p>
+                  </div>
+
+                  <div className={`p-3 rounded-lg ${unresolvedIncidents > 0 ? 'bg-orange-50' : 'bg-green-50'}`}>
+                    <p className={`text-sm font-medium mb-1 ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
+                      Unresolved
+                    </p>
+                    <p className={`text-3xl font-bold ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
+                      {unresolvedIncidents}
+                    </p>
+                  </div>
+
+                  <div className="p-3 bg-green-50 rounded-lg">
+                    <p className="text-sm font-medium text-green-900 mb-1">Resolved</p>
+                    <p className="text-3xl font-bold text-green-900">
+                      {incidents.filter(i => i.status === 'resolved' || i.status === 'closed').length}
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Module 5: Finance & Billing */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <DollarSign className="w-5 h-5 text-emerald-600" />
+            Finance & Billing
+          </h2>
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+            <Card>
+              <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-green-50">
+                <CardTitle className="text-lg">Billing Status</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <span className="text-sm font-medium text-red-900">Overdue</span>
+                    <span className="text-2xl font-bold text-red-900">{financeStats.overdue}%</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                    <span className="text-sm font-medium text-yellow-900">Pending</span>
+                    <span className="text-2xl font-bold text-yellow-900">{financeStats.pending}%</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <span className="text-sm font-medium text-green-900">Paid</span>
+                    <span className="text-2xl font-bold text-green-900">{financeStats.paid}%</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+                <CardTitle className="text-lg">Billing Breakdown</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6 flex items-center justify-center">
+                <div className="relative w-48 h-48">
+                  <svg viewBox="0 0 100 100" className="transform -rotate-90">
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#dcfce7"
+                      strokeWidth="20"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#22c55e"
+                      strokeWidth="20"
+                      strokeDasharray={`${financeStats.paid * 2.51} 251`}
+                      className="transition-all duration-500"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#eab308"
+                      strokeWidth="20"
+                      strokeDasharray={`${financeStats.pending * 2.51} 251`}
+                      strokeDashoffset={`-${financeStats.paid * 2.51}`}
+                      className="transition-all duration-500"
+                    />
+                    <circle
+                      cx="50"
+                      cy="50"
+                      r="40"
+                      fill="none"
+                      stroke="#ef4444"
+                      strokeWidth="20"
+                      strokeDasharray={`${financeStats.overdue * 2.51} 251`}
+                      strokeDashoffset={`-${(financeStats.paid + financeStats.pending) * 2.51}`}
+                      className="transition-all duration-500"
+                    />
+                  </svg>
+                  <div className="absolute inset-0 flex items-center justify-center">
+                    <div className="text-center">
+                      <p className="text-sm text-gray-600">Total</p>
+                      <p className="text-2xl font-bold text-gray-900">100%</p>
                     </div>
                   </div>
                 </div>
-              </div>
-            </CardContent>
-          </Card>
-        )}
+              </CardContent>
+            </Card>
+
+            <Card>
+              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="text-lg">Revenue</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="p-4 bg-emerald-50 rounded-lg">
+                    <p className="text-sm text-emerald-700 mb-1">Total Revenue</p>
+                    <p className="text-3xl font-bold text-emerald-900">
+                      £{(financeStats.totalRevenue / 1000).toFixed(0)}k
+                    </p>
+                    <p className="text-xs text-emerald-600 mt-1">This month</p>
+                  </div>
+                  <div className="p-4 bg-blue-50 rounded-lg">
+                    <p className="text-sm text-blue-700 mb-1">Outstanding</p>
+                    <p className="text-3xl font-bold text-blue-900">
+                      £{((financeStats.totalRevenue * (financeStats.overdue + financeStats.pending) / 100) / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+                  <div className="p-4 bg-green-50 rounded-lg">
+                    <p className="text-sm text-green-700 mb-1">Collections</p>
+                    <p className="text-3xl font-bold text-green-900">
+                      £{((financeStats.totalRevenue * financeStats.paid / 100) / 1000).toFixed(0)}k
+                    </p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+
+        {/* Module 6: Communication */}
+        <div className="mb-6">
+          <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
+            <MessageSquare className="w-5 h-5 text-indigo-600" />
+            Communication
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Staff Announcements</span>
+                  <Badge className="bg-blue-500 text-white">3 New</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-2">
+                  <div className="p-3 bg-blue-50 rounded border-l-4 border-blue-500">
+                    <p className="text-sm font-medium text-blue-900">New policy update</p>
+                    <p className="text-xs text-blue-700 mt-1">Posted 2 hours ago</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded">
+                    <p className="text-sm font-medium text-gray-900">Training session reminder</p>
+                    <p className="text-xs text-gray-600 mt-1">Posted yesterday</p>
+                  </div>
+                  <div className="p-3 bg-gray-50 rounded">
+                    <p className="text-sm font-medium text-gray-900">Team meeting minutes</p>
+                    <p className="text-xs text-gray-600 mt-1">Posted 2 days ago</p>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Family Updates</span>
+                  <Badge className="bg-purple-500 text-white">{newFeedback}</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-green-900">Compliments</p>
+                      <p className="text-xs text-green-700">This week</p>
+                    </div>
+                    <span className="text-2xl font-bold text-green-900">
+                      {feedback.filter(f => f.feedback_type === 'compliment').length}
+                    </span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                    <div>
+                      <p className="text-sm font-medium text-orange-900">Pending</p>
+                      <p className="text-xs text-orange-700">Requires response</p>
+                    </div>
+                    <span className="text-2xl font-bold text-orange-900">{newFeedback}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+
+            <Card className="hover:shadow-lg transition-shadow">
+              <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-yellow-50">
+                <CardTitle className="text-lg flex items-center justify-between">
+                  <span>Alerts & Requests</span>
+                  {(pendingLeave + criticalAlerts) > 0 && (
+                    <Badge className="bg-orange-500 text-white">{pendingLeave + criticalAlerts}</Badge>
+                  )}
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-4">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-5 h-5 text-yellow-600" />
+                      <div>
+                        <p className="text-sm font-medium text-yellow-900">Leave Requests</p>
+                        <p className="text-xs text-yellow-700">Pending approval</p>
+                      </div>
+                    </div>
+                    <span className="text-2xl font-bold text-yellow-900">{pendingLeave}</span>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <AlertTriangle className="w-5 h-5 text-red-600" />
+                      <div>
+                        <p className="text-sm font-medium text-red-900">Critical Alerts</p>
+                        <p className="text-xs text-red-700">Require attention</p>
+                      </div>
+                    </div>
+                    <span className="text-2xl font-bold text-red-900">{criticalAlerts}</span>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
 
         {/* Quick Actions */}
-        <Card className="mt-6">
+        <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
           <CardHeader className="border-b">
             <CardTitle className="text-lg">Quick Actions</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
-                <Calendar className="w-5 h-5" />
-                <span className="text-sm">Schedule</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
-                <Users className="w-5 h-5" />
-                <span className="text-sm">Staff Roster</span>
-              </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
+            <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
                 <FileText className="w-5 h-5" />
-                <span className="text-sm">Reports</span>
+                <span className="text-xs">View Reports</span>
               </Button>
-              <Button variant="outline" className="h-20 flex flex-col gap-2">
-                <MessageSquare className="w-5 h-5" />
-                <span className="text-sm">Messages</span>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <Calendar className="w-5 h-5" />
+                <span className="text-xs">Manage Roster</span>
+              </Button>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <Users className="w-5 h-5" />
+                <span className="text-xs">Staff List</span>
+              </Button>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <Shield className="w-5 h-5" />
+                <span className="text-xs">Incidents</span>
+              </Button>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <GraduationCap className="w-5 h-5" />
+                <span className="text-xs">Training</span>
+              </Button>
+              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
+                <Bell className="w-5 h-5" />
+                <span className="text-xs">Notifications</span>
               </Button>
             </div>
           </CardContent>

@@ -25,13 +25,13 @@ import { useQuery } from "@tanstack/react-query";
 
 const residentialCareNav = [
   {
-    title: "Manager Dashboard",
-    url: createPageUrl("ManagerDashboard"),
+    title: "Dashboard",
+    url: createPageUrl("Dashboard"),
     icon: LayoutDashboard,
   },
   {
-    title: "Dashboard",
-    url: createPageUrl("Dashboard"),
+    title: "Manager Dashboard",
+    url: createPageUrl("ManagerDashboard"),
     icon: LayoutDashboard,
   },
   {
