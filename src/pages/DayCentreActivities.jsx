@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -245,7 +246,7 @@ export default function DayCentreActivities() {
                 <div className="space-y-3">
                   <div>
                     <p className="text-sm text-gray-600 mb-2">Risk Level</p>
-                    <Badge className={riskColors[selectedActivity.risk_level]} className="text-base px-3 py-1">
+                    <Badge className={`text-base px-3 py-1 ${riskColors[selectedActivity.risk_level]}`}>
                       {selectedActivity.risk_level} risk
                     </Badge>
                   </div>
@@ -372,7 +373,7 @@ export default function DayCentreActivities() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{activity.activity_name}</h3>
-                        <Badge className={categoryColors[activity.category]} className="text-xs">
+                        <Badge className={`text-xs ${categoryColors[activity.category]}`}>
                           {activity.category.replace('_', ' ')}
                         </Badge>
                       </div>
