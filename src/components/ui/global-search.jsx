@@ -1,30 +1,17 @@
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect } from "react";
+import { Search, X, Users, UserCircle, Calendar, Home, Activity, ArrowRight } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useQuery } from "@tanstack/react-query";
 import { base44 } from "@/api/base44Client";
 import { createPageUrl } from "@/utils";
-import { useQuery } from "@tanstack/react-query";
-import { 
-  Search, 
-  X, 
-  Users, 
-  UserCircle, 
-  Calendar, 
-  MapPin,
-  Home,
-  Activity,
-  Clock,
-  FileText,
-  TrendingUp
-} from "lucide-react";
-import { motion, AnimatePresence } from "framer-motion";
+import { Input } from "@/components/ui/input";
+import { Card } from "@/components/ui/card";
 
-export const GlobalSearch = ({ isOpen, onClose }) => {
+export default function GlobalSearch({ isOpen, onClose }) {
   const [query, setQuery] = useState("");
-  const [results, setResults] = useState([]);
-  const [selectedIndex, setSelectedIndex] = useState(0);
   const navigate = useNavigate();
-  const inputRef = useRef(null);
 
+  // Fetch all searchable data
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
     queryFn: () => base44.entities.Client.list(),
@@ -37,7 +24,7 @@ export const GlobalSearch = ({ isOpen, onClose }) => {
     enabled: isOpen,
   });
 
-  const { data: domClients = [] } = useQuery({
+  const { data: domCareClients = [] } = useQuery({
     queryKey: ['domcare-clients'],
     queryFn: () => base44.entities.DomCareClient.list(),
     enabled: isOpen,
@@ -49,265 +36,264 @@ export const GlobalSearch = ({ isOpen, onClose }) => {
     enabled: isOpen,
   });
 
-  const { data: slClients = [] } = useQuery({
+  const { data: supportedLivingClients = [] } = useQuery({
     queryKey: ['supported-living-clients'],
     queryFn: () => base44.entities.SupportedLivingClient.list(),
     enabled: isOpen,
   });
 
-  const { data: dcClients = [] } = useQuery({
-    queryKey: ['day-centre-clients'],
+  const { data: dayCentreClients = [] } = useQuery({
+    queryKey: ['daycentre-clients'],
     queryFn: () => base44.entities.DayCentreClient.list(),
     enabled: isOpen,
   });
 
-  useEffect(() => {
-    if (isOpen && inputRef.current) {
-      inputRef.current.focus();
-    }
-  }, [isOpen]);
+  // Search logic
+  const searchResults = React.useMemo(() => {
+    if (!query.trim()) return [];
 
-  useEffect(() => {
-    if (!query.trim()) {
-      setResults([]);
-      return;
-    }
+    const lowerQuery = query.toLowerCase();
+    const results = [];
 
-    const searchQuery = query.toLowerCase();
-    const searchResults = [];
-
-    // Search residential clients
+    // Search clients
     clients.forEach(client => {
-      if (client.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'residential_client',
-          icon: UserCircle,
+      if (client.full_name?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: client.id,
           title: client.full_name,
-          subtitle: 'Residential Client',
-          action: () => navigate(createPageUrl("Clients") + "?id=" + client.id),
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
+          subtitle: "Residential Client",
+          icon: UserCircle,
+          color: "text-green-600",
+          action: () => {
+            navigate(createPageUrl("Clients"));
+            onClose();
+          }
         });
       }
     });
 
     // Search carers
     carers.forEach(carer => {
-      if (carer.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'carer',
-          icon: Users,
+      if (carer.full_name?.toLowerCase().includes(lowerQuery) || 
+          carer.email?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: carer.id,
           title: carer.full_name,
-          subtitle: 'Carer',
-          action: () => navigate(createPageUrl("Carers")),
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
+          subtitle: "Carer",
+          icon: Users,
+          color: "text-blue-600",
+          action: () => {
+            navigate(createPageUrl("Carers"));
+            onClose();
+          }
         });
       }
     });
 
     // Search dom care clients
-    domClients.forEach(client => {
-      if (client.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'dom_client',
-          icon: MapPin,
+    domCareClients.forEach(client => {
+      if (client.full_name?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: client.id,
           title: client.full_name,
-          subtitle: 'Domiciliary Client',
-          action: () => navigate(createPageUrl("DomCareClients")),
-          color: 'text-green-600',
-          bgColor: 'bg-green-50',
+          subtitle: "Domiciliary Care Client",
+          icon: UserCircle,
+          color: "text-green-600",
+          action: () => {
+            navigate(createPageUrl("DomCareClients"));
+            onClose();
+          }
         });
       }
     });
 
     // Search staff
-    staff.forEach(s => {
-      if (s.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'staff',
+    staff.forEach(member => {
+      if (member.full_name?.toLowerCase().includes(lowerQuery) || 
+          member.email?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: member.id,
+          title: member.full_name,
+          subtitle: "Domiciliary Care Staff",
           icon: Users,
-          title: s.full_name,
-          subtitle: 'Dom Care Staff',
-          action: () => navigate(createPageUrl("DomCareStaff")),
-          color: 'text-blue-600',
-          bgColor: 'bg-blue-50',
+          color: "text-blue-600",
+          action: () => {
+            navigate(createPageUrl("DomCareStaff"));
+            onClose();
+          }
         });
       }
     });
 
     // Search supported living clients
-    slClients.forEach(client => {
-      if (client.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'sl_client',
-          icon: Home,
+    supportedLivingClients.forEach(client => {
+      if (client.full_name?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: client.id,
           title: client.full_name,
-          subtitle: 'Supported Living Client',
-          action: () => navigate(createPageUrl("SupportedLivingClients")),
-          color: 'text-indigo-600',
-          bgColor: 'bg-indigo-50',
+          subtitle: "Supported Living Client",
+          icon: Home,
+          color: "text-indigo-600",
+          action: () => {
+            navigate(createPageUrl("SupportedLivingClients"));
+            onClose();
+          }
         });
       }
     });
 
     // Search day centre clients
-    dcClients.forEach(client => {
-      if (client.full_name?.toLowerCase().includes(searchQuery)) {
-        searchResults.push({
-          type: 'dc_client',
-          icon: Activity,
+    dayCentreClients.forEach(client => {
+      if (client.full_name?.toLowerCase().includes(lowerQuery)) {
+        results.push({
+          id: client.id,
           title: client.full_name,
-          subtitle: 'Day Centre Client',
-          action: () => navigate(createPageUrl("DayCentreClients")),
-          color: 'text-amber-600',
-          bgColor: 'bg-amber-50',
+          subtitle: "Day Centre Client",
+          icon: Activity,
+          color: "text-amber-600",
+          action: () => {
+            navigate(createPageUrl("DayCentreClients"));
+            onClose();
+          }
         });
       }
     });
 
-    // Add quick actions
-    const quickActions = [
-      {
-        type: 'action',
-        icon: Calendar,
-        title: 'Schedule',
-        subtitle: 'View and manage shifts',
-        action: () => navigate(createPageUrl("Schedule")),
-        color: 'text-purple-600',
-        bgColor: 'bg-purple-50',
-        keywords: ['schedule', 'shifts', 'roster', 'calendar'],
-      },
-      {
-        type: 'action',
-        icon: MapPin,
-        title: 'Dom Care Schedule',
-        subtitle: 'Manage visits and runs',
-        action: () => navigate(createPageUrl("DomCareSchedule")),
-        color: 'text-green-600',
-        bgColor: 'bg-green-50',
-        keywords: ['domiciliary', 'visits', 'runs', 'schedule'],
-      },
-      {
-        type: 'action',
-        icon: FileText,
-        title: 'Reports',
-        subtitle: 'View analytics and reports',
-        action: () => navigate(createPageUrl("Reports")),
-        color: 'text-blue-600',
-        bgColor: 'bg-blue-50',
-        keywords: ['reports', 'analytics', 'statistics'],
-      },
-    ];
+    return results.slice(0, 10); // Limit to 10 results
+  }, [query, clients, carers, domCareClients, staff, supportedLivingClients, dayCentreClients, navigate, onClose]);
 
-    quickActions.forEach(action => {
-      const matchesKeywords = action.keywords?.some(k => k.includes(searchQuery));
-      const matchesTitle = action.title.toLowerCase().includes(searchQuery);
-      
-      if (matchesKeywords || matchesTitle) {
-        searchResults.push(action);
+  // Quick actions (always visible)
+  const quickActions = [
+    { title: "Go to Dashboard", icon: Calendar, action: () => { navigate(createPageUrl("Dashboard")); onClose(); } },
+    { title: "Go to Schedule", icon: Calendar, action: () => { navigate(createPageUrl("Schedule")); onClose(); } },
+    { title: "Go to Clients", icon: UserCircle, action: () => { navigate(createPageUrl("Clients")); onClose(); } },
+    { title: "Go to Carers", icon: Users, action: () => { navigate(createPageUrl("Carers")); onClose(); } },
+  ];
+
+  // Handle keyboard navigation
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
       }
-    });
+    };
 
-    setResults(searchResults.slice(0, 10));
-    setSelectedIndex(0);
-  }, [query, clients, carers, domClients, staff, slClients, dcClients, navigate]);
-
-  const handleKeyDown = (e) => {
-    if (e.key === 'ArrowDown') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.min(prev + 1, results.length - 1));
-    } else if (e.key === 'ArrowUp') {
-      e.preventDefault();
-      setSelectedIndex((prev) => Math.max(prev - 1, 0));
-    } else if (e.key === 'Enter' && results[selectedIndex]) {
-      e.preventDefault();
-      results[selectedIndex].action();
-      onClose();
-    } else if (e.key === 'Escape') {
-      e.preventDefault();
-      onClose();
+    if (isOpen) {
+      window.addEventListener("keydown", handleKeyDown);
+      return () => window.removeEventListener("keydown", handleKeyDown);
     }
-  };
+  }, [isOpen, onClose]);
+
+  // Focus input when opened
+  useEffect(() => {
+    if (isOpen) {
+      setTimeout(() => {
+        document.getElementById("global-search-input")?.focus();
+      }, 100);
+    }
+  }, [isOpen]);
 
   if (!isOpen) return null;
 
   return (
-    <AnimatePresence>
-      <motion.div
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        exit={{ opacity: 0 }}
-        className="fixed inset-0 bg-black/50 z-[9999] flex items-start justify-center pt-20"
-        onClick={onClose}
+    <div
+      className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-20 fade-in"
+      onClick={onClose}
+    >
+      <Card
+        className="w-full max-w-2xl max-h-[70vh] overflow-hidden"
+        onClick={(e) => e.stopPropagation()}
       >
-        <motion.div
-          initial={{ scale: 0.95, opacity: 0 }}
-          animate={{ scale: 1, opacity: 1 }}
-          exit={{ scale: 0.95, opacity: 0 }}
-          onClick={(e) => e.stopPropagation()}
-          className="bg-white rounded-xl shadow-2xl w-full max-w-2xl mx-4 overflow-hidden"
-        >
-          <div className="flex items-center gap-3 p-4 border-b">
-            <Search className="w-5 h-5 text-gray-400" />
-            <input
-              ref={inputRef}
+        {/* Search Input */}
+        <div className="p-4 border-b bg-gradient-to-r from-blue-50 to-purple-50">
+          <div className="relative">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+            <Input
+              id="global-search-input"
               type="text"
+              placeholder="Search clients, staff, carers..."
               value={query}
               onChange={(e) => setQuery(e.target.value)}
-              onKeyDown={handleKeyDown}
-              placeholder="Search clients, staff, or navigate..."
-              className="flex-1 outline-none text-lg"
+              className="pl-10 pr-10 h-12 text-lg"
             />
             <button
               onClick={onClose}
-              className="p-1 hover:bg-gray-100 rounded transition-colors"
+              className="absolute right-3 top-1/2 transform -translate-y-1/2 p-1 hover:bg-gray-200 rounded transition-colors"
             >
               <X className="w-5 h-5 text-gray-400" />
             </button>
           </div>
+        </div>
 
-          {results.length > 0 ? (
-            <div className="max-h-96 overflow-y-auto">
-              {results.map((result, index) => {
-                const Icon = result.icon;
+        {/* Results */}
+        <div className="overflow-y-auto max-h-[calc(70vh-100px)]">
+          {query.trim() ? (
+            searchResults.length > 0 ? (
+              <div className="p-2">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2">
+                  Search Results ({searchResults.length})
+                </p>
+                {searchResults.map((result) => {
+                  const Icon = result.icon;
+                  return (
+                    <button
+                      key={result.id}
+                      onClick={result.action}
+                      className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
+                    >
+                      <div className={`w-10 h-10 rounded-lg bg-gray-100 flex items-center justify-center ${result.color}`}>
+                        <Icon className="w-5 h-5" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-gray-900 truncate">{result.title}</p>
+                        <p className="text-sm text-gray-500 truncate">{result.subtitle}</p>
+                      </div>
+                      <ArrowRight className="w-4 h-4 text-gray-400" />
+                    </button>
+                  );
+                })}
+              </div>
+            ) : (
+              <div className="p-12 text-center">
+                <Search className="w-12 h-12 text-gray-300 mx-auto mb-3" />
+                <p className="text-gray-500 font-medium">No results found</p>
+                <p className="text-sm text-gray-400 mt-1">Try searching for a different name</p>
+              </div>
+            )
+          ) : (
+            <div className="p-2">
+              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                Quick Actions
+              </p>
+              {quickActions.map((action, index) => {
+                const Icon = action.icon;
                 return (
                   <button
                     key={index}
-                    onClick={() => {
-                      result.action();
-                      onClose();
-                    }}
-                    className={`w-full flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors ${
-                      index === selectedIndex ? 'bg-blue-50' : ''
-                    }`}
+                    onClick={action.action}
+                    className="w-full flex items-center gap-3 p-3 rounded-lg hover:bg-gray-100 transition-colors text-left"
                   >
-                    <div className={`p-2 rounded-lg ${result.bgColor}`}>
-                      <Icon className={`w-5 h-5 ${result.color}`} />
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center text-blue-600">
+                      <Icon className="w-5 h-5" />
                     </div>
-                    <div className="flex-1 text-left">
-                      <p className="font-medium text-gray-900">{result.title}</p>
-                      <p className="text-sm text-gray-500">{result.subtitle}</p>
+                    <div className="flex-1">
+                      <p className="font-medium text-gray-900">{action.title}</p>
                     </div>
+                    <ArrowRight className="w-4 h-4 text-gray-400" />
                   </button>
                 );
               })}
             </div>
-          ) : query ? (
-            <div className="p-8 text-center text-gray-500">
-              <Search className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-              <p>No results found for "{query}"</p>
-            </div>
-          ) : (
-            <div className="p-8 text-center text-gray-500">
-              <p className="text-sm">Start typing to search...</p>
-              <p className="text-xs mt-2 text-gray-400">
-                Press <kbd className="px-2 py-1 bg-gray-100 rounded">Cmd+K</kbd> to open search
-              </p>
-            </div>
           )}
-        </motion.div>
-      </motion.div>
-    </AnimatePresence>
+        </div>
+
+        {/* Footer tip */}
+        <div className="border-t p-3 bg-gray-50">
+          <p className="text-xs text-gray-500 text-center">
+            Press <kbd className="px-2 py-1 bg-white border border-gray-300 rounded text-xs">ESC</kbd> to close
+          </p>
+        </div>
+      </Card>
+    </div>
   );
-};
+}

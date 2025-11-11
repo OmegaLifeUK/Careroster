@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -21,13 +20,15 @@ import {
   Home,
   Activity,
   Settings,
-  X
+  X,
+  Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import KeyboardShortcuts from "@/components/ui/keyboard-shortcuts";
+import GlobalSearch from "@/components/ui/global-search";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -88,6 +89,7 @@ export default function Layout({ children, currentPageName }) {
   const location = useLocation();
   const [user, setUser] = React.useState(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
+  const [searchOpen, setSearchOpen] = React.useState(false);
   const [enabledModules, setEnabledModules] = React.useState({
     residential_care: true,
     domiciliary_care: true,
@@ -112,6 +114,19 @@ export default function Layout({ children, currentPageName }) {
       }
     };
     loadUser();
+  }, []);
+
+  // Listen for Ctrl/Cmd + K to open search
+  React.useEffect(() => {
+    const handleKeyDown = (e) => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const { data: settings = [] } = useQuery({
@@ -177,6 +192,18 @@ export default function Layout({ children, currentPageName }) {
                 </p>
               </div>
             </div>
+            
+            {/* Search button in sidebar */}
+            <button
+              onClick={() => setSearchOpen(true)}
+              className="w-full mt-4 flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left text-sm text-gray-600"
+            >
+              <Search className="w-4 h-4" />
+              <span>Quick Search...</span>
+              <kbd className="ml-auto px-2 py-0.5 bg-white border border-gray-300 rounded text-xs">
+                ⌘K
+              </kbd>
+            </button>
           </div>
 
           <div className="flex-1 p-3">
@@ -406,6 +433,14 @@ export default function Layout({ children, currentPageName }) {
             {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
           </Button>
           <h1 className="text-xl font-bold text-gray-900 flex-1">CareRoster</h1>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setSearchOpen(true)}
+            className="hover:bg-gray-100"
+          >
+            <Search className="w-5 h-5" />
+          </Button>
         </header>
 
         <main className="flex-1 overflow-auto">
@@ -416,6 +451,9 @@ export default function Layout({ children, currentPageName }) {
 
         {/* Keyboard Shortcuts Component */}
         <KeyboardShortcuts />
+        
+        {/* Global Search Component */}
+        <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
       </div>
     </div>
   );
