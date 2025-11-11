@@ -19,6 +19,10 @@ import ManagerDashboard from './pages/ManagerDashboard';
 import IncidentManagement from './pages/IncidentManagement';
 import SupportedLivingDashboard from './pages/SupportedLivingDashboard';
 import DayCentreDashboard from './pages/DayCentreDashboard';
+import SupportedLivingClients from './pages/SupportedLivingClients';
+import SupportedLivingProperties from './pages/SupportedLivingProperties';
+import SupportedLivingSchedule from './pages/SupportedLivingSchedule';
+import DayCentreClients from './pages/DayCentreClients';
 import Layout from './Layout.jsx';
 
 
@@ -44,6 +48,10 @@ export const PAGES = {
     "IncidentManagement": IncidentManagement,
     "SupportedLivingDashboard": SupportedLivingDashboard,
     "DayCentreDashboard": DayCentreDashboard,
+    "SupportedLivingClients": SupportedLivingClients,
+    "SupportedLivingProperties": SupportedLivingProperties,
+    "SupportedLivingSchedule": SupportedLivingSchedule,
+    "DayCentreClients": DayCentreClients,
 }
 
 export const pagesConfig = {
