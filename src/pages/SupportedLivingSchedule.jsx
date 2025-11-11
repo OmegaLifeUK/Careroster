@@ -1,6 +1,7 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -12,15 +13,20 @@ import {
   User,
   Home,
   Plus,
-  Filter
+  Filter,
+  Edit
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
+import SupportedLivingShiftDialog from "../components/supportedliving/SupportedLivingShiftDialog";
 
 export default function SupportedLivingSchedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [viewMode, setViewMode] = useState("week"); // week or day
   const [selectedShift, setSelectedShift] = useState(null);
+  const [showShiftDialog, setShowShiftDialog] = useState(false);
+  const [editingShift, setEditingShift] = useState(null);
 
+  const queryClient = useQueryClient();
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
 
@@ -43,6 +49,39 @@ export default function SupportedLivingSchedule() {
     queryKey: ['staff'],
     queryFn: () => base44.entities.Staff.list(),
   });
+
+  const createShiftMutation = useMutation({
+    mutationFn: (shiftData) => base44.entities.SupportedLivingShift.create(shiftData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supported-living-shifts'] });
+      setShowShiftDialog(false);
+      setEditingShift(null);
+    },
+  });
+
+  const updateShiftMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.SupportedLivingShift.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['supported-living-shifts'] });
+      setShowShiftDialog(false);
+      setEditingShift(null);
+      setSelectedShift(null);
+    },
+  });
+
+  const handleSaveShift = (shiftData) => {
+    if (editingShift) {
+      updateShiftMutation.mutate({ id: editingShift.id, data: shiftData });
+    } else {
+      createShiftMutation.mutate(shiftData);
+    }
+  };
+
+  const handleEditShift = (shift) => {
+    setEditingShift(shift);
+    setShowShiftDialog(true);
+    setSelectedShift(null);
+  };
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
 
@@ -112,9 +151,19 @@ export default function SupportedLivingSchedule() {
             <CardHeader className="border-b bg-gradient-to-r from-indigo-50 to-purple-50">
               <div className="flex items-center justify-between">
                 <CardTitle className="text-xl">Shift Details</CardTitle>
-                <Badge className={statusColors[selectedShift.status]}>
-                  {selectedShift.status.replace('_', ' ')}
-                </Badge>
+                <div className="flex items-center gap-2">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => handleEditShift(selectedShift)}
+                  >
+                    <Edit className="w-4 h-4 mr-2" />
+                    Edit
+                  </Button>
+                  <Badge className={statusColors[selectedShift.status]}>
+                    {selectedShift.status.replace('_', ' ')}
+                  </Badge>
+                </div>
               </div>
             </CardHeader>
             <CardContent className="p-6">
@@ -228,7 +277,13 @@ export default function SupportedLivingSchedule() {
               <Filter className="w-4 h-4 mr-2" />
               Filters
             </Button>
-            <Button className="bg-indigo-600 hover:bg-indigo-700">
+            <Button 
+              className="bg-indigo-600 hover:bg-indigo-700"
+              onClick={() => {
+                setEditingShift(null);
+                setShowShiftDialog(true);
+              }}
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Shift
             </Button>
@@ -429,6 +484,20 @@ export default function SupportedLivingSchedule() {
             )}
           </CardContent>
         </Card>
+
+        {showShiftDialog && (
+          <SupportedLivingShiftDialog
+            shift={editingShift}
+            properties={properties}
+            clients={clients}
+            staff={staff}
+            onSave={handleSaveShift}
+            onClose={() => {
+              setShowShiftDialog(false);
+              setEditingShift(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
