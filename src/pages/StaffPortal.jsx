@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -268,6 +269,7 @@ export default function StaffPortal() {
                         timeAttendance={timeAttendance.find(ta => 
                           staffType === 'carer' ? ta.shift_id === activeAssignment.id : false
                         )}
+                        entityType={staffType === 'carer' ? 'shift' : 'visit'}
                       />
                     </CardContent>
                   </Card>
@@ -289,6 +291,7 @@ export default function StaffPortal() {
                         timeAttendance={timeAttendance.find(ta => 
                           staffType === 'carer' ? ta.shift_id === nextAssignment.id : false
                         )}
+                        entityType={staffType === 'carer' ? 'shift' : 'visit'}
                       />
                     </CardContent>
                   </Card>
