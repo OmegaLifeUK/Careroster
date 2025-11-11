@@ -127,8 +127,8 @@ export default function DomCareDashboard() {
 
         {modulePreferences.statsCards && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Link to={createPageUrl("DomCareStaff") + "?filter=active"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DomCareStaff")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
@@ -143,8 +143,8 @@ export default function DomCareDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DomCareClients") + "?filter=active"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DomCareClients")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
@@ -159,8 +159,8 @@ export default function DomCareDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DomCareSchedule") + "?filter=today"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DomCareSchedule")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
@@ -175,8 +175,8 @@ export default function DomCareDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DomCareSchedule") + "?filter=unfilled"}>
-              <Card className={`hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${unfilledVisits > 0 ? 'ring-2 ring-orange-500' : ''}`}>
+            <Link to={createPageUrl("DomCareSchedule")} className="block">
+              <Card className={`hover:shadow-xl hover:scale-105 transition-all cursor-pointer ${unfilledVisits > 0 ? 'ring-2 ring-orange-500' : ''}`}>
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className={`p-3 bg-gradient-to-br ${unfilledVisits > 0 ? 'from-orange-500 to-orange-600' : 'from-gray-400 to-gray-500'} rounded-lg`}>

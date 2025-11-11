@@ -114,8 +114,8 @@ export default function DayCentreDashboard() {
 
         {modulePreferences.statsCards && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Link to={createPageUrl("DayCentreClients") + "?filter=active"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DayCentreClients")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
@@ -130,8 +130,8 @@ export default function DayCentreDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DayCentreActivities")}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DayCentreActivities")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
@@ -146,8 +146,8 @@ export default function DayCentreDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DayCentreAttendance") + "?filter=today"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DayCentreAttendance")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
@@ -163,8 +163,8 @@ export default function DayCentreDashboard() {
               </Card>
             </Link>
 
-            <Link to={createPageUrl("DayCentreSessions") + "?filter=today"}>
-              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+            <Link to={createPageUrl("DayCentreSessions")} className="block">
+              <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
                 <CardContent className="p-6">
                   <div className="flex items-center gap-4">
                     <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
