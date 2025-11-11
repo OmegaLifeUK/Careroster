@@ -1,39 +1,34 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles } from "lucide-react"; // Added Sparkles
-import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
+import { Badge } from "@/components/ui/badge";
+import { Calendar, Plus, Sparkles, List, Grid, Shuffle } from "lucide-react";
+import { ExportButton } from "@/components/ui/export-button";
+import { QuickFilters } from "@/components/ui/quick-filters";
+import { useToast } from "@/components/ui/toast";
+import { AdvancedFilter } from "@/components/ui/advanced-filter";
+import { Tooltip } from "@/components/ui/tooltip";
+import { SkeletonCard } from "@/components/ui/skeleton";
+import { EnhancedEmptyState } from "@/components/ui/enhanced-empty-state";
+import { SmartSuggestion } from "@/components/ui/smart-suggestions";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
 import ShiftCard from "../components/schedule/ShiftCard";
 import WeekCalendar from "../components/schedule/WeekCalendar";
-import ShiftFilters from "../components/schedule/ShiftFilters";
 import AIScheduleGenerator from "../components/schedule/AIScheduleGenerator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
-import SmartAssignButton from "../components/schedule/SmartAssignButton";
 import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
-import { ExportButton } from "@/components/ui/export-button";
-import { QuickFilters } from "@/components/ui/quick-filters";
-import { useToast } from "@/components/ui/use-toast"; // Corrected import path for useToast
+import { DragDropScheduler } from "../components/schedule/DragDropScheduler";
 
 export default function Schedule() {
-  const [view, setView] = useState("timeline");
-  const [selectedDate, setSelectedDate] = useState(new Date());
-  const [showDialog, setShowDialog] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [viewMode, setViewMode] = useState("week");
+  const [filters, setFilters] = useState({});
+  const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
-  const [filters, setFilters] = useState({
-    status: "all",
-    carer: "all",
-    client: "all",
-  });
-  const [showFilters, setShowFilters] = useState(false); // This can likely be removed as QuickFilters will manage the filter display
-
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [savedViews, setSavedViews] = useState([]);
   const { toast } = useToast();
-
   const queryClient = useQueryClient();
 
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
@@ -57,21 +52,13 @@ export default function Schedule() {
   });
 
   const deleteShiftMutation = useMutation({
-    mutationFn: (shiftId) => base44.entities.Shift.delete(shiftId),
+    mutationFn: (id) => base44.entities.Shift.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
-      toast({
-        title: "Success",
-        description: "Shift deleted successfully",
-        variant: "success",
-      });
+      toast.success("Success", "Shift deleted successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete shift",
-        variant: "destructive",
-      });
+      toast.error("Error", "Failed to delete shift");
       console.error("Delete error:", error);
     },
   });
@@ -80,23 +67,14 @@ export default function Schedule() {
     mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
-      toast({
-        title: "Success",
-        description: "Shift updated successfully",
-        variant: "success",
-      });
+      toast.success("Success", "Shift updated successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to update shift",
-        variant: "destructive",
-      });
+      toast.error("Error", "Failed to update shift");
       console.error("Update error:", error);
     },
   });
 
-  // Load saved views from localStorage
   useEffect(() => {
     const saved = localStorage.getItem('schedule_saved_views');
     if (saved) {
@@ -104,86 +82,85 @@ export default function Schedule() {
     }
   }, []);
 
-  const handleSaveView = (viewToSave) => {
-    const updated = [...savedViews, viewToSave];
+  const handleSaveView = (view) => {
+    const updated = [...savedViews, view];
     setSavedViews(updated);
     localStorage.setItem('schedule_saved_views', JSON.stringify(updated));
-    toast({
-      title: "View Saved",
-      description: `"${viewToSave.name}" has been saved`,
-      variant: "success",
-    });
+    toast.success("View Saved", `"${view.name}" has been saved`);
   };
 
   const handleDeleteView = (index) => {
     const updated = savedViews.filter((_, i) => i !== index);
     setSavedViews(updated);
     localStorage.setItem('schedule_saved_views', JSON.stringify(updated));
-    toast({
-      title: "View Deleted",
-      description: "Saved view removed",
-      variant: "success",
-    });
+    toast.success("View Deleted", "Saved view removed");
   };
 
   const handleFilterChange = (newFilters) => {
     setFilters(newFilters);
   };
 
-  const handleCreateShift = () => {
-    setEditingShift(null);
-    setShowDialog(true);
-  };
-
-  const handleEditShift = (shift) => {
-    setEditingShift(shift);
-    setShowDialog(true);
-  };
-
-  const handleDeleteShift = (shiftId) => {
-    if (window.confirm("Are you sure you want to delete this shift?")) {
-      deleteShiftMutation.mutate(shiftId);
+  const handleDelete = (id) => {
+    if (confirm("Are you sure you want to delete this shift?")) {
+      deleteShiftMutation.mutate(id);
     }
   };
 
-  const handleCloseDialog = () => {
-    setShowDialog(false);
-    setEditingShift(null);
+  const handleEdit = (shift) => {
+    setEditingShift(shift);
+    setShowShiftDialog(true);
   };
 
-  const handleShiftUpdate = (shiftId, updatedData) => {
-    updateShiftMutation.mutate({ id: shiftId, data: updatedData });
+  const handleShiftUpdate = (shiftId, updates) => {
+    updateShiftMutation.mutate({ id: shiftId, data: updates });
   };
 
-  const filteredShifts = shifts.filter(shift => {
-    if (filters.status !== "all" && shift.status !== filters.status) return false;
-    if (filters.carer !== "all" && shift.carer_id !== filters.carer) return false;
-    if (filters.client !== "all" && shift.client_id !== filters.client) return false;
-    return true;
-  });
+  const applyAdvancedFilters = (data, filterList) => {
+    return data.filter(item => {
+      return filterList.every(filter => {
+        const value = item[filter.field];
+        const filterValue = filter.value;
 
-  const weekStart = startOfWeek(selectedDate, { weekStartsOn: 1 });
-  const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
-
-  const isLoading = shiftsLoading || carersLoading || clientsLoading;
-
-  const goToPreviousWeek = () => {
-    setSelectedDate(subWeeks(selectedDate, 1));
+        switch (filter.operator) {
+          case 'equals':
+            return value === filterValue;
+          case 'contains':
+            return String(value).toLowerCase().includes(String(filterValue).toLowerCase());
+          case 'greater than':
+            return Number(value) > Number(filterValue);
+          case 'less than':
+            return Number(value) < Number(filterValue);
+          case 'is':
+            return value === filterValue;
+          default:
+            return true;
+        }
+      });
+    });
   };
 
-  const goToNextWeek = () => {
-    setSelectedDate(addWeeks(selectedDate, 1));
-  };
+  let filteredShifts = shifts;
 
-  const goToToday = () => {
-    setSelectedDate(new Date());
-  };
+  // Apply basic filters
+  if (filters.status && filters.status !== "all") {
+    filteredShifts = filteredShifts.filter(s => s.status === filters.status);
+  }
+  if (filters.carer_id) {
+    filteredShifts = filteredShifts.filter(s => s.carer_id === filters.carer_id);
+  }
+  if (filters.client_id) {
+    filteredShifts = filteredShifts.filter(s => s.client_id === filters.client_id);
+  }
 
-  // Prepare data for export
+  // Apply advanced filters if they exist
+  if (filters.advanced && filters.advanced.length > 0) {
+    filteredShifts = applyAdvancedFilters(filteredShifts, filters.advanced);
+  }
+
   const exportData = filteredShifts.map(shift => {
     const carer = carers.find(c => c.id === shift.carer_id);
     const client = clients.find(c => c.id === shift.client_id);
-
+    
     return {
       date: shift.date,
       start_time: shift.start_time,
@@ -207,6 +184,28 @@ export default function Schedule() {
     { key: 'duration_hours', header: 'Duration (hrs)' },
   ];
 
+  const filterConfig = [
+    { field: 'status', label: 'Status', type: 'select', options: ['draft', 'published', 'scheduled', 'completed'], operators: ['is'] },
+    { field: 'shift_type', label: 'Shift Type', type: 'select', options: ['morning', 'afternoon', 'evening', 'night'], operators: ['is'] },
+    { field: 'date', label: 'Date', type: 'date', operators: ['equals', 'greater than', 'less than'] },
+    { field: 'duration_hours', label: 'Duration', type: 'number', operators: ['equals', 'greater than', 'less than'] },
+  ];
+
+  // Generate smart suggestions
+  const suggestions = [];
+  const unfilledShifts = shifts.filter(s => !s.carer_id).length;
+  if (unfilledShifts > 0) {
+    suggestions.push({
+      type: 'warning',
+      title: 'Unfilled Shifts Detected',
+      description: `You have ${unfilledShifts} shifts without assigned carers. Would you like AI to help assign them?`,
+      action: () => setShowAIGenerator(true),
+      actionLabel: 'Auto-Assign'
+    });
+  }
+
+  const isLoading = shiftsLoading || carersLoading || clientsLoading;
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
@@ -222,29 +221,26 @@ export default function Schedule() {
               savedViews={savedViews}
               onSaveView={handleSaveView}
               onDeleteView={handleDeleteView}
-              filterOptions={{
-                status: [{ value: "all", label: "All Statuses" }, { value: "filled", label: "Filled" }, { value: "unfilled", label: "Unfilled" }],
-                carer: [{ value: "all", label: "All Carers" }, ...carers.map(c => ({ value: c.id, label: c.full_name }))],
-                client: [{ value: "all", label: "All Clients" }, ...clients.map(cl => ({ value: cl.id, label: cl.full_name }))],
-              }}
             />
-            <ExportButton
-              data={exportData}
-              filename="shifts"
+            <ExportButton 
+              data={exportData} 
+              filename="shifts" 
               columns={exportColumns}
             />
-            <Button
-              onClick={() => setShowAIGenerator(true)}
-              variant="outline"
-              className="bg-gradient-to-r from-purple-50 to-blue-50"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Generate
-            </Button>
+            <Tooltip content="Generate schedule with AI">
+              <Button
+                onClick={() => setShowAIGenerator(true)}
+                variant="outline"
+                className="bg-gradient-to-r from-purple-50 to-blue-50"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Generate
+              </Button>
+            </Tooltip>
             <Button
               onClick={() => {
                 setEditingShift(null);
-                setShowDialog(true);
+                setShowShiftDialog(true);
               }}
               className="bg-blue-600 hover:bg-blue-700"
             >
@@ -254,139 +250,148 @@ export default function Schedule() {
           </div>
         </div>
 
-        {/* Removed the ShiftFilters component as QuickFilters now handles it */}
-        {/* {showFilters && (
-          <ShiftFilters
-            filters={filters}
-            setFilters={setFilters}
+        {suggestions.length > 0 && (
+          <div className="mb-6">
+            {suggestions.map((suggestion, idx) => (
+              <SmartSuggestion key={idx} {...suggestion} />
+            ))}
+          </div>
+        )}
+
+        <AdvancedFilter
+          filterConfig={filterConfig}
+          onFiltersChange={(advancedFilters) => {
+            setFilters({ ...filters, advanced: advancedFilters });
+          }}
+          appliedFilters={filters.advanced || []}
+        />
+
+        <div className="flex items-center gap-2 my-6">
+          <Tooltip content="Week calendar view">
+            <Button
+              variant={viewMode === "week" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("week")}
+            >
+              <Calendar className="w-4 h-4 mr-2" />
+              Week
+            </Button>
+          </Tooltip>
+          <Tooltip content="List view">
+            <Button
+              variant={viewMode === "list" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+            >
+              <List className="w-4 h-4 mr-2" />
+              List
+            </Button>
+          </Tooltip>
+          <Tooltip content="Drag and drop to assign">
+            <Button
+              variant={viewMode === "dragdrop" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("dragdrop")}
+            >
+              <Shuffle className="w-4 h-4 mr-2" />
+              Drag & Drop
+            </Button>
+          </Tooltip>
+          <Tooltip content="Split screen view">
+            <Button
+              variant={viewMode === "split" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("split")}
+            >
+              <Grid className="w-4 h-4 mr-2" />
+              Split
+            </Button>
+          </Tooltip>
+        </div>
+
+        <ConflictDetector shifts={filteredShifts} carers={carers} leaveRequests={leaveRequests} />
+
+        {isLoading ? (
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
+            {[1, 2, 3, 4, 5, 6].map(i => (
+              <SkeletonCard key={i} />
+            ))}
+          </div>
+        ) : viewMode === "week" ? (
+          <WeekCalendar 
+            shifts={filteredShifts} 
+            carers={carers} 
+            clients={clients}
+            onShiftClick={handleEdit}
+            onShiftUpdate={handleShiftUpdate}
+          />
+        ) : viewMode === "dragdrop" ? (
+          <DragDropScheduler
+            shifts={filteredShifts}
             carers={carers}
             clients={clients}
+            onShiftUpdate={handleShiftUpdate}
+            onShiftEdit={handleEdit}
+            onShiftDelete={handleDelete}
+            groupBy="carer"
           />
-        )} */}
-
-        <div className="mb-6">
-          <ConflictDetector shifts={shifts} carers={carers} clients={clients} />
-        </div>
-
-        <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
-          <div className="flex gap-2">
-            <Button
-              variant={view === "timeline" ? "default" : "ghost"}
-              onClick={() => setView("timeline")}
-              className="flex items-center gap-2"
-            >
-              <LayoutGrid className="w-4 h-4" />
-              Timeline
-            </Button>
-            <Button
-              variant={view === "week" ? "default" : "ghost"}
-              onClick={() => setView("week")}
-              className="flex items-center gap-2"
-            >
-              <Calendar className="w-4 h-4" />
-              Week View
-            </Button>
-            <Button
-              variant={view === "list" ? "default" : "ghost"}
-              onClick={() => setView("list")}
-              className="flex items-center gap-2"
-            >
-              <List className="w-4 h-4" />
-              List View
-            </Button>
-          </div>
-
-          {view !== "list" && (
-            <div className="flex items-center gap-2">
-              <Button variant="outline" size="sm" onClick={goToPreviousWeek}>
-                <ChevronLeft className="w-4 h-4" />
-              </Button>
-              <div className="px-4 py-2 bg-gray-50 rounded-lg min-w-[200px] text-center">
-                <p className="font-semibold text-gray-900">
-                  {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
-                </p>
-              </div>
-              <Button variant="outline" size="sm" onClick={goToNextWeek}>
-                <ChevronRight className="w-4 h-4" />
-              </Button>
-              <Button variant="outline" size="sm" onClick={goToToday}>
-                Today
-              </Button>
-            </div>
-          )}
-        </div>
-
-        {view === "timeline" ? (
+        ) : viewMode === "split" ? (
           <SplitScreenScheduler
             shifts={filteredShifts}
             carers={carers}
             clients={clients}
-            weekStart={weekStart}
-            onShiftUpdate={handleShiftUpdate}
-            onShiftClick={handleEditShift}
-          />
-        ) : view === "week" ? (
-          <WeekCalendar
-            weekDays={weekDays}
-            shifts={filteredShifts}
-            carers={carers}
-            clients={clients}
-            onEditShift={handleEditShift}
-            onDeleteShift={handleDeleteShift}
-            isLoading={isLoading}
+            onShiftClick={handleEdit}
           />
         ) : (
-          <div className="grid gap-4">
-            {filteredShifts.map((shift) => (
-              <div key={shift.id} className="relative">
-                <ShiftCard
-                  shift={shift}
-                  carers={carers}
-                  clients={clients}
-                  onEdit={() => handleEditShift(shift)}
-                  onDelete={() => handleDeleteShift(shift.id)}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            {filteredShifts.length === 0 ? (
+              <div className="col-span-full">
+                <EnhancedEmptyState
+                  type="noData"
+                  title="No shifts found"
+                  description="Create your first shift or adjust your filters to see results"
+                  actionLabel="Create Shift"
+                  action={() => {
+                    setEditingShift(null);
+                    setShowShiftDialog(true);
+                  }}
+                  secondaryActionLabel="Clear Filters"
+                  secondaryAction={() => setFilters({})}
                 />
-                {shift.status === 'unfilled' && (
-                  <div className="absolute top-4 right-4">
-                    <SmartAssignButton
-                      shift={shift}
-                      carers={carers}
-                      clients={clients}
-                      shifts={shifts}
-                      leaveRequests={leaveRequests}
-                    />
-                  </div>
-                )}
               </div>
-            ))}
-            {filteredShifts.length === 0 && !isLoading && (
-              <div className="text-center py-12 text-gray-500 bg-white rounded-lg border">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
-                <p className="text-lg font-medium mb-2">No shifts found</p>
-                <p className="text-sm">Create a new shift to get started</p>
-              </div>
+            ) : (
+              filteredShifts.map((shift) => (
+                <ShiftCard
+                  key={shift.id}
+                  shift={shift}
+                  carer={carers.find(c => c.id === shift.carer_id)}
+                  client={clients.find(c => c.id === shift.client_id)}
+                  onEdit={() => handleEdit(shift)}
+                  onDelete={() => handleDelete(shift.id)}
+                />
+              ))
             )}
           </div>
         )}
 
-        {showDialog && (
+        {showShiftDialog && (
           <ShiftDialog
             shift={editingShift}
             carers={carers}
             clients={clients}
-            shifts={shifts}
-            leaveRequests={leaveRequests}
-            onClose={handleCloseDialog}
+            onClose={() => {
+              setShowShiftDialog(false);
+              setEditingShift(null);
+            }}
           />
         )}
 
         {showAIGenerator && (
           <AIScheduleGenerator
+            onClose={() => setShowAIGenerator(false)}
+            shifts={shifts}
             carers={carers}
             clients={clients}
-            shifts={shifts}
-            leaveRequests={leaveRequests}
-            onClose={() => setShowAIGenerator(false)}
           />
         )}
       </div>
