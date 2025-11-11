@@ -8,7 +8,7 @@ import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, Mail, Car, MapPin, Trash2 } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/components/ui/toast";
 
 export default function DomCareStaff() {
   const [searchQuery, setSearchQuery] = useState("");
