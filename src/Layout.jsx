@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -30,6 +29,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { ToastProvider } from "@/components/ui/toast";
 import { GlobalSearch } from "@/components/ui/global-search";
+import { KeyboardShortcuts } from "@/components/ui/keyboard-shortcuts";
 
 const residentialCareNav = [
   {
@@ -243,7 +243,6 @@ export default function Layout({ children, currentPageName }) {
         const userData = await base44.auth.me();
         setUser(userData);
         
-        // Check for client portal access
         const allAccess = await base44.entities.ClientPortalAccess.list();
         const userAccess = allAccess.find(a => 
           a.user_email === userData.email && a.is_active
@@ -256,15 +255,12 @@ export default function Layout({ children, currentPageName }) {
     loadUser();
   }, []);
 
-  // Global keyboard shortcuts
   useEffect(() => {
     const handleKeyDown = (e) => {
-      // Cmd+K or Ctrl+K for search
       if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
         e.preventDefault();
         setSearchOpen(true);
       }
-      // Escape to close search
       if (e.key === 'Escape' && searchOpen) {
         setSearchOpen(false);
       }
@@ -308,7 +304,6 @@ export default function Layout({ children, currentPageName }) {
     base44.auth.logout();
   };
 
-  // If user has portal access and is not an admin, show only portal navigation
   const isPortalUser = !!portalAccess && user?.role !== 'admin';
 
   return (
@@ -326,7 +321,6 @@ export default function Layout({ children, currentPageName }) {
       `}</style>
       
       <div className="min-h-screen flex bg-gradient-to-br from-gray-50 to-blue-50">
-        {/* Mobile Sidebar Overlay */}
         {sidebarOpen && (
           <div 
             className="fixed inset-0 bg-black/50 z-40 lg:hidden"
@@ -334,14 +328,12 @@ export default function Layout({ children, currentPageName }) {
           />
         )}
 
-        {/* Sidebar */}
         <aside 
           className={`fixed lg:static inset-y-0 left-0 z-50 w-64 bg-white border-r border-gray-200 transform transition-transform duration-300 ease-in-out lg:translate-x-0 ${
             sidebarOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
         >
           <div className="flex flex-col h-full overflow-y-auto">
-            {/* Header */}
             <div className="border-b border-gray-200 p-6">
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-500 to-blue-600 rounded-xl flex items-center justify-center shadow-lg">
@@ -356,17 +348,14 @@ export default function Layout({ children, currentPageName }) {
               </div>
             </div>
 
-            {/* Navigation */}
             <div className="flex-1 p-3">
               {isPortalUser ? (
-                // Client Portal Navigation
                 <div className="mb-6">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
                     Client Portal
                   </p>
                   <nav className="space-y-1">
                     {clientPortalNav.map((item) => {
-                      // Hide booking requests if user doesn't have permission
                       if (item.title === "Booking Requests" && !portalAccess.can_request_bookings) {
                         return null;
                       }
@@ -390,7 +379,6 @@ export default function Layout({ children, currentPageName }) {
                   </nav>
                 </div>
               ) : (
-                // Staff/Admin Navigation
                 <>
                   {enabledModules.residential_care && (
                     <div className="mb-6">
@@ -546,7 +534,6 @@ export default function Layout({ children, currentPageName }) {
               )}
             </div>
 
-            {/* Footer */}
             <div className="border-t border-gray-200 p-4">
               <div className="flex items-center gap-3 mb-3">
                 <div className="w-10 h-10 bg-gradient-to-br from-blue-400 to-blue-500 rounded-full flex items-center justify-center">
@@ -577,9 +564,7 @@ export default function Layout({ children, currentPageName }) {
           </div>
         </aside>
 
-        {/* Main Content */}
         <div className="flex-1 flex flex-col min-w-0">
-          {/* Mobile Header */}
           <header className="bg-white border-b border-gray-200 px-6 py-4 flex items-center gap-4 lg:hidden sticky top-0 z-30 shadow-sm">
             <Button
               variant="ghost"
@@ -600,7 +585,6 @@ export default function Layout({ children, currentPageName }) {
             </Button>
           </header>
 
-          {/* Desktop Search Button */}
           <div className="hidden lg:block sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-gray-200">
             <div className="max-w-7xl mx-auto px-6 py-3">
               <button
@@ -619,15 +603,14 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </div>
 
-          {/* Page Content */}
           <main className="flex-1 overflow-auto">
             {children}
           </main>
         </div>
       </div>
 
-      {/* Global Search Modal */}
       <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+      <KeyboardShortcuts />
     </ToastProvider>
   );
 }
