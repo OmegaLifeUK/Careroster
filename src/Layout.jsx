@@ -212,6 +212,12 @@ const systemNavigation = [
     icon: Settings,
     adminOnly: true,
   },
+  {
+    title: "User Management",
+    url: createPageUrl("UserManagement"),
+    icon: Users,
+    adminOnly: true,
+  },
 ];
 
 export default function Layout({ children, currentPageName }) {

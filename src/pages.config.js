@@ -31,6 +31,7 @@ import ClientPortal from './pages/ClientPortal';
 import ClientPortalSchedule from './pages/ClientPortalSchedule';
 import ClientPortalMessages from './pages/ClientPortalMessages';
 import ClientPortalBookings from './pages/ClientPortalBookings';
+import UserManagement from './pages/UserManagement';
 import Layout from './Layout.jsx';
 
 
@@ -68,6 +69,7 @@ export const PAGES = {
     "ClientPortalSchedule": ClientPortalSchedule,
     "ClientPortalMessages": ClientPortalMessages,
     "ClientPortalBookings": ClientPortalBookings,
+    "UserManagement": UserManagement,
 }
 
 export const pagesConfig = {
