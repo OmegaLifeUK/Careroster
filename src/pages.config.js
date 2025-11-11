@@ -17,6 +17,8 @@ import StaffTraining from './pages/StaffTraining';
 import ClientFeedback from './pages/ClientFeedback';
 import ManagerDashboard from './pages/ManagerDashboard';
 import IncidentManagement from './pages/IncidentManagement';
+import SupportedLivingDashboard from './pages/SupportedLivingDashboard';
+import DayCentreDashboard from './pages/DayCentreDashboard';
 import Layout from './Layout.jsx';
 
 
@@ -40,6 +42,8 @@ export const PAGES = {
     "ClientFeedback": ClientFeedback,
     "ManagerDashboard": ManagerDashboard,
     "IncidentManagement": IncidentManagement,
+    "SupportedLivingDashboard": SupportedLivingDashboard,
+    "DayCentreDashboard": DayCentreDashboard,
 }
 
 export const pagesConfig = {
