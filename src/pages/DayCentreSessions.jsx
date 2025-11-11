@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -405,7 +406,7 @@ export default function DayCentreSessions() {
                               <Users className="w-3 h-3" />
                               <span>{registeredCount}/{session.max_capacity}</span>
                             </div>
-                            <Badge className={statusColors[session.status]} variant="outline" className="text-[10px] mt-1">
+                            <Badge variant="outline" className={`text-[10px] mt-1 ${statusColors[session.status]}`}>
                               {session.status}
                             </Badge>
                           </div>
