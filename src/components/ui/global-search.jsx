@@ -170,18 +170,20 @@ export default function GlobalSearch({ isOpen, onClose }) {
     { title: "Go to Carers", icon: Users, action: () => { navigate(createPageUrl("Carers")); onClose(); } },
   ];
 
-  // Handle keyboard navigation
+  // Handle ESC key to close - simplified version
   useEffect(() => {
-    const handleKeyDown = (e) => {
-      if (e.key === "Escape") {
+    if (!isOpen) return;
+
+    const handleEscape = (e) => {
+      if (e.key === "Escape" || e.keyCode === 27) {
+        e.preventDefault();
+        e.stopPropagation();
         onClose();
       }
     };
 
-    if (isOpen) {
-      window.addEventListener("keydown", handleKeyDown);
-      return () => window.removeEventListener("keydown", handleKeyDown);
-    }
+    document.addEventListener("keydown", handleEscape, true); // Use capture phase
+    return () => document.removeEventListener("keydown", handleEscape, true);
   }, [isOpen, onClose]);
 
   // Focus input when opened
