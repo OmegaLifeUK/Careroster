@@ -25,6 +25,7 @@ import SupportedLivingSchedule from './pages/SupportedLivingSchedule';
 import DayCentreClients from './pages/DayCentreClients';
 import DayCentreActivities from './pages/DayCentreActivities';
 import DayCentreSessions from './pages/DayCentreSessions';
+import DayCentreAttendance from './pages/DayCentreAttendance';
 import Layout from './Layout.jsx';
 
 
@@ -56,6 +57,7 @@ export const PAGES = {
     "DayCentreClients": DayCentreClients,
     "DayCentreActivities": DayCentreActivities,
     "DayCentreSessions": DayCentreSessions,
+    "DayCentreAttendance": DayCentreAttendance,
 }
 
 export const pagesConfig = {
