@@ -1,3 +1,4 @@
+
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -181,6 +182,29 @@ const staffNavigation = [
   },
 ];
 
+const clientPortalNav = [
+  {
+    title: "Portal Home",
+    url: createPageUrl("ClientPortal"),
+    icon: Home,
+  },
+  {
+    title: "My Schedule",
+    url: createPageUrl("ClientPortalSchedule"),
+    icon: Calendar,
+  },
+  {
+    title: "Messages",
+    url: createPageUrl("ClientPortalMessages"),
+    icon: MessageSquare,
+  },
+  {
+    title: "Booking Requests",
+    url: createPageUrl("ClientPortalBookings"),
+    icon: ClipboardList,
+  },
+];
+
 const systemNavigation = [
   {
     title: "Module Settings",
@@ -200,12 +224,20 @@ export default function Layout({ children, currentPageName }) {
     supported_living: true,
     day_centre: true,
   });
+  const [portalAccess, setPortalAccess] = React.useState(null);
 
   React.useEffect(() => {
     const loadUser = async () => {
       try {
         const userData = await base44.auth.me();
         setUser(userData);
+        
+        // Check for client portal access
+        const allAccess = await base44.entities.ClientPortalAccess.list();
+        const userAccess = allAccess.find(a => 
+          a.user_email === userData.email && a.is_active
+        );
+        setPortalAccess(userAccess);
       } catch (error) {
         console.error("Error loading user:", error);
       }
@@ -247,6 +279,9 @@ export default function Layout({ children, currentPageName }) {
     base44.auth.logout();
   };
 
+  // If user has portal access and is not an admin, show only portal navigation
+  const isPortalUser = !!portalAccess && user?.role !== 'admin';
+
   return (
     <>
       <style>{`
@@ -285,162 +320,200 @@ export default function Layout({ children, currentPageName }) {
                 </div>
                 <div>
                   <h2 className="font-bold text-lg text-gray-900">CareRoster</h2>
-                  <p className="text-xs text-gray-500">Care Management</p>
+                  <p className="text-xs text-gray-500">
+                    {isPortalUser ? 'Client Portal' : 'Care Management'}
+                  </p>
                 </div>
               </div>
             </div>
 
             {/* Navigation */}
             <div className="flex-1 p-3">
-              {enabledModules.residential_care && (
+              {isPortalUser ? (
+                // Client Portal Navigation
                 <div className="mb-6">
                   <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                    Residential Care
+                    Client Portal
                   </p>
                   <nav className="space-y-1">
-                    {residentialCareNav.map((item) => (
-                      <Link
-                        key={item.title}
-                        to={item.url}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                          location.pathname === item.url 
-                            ? 'bg-blue-50 text-blue-700 font-medium shadow-sm' 
-                            : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm">{item.title}</span>
-                        {item.title === "Notifications" && unreadCount > 0 && (
-                          <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
-                        )}
-                      </Link>
-                    ))}
+                    {clientPortalNav.map((item) => {
+                      // Hide booking requests if user doesn't have permission
+                      if (item.title === "Booking Requests" && !portalAccess.can_request_bookings) {
+                        return null;
+                      }
+                      
+                      return (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            location.pathname === item.url 
+                              ? 'bg-purple-50 text-purple-700 font-medium shadow-sm' 
+                              : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                          }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      );
+                    })}
                   </nav>
                 </div>
-              )}
+              ) : (
+                // Staff/Admin Navigation
+                <>
+                  {enabledModules.residential_care && (
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                        Residential Care
+                      </p>
+                      <nav className="space-y-1">
+                        {residentialCareNav.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.url}
+                            onClick={() => setSidebarOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                              location.pathname === item.url 
+                                ? 'bg-blue-50 text-blue-700 font-medium shadow-sm' 
+                                : 'text-gray-700 hover:bg-blue-50 hover:text-blue-700'
+                            }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-sm">{item.title}</span>
+                            {item.title === "Notifications" && unreadCount > 0 && (
+                              <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
+                            )}
+                          </Link>
+                        ))}
+                      </nav>
+                    </div>
+                  )}
 
-              {enabledModules.domiciliary_care && (
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                    Domiciliary Care
-                  </p>
-                  <nav className="space-y-1">
-                    {domCareNav.map((item) => (
-                      <Link
-                        key={item.title}
-                        to={item.url}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                          location.pathname === item.url 
-                            ? 'bg-green-50 text-green-700 font-medium shadow-sm' 
-                            : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              )}
+                  {enabledModules.domiciliary_care && (
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                        Domiciliary Care
+                      </p>
+                      <nav className="space-y-1">
+                        {domCareNav.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.url}
+                            onClick={() => setSidebarOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                              location.pathname === item.url 
+                                ? 'bg-green-50 text-green-700 font-medium shadow-sm' 
+                                : 'text-gray-700 hover:bg-green-50 hover:text-green-700'
+                            }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        ))}
+                      </nav>
+                    </div>
+                  )}
 
-              {enabledModules.supported_living && (
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                    Supported Living
-                  </p>
-                  <nav className="space-y-1">
-                    {supportedLivingNav.map((item) => (
-                      <Link
-                        key={item.title}
-                        to={item.url}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                          location.pathname === item.url 
-                            ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
-                            : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              )}
+                  {enabledModules.supported_living && (
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                        Supported Living
+                      </p>
+                      <nav className="space-y-1">
+                        {supportedLivingNav.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.url}
+                            onClick={() => setSidebarOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                              location.pathname === item.url 
+                                ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
+                                : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                            }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        ))}
+                      </nav>
+                    </div>
+                  )}
 
-              {enabledModules.day_centre && (
-                <div className="mb-6">
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                    Day Centre
-                  </p>
-                  <nav className="space-y-1">
-                    {dayCentreNav.map((item) => (
-                      <Link
-                        key={item.title}
-                        to={item.url}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                          location.pathname === item.url 
-                            ? 'bg-amber-50 text-amber-700 font-medium shadow-sm' 
-                            : 'text-gray-700 hover:bg-amber-50 hover:text-amber-700'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
-              )}
+                  {enabledModules.day_centre && (
+                    <div className="mb-6">
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                        Day Centre
+                      </p>
+                      <nav className="space-y-1">
+                        {dayCentreNav.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.url}
+                            onClick={() => setSidebarOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                              location.pathname === item.url 
+                                ? 'bg-amber-50 text-amber-700 font-medium shadow-sm' 
+                                : 'text-gray-700 hover:bg-amber-50 hover:text-amber-700'
+                            }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        ))}
+                      </nav>
+                    </div>
+                  )}
 
-              <div className="mb-6">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                  Staff Access
-                </p>
-                <nav className="space-y-1">
-                  {staffNavigation.map((item) => (
-                    <Link
-                      key={item.title}
-                      to={item.url}
-                      onClick={() => setSidebarOpen(false)}
-                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                        location.pathname === item.url 
-                          ? 'bg-purple-50 text-purple-700 font-medium shadow-sm' 
-                          : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-                      }`}
-                    >
-                      <item.icon className="w-5 h-5" />
-                      <span className="text-sm">{item.title}</span>
-                    </Link>
-                  ))}
-                </nav>
-              </div>
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                      Staff Access
+                    </p>
+                    <nav className="space-y-1">
+                      {staffNavigation.map((item) => (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            location.pathname === item.url 
+                              ? 'bg-purple-50 text-purple-700 font-medium shadow-sm' 
+                              : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
+                          }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </div>
 
-              {user?.role === 'admin' && (
-                <div>
-                  <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                    System
-                  </p>
-                  <nav className="space-y-1">
-                    {systemNavigation.map((item) => (
-                      <Link
-                        key={item.title}
-                        to={item.url}
-                        onClick={() => setSidebarOpen(false)}
-                        className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                          location.pathname === item.url 
-                            ? 'bg-gray-100 text-gray-900 font-medium shadow-sm' 
-                            : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                      >
-                        <item.icon className="w-5 h-5" />
-                        <span className="text-sm">{item.title}</span>
-                      </Link>
-                    ))}
-                  </nav>
-                </div>
+                  {user?.role === 'admin' && (
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                        System
+                      </p>
+                      <nav className="space-y-1">
+                        {systemNavigation.map((item) => (
+                          <Link
+                            key={item.title}
+                            to={item.url}
+                            onClick={() => setSidebarOpen(false)}
+                            className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                              location.pathname === item.url 
+                                ? 'bg-gray-100 text-gray-900 font-medium shadow-sm' 
+                                : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
+                            }`}
+                          >
+                            <item.icon className="w-5 h-5" />
+                            <span className="text-sm">{item.title}</span>
+                          </Link>
+                        ))}
+                      </nav>
+                    </div>
+                  )}
+                </>
               )}
             </div>
 
@@ -456,7 +529,12 @@ export default function Layout({ children, currentPageName }) {
                   <p className="font-medium text-gray-900 text-sm truncate">
                     {user?.full_name || 'User'}
                   </p>
-                  <p className="text-xs text-gray-500 truncate">{user?.role || 'Staff'}</p>
+                  <p className="text-xs text-gray-500 truncate">
+                    {isPortalUser 
+                      ? `${portalAccess.relationship} - Portal User`
+                      : (user?.role || 'Staff')
+                    }
+                  </p>
                 </div>
               </div>
               <button
