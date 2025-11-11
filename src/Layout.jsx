@@ -1,5 +1,5 @@
 
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 import { 
@@ -20,12 +20,16 @@ import {
   Shield,
   Home,
   Activity,
-  Settings
+  Settings,
+  Search,
+  Command
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { ToastProvider } from "@/components/ui/toast";
+import { GlobalSearch } from "@/components/ui/global-search";
 
 const residentialCareNav = [
   {
@@ -231,6 +235,7 @@ export default function Layout({ children, currentPageName }) {
     day_centre: true,
   });
   const [portalAccess, setPortalAccess] = React.useState(null);
+  const [searchOpen, setSearchOpen] = useState(false);
 
   React.useEffect(() => {
     const loadUser = async () => {
@@ -250,6 +255,24 @@ export default function Layout({ children, currentPageName }) {
     };
     loadUser();
   }, []);
+
+  // Global keyboard shortcuts
+  useEffect(() => {
+    const handleKeyDown = (e) => {
+      // Cmd+K or Ctrl+K for search
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        setSearchOpen(true);
+      }
+      // Escape to close search
+      if (e.key === 'Escape' && searchOpen) {
+        setSearchOpen(false);
+      }
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => window.removeEventListener('keydown', handleKeyDown);
+  }, [searchOpen]);
 
   const { data: settings = [] } = useQuery({
     queryKey: ['app-settings'],
@@ -289,7 +312,7 @@ export default function Layout({ children, currentPageName }) {
   const isPortalUser = !!portalAccess && user?.role !== 'admin';
 
   return (
-    <>
+    <ToastProvider>
       <style>{`
         :root {
           --primary: 203 89% 53%;
@@ -566,8 +589,35 @@ export default function Layout({ children, currentPageName }) {
             >
               <Menu className="w-5 h-5" />
             </Button>
-            <h1 className="text-xl font-bold text-gray-900">CareRoster</h1>
+            <h1 className="text-xl font-bold text-gray-900 flex-1">CareRoster</h1>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={() => setSearchOpen(true)}
+              className="hover:bg-gray-100"
+            >
+              <Search className="w-5 h-5" />
+            </Button>
           </header>
+
+          {/* Desktop Search Button */}
+          <div className="hidden lg:block sticky top-0 z-30 bg-white/80 backdrop-blur-sm border-b border-gray-200">
+            <div className="max-w-7xl mx-auto px-6 py-3">
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="w-full max-w-md flex items-center gap-3 px-4 py-2 bg-gray-50 hover:bg-gray-100 rounded-lg border border-gray-200 transition-colors"
+              >
+                <Search className="w-4 h-4 text-gray-400" />
+                <span className="text-sm text-gray-500 flex-1 text-left">
+                  Search clients, staff, or navigate...
+                </span>
+                <div className="flex items-center gap-1 text-xs text-gray-400">
+                  <Command className="w-3 h-3" />
+                  <span>K</span>
+                </div>
+              </button>
+            </div>
+          </div>
 
           {/* Page Content */}
           <main className="flex-1 overflow-auto">
@@ -575,6 +625,9 @@ export default function Layout({ children, currentPageName }) {
           </main>
         </div>
       </div>
-    </>
+
+      {/* Global Search Modal */}
+      <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
+    </ToastProvider>
   );
 }
