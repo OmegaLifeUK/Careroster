@@ -399,7 +399,7 @@ export default function SupportedLivingSchedule() {
                             className="p-2 bg-white rounded border-l-4 border-indigo-500 cursor-pointer hover:shadow-md transition-shadow text-xs"
                           >
                             <div className="font-medium mb-1">{shift.start_time}</div>
-                            <Badge className={shiftTypeColors[shift.shift_type]} variant="outline" className="text-[10px] mb-1">
+                            <Badge variant="outline" className={`text-[10px] mb-1 ${shiftTypeColors[shift.shift_type]}`}>
                               {shiftTypeLabels[shift.shift_type]}
                             </Badge>
                             <div className="text-gray-600 truncate">{property?.property_name}</div>
