@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -17,7 +16,9 @@ import {
   Navigation,
   MessageSquare,
   GraduationCap,
-  Shield // Added Shield icon
+  Shield,
+  Home,
+  Activity
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -117,6 +118,57 @@ const domCareNav = [
     title: "Reports",
     url: createPageUrl("DomCareReports"),
     icon: FileText,
+  },
+];
+
+const supportedLivingNav = [
+  {
+    title: "SL Dashboard",
+    url: createPageUrl("SupportedLivingDashboard"),
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Clients",
+    url: createPageUrl("SupportedLivingClients"),
+    icon: UserCircle,
+  },
+  {
+    title: "Properties",
+    url: createPageUrl("SupportedLivingProperties"),
+    icon: Home,
+  },
+  {
+    title: "Schedule",
+    url: createPageUrl("SupportedLivingSchedule"),
+    icon: Calendar,
+  },
+];
+
+const dayCentreNav = [
+  {
+    title: "Day Centre Dashboard",
+    url: createPageUrl("DayCentreDashboard"),
+    icon: LayoutDashboard,
+  },
+  {
+    title: "Clients",
+    url: createPageUrl("DayCentreClients"),
+    icon: UserCircle,
+  },
+  {
+    title: "Activities",
+    url: createPageUrl("DayCentreActivities"),
+    icon: Activity,
+  },
+  {
+    title: "Sessions",
+    url: createPageUrl("DayCentreSessions"),
+    icon: Calendar,
+  },
+  {
+    title: "Attendance",
+    url: createPageUrl("DayCentreAttendance"),
+    icon: ClipboardList,
   },
 ];
 
@@ -222,7 +274,7 @@ export default function Layout({ children, currentPageName }) {
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <span className="text-sm">{item.title}</span>
                       {item.title === "Notifications" && unreadCount > 0 && (
                         <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
                       )}
@@ -254,6 +306,52 @@ export default function Layout({ children, currentPageName }) {
                 </nav>
               </div>
 
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                  Supported Living
+                </p>
+                <nav className="space-y-1">
+                  {supportedLivingNav.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                        location.pathname === item.url 
+                          ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-sm">{item.title}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
+              <div className="mb-6">
+                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                  Day Centre
+                </p>
+                <nav className="space-y-1">
+                  {dayCentreNav.map((item) => (
+                    <Link
+                      key={item.title}
+                      to={item.url}
+                      onClick={() => setSidebarOpen(false)}
+                      className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                        location.pathname === item.url 
+                          ? 'bg-amber-50 text-amber-700 font-medium shadow-sm' 
+                          : 'text-gray-700 hover:bg-amber-50 hover:text-amber-700'
+                      }`}
+                    >
+                      <item.icon className="w-5 h-5" />
+                      <span className="text-sm">{item.title}</span>
+                    </Link>
+                  ))}
+                </nav>
+              </div>
+
               <div>
                 <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
                   Staff Access
@@ -271,7 +369,7 @@ export default function Layout({ children, currentPageName }) {
                       }`}
                     >
                       <item.icon className="w-5 h-5" />
-                      <span>{item.title}</span>
+                      <span className="text-sm">{item.title}</span>
                     </Link>
                   ))}
                 </nav>
