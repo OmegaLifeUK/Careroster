@@ -29,6 +29,8 @@ import DayCentreAttendance from './pages/DayCentreAttendance';
 import ModuleSettings from './pages/ModuleSettings';
 import ClientPortal from './pages/ClientPortal';
 import ClientPortalSchedule from './pages/ClientPortalSchedule';
+import ClientPortalMessages from './pages/ClientPortalMessages';
+import ClientPortalBookings from './pages/ClientPortalBookings';
 import Layout from './Layout.jsx';
 
 
@@ -64,6 +66,8 @@ export const PAGES = {
     "ModuleSettings": ModuleSettings,
     "ClientPortal": ClientPortal,
     "ClientPortalSchedule": ClientPortalSchedule,
+    "ClientPortalMessages": ClientPortalMessages,
+    "ClientPortalBookings": ClientPortalBookings,
 }
 
 export const pagesConfig = {
