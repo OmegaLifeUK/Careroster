@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -90,64 +91,72 @@ export default function SupportedLivingDashboard() {
 
         {modulePreferences.statsCards && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                    <Users className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("SupportedLivingClients") + "?filter=active"}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Active Clients</p>
+                      <p className="text-2xl font-bold text-gray-900">{activeClients}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Active Clients</p>
-                    <p className="text-2xl font-bold text-gray-900">{activeClients}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                    <Home className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("SupportedLivingProperties")}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+                      <Home className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Properties</p>
+                      <p className="text-2xl font-bold text-gray-900">{properties.length}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Properties</p>
-                    <p className="text-2xl font-bold text-gray-900">{properties.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                    <TrendingUp className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("SupportedLivingProperties")}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
+                      <TrendingUp className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Occupancy</p>
+                      <p className="text-2xl font-bold text-gray-900">{occupancyRate}%</p>
+                      <p className="text-xs text-gray-500">{currentOccupancy}/{totalCapacity}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Occupancy</p>
-                    <p className="text-2xl font-bold text-gray-900">{occupancyRate}%</p>
-                    <p className="text-xs text-gray-500">{currentOccupancy}/{totalCapacity}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className={`hover:shadow-lg transition-shadow ${unfilledShifts > 0 ? 'ring-2 ring-orange-500' : ''}`}>
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className={`p-3 bg-gradient-to-br ${unfilledShifts > 0 ? 'from-orange-500 to-orange-600' : 'from-gray-400 to-gray-500'} rounded-lg`}>
-                    <AlertCircle className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("SupportedLivingSchedule") + "?filter=unfilled"}>
+              <Card className={`hover:shadow-lg transition-all cursor-pointer hover:scale-105 ${unfilledShifts > 0 ? 'ring-2 ring-orange-500' : ''}`}>
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className={`p-3 bg-gradient-to-br ${unfilledShifts > 0 ? 'from-orange-500 to-orange-600' : 'from-gray-400 to-gray-500'} rounded-lg`}>
+                      <AlertCircle className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Unfilled Shifts</p>
+                      <p className={`text-2xl font-bold ${unfilledShifts > 0 ? 'text-orange-600' : 'text-gray-900'}`}>
+                        {unfilledShifts}
+                      </p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Unfilled Shifts</p>
-                    <p className={`text-2xl font-bold ${unfilledShifts > 0 ? 'text-orange-600' : 'text-gray-900'}`}>
-                      {unfilledShifts}
-                    </p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         )}
 

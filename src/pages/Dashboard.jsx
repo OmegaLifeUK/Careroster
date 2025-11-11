@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -138,6 +139,7 @@ export default function Dashboard() {
               icon={Users}
               bgColor="from-blue-500 to-blue-600"
               isLoading={isLoading}
+              linkTo={createPageUrl("Carers") + "?filter=active"}
             />
             <StatsCard
               title="Active Clients"
@@ -145,6 +147,7 @@ export default function Dashboard() {
               icon={UserCircle}
               bgColor="from-green-500 to-green-600"
               isLoading={isLoading}
+              linkTo={createPageUrl("Clients") + "?filter=active"}
             />
             <StatsCard
               title="Today's Shifts"
@@ -152,6 +155,7 @@ export default function Dashboard() {
               icon={Calendar}
               bgColor="from-purple-500 to-purple-600"
               isLoading={isLoading}
+              linkTo={createPageUrl("Schedule") + "?filter=today"}
             />
             <StatsCard
               title="Unfilled Shifts"
@@ -160,6 +164,7 @@ export default function Dashboard() {
               bgColor="from-orange-500 to-orange-600"
               isLoading={isLoading}
               alert={unfilledShifts > 0}
+              linkTo={createPageUrl("Schedule") + "?filter=unfilled"}
             />
           </div>
         )}

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -113,62 +114,70 @@ export default function DayCentreDashboard() {
 
         {modulePreferences.statsCards && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
-                    <Users className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("DayCentreClients") + "?filter=active"}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-blue-500 to-blue-600 rounded-lg">
+                      <Users className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Active Clients</p>
+                      <p className="text-2xl font-bold text-gray-900">{activeClients}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Active Clients</p>
-                    <p className="text-2xl font-bold text-gray-900">{activeClients}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
-                    <Activity className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("DayCentreActivities")}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-purple-500 to-purple-600 rounded-lg">
+                      <Activity className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Active Activities</p>
+                      <p className="text-2xl font-bold text-gray-900">{activities.length}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Active Activities</p>
-                    <p className="text-2xl font-bold text-gray-900">{activities.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
-                    <Smile className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("DayCentreAttendance") + "?filter=today"}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-green-500 to-green-600 rounded-lg">
+                      <Smile className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Today's Attendance</p>
+                      <p className="text-2xl font-bold text-gray-900">{todayAttendance.length}</p>
+                      <p className="text-xs text-gray-500">{attendanceRate}% rate</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Today's Attendance</p>
-                    <p className="text-2xl font-bold text-gray-900">{todayAttendance.length}</p>
-                    <p className="text-xs text-gray-500">{attendanceRate}% rate</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
 
-            <Card className="hover:shadow-lg transition-shadow">
-              <CardContent className="p-6">
-                <div className="flex items-center gap-4">
-                  <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
-                    <Calendar className="w-6 h-6 text-white" />
+            <Link to={createPageUrl("DayCentreSessions") + "?filter=today"}>
+              <Card className="hover:shadow-lg transition-all cursor-pointer hover:scale-105">
+                <CardContent className="p-6">
+                  <div className="flex items-center gap-4">
+                    <div className="p-3 bg-gradient-to-br from-orange-500 to-orange-600 rounded-lg">
+                      <Calendar className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Today's Sessions</p>
+                      <p className="text-2xl font-bold text-gray-900">{todaySessions.length}</p>
+                    </div>
                   </div>
-                  <div>
-                    <p className="text-sm text-gray-600">Today's Sessions</p>
-                    <p className="text-2xl font-bold text-gray-900">{todaySessions.length}</p>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
+                </CardContent>
+              </Card>
+            </Link>
           </div>
         )}
 
