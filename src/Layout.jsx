@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -26,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import KeyboardShortcuts from "@/components/ui/keyboard-shortcuts";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -411,6 +413,9 @@ export default function Layout({ children, currentPageName }) {
             {children}
           </div>
         </main>
+
+        {/* Keyboard Shortcuts Component */}
+        <KeyboardShortcuts />
       </div>
     </div>
   );
