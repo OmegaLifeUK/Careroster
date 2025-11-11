@@ -1,20 +1,10 @@
 import React from "react";
-import { useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Skeleton } from "@/components/ui/skeleton";
 import { AlertCircle } from "lucide-react";
 
 export default function StatsCard({ title, value, icon: Icon, bgColor, isLoading, alert, onClick, linkTo }) {
-  const navigate = useNavigate();
-
-  const handleClick = () => {
-    if (onClick) {
-      onClick();
-    } else if (linkTo) {
-      navigate(linkTo);
-    }
-  };
-
   if (isLoading) {
     return (
       <Card className="relative overflow-hidden">
@@ -26,14 +16,14 @@ export default function StatsCard({ title, value, icon: Icon, bgColor, isLoading
     );
   }
 
-  return (
+  const cardContent = (
     <Card 
       className={`relative overflow-hidden transition-all duration-300 ${
         (onClick || linkTo) 
           ? 'hover:shadow-xl hover:scale-105 cursor-pointer' 
           : 'hover:shadow-lg'
       }`}
-      onClick={handleClick}
+      onClick={onClick}
     >
       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${bgColor} opacity-10 rounded-full transform translate-x-12 -translate-y-12`} />
       <CardHeader className="p-6">
@@ -52,4 +42,11 @@ export default function StatsCard({ title, value, icon: Icon, bgColor, isLoading
       </CardHeader>
     </Card>
   );
+
+  // If there's a linkTo prop, wrap in Link component
+  if (linkTo && !onClick) {
+    return <Link to={linkTo}>{cardContent}</Link>;
+  }
+
+  return cardContent;
 }
