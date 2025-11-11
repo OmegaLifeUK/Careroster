@@ -5,9 +5,9 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Users, 
-  UserCircle, 
+import {
+  Users,
+  UserCircle,
   Calendar,
   AlertTriangle,
   TrendingUp,
@@ -27,6 +27,7 @@ import {
   Shield
 } from "lucide-react";
 import { format, parseISO, isToday, isPast, addDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
+import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
 
@@ -46,13 +47,39 @@ export default function ManagerDashboard() {
   const [user, setUser] = useState(null);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
 
+  // Helper function to create dynamic page URLs
+  const createPageUrl = (pageName) => {
+    // This is a placeholder for your actual routing logic
+    // You'll need to define your routes appropriately
+    switch (pageName) {
+      case "Clients":
+        return "/dashboard/clients"; // Example path
+      case "Schedule":
+        return "/dashboard/schedule"; // Example path
+      case "LeaveRequests":
+        return "/dashboard/leave-requests"; // Example path
+      case "StaffTraining":
+        return "/dashboard/staff/training"; // Example path
+      case "IncidentManagement":
+        return "/dashboard/incidents"; // Example path
+      case "StaffList":
+        return "/dashboard/staff";
+      case "Reports":
+        return "/dashboard/reports";
+      case "Notifications":
+        return "/dashboard/notifications";
+      default:
+        return "/dashboard"; // Default to dashboard or a generic error page
+    }
+  };
+
   // Load user and preferences
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const userData = await base44.auth.me();
         setUser(userData);
-        
+
         // Load dashboard preferences from user data
         if (userData.dashboard_preferences) {
           setModulePreferences(userData.dashboard_preferences);
@@ -149,7 +176,7 @@ export default function ManagerDashboard() {
     }
   });
   const unfilledShifts = shifts.filter(s => s.status === 'unfilled').length;
-  const shiftFillRate = todayShifts.length > 0 
+  const shiftFillRate = todayShifts.length > 0
     ? (((todayShifts.length - todayShifts.filter(s => s.status === 'unfilled').length) / todayShifts.length) * 100).toFixed(1)
     : 100;
 
@@ -241,7 +268,7 @@ export default function ManagerDashboard() {
 
   const exportDashboard = () => {
     const report = `Manager's Dashboard Report - ${format(new Date(), 'yyyy-MM-dd HH:mm')}
-    
+
 OCCUPANCY & COMPLIANCE
 - Beds Occupied: ${occupancyStats.occupied}/${occupancyStats.totalBeds} (${occupancyStats.occupancyRate}%)
 - Planned Admissions: ${occupancyStats.plannedAdmissions}
@@ -303,8 +330,8 @@ COMMUNICATION
               <Download className="w-4 h-4 mr-2" />
               Export Report
             </Button>
-            <Button 
-              variant="outline" 
+            <Button
+              variant="outline"
               size="sm"
               onClick={() => setShowCustomizer(true)}
             >
@@ -347,20 +374,22 @@ COMMUNICATION
               Occupancy & Compliance
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Home className="w-5 h-5 text-blue-600" />
+              <Link to={createPageUrl("Clients")} className="block">
+                <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Home className="w-5 h-5 text-blue-600" />
+                      </div>
+                      <Badge className="bg-blue-100 text-blue-800">{occupancyStats.occupancyRate}%</Badge>
                     </div>
-                    <Badge className="bg-blue-100 text-blue-800">{occupancyStats.occupancyRate}%</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">Beds Occupied</p>
-                  <p className="text-2xl font-bold text-gray-900">
-                    {occupancyStats.occupied}/{occupancyStats.totalBeds}
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-gray-600 mb-1">Beds Occupied</p>
+                    <p className="text-2xl font-bold text-gray-900">
+                      {occupancyStats.occupied}/{occupancyStats.totalBeds}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
 
               <Card className="hover:shadow-lg transition-shadow">
                 <CardContent className="p-4">
@@ -427,34 +456,48 @@ COMMUNICATION
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card className="lg:col-span-2">
                 <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
-                  <CardTitle className="text-lg">Roster & Attendance</CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg">Roster & Attendance</CardTitle>
+                    <Link
+                      to={createPageUrl("Schedule")}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View Full Schedule →
+                    </Link>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    <div className="p-4 bg-blue-50 rounded-lg">
-                      <Calendar className="w-6 h-6 text-blue-600 mb-2" />
-                      <p className="text-xs text-gray-600">Today's Shifts</p>
-                      <p className="text-2xl font-bold text-blue-900">{todayShifts.length}</p>
-                    </div>
-                    <div className={`p-4 rounded-lg ${unfilledShifts > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
-                      <AlertTriangle className={`w-6 h-6 mb-2 ${unfilledShifts > 0 ? 'text-red-600' : 'text-green-600'}`} />
-                      <p className="text-xs text-gray-600">Unfilled</p>
-                      <p className={`text-2xl font-bold ${unfilledShifts > 0 ? 'text-red-900' : 'text-green-900'}`}>
-                        {unfilledShifts}
-                      </p>
-                    </div>
+                    <Link to={createPageUrl("Schedule")} className="block">
+                      <div className="p-4 bg-blue-50 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer">
+                        <Calendar className="w-6 h-6 text-blue-600 mb-2" />
+                        <p className="text-xs text-gray-600">Today's Shifts</p>
+                        <p className="text-2xl font-bold text-blue-900">{todayShifts.length}</p>
+                      </div>
+                    </Link>
+                    <Link to={createPageUrl("Schedule")} className="block">
+                      <div className={`p-4 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer ${unfilledShifts > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
+                        <AlertTriangle className={`w-6 h-6 mb-2 ${unfilledShifts > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                        <p className="text-xs text-gray-600">Unfilled</p>
+                        <p className={`text-2xl font-bold ${unfilledShifts > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                          {unfilledShifts}
+                        </p>
+                      </div>
+                    </Link>
                     <div className="p-4 bg-green-50 rounded-lg">
                       <CheckCircle className="w-6 h-6 text-green-600 mb-2" />
                       <p className="text-xs text-gray-600">Fill Rate</p>
                       <p className="text-2xl font-bold text-green-900">{shiftFillRate}%</p>
                     </div>
-                    <div className="p-4 bg-orange-50 rounded-lg">
-                      <Clock className="w-6 h-6 text-orange-600 mb-2" />
-                      <p className="text-xs text-gray-600">On Leave</p>
-                      <p className="text-2xl font-bold text-orange-900">
-                        {carers.filter(c => c.status === 'on_leave').length}
-                      </p>
-                    </div>
+                    <Link to={createPageUrl("LeaveRequests")} className="block">
+                      <div className="p-4 bg-orange-50 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer">
+                        <Clock className="w-6 h-6 text-orange-600 mb-2" />
+                        <p className="text-xs text-gray-600">On Leave</p>
+                        <p className="text-2xl font-bold text-orange-900">
+                          {carers.filter(c => c.status === 'on_leave').length}
+                        </p>
+                      </div>
+                    </Link>
                   </div>
 
                   <div className="mt-4 p-3 bg-gray-50 rounded-lg">
@@ -465,7 +508,7 @@ COMMUNICATION
                       </span>
                     </div>
                     <div className="mt-2 h-2 bg-gray-200 rounded-full overflow-hidden">
-                      <div 
+                      <div
                         className="h-full bg-green-500"
                         style={{ width: `${(carers.filter(c => c.status === 'active').length / carers.length) * 100}%` }}
                       />
@@ -510,62 +553,70 @@ COMMUNICATION
               Training & Certification
             </h2>
             <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-              <Card className={`hover:shadow-lg transition-shadow ${expiringCerts > 0 ? 'ring-2 ring-orange-500' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 bg-orange-100 rounded-lg">
-                      <AlertTriangle className="w-5 h-5 text-orange-600" />
+              <Link to={createPageUrl("StaffTraining")} className="block">
+                <Card className={`hover:shadow-xl hover:scale-105 transition-all cursor-pointer ${expiringCerts > 0 ? 'ring-2 ring-orange-500' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-2 bg-orange-100 rounded-lg">
+                        <AlertTriangle className="w-5 h-5 text-orange-600" />
+                      </div>
+                      {expiringCerts > 0 && <Badge className="bg-orange-500 text-white">Action</Badge>}
                     </div>
-                    {expiringCerts > 0 && <Badge className="bg-orange-500 text-white">Action</Badge>}
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">Expiring Certs</p>
-                  <p className="text-2xl font-bold text-orange-600">{expiringCerts}</p>
-                  <p className="text-xs text-gray-500 mt-1">Next 30 days</p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-gray-600 mb-1">Expiring Certs</p>
+                    <p className="text-2xl font-bold text-orange-600">{expiringCerts}</p>
+                    <p className="text-xs text-gray-500 mt-1">Next 30 days</p>
+                  </CardContent>
+                </Card>
+              </Link>
 
-              <Card className={`hover:shadow-lg transition-shadow ${overdueTraining > 0 ? 'ring-2 ring-red-500' : ''}`}>
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className={`p-2 ${overdueTraining > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg`}>
-                      <Clock className={`w-5 h-5 ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`} />
+              <Link to={createPageUrl("StaffTraining")} className="block">
+                <Card className={`hover:shadow-xl hover:scale-105 transition-all cursor-pointer ${overdueTraining > 0 ? 'ring-2 ring-red-500' : ''}`}>
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className={`p-2 ${overdueTraining > 0 ? 'bg-red-100' : 'bg-green-100'} rounded-lg`}>
+                        <Clock className={`w-5 h-5 ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`} />
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">Overdue Training</p>
-                  <p className={`text-2xl font-bold ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`}>
-                    {overdueTraining}
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-gray-600 mb-1">Overdue Training</p>
+                    <p className={`text-2xl font-bold ${overdueTraining > 0 ? 'text-red-600' : 'text-green-600'}`}>
+                      {overdueTraining}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 bg-blue-100 rounded-lg">
-                      <Activity className="w-5 h-5 text-blue-600" />
+              <Link to={createPageUrl("StaffTraining")} className="block">
+                <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-2 bg-blue-100 rounded-lg">
+                        <Activity className="w-5 h-5 text-blue-600" />
+                      </div>
                     </div>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">In Progress</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {trainingAssignments.filter(a => a.status === 'in_progress').length}
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-gray-600 mb-1">In Progress</p>
+                    <p className="text-2xl font-bold text-blue-600">
+                      {trainingAssignments.filter(a => a.status === 'in_progress').length}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
 
-              <Card className="hover:shadow-lg transition-shadow">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between mb-2">
-                    <div className="p-2 bg-green-100 rounded-lg">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
+              <Link to={createPageUrl("StaffTraining")} className="block">
+                <Card className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+                  <CardContent className="p-4">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="p-2 bg-green-100 rounded-lg">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                      </div>
+                      <Badge className="bg-green-100 text-green-800">{trainingCompletionRate}%</Badge>
                     </div>
-                    <Badge className="bg-green-100 text-green-800">{trainingCompletionRate}%</Badge>
-                  </div>
-                  <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
-                  <p className="text-2xl font-bold text-green-600">
-                    {trainingAssignments.filter(a => a.status === 'completed').length}/{trainingAssignments.length}
-                  </p>
-                </CardContent>
-              </Card>
+                    <p className="text-sm text-gray-600 mb-1">Completion Rate</p>
+                    <p className="text-2xl font-bold text-green-600">
+                      {trainingAssignments.filter(a => a.status === 'completed').length}/{trainingAssignments.length}
+                    </p>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           </div>
         )}
@@ -580,7 +631,15 @@ COMMUNICATION
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
               <Card className="lg:col-span-2">
                 <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
-                  <CardTitle className="text-lg">Monthly Incident Trends</CardTitle>
+                  <div className="flex justify-between items-center">
+                    <CardTitle className="text-lg">Monthly Incident Trends</CardTitle>
+                    <Link
+                      to={createPageUrl("IncidentManagement")}
+                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
+                    >
+                      View All Incidents →
+                    </Link>
+                  </div>
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="h-64 flex items-end justify-between gap-2">
@@ -590,7 +649,7 @@ COMMUNICATION
                       return (
                         <div key={index} className="flex-1 flex flex-col items-center gap-1">
                           <div className="w-full relative" style={{ height: '200px' }}>
-                            <div 
+                            <div
                               className="absolute bottom-0 w-full bg-gradient-to-t from-orange-400 to-orange-300 rounded-t-lg hover:from-orange-500 hover:to-orange-400 transition-all cursor-pointer"
                               style={{ height: `${height}%` }}
                               title={`${trend.count} incidents (${trend.critical} critical)`}
@@ -616,35 +675,43 @@ COMMUNICATION
                 </CardHeader>
                 <CardContent className="p-6">
                   <div className="space-y-4">
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm font-medium text-blue-900 mb-1">Total (30 days)</p>
-                      <p className="text-3xl font-bold text-blue-900">{recentIncidents.length}</p>
-                    </div>
-                    
-                    <div className={`p-3 rounded-lg ${criticalIncidents > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
-                      <p className="text-sm font-medium mb-1" className={criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}>
-                        Critical
-                      </p>
-                      <p className={`text-3xl font-bold ${criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}`}>
-                        {criticalIncidents}
-                      </p>
-                    </div>
+                    <Link to={createPageUrl("IncidentManagement")} className="block">
+                      <div className="p-3 bg-blue-50 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer">
+                        <p className="text-sm font-medium text-blue-900 mb-1">Total (30 days)</p>
+                        <p className="text-3xl font-bold text-blue-900">{recentIncidents.length}</p>
+                      </div>
+                    </Link>
 
-                    <div className={`p-3 rounded-lg ${unresolvedIncidents > 0 ? 'bg-orange-50' : 'bg-green-50'}`}>
-                      <p className={`text-sm font-medium mb-1 ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
-                        Unresolved
-                      </p>
-                      <p className={`text-3xl font-bold ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
-                        {unresolvedIncidents}
-                      </p>
-                    </div>
+                    <Link to={createPageUrl("IncidentManagement")} className="block">
+                      <div className={`p-3 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer ${criticalIncidents > 0 ? 'bg-red-50 ring-2 ring-red-300' : 'bg-green-50'}`}>
+                        <p className={`text-sm font-medium mb-1 ${criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                          Critical
+                        </p>
+                        <p className={`text-3xl font-bold ${criticalIncidents > 0 ? 'text-red-900' : 'text-green-900'}`}>
+                          {criticalIncidents}
+                        </p>
+                      </div>
+                    </Link>
 
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm font-medium text-green-900 mb-1">Resolved</p>
-                      <p className="text-3xl font-bold text-green-900">
-                        {incidents.filter(i => i.status === 'resolved' || i.status === 'closed').length}
-                      </p>
-                    </div>
+                    <Link to={createPageUrl("IncidentManagement")} className="block">
+                      <div className={`p-3 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer ${unresolvedIncidents > 0 ? 'bg-orange-50' : 'bg-green-50'}`}>
+                        <p className={`text-sm font-medium mb-1 ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
+                          Unresolved
+                        </p>
+                        <p className={`text-3xl font-bold ${unresolvedIncidents > 0 ? 'text-orange-900' : 'text-green-900'}`}>
+                          {unresolvedIncidents}
+                        </p>
+                      </div>
+                    </Link>
+
+                    <Link to={createPageUrl("IncidentManagement")} className="block">
+                      <div className="p-3 bg-green-50 rounded-lg hover:shadow-md hover:scale-105 transition-all cursor-pointer">
+                        <p className="text-sm font-medium text-green-900 mb-1">Resolved</p>
+                        <p className="text-3xl font-bold text-green-900">
+                          {incidents.filter(i => i.status === 'resolved' || i.status === 'closed').length}
+                        </p>
+                      </div>
+                    </Link>
                   </div>
                 </CardContent>
               </Card>
@@ -879,30 +946,42 @@ COMMUNICATION
           </CardHeader>
           <CardContent className="p-6">
             <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <FileText className="w-5 h-5" />
-                <span className="text-xs">View Reports</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <Calendar className="w-5 h-5" />
-                <span className="text-xs">Manage Roster</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <Users className="w-5 h-5" />
-                <span className="text-xs">Staff List</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <Shield className="w-5 h-5" />
-                <span className="text-xs">Incidents</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <GraduationCap className="w-5 h-5" />
-                <span className="text-xs">Training</span>
-              </Button>
-              <Button variant="outline" className="h-auto py-4 flex-col gap-2">
-                <Bell className="w-5 h-5" />
-                <span className="text-xs">Notifications</span>
-              </Button>
+              <Link to={createPageUrl("Reports")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <FileText className="w-5 h-5" />
+                  <span className="text-xs">View Reports</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Schedule")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <Calendar className="w-5 h-5" />
+                  <span className="text-xs">Manage Roster</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl("StaffList")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <Users className="w-5 h-5" />
+                  <span className="text-xs">Staff List</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl("IncidentManagement")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <Shield className="w-5 h-5" />
+                  <span className="text-xs">Incidents</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl("StaffTraining")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <GraduationCap className="w-5 h-5" />
+                  <span className="text-xs">Training</span>
+                </Button>
+              </Link>
+              <Link to={createPageUrl("Notifications")} className="block">
+                <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
+                  <Bell className="w-5 h-5" />
+                  <span className="text-xs">Notifications</span>
+                </Button>
+              </Link>
             </div>
           </CardContent>
         </Card>
