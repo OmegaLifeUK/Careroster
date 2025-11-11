@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -9,6 +10,8 @@ import { Plus, Search, Edit, Phone, Mail, Award, MapPin } from "lucide-react";
 
 import CarerDialog from "../components/carers/CarerDialog";
 import CarerCard from "../components/carers/CarerCard";
+import { ExportButton } from "@/components/ui/export-button";
+import { useToast } from "@/components/ui/toast";
 
 export default function Carers() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -17,6 +20,7 @@ export default function Carers() {
   const [editingCarer, setEditingCarer] = useState(null);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: carers = [], isLoading } = useQuery({
     queryKey: ['carers'],
@@ -28,10 +32,23 @@ export default function Carers() {
     queryFn: () => base44.entities.Qualification.list(),
   });
 
-  const deleteMutation = useMutation({
+  const deleteCarerMutation = useMutation({
     mutationFn: (id) => base44.entities.Carer.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carers'] });
+      toast({
+        title: "Success",
+        description: "Carer deleted successfully",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete carer",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
     },
   });
 
@@ -48,7 +65,7 @@ export default function Carers() {
 
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete this carer?")) {
-      deleteMutation.mutate(id);
+      deleteCarerMutation.mutate(id);
     }
   };
 
@@ -64,6 +81,31 @@ export default function Carers() {
     inactive: carers.filter(c => c.status === 'inactive').length,
   };
 
+  // Prepare data for export
+  const exportData = filteredCarers.map(carer => ({
+    full_name: carer.full_name,
+    email: carer.email,
+    phone: carer.phone,
+    status: carer.status,
+    employment_type: carer.employment_type,
+    hourly_rate: carer.hourly_rate,
+    qualifications: carer.qualifications?.length || 0,
+    city: carer.address?.city || '',
+    postcode: carer.address?.postcode || '',
+  }));
+
+  const exportColumns = [
+    { key: 'full_name', header: 'Name' },
+    { key: 'email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'status', header: 'Status' },
+    { key: 'employment_type', header: 'Employment Type' },
+    { key: 'hourly_rate', header: 'Hourly Rate' },
+    { key: 'qualifications', header: 'Qualifications' },
+    { key: 'city', header: 'City' },
+    { key: 'postcode', header: 'Postcode' },
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
@@ -72,13 +114,23 @@ export default function Carers() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Carers</h1>
             <p className="text-gray-500">Manage your care team</p>
           </div>
-          <Button
-            onClick={() => setShowDialog(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Carer
-          </Button>
+          <div className="flex gap-2">
+            <ExportButton 
+              data={exportData} 
+              filename="carers" 
+              columns={exportColumns}
+            />
+            <Button
+              onClick={() => {
+                setEditingCarer(null);
+                setShowDialog(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Carer
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">

@@ -1,8 +1,9 @@
-import React, { useState } from "react";
+
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
+import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles } from "lucide-react"; // Added Sparkles
 import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
@@ -13,6 +14,9 @@ import AIScheduleGenerator from "../components/schedule/AIScheduleGenerator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import SmartAssignButton from "../components/schedule/SmartAssignButton";
 import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
+import { ExportButton } from "@/components/ui/export-button";
+import { QuickFilters } from "@/components/ui/quick-filters";
+import { useToast } from "@/components/ui/use-toast"; // Corrected import path for useToast
 
 export default function Schedule() {
   const [view, setView] = useState("timeline");
@@ -25,7 +29,10 @@ export default function Schedule() {
     carer: "all",
     client: "all",
   });
-  const [showFilters, setShowFilters] = useState(false);
+  const [showFilters, setShowFilters] = useState(false); // This can likely be removed as QuickFilters will manage the filter display
+
+  const [savedViews, setSavedViews] = useState([]);
+  const { toast } = useToast();
 
   const queryClient = useQueryClient();
 
@@ -53,6 +60,19 @@ export default function Schedule() {
     mutationFn: (shiftId) => base44.entities.Shift.delete(shiftId),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      toast({
+        title: "Success",
+        description: "Shift deleted successfully",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to delete shift",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
     },
   });
 
@@ -60,8 +80,55 @@ export default function Schedule() {
     mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      toast({
+        title: "Success",
+        description: "Shift updated successfully",
+        variant: "success",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to update shift",
+        variant: "destructive",
+      });
+      console.error("Update error:", error);
     },
   });
+
+  // Load saved views from localStorage
+  useEffect(() => {
+    const saved = localStorage.getItem('schedule_saved_views');
+    if (saved) {
+      setSavedViews(JSON.parse(saved));
+    }
+  }, []);
+
+  const handleSaveView = (viewToSave) => {
+    const updated = [...savedViews, viewToSave];
+    setSavedViews(updated);
+    localStorage.setItem('schedule_saved_views', JSON.stringify(updated));
+    toast({
+      title: "View Saved",
+      description: `"${viewToSave.name}" has been saved`,
+      variant: "success",
+    });
+  };
+
+  const handleDeleteView = (index) => {
+    const updated = savedViews.filter((_, i) => i !== index);
+    setSavedViews(updated);
+    localStorage.setItem('schedule_saved_views', JSON.stringify(updated));
+    toast({
+      title: "View Deleted",
+      description: "Saved view removed",
+      variant: "success",
+    });
+  };
+
+  const handleFilterChange = (newFilters) => {
+    setFilters(newFilters);
+  };
 
   const handleCreateShift = () => {
     setEditingShift(null);
@@ -112,48 +179,90 @@ export default function Schedule() {
     setSelectedDate(new Date());
   };
 
+  // Prepare data for export
+  const exportData = filteredShifts.map(shift => {
+    const carer = carers.find(c => c.id === shift.carer_id);
+    const client = clients.find(c => c.id === shift.client_id);
+
+    return {
+      date: shift.date,
+      start_time: shift.start_time,
+      end_time: shift.end_time,
+      carer: carer?.full_name || 'Unassigned',
+      client: client?.full_name || 'Unknown',
+      shift_type: shift.shift_type,
+      status: shift.status,
+      duration_hours: shift.duration_hours,
+    };
+  });
+
+  const exportColumns = [
+    { key: 'date', header: 'Date' },
+    { key: 'start_time', header: 'Start Time' },
+    { key: 'end_time', header: 'End Time' },
+    { key: 'carer', header: 'Carer' },
+    { key: 'client', header: 'Client' },
+    { key: 'shift_type', header: 'Type' },
+    { key: 'status', header: 'Status' },
+    { key: 'duration_hours', header: 'Duration (hrs)' },
+  ];
+
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-[98%] mx-auto">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+      <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Schedule</h1>
-            <p className="text-gray-500">Drag and drop shifts to manage your care schedule</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Shift Schedule</h1>
+            <p className="text-gray-500">Manage and assign shifts to carers</p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto flex-wrap">
-            <Button
-              variant="outline"
-              onClick={() => setShowFilters(!showFilters)}
-              className="flex-1 md:flex-none"
-            >
-              <Filter className="w-4 h-4 mr-2" />
-              Filters
-            </Button>
+          <div className="flex gap-2 flex-wrap">
+            <QuickFilters
+              currentFilters={filters}
+              onFilterChange={handleFilterChange}
+              savedViews={savedViews}
+              onSaveView={handleSaveView}
+              onDeleteView={handleDeleteView}
+              filterOptions={{
+                status: [{ value: "all", label: "All Statuses" }, { value: "filled", label: "Filled" }, { value: "unfilled", label: "Unfilled" }],
+                carer: [{ value: "all", label: "All Carers" }, ...carers.map(c => ({ value: c.id, label: c.full_name }))],
+                client: [{ value: "all", label: "All Clients" }, ...clients.map(cl => ({ value: cl.id, label: cl.full_name }))],
+              }}
+            />
+            <ExportButton
+              data={exportData}
+              filename="shifts"
+              columns={exportColumns}
+            />
             <Button
               onClick={() => setShowAIGenerator(true)}
-              className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
+              variant="outline"
+              className="bg-gradient-to-r from-purple-50 to-blue-50"
             >
-              <Calendar className="w-4 h-4 mr-2" />
+              <Sparkles className="w-4 h-4 mr-2" />
               AI Generate
             </Button>
             <Button
-              onClick={handleCreateShift}
-              className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700"
+              onClick={() => {
+                setEditingShift(null);
+                setShowDialog(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
-              New Shift
+              Add Shift
             </Button>
           </div>
         </div>
 
-        {showFilters && (
+        {/* Removed the ShiftFilters component as QuickFilters now handles it */}
+        {/* {showFilters && (
           <ShiftFilters
             filters={filters}
             setFilters={setFilters}
             carers={carers}
             clients={clients}
           />
-        )}
+        )} */}
 
         <div className="mb-6">
           <ConflictDetector shifts={shifts} carers={carers} clients={clients} />

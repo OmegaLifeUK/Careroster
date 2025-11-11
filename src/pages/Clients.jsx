@@ -7,6 +7,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles } from "lucide-react";
+import { ExportButton } from "@/components/ui/export-button";
+import { useToast } from "@/components/ui/toast";
 
 import ClientDialog from "../components/clients/ClientDialog";
 import MedicationManagement from "../components/clients/MedicationManagement";
@@ -27,6 +29,7 @@ export default function Clients() {
   const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
@@ -38,10 +41,23 @@ export default function Clients() {
     queryFn: () => base44.entities.Carer.list(),
   });
 
-  const deleteMutation = useMutation({
+  const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      toast({
+        title: "Success",
+        description: "Client removed successfully",
+        variant: "default",
+      });
+    },
+    onError: (error) => {
+      toast({
+        title: "Error",
+        description: "Failed to remove client",
+        variant: "destructive",
+      });
+      console.error("Delete error:", error);
     },
   });
 
@@ -58,7 +74,7 @@ export default function Clients() {
 
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete this client?")) {
-      deleteMutation.mutate(id);
+      deleteClientMutation.mutate(id);
     }
   };
 
@@ -83,6 +99,31 @@ export default function Clients() {
     inactive: "bg-gray-100 text-gray-800",
     archived: "bg-red-100 text-red-800",
   };
+
+  // Prepare data for export
+  const exportData = filteredClients.map(client => ({
+    full_name: client.full_name,
+    date_of_birth: client.date_of_birth,
+    phone: client.phone,
+    status: client.status,
+    mobility: client.mobility,
+    funding_type: client.funding_type,
+    care_needs: client.care_needs?.join('; ') || '',
+    city: client.address?.city || '',
+    postcode: client.address?.postcode || '',
+  }));
+
+  const exportColumns = [
+    { key: 'full_name', header: 'Name' },
+    { key: 'date_of_birth', header: 'Date of Birth' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'status', header: 'Status' },
+    { key: 'mobility', header: 'Mobility' },
+    { key: 'funding_type', header: 'Funding Type' },
+    { key: 'care_needs', header: 'Care Needs' },
+    { key: 'city', header: 'City' },
+    { key: 'postcode', header: 'Postcode' },
+  ];
 
   if (selectedClient) {
     return (
@@ -281,15 +322,25 @@ export default function Clients() {
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Clients</h1>
-            <p className="text-gray-500">Manage client information and care needs</p>
+            <p className="text-gray-500">Manage client information and care plans</p>
           </div>
-          <Button
-            onClick={() => setShowDialog(true)}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Add Client
-          </Button>
+          <div className="flex gap-2">
+            <ExportButton 
+              data={exportData} 
+              filename="clients" 
+              columns={exportColumns}
+            />
+            <Button
+              onClick={() => {
+                setEditingClient(null);
+                setShowDialog(true);
+              }}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Add Client
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
