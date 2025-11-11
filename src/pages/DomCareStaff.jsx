@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -6,12 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, Mail, Car, MapPin, Trash2 } from "lucide-react";
+import { ExportButton } from "@/components/ui/export-button";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function DomCareStaff() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: staff = [], isLoading } = useQuery({
     queryKey: ['staff'],
@@ -35,18 +39,50 @@ export default function DomCareStaff() {
     inactive: staff.filter(s => !s.is_active).length,
   };
 
+  // Prepare data for export
+  const exportData = filteredStaff.map(staff => ({
+    full_name: staff.full_name,
+    email: staff.email,
+    phone: staff.phone,
+    is_active: staff.is_active ? 'Yes' : 'No',
+    vehicle_type: staff.vehicle_type,
+    max_visits_per_day: staff.max_visits_per_day,
+    hourly_rate: staff.hourly_rate,
+    qualifications: staff.qualifications?.length || 0,
+    preferred_areas: staff.preferred_areas?.join('; ') || '',
+  }));
+
+  const exportColumns = [
+    { key: 'full_name', header: 'Name' },
+    { key: 'email', header: 'Email' },
+    { key: 'phone', header: 'Phone' },
+    { key: 'is_active', header: 'Active' },
+    { key: 'vehicle_type', header: 'Vehicle' },
+    { key: 'max_visits_per_day', header: 'Max Visits/Day' },
+    { key: 'hourly_rate', header: 'Hourly Rate' },
+    { key: 'qualifications', header: 'Qualifications' },
+    { key: 'preferred_areas', header: 'Preferred Areas' },
+  ];
+
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Care Staff</h1>
-            <p className="text-gray-500">Manage domiciliary care team</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Domiciliary Care Staff</h1>
+            <p className="text-gray-500">Manage your care team</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
-            <Plus className="w-4 h-4 mr-2" />
-            Add Staff Member
-          </Button>
+          <div className="flex gap-2">
+            <ExportButton 
+              data={exportData} 
+              filename="domcare-staff" 
+              columns={exportColumns}
+            />
+            <Button className="bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-4 h-4 mr-2" />
+              Add Staff
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
