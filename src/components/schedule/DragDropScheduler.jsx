@@ -3,7 +3,7 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, MapPin, GripVertical, Edit, Trash2 } from "lucide-react";
+import { Clock, User, MapPin, GripVertical, Edit, Trash2, Calendar } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 export const DragDropScheduler = ({ 
