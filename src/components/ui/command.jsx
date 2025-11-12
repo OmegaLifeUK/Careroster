@@ -1,116 +1,112 @@
-import * as React from "react"
-import { Command as CommandPrimitive } from "cmdk"
-import { Search } from "lucide-react"
+import React, { useState, useEffect } from "react";
+import { Search, ArrowRight } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
-import { cn } from "@/lib/utils"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+export function CommandPalette({ isOpen, onClose, commands }) {
+  const [query, setQuery] = useState("");
+  const [selectedIndex, setSelectedIndex] = useState(0);
+  const navigate = useNavigate();
 
-const Command = React.forwardRef(({ className, ...props }, ref) => (
-  <CommandPrimitive
-    ref={ref}
-    className={cn(
-      "flex h-full w-full flex-col overflow-hidden rounded-md bg-popover text-popover-foreground",
-      className
-    )}
-    {...props} />
-))
-Command.displayName = CommandPrimitive.displayName
-
-const CommandDialog = ({
-  children,
-  ...props
-}) => {
-  return (
-    (<Dialog {...props}>
-      <DialogContent className="overflow-hidden p-0">
-        <Command
-          className="[&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground [&_[cmdk-group]:not([hidden])_~[cmdk-group]]:pt-0 [&_[cmdk-group]]:px-2 [&_[cmdk-input-wrapper]_svg]:h-5 [&_[cmdk-input-wrapper]_svg]:w-5 [&_[cmdk-input]]:h-12 [&_[cmdk-item]]:px-2 [&_[cmdk-item]]:py-3 [&_[cmdk-item]_svg]:h-5 [&_[cmdk-item]_svg]:w-5">
-          {children}
-        </Command>
-      </DialogContent>
-    </Dialog>)
+  const filteredCommands = commands.filter(cmd =>
+    cmd.label.toLowerCase().includes(query.toLowerCase()) ||
+    cmd.keywords?.some(k => k.toLowerCase().includes(query.toLowerCase()))
   );
-}
 
-const CommandInput = React.forwardRef(({ className, ...props }, ref) => (
-  <div className="flex items-center border-b px-3" cmdk-input-wrapper="">
-    <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-    <CommandPrimitive.Input
-      ref={ref}
-      className={cn(
-        "flex h-10 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50",
-        className
-      )}
-      {...props} />
-  </div>
-))
+  useEffect(() => {
+    if (!isOpen) return;
 
-CommandInput.displayName = CommandPrimitive.Input.displayName
+    const handleKeyDown = (e) => {
+      if (e.key === "Escape") {
+        onClose();
+      } else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        setSelectedIndex(i => Math.min(i + 1, filteredCommands.length - 1));
+      } else if (e.key === "ArrowUp") {
+        e.preventDefault();
+        setSelectedIndex(i => Math.max(i - 1, 0));
+      } else if (e.key === "Enter") {
+        e.preventDefault();
+        const cmd = filteredCommands[selectedIndex];
+        if (cmd) {
+          if (cmd.action) cmd.action();
+          if (cmd.url) navigate(cmd.url);
+          onClose();
+        }
+      }
+    };
 
-const CommandList = React.forwardRef(({ className, ...props }, ref) => (
-  <CommandPrimitive.List
-    ref={ref}
-    className={cn("max-h-[300px] overflow-y-auto overflow-x-hidden", className)}
-    {...props} />
-))
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+  }, [isOpen, filteredCommands, selectedIndex, navigate, onClose]);
 
-CommandList.displayName = CommandPrimitive.List.displayName
+  useEffect(() => {
+    setSelectedIndex(0);
+  }, [query]);
 
-const CommandEmpty = React.forwardRef((props, ref) => (
-  <CommandPrimitive.Empty ref={ref} className="py-6 text-center text-sm" {...props} />
-))
+  if (!isOpen) return null;
 
-CommandEmpty.displayName = CommandPrimitive.Empty.displayName
-
-const CommandGroup = React.forwardRef(({ className, ...props }, ref) => (
-  <CommandPrimitive.Group
-    ref={ref}
-    className={cn(
-      "overflow-hidden p-1 text-foreground [&_[cmdk-group-heading]]:px-2 [&_[cmdk-group-heading]]:py-1.5 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-medium [&_[cmdk-group-heading]]:text-muted-foreground",
-      className
-    )}
-    {...props} />
-))
-
-CommandGroup.displayName = CommandPrimitive.Group.displayName
-
-const CommandSeparator = React.forwardRef(({ className, ...props }, ref) => (
-  <CommandPrimitive.Separator ref={ref} className={cn("-mx-1 h-px bg-border", className)} {...props} />
-))
-CommandSeparator.displayName = CommandPrimitive.Separator.displayName
-
-const CommandItem = React.forwardRef(({ className, ...props }, ref) => (
-  <CommandPrimitive.Item
-    ref={ref}
-    className={cn(
-      "relative flex cursor-default gap-2 select-none items-center rounded-sm px-2 py-1.5 text-sm outline-none data-[disabled=true]:pointer-events-none data-[selected=true]:bg-accent data-[selected=true]:text-accent-foreground data-[disabled=true]:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
-      className
-    )}
-    {...props} />
-))
-
-CommandItem.displayName = CommandPrimitive.Item.displayName
-
-const CommandShortcut = ({
-  className,
-  ...props
-}) => {
   return (
-    (<span
-      className={cn("ml-auto text-xs tracking-widest text-muted-foreground", className)}
-      {...props} />)
-  );
-}
-CommandShortcut.displayName = "CommandShortcut"
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-start justify-center p-4 pt-32">
+      <div className="w-full max-w-2xl bg-white rounded-xl shadow-2xl overflow-hidden">
+        <div className="flex items-center gap-3 p-4 border-b">
+          <Search className="w-5 h-5 text-gray-400" />
+          <input
+            type="text"
+            placeholder="Type a command or search..."
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="flex-1 outline-none text-lg"
+            autoFocus
+          />
+          <kbd className="px-2 py-1 bg-gray-100 rounded text-xs">ESC</kbd>
+        </div>
 
-export {
-  Command,
-  CommandDialog,
-  CommandInput,
-  CommandList,
-  CommandEmpty,
-  CommandGroup,
-  CommandItem,
-  CommandShortcut,
-  CommandSeparator,
+        <div className="max-h-96 overflow-y-auto">
+          {filteredCommands.length === 0 ? (
+            <div className="p-8 text-center text-gray-500">
+              <p>No commands found</p>
+            </div>
+          ) : (
+            filteredCommands.map((cmd, idx) => {
+              const Icon = cmd.icon;
+              return (
+                <button
+                  key={idx}
+                  onClick={() => {
+                    if (cmd.action) cmd.action();
+                    if (cmd.url) navigate(cmd.url);
+                    onClose();
+                  }}
+                  className={`w-full flex items-center gap-3 p-4 hover:bg-blue-50 transition-colors ${
+                    idx === selectedIndex ? 'bg-blue-50' : ''
+                  }`}
+                >
+                  {Icon && (
+                    <div className="w-10 h-10 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0">
+                      <Icon className="w-5 h-5 text-blue-600" />
+                    </div>
+                  )}
+                  <div className="flex-1 text-left">
+                    <p className="font-medium text-gray-900">{cmd.label}</p>
+                    {cmd.description && (
+                      <p className="text-sm text-gray-500">{cmd.description}</p>
+                    )}
+                  </div>
+                  <ArrowRight className="w-4 h-4 text-gray-400" />
+                </button>
+              );
+            })
+          )}
+        </div>
+
+        <div className="p-3 border-t bg-gray-50 flex items-center justify-between text-xs text-gray-600">
+          <div className="flex gap-4">
+            <span><kbd className="px-2 py-1 bg-white border rounded">↑↓</kbd> Navigate</span>
+            <span><kbd className="px-2 py-1 bg-white border rounded">Enter</kbd> Select</span>
+          </div>
+          <span>{filteredCommands.length} commands</span>
+        </div>
+      </div>
+    </div>
+  );
 }
