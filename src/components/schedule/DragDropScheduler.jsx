@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Card, CardContent } from "@/components/ui/card";
@@ -8,9 +9,9 @@ import { format, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
 export const DragDropScheduler = ({ 
-  shifts, 
-  carers, 
-  clients, 
+  shifts = [], 
+  carers = [], 
+  clients = [], 
   onShiftUpdate,
   onShiftEdit,
   onShiftDelete,
@@ -22,12 +23,14 @@ export const DragDropScheduler = ({
   const { toast } = useToast();
 
   // Group shifts by carer, date, or client
-  const groupedShifts = shifts.reduce((acc, shift) => {
+  const groupedShifts = Array.isArray(shifts) ? shifts.reduce((acc, shift) => {
+    if (!shift) return acc;
+    
     let key;
     if (groupBy === "carer") {
       key = shift.carer_id || "unassigned";
     } else if (groupBy === "date") {
-      key = shift.date;
+      key = shift.date || "unknown";
     } else if (groupBy === "client") {
       key = shift.client_id || "unknown";
     }
@@ -37,7 +40,7 @@ export const DragDropScheduler = ({
     }
     acc[key].push(shift);
     return acc;
-  }, {});
+  }, {}) : {};
 
   // Create list of all possible drop zones (including empty ones)
   const getAllDropZones = () => {
@@ -45,7 +48,9 @@ export const DragDropScheduler = ({
     
     if (groupBy === "carer") {
       zones.add("unassigned");
-      carers.forEach(c => zones.add(c.id));
+      if (Array.isArray(carers)) {
+        carers.forEach(c => c && zones.add(c.id));
+      }
     }
     
     return Array.from(zones);
@@ -53,7 +58,9 @@ export const DragDropScheduler = ({
 
   // Check for conflicts when dragging
   const checkConflicts = (shiftId, newCarerId, newDate) => {
-    const shift = shifts.find(s => s.id === shiftId);
+    if (!Array.isArray(shifts)) return [];
+    
+    const shift = shifts.find(s => s && s.id === shiftId);
     if (!shift) return [];
 
     const conflicts = [];
@@ -62,12 +69,14 @@ export const DragDropScheduler = ({
 
     // Check for overlapping shifts
     const carerShifts = shifts.filter(s => 
-      s.id !== shiftId && 
+      s && s.id !== shiftId && 
       s.carer_id === targetCarerId && 
       s.date === targetDate
     );
 
     carerShifts.forEach(otherShift => {
+      if (!otherShift) return; // Skip null/undefined shifts
+      
       const start1 = shift.start_time || "00:00";
       const end1 = shift.end_time || "23:59";
       const start2 = otherShift.start_time || "00:00";
@@ -86,7 +95,7 @@ export const DragDropScheduler = ({
     });
 
     // Check for total hours
-    const totalHours = carerShifts.reduce((sum, s) => sum + (s.duration_hours || 0), 0) + (shift.duration_hours || 0);
+    const totalHours = carerShifts.reduce((sum, s) => sum + (s?.duration_hours || 0), 0) + (shift.duration_hours || 0);
     if (totalHours > 10) {
       conflicts.push({
         type: "hours",
@@ -99,7 +108,7 @@ export const DragDropScheduler = ({
 
   const handleDragStart = (result) => {
     setIsDragging(true);
-    const shift = shifts.find(s => s.id === result.draggableId);
+    const shift = Array.isArray(shifts) ? shifts.find(s => s && s.id === result.draggableId) : null;
     setDraggedShift(shift);
   };
 
@@ -130,7 +139,7 @@ export const DragDropScheduler = ({
         source.index === destination.index) return;
 
     // Find the shift being moved
-    const shift = shifts.find(s => s.id === draggableId);
+    const shift = Array.isArray(shifts) ? shifts.find(s => s && s.id === draggableId) : null;
     if (!shift) return;
 
     // Check for conflicts one more time
@@ -153,27 +162,28 @@ export const DragDropScheduler = ({
     }
 
     // Update based on groupBy type
-    if (groupBy === "carer") {
+    if (groupBy === "carer" && onShiftUpdate) {
       const newCarerId = destination.droppableId === "unassigned" 
         ? null 
         : destination.droppableId;
       
       onShiftUpdate(draggableId, { carer_id: newCarerId, status: newCarerId ? 'scheduled' : 'unfilled' });
-    } else if (groupBy === "date") {
+    } else if (groupBy === "date" && onShiftUpdate) {
       onShiftUpdate(draggableId, { date: destination.droppableId });
-    } else if (groupBy === "client") {
+    } else if (groupBy === "client" && onShiftUpdate) {
       onShiftUpdate(draggableId, { client_id: destination.droppableId });
     }
   };
 
   const getCarerName = (carerId) => {
-    if (!carerId) return "Unassigned";
-    const carer = carers.find(c => c.id === carerId);
+    if (!carerId || !Array.isArray(carers)) return "Unassigned";
+    const carer = carers.find(c => c && c.id === carerId);
     return carer?.full_name || "Unknown";
   };
 
   const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
+    if (!clientId || !Array.isArray(clients)) return "Unknown";
+    const client = clients.find(c => c && c.id === clientId);
     return client?.full_name || "Unknown";
   };
 
@@ -250,9 +260,9 @@ export const DragDropScheduler = ({
           const isUnassigned = groupKey === "unassigned";
 
           // Calculate stats for this group
-          const totalHours = groupShifts.reduce((sum, s) => sum + (s.duration_hours || 0), 0);
-          const hasConflicts = groupShifts.some(s => 
-            checkConflicts(s.id, s.carer_id, s.date).length > 0
+          const totalHours = Array.isArray(groupShifts) ? groupShifts.reduce((sum, s) => sum + (s?.duration_hours || 0), 0) : 0;
+          const hasConflicts = Array.isArray(groupShifts) && groupShifts.some(s => 
+            s && checkConflicts(s.id, s.carer_id, s.date).length > 0
           );
 
           return (
@@ -304,7 +314,9 @@ export const DragDropScheduler = ({
                           </p>
                         </div>
                       ) : (
-                        groupShifts.map((shift, index) => {
+                        Array.isArray(groupShifts) && groupShifts.map((shift, index) => {
+                          if (!shift) return null; // Skip null/undefined shifts in rendering
+                          
                           const shiftConflicts = checkConflicts(shift.id, shift.carer_id, shift.date);
                           
                           return (
@@ -362,7 +374,7 @@ export const DragDropScheduler = ({
                                             </Badge>
                                           </div>
 
-                                          {groupBy !== "date" && (
+                                          {groupBy !== "date" && shift.date && (
                                             <div className="flex items-center gap-2 text-xs text-gray-600 mb-2">
                                               <Calendar className="w-3 h-3" />
                                               {shift.date}
@@ -385,7 +397,7 @@ export const DragDropScheduler = ({
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              onClick={() => onShiftEdit(shift)}
+                                              onClick={() => onShiftEdit && onShiftEdit(shift)}
                                             >
                                               <Edit className="w-3 h-3 mr-1" />
                                               Edit
@@ -393,7 +405,7 @@ export const DragDropScheduler = ({
                                             <Button
                                               size="sm"
                                               variant="outline"
-                                              onClick={() => onShiftDelete(shift.id)}
+                                              onClick={() => onShiftDelete && onShiftDelete(shift.id)}
                                               className="text-red-600 hover:text-red-700"
                                             >
                                               <Trash2 className="w-3 h-3 mr-1" />

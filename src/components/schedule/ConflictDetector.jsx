@@ -5,16 +5,20 @@ import { Button } from "@/components/ui/button";
 import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
-export default function ConflictDetector({ shifts, carers, clients }) {
+export default function ConflictDetector({ shifts = [], carers = [], clients = [] }) {
   const [isExpanded, setIsExpanded] = React.useState(true);
 
   const detectConflicts = () => {
     const conflicts = [];
 
+    if (!Array.isArray(shifts) || !Array.isArray(carers) || !Array.isArray(clients)) {
+      return conflicts;
+    }
+
     // Group shifts by date and carer
     const shiftsByCarerAndDate = {};
     shifts.forEach(shift => {
-      if (!shift.carer_id || !shift.date) return;
+      if (!shift || !shift.carer_id || !shift.date) return;
       const key = `${shift.carer_id}-${shift.date}`;
       if (!shiftsByCarerAndDate[key]) {
         shiftsByCarerAndDate[key] = [];
@@ -24,15 +28,17 @@ export default function ConflictDetector({ shifts, carers, clients }) {
 
     // Check for overlapping shifts
     Object.entries(shiftsByCarerAndDate).forEach(([key, shiftsForDay]) => {
-      if (shiftsForDay.length < 2) return;
+      if (!Array.isArray(shiftsForDay) || shiftsForDay.length < 2) return;
 
       const [carerId, date] = key.split('-');
-      const carer = carers.find(c => c.id === carerId);
+      const carer = carers.find(c => c && c.id === carerId);
 
       for (let i = 0; i < shiftsForDay.length; i++) {
         for (let j = i + 1; j < shiftsForDay.length; j++) {
           const shift1 = shiftsForDay[i];
           const shift2 = shiftsForDay[j];
+
+          if (!shift1 || !shift2) continue;
 
           const start1 = shift1.start_time || "00:00";
           const end1 = shift1.end_time || "23:59";
@@ -52,7 +58,7 @@ export default function ConflictDetector({ shifts, carers, clients }) {
               date,
               shift1,
               shift2,
-              message: `${carer?.full_name} has overlapping shifts on ${format(parseISO(date), "MMM d")}`,
+              message: `${carer?.full_name || 'Unknown'} has overlapping shifts on ${format(parseISO(date), "MMM d")}`,
             });
           }
         }
@@ -60,7 +66,7 @@ export default function ConflictDetector({ shifts, carers, clients }) {
 
       // Check for overallocation (too many hours in a day)
       const totalHours = shiftsForDay.reduce((sum, shift) => {
-        return sum + (shift.duration_hours || 0);
+        return sum + (shift?.duration_hours || 0);
       }, 0);
 
       if (totalHours > 10) {
@@ -70,7 +76,7 @@ export default function ConflictDetector({ shifts, carers, clients }) {
           carer: carer?.full_name || "Unknown",
           date,
           totalHours,
-          message: `${carer?.full_name} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (exceeds 10 hours)`,
+          message: `${carer?.full_name || 'Unknown'} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (exceeds 10 hours)`,
         });
       } else if (totalHours > 8) {
         conflicts.push({
@@ -79,33 +85,34 @@ export default function ConflictDetector({ shifts, carers, clients }) {
           carer: carer?.full_name || "Unknown",
           date,
           totalHours,
-          message: `${carer?.full_name} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (approaching limit)`,
+          message: `${carer?.full_name || 'Unknown'} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (approaching limit)`,
         });
       }
     });
 
     // Check for unfilled critical shifts
     const criticalUnfilled = shifts.filter(s => 
-      s.status === 'unfilled' && 
+      s && s.status === 'unfilled' && 
       s.date && 
-      new Date(s.date) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000) // Within next 7 days
+      new Date(s.date) <= new Date(Date.now() + 7 * 24 * 60 * 60 * 1000)
     );
 
     criticalUnfilled.forEach(shift => {
-      const client = clients.find(c => c.id === shift.client_id);
+      if (!shift) return;
+      const client = clients.find(c => c && c.id === shift.client_id);
       conflicts.push({
         type: "unfilled",
         severity: "high",
         shift,
-        client: client?.full_name,
-        message: `Unfilled shift for ${client?.full_name} on ${format(parseISO(shift.date), "MMM d")} at ${shift.start_time}`,
+        client: client?.full_name || "Unknown",
+        message: `Unfilled shift for ${client?.full_name || 'Unknown'} on ${format(parseISO(shift.date), "MMM d")} at ${shift.start_time}`,
       });
     });
 
     // Check for consecutive long shifts
     const consecutiveShiftsByDate = {};
     shifts.forEach(shift => {
-      if (!shift.carer_id || !shift.date) return;
+      if (!shift || !shift.carer_id || !shift.date) return;
       if (!consecutiveShiftsByDate[shift.carer_id]) {
         consecutiveShiftsByDate[shift.carer_id] = {};
       }
@@ -116,7 +123,7 @@ export default function ConflictDetector({ shifts, carers, clients }) {
     });
 
     Object.entries(consecutiveShiftsByDate).forEach(([carerId, dateMap]) => {
-      const carer = carers.find(c => c.id === carerId);
+      const carer = carers.find(c => c && c.id === carerId);
       const sortedDates = Object.keys(dateMap).sort();
       
       let consecutiveDays = 0;
@@ -126,8 +133,8 @@ export default function ConflictDetector({ shifts, carers, clients }) {
           conflicts.push({
             type: "consecutive",
             severity: "medium",
-            carer: carer?.full_name,
-            message: `${carer?.full_name} has ${consecutiveDays} consecutive days without break`,
+            carer: carer?.full_name || "Unknown",
+            message: `${carer?.full_name || 'Unknown'} has ${consecutiveDays} consecutive days without break`,
           });
           break;
         }
@@ -148,8 +155,8 @@ export default function ConflictDetector({ shifts, carers, clients }) {
   };
 
   const conflicts = detectConflicts();
-  const highSeverity = conflicts.filter(c => c.severity === "high").length;
-  const mediumSeverity = conflicts.filter(c => c.severity === "medium").length;
+  const highSeverity = conflicts.filter(c => c && c.severity === "high").length;
+  const mediumSeverity = conflicts.filter(c => c && c.severity === "medium").length;
 
   if (conflicts.length === 0) {
     return (
@@ -212,32 +219,36 @@ export default function ConflictDetector({ shifts, carers, clients }) {
 
       {isExpanded && (
         <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-          {conflicts.map((conflict, idx) => (
-            <div
-              key={idx}
-              className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)}`}
-            >
-              <div className="flex items-start gap-3">
-                <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5`} />
-                <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-2">
-                    <Badge className={conflict.severity === "high" ? "bg-red-600" : "bg-yellow-600"}>
-                      {conflict.severity.toUpperCase()}
-                    </Badge>
-                    <Badge variant="outline">{conflict.type}</Badge>
-                  </div>
-                  <p className="text-sm font-medium mb-2">{conflict.message}</p>
-                  
-                  {conflict.type === "overlap" && (
-                    <div className="text-xs space-y-1 text-gray-700">
-                      <p>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</p>
-                      <p>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</p>
+          {conflicts.map((conflict, idx) => {
+            if (!conflict) return null;
+            
+            return (
+              <div
+                key={idx}
+                className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)}`}
+              >
+                <div className="flex items-start gap-3">
+                  <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5`} />
+                  <div className="flex-1">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Badge className={conflict.severity === "high" ? "bg-red-600" : "bg-yellow-600"}>
+                        {conflict.severity?.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline">{conflict.type}</Badge>
                     </div>
-                  )}
+                    <p className="text-sm font-medium mb-2">{conflict.message}</p>
+                    
+                    {conflict.type === "overlap" && conflict.shift1 && conflict.shift2 && (
+                      <div className="text-xs space-y-1 text-gray-700">
+                        <p>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</p>
+                        <p>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</p>
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          ))}
+            );
+          })}
         </div>
       )}
     </Card>

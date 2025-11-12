@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -8,7 +9,7 @@ import { X, Sparkles, Calendar, Users, Clock, AlertCircle, CheckCircle, Loader2 
 import { useToast } from "@/components/ui/toast";
 import { format, addDays, parseISO } from "date-fns";
 
-export default function AIScheduleGenerator({ onClose, shifts, carers, clients }) {
+export default function AIScheduleGenerator({ onClose, shifts = [], carers = [], clients = [] }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [suggestions, setSuggestions] = useState([]);
   const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
@@ -35,24 +36,31 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
     const newSuggestions = [];
 
     try {
+      if (!Array.isArray(shifts) || !Array.isArray(carers) || !Array.isArray(clients)) {
+        throw new Error("Invalid data: shifts, carers, or clients are not arrays.");
+      }
+
       // 1. Find unfilled shifts
-      const unfilledShifts = shifts.filter(s => !s.carer_id || s.status === 'unfilled');
+      const unfilledShifts = shifts.filter(s => s && (!s.carer_id || s.status === 'unfilled'));
       
       for (const shift of unfilledShifts) {
-        const client = clients.find(c => c.id === shift.client_id);
-        if (!client) continue;
+        if (!shift) continue; // Ensure shift object is not null/undefined
+        
+        const client = clients.find(c => c && c.id === shift.client_id);
+        if (!client) continue; // Ensure client object is not null/undefined
 
         // Find best matching carers
         const availableCarers = carers.filter(carer => {
-          if (carer.status !== 'active') return false;
+          if (!carer || carer.status !== 'active') return false; // Ensure carer object is not null/undefined and active
 
           // Check if carer has conflicting shifts
           const carerShifts = shifts.filter(s => 
-            s.carer_id === carer.id && 
+            s && s.carer_id === carer.id && // Ensure shift object is not null/undefined
             s.date === shift.date
           );
 
           const hasConflict = carerShifts.some(cs => {
+            if (!cs) return false; // Ensure conflicting shift object is not null/undefined
             const start1 = shift.start_time || "00:00";
             const end1 = shift.end_time || "23:59";
             const start2 = cs.start_time || "00:00";
@@ -68,7 +76,7 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
           if (hasConflict) return false;
 
           // Check total hours for the day
-          const totalHours = carerShifts.reduce((sum, s) => sum + (s.duration_hours || 0), 0);
+          const totalHours = carerShifts.reduce((sum, s) => sum + (s?.duration_hours || 0), 0);
           if (totalHours + (shift.duration_hours || 0) > 10) return false;
 
           return true;
@@ -79,31 +87,31 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
           let score = 0;
 
           // Preferred carer bonus
-          if (client.preferred_carers?.includes(carer.id)) {
+          if (Array.isArray(client.preferred_carers) && client.preferred_carers.includes(carer.id)) {
             score += 50;
           }
 
           // Qualification match
-          if (shift.required_qualification && carer.qualifications?.includes(shift.required_qualification)) {
+          if (shift.required_qualification && Array.isArray(carer.qualifications) && carer.qualifications.includes(shift.required_qualification)) {
             score += 30;
           }
 
           // Previous experience with client
           const pastShifts = shifts.filter(s => 
-            s.carer_id === carer.id && 
+            s && s.carer_id === carer.id && // Ensure shift object is not null/undefined
             s.client_id === shift.client_id &&
             s.status === 'completed'
           );
           score += Math.min(pastShifts.length * 5, 20);
 
           // Workload balance (prefer carers with fewer shifts)
-          const carerShiftCount = shifts.filter(s => s.carer_id === carer.id).length;
+          const carerShiftCount = shifts.filter(s => s && s.carer_id === carer.id).length; // Ensure shift object is not null/undefined
           score += Math.max(0, 20 - carerShiftCount);
 
           return { carer, score };
         });
 
-        scoredCarers.sort((a, b) => b.score - a.score);
+        scoredCarers.sort((a, b) => (b?.score || 0) - (a?.score || 0)); // Add null/undefined checks for a and b scores
 
         if (scoredCarers.length > 0) {
           const bestMatch = scoredCarers[0];
@@ -114,8 +122,8 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
             client,
             score: bestMatch.score,
             reasons: [
-              client.preferred_carers?.includes(bestMatch.carer.id) && "Preferred carer",
-              shift.required_qualification && bestMatch.carer.qualifications?.includes(shift.required_qualification) && "Has required qualification",
+              Array.isArray(client.preferred_carers) && client.preferred_carers.includes(bestMatch.carer.id) && "Preferred carer",
+              shift.required_qualification && Array.isArray(bestMatch.carer.qualifications) && bestMatch.carer.qualifications.includes(shift.required_qualification) && "Has required qualification",
               "Available and no conflicts",
               bestMatch.score > 50 && "High compatibility score"
             ].filter(Boolean)
@@ -131,27 +139,30 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
       }
 
       // 2. Suggest optimization for existing assignments
-      const assignedShifts = shifts.filter(s => s.carer_id && s.status !== 'completed');
+      const assignedShifts = shifts.filter(s => s && s.carer_id && s.status !== 'completed'); // Ensure shift object is not null/undefined
       
       for (const shift of assignedShifts.slice(0, 5)) { // Limit to 5 suggestions
-        const currentCarer = carers.find(c => c.id === shift.carer_id);
-        const client = clients.find(c => c.id === shift.client_id);
+        if (!shift) continue; // Ensure shift object is not null/undefined
+
+        const currentCarer = carers.find(c => c && c.id === shift.carer_id); // Ensure carer object is not null/undefined
+        const client = clients.find(c => c && c.id === shift.client_id); // Ensure client object is not null/undefined
         
         if (!currentCarer || !client) continue;
 
         // Check if there's a better match
         const betterCarers = carers.filter(carer => {
-          if (carer.id === shift.carer_id) return false;
+          if (!carer || carer.id === shift.carer_id) return false; // Ensure carer object is not null/undefined
           if (carer.status !== 'active') return false;
-          if (!client.preferred_carers?.includes(carer.id)) return false;
+          if (!Array.isArray(client.preferred_carers) || !client.preferred_carers.includes(carer.id)) return false; // Add Array.isArray check
 
           // Check availability
           const carerShifts = shifts.filter(s => 
-            s.carer_id === carer.id && 
+            s && s.carer_id === carer.id && // Ensure shift object is not null/undefined
             s.date === shift.date
           );
 
           const hasConflict = carerShifts.some(cs => {
+            if (!cs) return false; // Ensure conflicting shift object is not null/undefined
             const start1 = shift.start_time || "00:00";
             const end1 = shift.end_time || "23:59";
             const start2 = cs.start_time || "00:00";
@@ -165,7 +176,7 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
           return !hasConflict;
         });
 
-        if (betterCarers.length > 0 && !client.preferred_carers?.includes(currentCarer.id)) {
+        if (betterCarers.length > 0 && !(Array.isArray(client.preferred_carers) && client.preferred_carers.includes(currentCarer.id))) { // Add Array.isArray check
           newSuggestions.push({
             type: 'optimization',
             shift,
@@ -178,13 +189,18 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
       }
 
       setSuggestions(newSuggestions);
-      toast.success(
-        "AI Analysis Complete",
-        `Found ${newSuggestions.length} suggestions to improve your schedule`
-      );
+      toast({
+        title: "AI Analysis Complete",
+        description: `Found ${newSuggestions.length} suggestions to improve your schedule`,
+        variant: "success",
+      });
     } catch (error) {
       console.error("Error generating suggestions:", error);
-      toast.error("Error", "Failed to generate suggestions");
+      toast({
+        title: "Error",
+        description: "Failed to generate suggestions: " + error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
     }
@@ -196,7 +212,9 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
     setIsGenerating(true);
     try {
       for (const suggestion of selected) {
-        if (suggestion.type === 'assignment') {
+        if (!suggestion) continue; // Ensure suggestion object is not null/undefined
+        
+        if (suggestion.type === 'assignment' && suggestion.shift && suggestion.carer) {
           await updateShiftMutation.mutateAsync({
             id: suggestion.shift.id,
             data: {
@@ -204,7 +222,7 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
               status: 'scheduled'
             }
           });
-        } else if (suggestion.type === 'optimization') {
+        } else if (suggestion.type === 'optimization' && suggestion.shift && suggestion.suggestedCarer) {
           await updateShiftMutation.mutateAsync({
             id: suggestion.shift.id,
             data: {
@@ -214,14 +232,19 @@ export default function AIScheduleGenerator({ onClose, shifts, carers, clients }
         }
       }
 
-      toast.success(
-        "Suggestions Applied",
-        `Successfully updated ${selected.length} shift${selected.length > 1 ? 's' : ''}`
-      );
+      toast({
+        title: "Suggestions Applied",
+        description: `Successfully updated ${selected.length} shift${selected.length > 1 ? 's' : ''}`,
+        variant: "success",
+      });
       onClose();
     } catch (error) {
       console.error("Error applying suggestions:", error);
-      toast.error("Error", "Failed to apply some suggestions");
+      toast({
+        title: "Error",
+        description: "Failed to apply some suggestions: " + error.message,
+        variant: "destructive",
+      });
     } finally {
       setIsGenerating(false);
     }
