@@ -1,4 +1,3 @@
-
 import React from "react";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -14,7 +13,7 @@ const statusColors = {
   unfilled: "bg-orange-100 text-orange-800",
 };
 
-export default function TodayShifts({ shifts, carers, clients, isLoading }) {
+export default function TodayShifts({ shifts = [], carers = [], clients = [], isLoading }) {
   if (isLoading) {
     return (
       <Card>
@@ -33,20 +32,22 @@ export default function TodayShifts({ shifts, carers, clients, isLoading }) {
   }
 
   const getCarerName = (carerId) => {
-    const carer = carers.find(c => c.id === carerId);
+    if (!carerId || !Array.isArray(carers)) return "Unassigned";
+    const carer = carers.find(c => c && c.id === carerId);
     return carer?.full_name || "Unassigned";
   };
 
   const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
+    if (!clientId || !Array.isArray(clients)) return "Unknown Client";
+    const client = clients.find(c => c && c.id === clientId);
     return client?.full_name || "Unknown Client";
   };
 
-  const sortedShifts = [...shifts].sort((a, b) => {
-    const timeA = a.start_time || "00:00";
-    const timeB = b.start_time || "00:00";
+  const sortedShifts = Array.isArray(shifts) ? [...shifts].sort((a, b) => {
+    const timeA = a?.start_time || "00:00";
+    const timeB = b?.start_time || "00:00";
     return timeA.localeCompare(timeB);
-  });
+  }) : [];
 
   return (
     <Card className="shadow-lg">
@@ -69,55 +70,59 @@ export default function TodayShifts({ shifts, carers, clients, isLoading }) {
           </div>
         ) : (
           <div className="space-y-4">
-            {sortedShifts.map((shift) => (
-              <div 
-                key={shift.id}
-                className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
-              >
-                <div className="flex items-start justify-between mb-3">
-                  <div className="flex items-center gap-2">
-                    <Clock className="w-4 h-4 text-gray-400" />
-                    <span className="font-semibold text-gray-900">
-                      {shift.start_time} - {shift.end_time}
-                    </span>
+            {sortedShifts.map((shift) => {
+              if (!shift) return null;
+              
+              return (
+                <div 
+                  key={shift.id}
+                  className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
+                >
+                  <div className="flex items-start justify-between mb-3">
+                    <div className="flex items-center gap-2">
+                      <Clock className="w-4 h-4 text-gray-400" />
+                      <span className="font-semibold text-gray-900">
+                        {shift.start_time || 'N/A'} - {shift.end_time || 'N/A'}
+                      </span>
+                    </div>
+                    <Badge className={statusColors[shift.status] || statusColors.scheduled}>
+                      {shift.status?.replace('_', ' ') || 'scheduled'}
+                    </Badge>
                   </div>
-                  <Badge className={statusColors[shift.status]}>
-                    {shift.status.replace('_', ' ')}
-                  </Badge>
-                </div>
-                
-                <div className="space-y-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <User className="w-4 h-4 text-blue-500" />
-                    <span className="text-gray-600">Carer:</span>
-                    <span className="font-medium">{getCarerName(shift.carer_id)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <MapPin className="w-4 h-4 text-green-500" />
-                    <span className="text-gray-600">Client:</span>
-                    <span className="font-medium">{getClientName(shift.client_id)}</span>
-                  </div>
-                </div>
-
-                {shift.tasks && shift.tasks.length > 0 && (
-                  <div className="mt-3 pt-3 border-t">
-                    <p className="text-xs text-gray-500 mb-1">Tasks:</p>
-                    <div className="flex flex-wrap gap-1">
-                      {shift.tasks.slice(0, 3).map((task, idx) => (
-                        <Badge key={idx} variant="outline" className="text-xs">
-                          {task}
-                        </Badge>
-                      ))}
-                      {shift.tasks.length > 3 && (
-                        <Badge variant="outline" className="text-xs">
-                          +{shift.tasks.length - 3} more
-                        </Badge>
-                      )}
+                  
+                  <div className="space-y-2 text-sm">
+                    <div className="flex items-center gap-2">
+                      <User className="w-4 h-4 text-blue-500" />
+                      <span className="text-gray-600">Carer:</span>
+                      <span className="font-medium">{getCarerName(shift.carer_id)}</span>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <MapPin className="w-4 h-4 text-green-500" />
+                      <span className="text-gray-600">Client:</span>
+                      <span className="font-medium">{getClientName(shift.client_id)}</span>
                     </div>
                   </div>
-                )}
-              </div>
-            ))}
+
+                  {shift.tasks && Array.isArray(shift.tasks) && shift.tasks.length > 0 && (
+                    <div className="mt-3 pt-3 border-t">
+                      <p className="text-xs text-gray-500 mb-1">Tasks:</p>
+                      <div className="flex flex-wrap gap-1">
+                        {shift.tasks.slice(0, 3).map((task, idx) => (
+                          <Badge key={idx} variant="outline" className="text-xs">
+                            {task}
+                          </Badge>
+                        ))}
+                        {shift.tasks.length > 3 && (
+                          <Badge variant="outline" className="text-xs">
+                            +{shift.tasks.length - 3} more
+                          </Badge>
+                        )}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
         )}
       </CardContent>

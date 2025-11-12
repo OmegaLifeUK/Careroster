@@ -33,22 +33,34 @@ export default function Schedule() {
 
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts'],
-    queryFn: () => base44.entities.Shift.list('-date'),
+    queryFn: async () => {
+      const data = await base44.entities.Shift.list('-date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: carers = [], isLoading: carersLoading } = useQuery({
     queryKey: ['carers'],
-    queryFn: () => base44.entities.Carer.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests'],
-    queryFn: () => base44.entities.LeaveRequest.list(),
+    queryFn: async () => {
+      const data = await base44.entities.LeaveRequest.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const deleteShiftMutation = useMutation({
@@ -78,7 +90,11 @@ export default function Schedule() {
   useEffect(() => {
     const saved = localStorage.getItem('schedule_saved_views');
     if (saved) {
-      setSavedViews(JSON.parse(saved));
+      try {
+        setSavedViews(JSON.parse(saved));
+      } catch (e) {
+        console.error("Error parsing saved views:", e);
+      }
     }
   }, []);
 
@@ -116,6 +132,8 @@ export default function Schedule() {
   };
 
   const applyAdvancedFilters = (data, filterList) => {
+    if (!Array.isArray(data) || !Array.isArray(filterList)) return data;
+    
     return data.filter(item => {
       return filterList.every(filter => {
         const value = item[filter.field];
@@ -139,37 +157,39 @@ export default function Schedule() {
     });
   };
 
-  let filteredShifts = shifts;
+  let filteredShifts = Array.isArray(shifts) ? [...shifts] : [];
 
   // Apply basic filters
   if (filters.status && filters.status !== "all") {
-    filteredShifts = filteredShifts.filter(s => s.status === filters.status);
+    filteredShifts = filteredShifts.filter(s => s && s.status === filters.status);
   }
   if (filters.carer_id) {
-    filteredShifts = filteredShifts.filter(s => s.carer_id === filters.carer_id);
+    filteredShifts = filteredShifts.filter(s => s && s.carer_id === filters.carer_id);
   }
   if (filters.client_id) {
-    filteredShifts = filteredShifts.filter(s => s.client_id === filters.client_id);
+    filteredShifts = filteredShifts.filter(s => s && s.client_id === filters.client_id);
   }
 
   // Apply advanced filters if they exist
-  if (filters.advanced && filters.advanced.length > 0) {
+  if (filters.advanced && Array.isArray(filters.advanced) && filters.advanced.length > 0) {
     filteredShifts = applyAdvancedFilters(filteredShifts, filters.advanced);
   }
 
   const exportData = filteredShifts.map(shift => {
-    const carer = carers.find(c => c.id === shift.carer_id);
-    const client = clients.find(c => c.id === shift.client_id);
+    if (!shift) return {};
+    
+    const carer = Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id) : null;
+    const client = Array.isArray(clients) ? clients.find(c => c && c.id === shift.client_id) : null;
     
     return {
-      date: shift.date,
-      start_time: shift.start_time,
-      end_time: shift.end_time,
+      date: shift.date || '',
+      start_time: shift.start_time || '',
+      end_time: shift.end_time || '',
       carer: carer?.full_name || 'Unassigned',
       client: client?.full_name || 'Unknown',
-      shift_type: shift.shift_type,
-      status: shift.status,
-      duration_hours: shift.duration_hours,
+      shift_type: shift.shift_type || '',
+      status: shift.status || '',
+      duration_hours: shift.duration_hours || '',
     };
   });
 
@@ -193,7 +213,7 @@ export default function Schedule() {
 
   // Generate smart suggestions
   const suggestions = [];
-  const unfilledShifts = shifts.filter(s => !s.carer_id).length;
+  const unfilledShifts = Array.isArray(shifts) ? shifts.filter(s => s && !s.carer_id).length : 0;
   if (unfilledShifts > 0) {
     suggestions.push({
       type: 'warning',
@@ -360,16 +380,23 @@ export default function Schedule() {
                 />
               </div>
             ) : (
-              filteredShifts.map((shift) => (
-                <ShiftCard
-                  key={shift.id}
-                  shift={shift}
-                  carer={carers.find(c => c.id === shift.carer_id)}
-                  client={clients.find(c => c.id === shift.client_id)}
-                  onEdit={() => handleEdit(shift)}
-                  onDelete={() => handleDelete(shift.id)}
-                />
-              ))
+              filteredShifts.map((shift) => {
+                if (!shift) return null;
+                
+                const carer = Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id) : null;
+                const client = Array.isArray(clients) ? clients.find(c => c && c.id === shift.client_id) : null;
+                
+                return (
+                  <ShiftCard
+                    key={shift.id}
+                    shift={shift}
+                    carer={carer}
+                    client={client}
+                    onEdit={() => handleEdit(shift)}
+                    onDelete={() => handleDelete(shift.id)}
+                  />
+                );
+              })
             )}
           </div>
         )}
