@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -177,11 +176,60 @@ export default function Clients() {
               Alerts
             </Button>
             <Button
+              variant={activeTab === "care_plan" ? "default" : "ghost"}
+              onClick={() => setActiveTab("care_plan")}
+              className="flex-shrink-0"
+            >
+              Care Plan
+            </Button>
+            <Button
+              variant={activeTab === "risk_assessments" ? "default" : "ghost"}
+              onClick={() => setActiveTab("risk_assessments")}
+              className="flex-shrink-0"
+            >
+              Risk Assessments
+            </Button>
+            <Button
               variant={activeTab === "medication" ? "default" : "ghost"}
               onClick={() => setActiveTab("medication")}
               className="flex-shrink-0"
             >
               Medication
+            </Button>
+            <Button
+              variant={activeTab === "peep" ? "default" : "ghost"}
+              onClick={() => setActiveTab("peep")}
+              className="flex-shrink-0"
+            >
+              PEEP
+            </Button>
+            <Button
+              variant={activeTab === "repositioning" ? "default" : "ghost"}
+              onClick={() => setActiveTab("repositioning")}
+              className="flex-shrink-0"
+            >
+              Repositioning
+            </Button>
+            <Button
+              variant={activeTab === "behavior" ? "default" : "ghost"}
+              onClick={() => setActiveTab("behavior")}
+              className="flex-shrink-0"
+            >
+              Behavior
+            </Button>
+            <Button
+              variant={activeTab === "mental_capacity" ? "default" : "ghost"}
+              onClick={() => setActiveTab("mental_capacity")}
+              className="flex-shrink-0"
+            >
+              Mental Capacity
+            </Button>
+            <Button
+              variant={activeTab === "safeguarding" ? "default" : "ghost"}
+              onClick={() => setActiveTab("safeguarding")}
+              className="flex-shrink-0"
+            >
+              Safeguarding
             </Button>
             <Button
               variant={activeTab === "consent" ? "default" : "ghost"}
