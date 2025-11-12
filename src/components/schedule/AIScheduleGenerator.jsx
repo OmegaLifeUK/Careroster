@@ -1,398 +1,463 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogFooter,
-} from "@/components/ui/dialog";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Label } from "@/components/ui/label";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2, Sparkles, Calendar, AlertCircle, CheckCircle } from "lucide-react";
-import { format, addDays, parseISO } from "date-fns";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { X, Sparkles, Calendar, Users, Clock, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { format, addDays, parseISO } from "date-fns";
 
-export default function AIScheduleGenerator({ carers, clients, shifts, leaveRequests, onClose }) {
-  const [step, setStep] = useState(1);
-  const [formData, setFormData] = useState({
-    start_date: format(new Date(), "yyyy-MM-dd"),
-    duration: "7",
-    clients: [],
-    shift_preferences: "balanced",
-    additional_instructions: "",
-  });
-  const [generatedSchedule, setGeneratedSchedule] = useState([]);
+export default function AIScheduleGenerator({ onClose, shifts, carers, clients }) {
   const [isGenerating, setIsGenerating] = useState(false);
-
+  const [suggestions, setSuggestions] = useState([]);
+  const [selectedSuggestions, setSelectedSuggestions] = useState(new Set());
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  const generateSchedule = async () => {
+  const createShiftMutation = useMutation({
+    mutationFn: (shiftData) => base44.entities.Shift.create(shiftData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+  });
+
+  const updateShiftMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    },
+  });
+
+  // Smart scheduling algorithm
+  const generateSmartSuggestions = async () => {
     setIsGenerating(true);
+    const newSuggestions = [];
+
     try {
-      // Prepare data for AI
-      const activeCarers = carers.filter(c => c.status === 'active');
-      const activeClients = formData.clients.length > 0 
-        ? clients.filter(c => formData.clients.includes(c.id))
-        : clients.filter(c => c.status === 'active');
+      // 1. Find unfilled shifts
+      const unfilledShifts = shifts.filter(s => !s.carer_id || s.status === 'unfilled');
+      
+      for (const shift of unfilledShifts) {
+        const client = clients.find(c => c.id === shift.client_id);
+        if (!client) continue;
 
-      // Get leave requests for the period
-      const relevantLeave = leaveRequests.filter(leave => {
-        if (leave.status !== 'approved') return false;
-        const leaveStart = new Date(leave.start_date);
-        const leaveEnd = new Date(leave.end_date);
-        const periodStart = new Date(formData.start_date);
-        const periodEnd = addDays(periodStart, parseInt(formData.duration));
-        return leaveStart <= periodEnd && leaveEnd >= periodStart;
-      });
+        // Find best matching carers
+        const availableCarers = carers.filter(carer => {
+          if (carer.status !== 'active') return false;
 
-      const prompt = `You are an expert care scheduling assistant. Generate an optimal shift schedule based on the following data:
+          // Check if carer has conflicting shifts
+          const carerShifts = shifts.filter(s => 
+            s.carer_id === carer.id && 
+            s.date === shift.date
+          );
 
-**Carers (${activeCarers.length} available):**
-${activeCarers.map(c => `- ${c.full_name}: ${c.employment_type} (${c.qualifications?.join(', ') || 'No qualifications'})`).join('\n')}
+          const hasConflict = carerShifts.some(cs => {
+            const start1 = shift.start_time || "00:00";
+            const end1 = shift.end_time || "23:59";
+            const start2 = cs.start_time || "00:00";
+            const end2 = cs.end_time || "23:59";
 
-**Carers on Leave:**
-${relevantLeave.map(leave => {
-  const carer = carers.find(c => c.id === leave.carer_id);
-  return `- ${carer?.full_name}: ${leave.start_date} to ${leave.end_date}`;
-}).join('\n') || 'None'}
+            return (
+              (start1 >= start2 && start1 < end2) ||
+              (end1 > start2 && end1 <= end2) ||
+              (start1 <= start2 && end1 >= end2)
+            );
+          });
 
-**Clients (${activeClients.length} requiring care):**
-${activeClients.map(c => `- ${c.full_name}: Care needs: ${c.care_needs?.join(', ') || 'General care'}, Preferred carers: ${c.preferred_carers?.map(id => carers.find(cr => cr.id === id)?.full_name).filter(Boolean).join(', ') || 'None'}`).join('\n')}
+          if (hasConflict) return false;
 
-**Scheduling Requirements:**
-- Period: ${formData.start_date} for ${formData.duration} days
-- Preference: ${formData.shift_preferences}
-- ${formData.additional_instructions || 'No additional instructions'}
+          // Check total hours for the day
+          const totalHours = carerShifts.reduce((sum, s) => sum + (s.duration_hours || 0), 0);
+          if (totalHours + (shift.duration_hours || 0) > 10) return false;
 
-**Rules:**
-1. Each client needs at least one visit per day (morning 9-12, afternoon 14-17, or evening 18-21)
-2. Respect carer qualifications and client care needs
-3. Prioritize preferred carers when possible
-4. Balance workload across carers (${formData.shift_preferences === 'balanced' ? 'evenly distribute' : formData.shift_preferences === 'minimize_carers' ? 'minimize number of carers' : 'maximize continuity'})
-5. No carer should have overlapping shifts
-6. Respect leave requests
-7. Limit to 8 hours per day per carer
+          return true;
+        });
 
-Generate shifts for ${formData.duration} days. For each shift provide: client_name, carer_name, date, start_time, end_time, shift_type, tasks, confidence_score (0-100).`;
+        // Score carers based on preferences and qualifications
+        const scoredCarers = availableCarers.map(carer => {
+          let score = 0;
 
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            schedule: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  client_name: { type: "string" },
-                  carer_name: { type: "string" },
-                  date: { type: "string" },
-                  start_time: { type: "string" },
-                  end_time: { type: "string" },
-                  shift_type: { type: "string" },
-                  tasks: { type: "array", items: { type: "string" } },
-                  confidence_score: { type: "number" },
-                  reasoning: { type: "string" }
-                }
-              }
-            },
-            summary: { type: "string" },
-            warnings: { type: "array", items: { type: "string" } }
+          // Preferred carer bonus
+          if (client.preferred_carers?.includes(carer.id)) {
+            score += 50;
           }
+
+          // Qualification match
+          if (shift.required_qualification && carer.qualifications?.includes(shift.required_qualification)) {
+            score += 30;
+          }
+
+          // Previous experience with client
+          const pastShifts = shifts.filter(s => 
+            s.carer_id === carer.id && 
+            s.client_id === shift.client_id &&
+            s.status === 'completed'
+          );
+          score += Math.min(pastShifts.length * 5, 20);
+
+          // Workload balance (prefer carers with fewer shifts)
+          const carerShiftCount = shifts.filter(s => s.carer_id === carer.id).length;
+          score += Math.max(0, 20 - carerShiftCount);
+
+          return { carer, score };
+        });
+
+        scoredCarers.sort((a, b) => b.score - a.score);
+
+        if (scoredCarers.length > 0) {
+          const bestMatch = scoredCarers[0];
+          newSuggestions.push({
+            type: 'assignment',
+            shift,
+            carer: bestMatch.carer,
+            client,
+            score: bestMatch.score,
+            reasons: [
+              client.preferred_carers?.includes(bestMatch.carer.id) && "Preferred carer",
+              shift.required_qualification && bestMatch.carer.qualifications?.includes(shift.required_qualification) && "Has required qualification",
+              "Available and no conflicts",
+              bestMatch.score > 50 && "High compatibility score"
+            ].filter(Boolean)
+          });
+        } else {
+          newSuggestions.push({
+            type: 'warning',
+            shift,
+            client,
+            message: "No available carers found - consider adjusting shift time or recruiting"
+          });
         }
-      });
+      }
 
-      // Map names back to IDs
-      const scheduleWithIds = response.schedule.map(shift => {
-        const client = activeClients.find(c => c.full_name === shift.client_name);
-        const carer = activeCarers.find(c => c.full_name === shift.carer_name);
+      // 2. Suggest optimization for existing assignments
+      const assignedShifts = shifts.filter(s => s.carer_id && s.status !== 'completed');
+      
+      for (const shift of assignedShifts.slice(0, 5)) { // Limit to 5 suggestions
+        const currentCarer = carers.find(c => c.id === shift.carer_id);
+        const client = clients.find(c => c.id === shift.client_id);
         
-        return {
-          ...shift,
-          client_id: client?.id,
-          carer_id: carer?.id,
-          status: "draft",
-        };
-      }).filter(s => s.client_id && s.carer_id);
+        if (!currentCarer || !client) continue;
 
-      setGeneratedSchedule({
-        shifts: scheduleWithIds,
-        summary: response.summary,
-        warnings: response.warnings || []
-      });
-      setStep(2);
+        // Check if there's a better match
+        const betterCarers = carers.filter(carer => {
+          if (carer.id === shift.carer_id) return false;
+          if (carer.status !== 'active') return false;
+          if (!client.preferred_carers?.includes(carer.id)) return false;
+
+          // Check availability
+          const carerShifts = shifts.filter(s => 
+            s.carer_id === carer.id && 
+            s.date === shift.date
+          );
+
+          const hasConflict = carerShifts.some(cs => {
+            const start1 = shift.start_time || "00:00";
+            const end1 = shift.end_time || "23:59";
+            const start2 = cs.start_time || "00:00";
+            const end2 = cs.end_time || "23:59";
+
+            return (start1 >= start2 && start1 < end2) ||
+                   (end1 > start2 && end1 <= end2) ||
+                   (start1 <= start2 && end1 >= end2);
+          });
+
+          return !hasConflict;
+        });
+
+        if (betterCarers.length > 0 && !client.preferred_carers?.includes(currentCarer.id)) {
+          newSuggestions.push({
+            type: 'optimization',
+            shift,
+            currentCarer,
+            suggestedCarer: betterCarers[0],
+            client,
+            reasons: ["Suggested carer is client's preferred choice", "Improves continuity of care"]
+          });
+        }
+      }
+
+      setSuggestions(newSuggestions);
+      toast.success(
+        "AI Analysis Complete",
+        `Found ${newSuggestions.length} suggestions to improve your schedule`
+      );
     } catch (error) {
-      console.error("Error generating schedule:", error);
-      alert("Failed to generate schedule. Please try again.");
+      console.error("Error generating suggestions:", error);
+      toast.error("Error", "Failed to generate suggestions");
     } finally {
       setIsGenerating(false);
     }
   };
 
-  const createScheduleMutation = useMutation({
-    mutationFn: async () => {
-      const shiftsToCreate = generatedSchedule.shifts.map(shift => ({
-        client_id: shift.client_id,
-        carer_id: shift.carer_id,
-        date: shift.date,
-        start_time: shift.start_time,
-        end_time: shift.end_time,
-        shift_type: shift.shift_type,
-        status: "scheduled",
-        tasks: shift.tasks || [],
-        notes: shift.reasoning || `AI-generated shift (Confidence: ${shift.confidence_score}%)`,
-        duration_hours: calculateDuration(shift.start_time, shift.end_time),
-      }));
+  const handleApplySuggestions = async () => {
+    const selected = suggestions.filter((_, idx) => selectedSuggestions.has(idx));
+    
+    setIsGenerating(true);
+    try {
+      for (const suggestion of selected) {
+        if (suggestion.type === 'assignment') {
+          await updateShiftMutation.mutateAsync({
+            id: suggestion.shift.id,
+            data: {
+              carer_id: suggestion.carer.id,
+              status: 'scheduled'
+            }
+          });
+        } else if (suggestion.type === 'optimization') {
+          await updateShiftMutation.mutateAsync({
+            id: suggestion.shift.id,
+            data: {
+              carer_id: suggestion.suggestedCarer.id
+            }
+          });
+        }
+      }
 
-      await Promise.all(shiftsToCreate.map(shift => 
-        base44.entities.Shift.create(shift)
-      ));
-    },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      toast.success(
+        "Suggestions Applied",
+        `Successfully updated ${selected.length} shift${selected.length > 1 ? 's' : ''}`
+      );
       onClose();
-    },
-  });
-
-  const calculateDuration = (start, end) => {
-    const [startHour, startMin] = start.split(":").map(Number);
-    const [endHour, endMin] = end.split(":").map(Number);
-    const startMinutes = startHour * 60 + startMin;
-    const endMinutes = endHour * 60 + endMin;
-    return (endMinutes - startMinutes) / 60;
+    } catch (error) {
+      console.error("Error applying suggestions:", error);
+      toast.error("Error", "Failed to apply some suggestions");
+    } finally {
+      setIsGenerating(false);
+    }
   };
 
-  const handleClientToggle = (clientId) => {
-    setFormData(prev => ({
-      ...prev,
-      clients: prev.clients.includes(clientId)
-        ? prev.clients.filter(id => id !== clientId)
-        : [...prev.clients, clientId]
-    }));
+  const toggleSuggestion = (index) => {
+    const newSelected = new Set(selectedSuggestions);
+    if (newSelected.has(index)) {
+      newSelected.delete(index);
+    } else {
+      newSelected.add(index);
+    }
+    setSelectedSuggestions(newSelected);
   };
-
-  const getCarerName = (carerId) => carers.find(c => c.id === carerId)?.full_name || "Unknown";
-  const getClientName = (clientId) => clients.find(c => c.id === clientId)?.full_name || "Unknown";
 
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
-        <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
-            <Sparkles className="w-6 h-6 text-purple-600" />
-            AI Schedule Generator
-          </DialogTitle>
-        </DialogHeader>
-
-        {step === 1 ? (
-          <div className="space-y-6 py-4">
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <Sparkles className="w-5 h-5 text-purple-600 mt-0.5" />
-                <div>
-                  <h3 className="font-semibold text-purple-900 mb-1">AI-Powered Scheduling</h3>
-                  <p className="text-sm text-purple-800">
-                    Our AI will analyze carer qualifications, client needs, preferences, and availability to generate an optimal schedule.
-                  </p>
-                </div>
+    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="bg-gradient-to-r from-purple-500 to-blue-500 text-white flex-shrink-0">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
+                <Sparkles className="w-6 h-6" />
               </div>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
               <div>
-                <Label htmlFor="start_date">Start Date</Label>
-                <Input
-                  id="start_date"
-                  type="date"
-                  value={formData.start_date}
-                  onChange={(e) => setFormData(prev => ({ ...prev, start_date: e.target.value }))}
-                  min={format(new Date(), "yyyy-MM-dd")}
-                />
-              </div>
-
-              <div>
-                <Label htmlFor="duration">Duration (Days)</Label>
-                <Select
-                  value={formData.duration}
-                  onValueChange={(value) => setFormData(prev => ({ ...prev, duration: value }))}
-                >
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="7">1 Week (7 days)</SelectItem>
-                    <SelectItem value="14">2 Weeks (14 days)</SelectItem>
-                    <SelectItem value="30">1 Month (30 days)</SelectItem>
-                  </SelectContent>
-                </Select>
+                <CardTitle className="text-2xl">AI Schedule Assistant</CardTitle>
+                <p className="text-sm text-white/80 mt-1">
+                  Smart suggestions to optimize your schedule
+                </p>
               </div>
             </div>
-
-            <div>
-              <Label>Clients to Include</Label>
-              <p className="text-sm text-gray-500 mb-3">Leave empty to include all active clients</p>
-              <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-gray-50 max-h-48 overflow-y-auto">
-                {clients.filter(c => c.status === 'active').map(client => (
-                  <label key={client.id} className="flex items-center gap-2 cursor-pointer">
-                    <input
-                      type="checkbox"
-                      checked={formData.clients.includes(client.id)}
-                      onChange={() => handleClientToggle(client.id)}
-                      className="rounded"
-                    />
-                    <span className="text-sm">{client.full_name}</span>
-                  </label>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <Label htmlFor="shift_preferences">Optimization Priority</Label>
-              <Select
-                value={formData.shift_preferences}
-                onValueChange={(value) => setFormData(prev => ({ ...prev, shift_preferences: value }))}
-              >
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="balanced">Balanced Workload</SelectItem>
-                  <SelectItem value="continuity">Maximize Continuity of Care</SelectItem>
-                  <SelectItem value="minimize_carers">Minimize Number of Carers</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div>
-              <Label htmlFor="additional_instructions">Additional Instructions (Optional)</Label>
-              <Textarea
-                id="additional_instructions"
-                value={formData.additional_instructions}
-                onChange={(e) => setFormData(prev => ({ ...prev, additional_instructions: e.target.value }))}
-                placeholder="e.g., Avoid early morning shifts for John, Prioritize continuity for Mrs. Smith..."
-                className="h-24"
-              />
-            </div>
+            <Button
+              variant="ghost"
+              size="icon"
+              onClick={onClose}
+              className="text-white hover:bg-white/20"
+            >
+              <X className="w-5 h-5" />
+            </Button>
           </div>
-        ) : (
-          <div className="space-y-6 py-4">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <div className="flex items-start gap-3">
-                <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-green-900 mb-2">Schedule Generated!</h3>
-                  <p className="text-sm text-green-800 mb-3">{generatedSchedule.summary}</p>
-                  <p className="text-sm font-medium text-green-900">
-                    {generatedSchedule.shifts.length} shifts created
+        </CardHeader>
+
+        <CardContent className="p-6 overflow-y-auto flex-1">
+          {suggestions.length === 0 ? (
+            <div className="text-center py-12">
+              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
+                <Sparkles className="w-10 h-10 text-purple-600" />
+              </div>
+              <h3 className="text-xl font-semibold text-gray-900 mb-2">
+                Ready to optimize your schedule?
+              </h3>
+              <p className="text-gray-600 mb-6 max-w-md mx-auto">
+                Our AI will analyze your shifts, carers, and clients to provide smart scheduling suggestions
+              </p>
+              <Button
+                onClick={generateSmartSuggestions}
+                disabled={isGenerating}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                {isGenerating ? (
+                  <>
+                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
+                    Analyzing...
+                  </>
+                ) : (
+                  <>
+                    <Sparkles className="w-5 h-5 mr-2" />
+                    Generate Suggestions
+                  </>
+                )}
+              </Button>
+            </div>
+          ) : (
+            <>
+              <div className="flex items-center justify-between mb-6">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900">
+                    {suggestions.length} Suggestion{suggestions.length > 1 ? 's' : ''} Found
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {selectedSuggestions.size} selected for application
                   </p>
                 </div>
-              </div>
-            </div>
-
-            {generatedSchedule.warnings && generatedSchedule.warnings.length > 0 && (
-              <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
-                <div className="flex items-start gap-3">
-                  <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
-                  <div>
-                    <h3 className="font-semibold text-yellow-900 mb-2">Warnings:</h3>
-                    <ul className="text-sm text-yellow-800 space-y-1">
-                      {generatedSchedule.warnings.map((warning, idx) => (
-                        <li key={idx}>• {warning}</li>
-                      ))}
-                    </ul>
-                  </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedSuggestions(new Set(suggestions.map((_, i) => i)))}
+                  >
+                    Select All
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => setSelectedSuggestions(new Set())}
+                  >
+                    Clear All
+                  </Button>
                 </div>
               </div>
-            )}
 
-            <div>
-              <h3 className="font-semibold mb-3">Preview Schedule ({generatedSchedule.shifts.length} shifts)</h3>
-              <div className="space-y-2 max-h-[400px] overflow-y-auto">
-                {generatedSchedule.shifts.map((shift, idx) => (
-                  <Card key={idx} className="p-3">
-                    <div className="flex items-start justify-between gap-4">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2">
-                          <Calendar className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{format(parseISO(shift.date), "EEE, MMM d")}</span>
-                          <Badge variant="outline" className="text-xs">{shift.shift_type}</Badge>
+              <div className="space-y-4">
+                {suggestions.map((suggestion, idx) => (
+                  <Card
+                    key={idx}
+                    className={`cursor-pointer transition-all ${
+                      selectedSuggestions.has(idx)
+                        ? 'ring-2 ring-purple-500 bg-purple-50'
+                        : 'hover:shadow-md'
+                    }`}
+                    onClick={() => suggestion.type !== 'warning' && toggleSuggestion(idx)}
+                  >
+                    <CardContent className="p-4">
+                      {suggestion.type === 'assignment' && (
+                        <div className="flex items-start gap-4">
+                          <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                            selectedSuggestions.has(idx)
+                              ? 'bg-purple-600 border-purple-600'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedSuggestions.has(idx) && (
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className="bg-green-100 text-green-800">Assignment</Badge>
+                              <Badge className="bg-blue-100 text-blue-800">
+                                Score: {suggestion.score}
+                              </Badge>
+                            </div>
+                            <p className="font-semibold text-gray-900 mb-2">
+                              Assign {suggestion.carer.full_name} to {suggestion.client.full_name}
+                            </p>
+                            <div className="text-sm text-gray-600 space-y-1 mb-3">
+                              <div className="flex items-center gap-2">
+                                <Calendar className="w-4 h-4" />
+                                {suggestion.shift.date} at {suggestion.shift.start_time}
+                              </div>
+                              <div className="flex items-center gap-2">
+                                <Clock className="w-4 h-4" />
+                                {suggestion.shift.duration_hours}h shift
+                              </div>
+                            </div>
+                            <div className="space-y-1">
+                              {suggestion.reasons.map((reason, i) => (
+                                <div key={i} className="flex items-center gap-2 text-sm text-green-700">
+                                  <CheckCircle className="w-3 h-3" />
+                                  {reason}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                        <div className="text-sm space-y-1">
-                          <p><strong>Carer:</strong> {getCarerName(shift.carer_id)}</p>
-                          <p><strong>Client:</strong> {getClientName(shift.client_id)}</p>
-                          <p><strong>Time:</strong> {shift.start_time} - {shift.end_time}</p>
-                          {shift.tasks && shift.tasks.length > 0 && (
-                            <p><strong>Tasks:</strong> {shift.tasks.join(', ')}</p>
-                          )}
+                      )}
+
+                      {suggestion.type === 'optimization' && (
+                        <div className="flex items-start gap-4">
+                          <div className={`mt-1 w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 ${
+                            selectedSuggestions.has(idx)
+                              ? 'bg-purple-600 border-purple-600'
+                              : 'border-gray-300'
+                          }`}>
+                            {selectedSuggestions.has(idx) && (
+                              <CheckCircle className="w-4 h-4 text-white" />
+                            )}
+                          </div>
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className="bg-blue-100 text-blue-800">Optimization</Badge>
+                            </div>
+                            <p className="font-semibold text-gray-900 mb-2">
+                              Reassign from {suggestion.currentCarer.full_name} to {suggestion.suggestedCarer.full_name}
+                            </p>
+                            <div className="text-sm text-gray-600 mb-3">
+                              Client: {suggestion.client.full_name} • {suggestion.shift.date}
+                            </div>
+                            <div className="space-y-1">
+                              {suggestion.reasons.map((reason, i) => (
+                                <div key={i} className="flex items-center gap-2 text-sm text-blue-700">
+                                  <CheckCircle className="w-3 h-3" />
+                                  {reason}
+                                </div>
+                              ))}
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                      <Badge className={
-                        shift.confidence_score >= 80 ? "bg-green-100 text-green-800" :
-                        shift.confidence_score >= 60 ? "bg-yellow-100 text-yellow-800" :
-                        "bg-orange-100 text-orange-800"
-                      }>
-                        {shift.confidence_score}% match
-                      </Badge>
-                    </div>
+                      )}
+
+                      {suggestion.type === 'warning' && (
+                        <div className="flex items-start gap-4">
+                          <AlertCircle className="w-5 h-5 text-orange-600 flex-shrink-0 mt-1" />
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-2">
+                              <Badge className="bg-orange-100 text-orange-800">Attention Needed</Badge>
+                            </div>
+                            <p className="font-semibold text-gray-900 mb-2">
+                              {suggestion.client.full_name} - {suggestion.shift.date} at {suggestion.shift.start_time}
+                            </p>
+                            <p className="text-sm text-gray-700">{suggestion.message}</p>
+                          </div>
+                        </div>
+                      )}
+                    </CardContent>
                   </Card>
                 ))}
               </div>
-            </div>
-          </div>
-        )}
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          {step === 1 ? (
-            <Button
-              onClick={generateSchedule}
-              disabled={isGenerating}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {isGenerating ? (
-                <>
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                  Generating...
-                </>
-              ) : (
-                <>
+              <div className="flex gap-3 mt-6 pt-6 border-t">
+                <Button
+                  variant="outline"
+                  onClick={generateSmartSuggestions}
+                  disabled={isGenerating}
+                >
                   <Sparkles className="w-4 h-4 mr-2" />
-                  Generate Schedule
-                </>
-              )}
-            </Button>
-          ) : (
-            <>
-              <Button variant="outline" onClick={() => setStep(1)}>
-                Back
-              </Button>
-              <Button
-                onClick={() => createScheduleMutation.mutate()}
-                disabled={createScheduleMutation.isPending}
-                className="bg-green-600 hover:bg-green-700"
-              >
-                {createScheduleMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Creating...
-                  </>
-                ) : (
-                  `Create ${generatedSchedule.shifts.length} Shifts`
-                )}
-              </Button>
+                  Regenerate
+                </Button>
+                <Button
+                  onClick={handleApplySuggestions}
+                  disabled={selectedSuggestions.size === 0 || isGenerating}
+                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                >
+                  {isGenerating ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Applying...
+                    </>
+                  ) : (
+                    <>
+                      Apply {selectedSuggestions.size} Suggestion{selectedSuggestions.size > 1 ? 's' : ''}
+                    </>
+                  )}
+                </Button>
+              </div>
             </>
           )}
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
+        </CardContent>
+      </Card>
+    </div>
   );
 }
