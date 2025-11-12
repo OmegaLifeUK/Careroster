@@ -22,7 +22,9 @@ import {
   Activity,
   Settings,
   X,
-  Search
+  Search,
+  TrendingUp, // Added
+  Zap // Added
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,6 +43,7 @@ const residentialCareNav = [
   { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
   { title: "Analytics", url: createPageUrl("AnalyticsPage"), icon: Activity },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
+  { title: "Custom Reports", url: createPageUrl("CustomReportsPage"), icon: TrendingUp },
   { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
   { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
 ];
@@ -84,6 +87,8 @@ const clientPortalNav = [
 ];
 
 const systemNavigation = [
+  { title: "Automated Workflows", url: createPageUrl("WorkflowsPage"), icon: Zap, adminOnly: true },
+  { title: "Permissions", url: createPageUrl("PermissionsPage"), icon: Shield, adminOnly: true },
   { title: "Module Settings", url: createPageUrl("ModuleSettings"), icon: Settings, adminOnly: true },
   { title: "User Management", url: createPageUrl("UserManagement"), icon: Users, adminOnly: true },
 ];

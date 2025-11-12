@@ -33,6 +33,9 @@ import ClientPortalMessages from './pages/ClientPortalMessages';
 import ClientPortalBookings from './pages/ClientPortalBookings';
 import UserManagement from './pages/UserManagement';
 import AnalyticsPage from './pages/AnalyticsPage';
+import WorkflowsPage from './pages/WorkflowsPage';
+import PermissionsPage from './pages/PermissionsPage';
+import CustomReportsPage from './pages/CustomReportsPage';
 import Layout from './Layout.jsx';
 
 
@@ -72,6 +75,9 @@ export const PAGES = {
     "ClientPortalBookings": ClientPortalBookings,
     "UserManagement": UserManagement,
     "AnalyticsPage": AnalyticsPage,
+    "WorkflowsPage": WorkflowsPage,
+    "PermissionsPage": PermissionsPage,
+    "CustomReportsPage": CustomReportsPage,
 }
 
 export const pagesConfig = {
