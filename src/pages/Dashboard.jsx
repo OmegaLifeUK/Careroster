@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -27,12 +26,14 @@ import TodayShifts from "../components/dashboard/TodayShifts";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import QuickActions from "../components/dashboard/QuickActions";
 import MainDashboardCustomizer from "../components/dashboard/MainDashboardCustomizer";
+import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 
 const DEFAULT_PREFERENCES = {
   statsCards: true,
   todayShifts: true,
   quickActions: true,
   recentActivity: true,
+  smartSuggestions: true,
 };
 
 export default function Dashboard() {
@@ -47,7 +48,10 @@ export default function Dashboard() {
         setUser(userData);
         
         if (userData.main_dashboard_preferences) {
-          setModulePreferences(userData.main_dashboard_preferences);
+          setModulePreferences({
+            ...DEFAULT_PREFERENCES,
+            ...userData.main_dashboard_preferences
+          });
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -130,6 +134,18 @@ export default function Dashboard() {
             Customize
           </Button>
         </div>
+
+        {/* Smart Suggestions - New! */}
+        {modulePreferences.smartSuggestions && (
+          <div className="mb-8">
+            <SmartSuggestionsWidget
+              shifts={shifts}
+              carers={carers}
+              clients={clients}
+              leaveRequests={leaveRequests}
+            />
+          </div>
+        )}
 
         {modulePreferences.statsCards && (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
