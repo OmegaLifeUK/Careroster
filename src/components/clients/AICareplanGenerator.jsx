@@ -18,13 +18,13 @@ export default function AICareplanGenerator({ client, onClose }) {
     try {
       const prompt = `Generate a comprehensive care plan for the following client:
 
-Name: ${client.full_name}
+Name: ${client.full_name || 'Not provided'}
 Date of Birth: ${client.date_of_birth || 'Not provided'}
 Mobility: ${client.mobility || 'Not specified'}
 Care Needs: ${client.care_needs?.join(', ') || 'Not specified'}
 Medical Notes: ${client.medical_notes || 'None provided'}
 Funding Type: ${client.funding_type || 'Not specified'}
-Additional Context: ${additionalNotes}
+Additional Context: ${additionalNotes || 'None'}
 
 Please provide a detailed care plan with the following sections:
 1. Assessment Summary
@@ -69,32 +69,40 @@ Format the response as JSON with these sections.`;
   };
 
   const saveToDocs = async () => {
+    if (!generatedPlan) return;
+    
     try {
+      const shortTermGoals = generatedPlan.care_goals?.short_term || [];
+      const longTermGoals = generatedPlan.care_goals?.long_term || [];
+      const dailyRoutine = generatedPlan.daily_routine || [];
+      const riskAssessment = generatedPlan.risk_assessment || [];
+      const supportRequirements = generatedPlan.support_requirements || [];
+
       const planText = `
 CARE PLAN FOR ${client.full_name}
 Generated: ${new Date().toLocaleDateString()}
 
 ASSESSMENT SUMMARY
-${generatedPlan.assessment_summary}
+${generatedPlan.assessment_summary || 'N/A'}
 
 CARE GOALS
 Short-term:
-${generatedPlan.care_goals.short_term.map(g => `- ${g}`).join('\n')}
+${shortTermGoals.map(g => `- ${g}`).join('\n')}
 
 Long-term:
-${generatedPlan.care_goals.long_term.map(g => `- ${g}`).join('\n')}
+${longTermGoals.map(g => `- ${g}`).join('\n')}
 
 DAILY CARE ROUTINE
-${generatedPlan.daily_routine.map(r => `- ${r}`).join('\n')}
+${dailyRoutine.map(r => `- ${r}`).join('\n')}
 
 RISK ASSESSMENT
-${generatedPlan.risk_assessment.map(r => `- ${r}`).join('\n')}
+${riskAssessment.map(r => `- ${r}`).join('\n')}
 
 SUPPORT REQUIREMENTS
-${generatedPlan.support_requirements.map(r => `- ${r}`).join('\n')}
+${supportRequirements.map(r => `- ${r}`).join('\n')}
 
 REVIEW SCHEDULE
-${generatedPlan.review_schedule}
+${generatedPlan.review_schedule || 'N/A'}
 `;
 
       const blob = new Blob([planText], { type: 'text/plain' });
@@ -202,89 +210,105 @@ ${generatedPlan.review_schedule}
                 <span className="text-green-900 font-medium">Care plan generated successfully!</span>
               </div>
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Assessment Summary</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
-                  {generatedPlan.assessment_summary}
-                </p>
-              </div>
+              {generatedPlan.assessment_summary && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Assessment Summary</h3>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                    {generatedPlan.assessment_summary}
+                  </p>
+                </div>
+              )}
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Care Goals</h3>
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="bg-blue-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-blue-900 mb-2">Short-term</h4>
-                    <ul className="space-y-1">
-                      {generatedPlan.care_goals.short_term.map((goal, idx) => (
-                        <li key={idx} className="text-sm text-blue-800 flex items-start gap-2">
-                          <span className="text-blue-600 mt-0.5">•</span>
-                          <span>{goal}</span>
+              {generatedPlan.care_goals && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Care Goals</h3>
+                  <div className="grid md:grid-cols-2 gap-4">
+                    {generatedPlan.care_goals.short_term && generatedPlan.care_goals.short_term.length > 0 && (
+                      <div className="bg-blue-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-blue-900 mb-2">Short-term</h4>
+                        <ul className="space-y-1">
+                          {generatedPlan.care_goals.short_term.map((goal, idx) => (
+                            <li key={idx} className="text-sm text-blue-800 flex items-start gap-2">
+                              <span className="text-blue-600 mt-0.5">•</span>
+                              <span>{goal}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                    {generatedPlan.care_goals.long_term && generatedPlan.care_goals.long_term.length > 0 && (
+                      <div className="bg-purple-50 p-4 rounded-lg">
+                        <h4 className="font-medium text-purple-900 mb-2">Long-term</h4>
+                        <ul className="space-y-1">
+                          {generatedPlan.care_goals.long_term.map((goal, idx) => (
+                            <li key={idx} className="text-sm text-purple-800 flex items-start gap-2">
+                              <span className="text-purple-600 mt-0.5">•</span>
+                              <span>{goal}</span>
+                            </li>
+                          ))}
+                        </ul>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+
+              {generatedPlan.daily_routine && generatedPlan.daily_routine.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Daily Care Routine</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <ul className="space-y-2">
+                      {generatedPlan.daily_routine.map((item, idx) => (
+                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                          <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                          <span>{item}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
-                  <div className="bg-purple-50 p-4 rounded-lg">
-                    <h4 className="font-medium text-purple-900 mb-2">Long-term</h4>
-                    <ul className="space-y-1">
-                      {generatedPlan.care_goals.long_term.map((goal, idx) => (
-                        <li key={idx} className="text-sm text-purple-800 flex items-start gap-2">
-                          <span className="text-purple-600 mt-0.5">•</span>
-                          <span>{goal}</span>
+                </div>
+              )}
+
+              {generatedPlan.risk_assessment && generatedPlan.risk_assessment.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Risk Assessment</h3>
+                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                    <ul className="space-y-2">
+                      {generatedPlan.risk_assessment.map((risk, idx) => (
+                        <li key={idx} className="text-sm text-orange-900 flex items-start gap-2">
+                          <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                          <span>{risk}</span>
                         </li>
                       ))}
                     </ul>
                   </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Daily Care Routine</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <ul className="space-y-2">
-                    {generatedPlan.daily_routine.map((item, idx) => (
-                      <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                        <span>{item}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {generatedPlan.support_requirements && generatedPlan.support_requirements.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Support Requirements</h3>
+                  <div className="bg-gray-50 p-4 rounded-lg">
+                    <ul className="space-y-2">
+                      {generatedPlan.support_requirements.map((req, idx) => (
+                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                          <span className="text-gray-600 mt-0.5">•</span>
+                          <span>{req}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              </div>
+              )}
 
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Risk Assessment</h3>
-                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                  <ul className="space-y-2">
-                    {generatedPlan.risk_assessment.map((risk, idx) => (
-                      <li key={idx} className="text-sm text-orange-900 flex items-start gap-2">
-                        <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                        <span>{risk}</span>
-                      </li>
-                    ))}
-                  </ul>
+              {generatedPlan.review_schedule && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Review Schedule</h3>
+                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                    {generatedPlan.review_schedule}
+                  </p>
                 </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Support Requirements</h3>
-                <div className="bg-gray-50 p-4 rounded-lg">
-                  <ul className="space-y-2">
-                    {generatedPlan.support_requirements.map((req, idx) => (
-                      <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                        <span className="text-gray-600 mt-0.5">•</span>
-                        <span>{req}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </div>
-              </div>
-
-              <div>
-                <h3 className="font-semibold text-gray-900 mb-2">Review Schedule</h3>
-                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
-                  {generatedPlan.review_schedule}
-                </p>
-              </div>
+              )}
 
               <div className="flex gap-3 pt-4 border-t">
                 <Button
