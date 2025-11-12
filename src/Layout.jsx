@@ -21,7 +21,8 @@ import {
   Activity,
   Settings,
   X,
-  Search
+  Search,
+  FolderOpen
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -37,6 +38,7 @@ const residentialCareNav = [
   { title: "Schedule", url: createPageUrl("Schedule"), icon: Calendar },
   { title: "Carers", url: createPageUrl("Carers"), icon: Users },
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
+  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
   { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
@@ -48,6 +50,7 @@ const domCareNav = [
   { title: "Visit Schedule", url: createPageUrl("DomCareSchedule"), icon: MapPin },
   { title: "Staff", url: createPageUrl("DomCareStaff"), icon: Users },
   { title: "Clients", url: createPageUrl("DomCareClients"), icon: UserCircle },
+  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
   { title: "Runs", url: createPageUrl("DomCareRuns"), icon: Navigation },
   { title: "Communications", url: createPageUrl("CommunicationHub"), icon: MessageSquare },
   { title: "Client Feedback", url: createPageUrl("ClientFeedback"), icon: MessageSquare },
@@ -60,6 +63,7 @@ const supportedLivingNav = [
   { title: "Clients", url: createPageUrl("SupportedLivingClients"), icon: UserCircle },
   { title: "Properties", url: createPageUrl("SupportedLivingProperties"), icon: Home },
   { title: "Schedule", url: createPageUrl("SupportedLivingSchedule"), icon: Calendar },
+  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
 ];
 
 const dayCentreNav = [
@@ -68,6 +72,7 @@ const dayCentreNav = [
   { title: "Activities", url: createPageUrl("DayCentreActivities"), icon: Activity },
   { title: "Sessions", url: createPageUrl("DayCentreSessions"), icon: Calendar },
   { title: "Attendance", url: createPageUrl("DayCentreAttendance"), icon: ClipboardList },
+  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
 ];
 
 const staffNavigation = [
