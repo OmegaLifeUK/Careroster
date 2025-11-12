@@ -19,7 +19,8 @@ import {
   Users,
   ThumbsUp,
   MessageSquare,
-  Zap
+  Zap,
+  X
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -27,6 +28,7 @@ export default function CareDocuments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
   const [selectedClient, setSelectedClient] = useState("all");
+  const [selectedDocument, setSelectedDocument] = useState(null);
 
   // Fetch all clients
   const { data: clients = [] } = useQuery({
@@ -359,7 +361,11 @@ export default function CareDocuments() {
                         )}
                       </div>
 
-                      <Button variant="outline" size="sm">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => setSelectedDocument(doc)}
+                      >
                         View Details
                       </Button>
                     </div>
@@ -369,6 +375,64 @@ export default function CareDocuments() {
             })
           )}
         </div>
+
+        {/* Document Detail Modal */}
+        {selectedDocument && (
+          <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
+            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+                <div className="flex items-center gap-3">
+                  <selectedDocument.icon className="w-6 h-6 text-blue-600" />
+                  <h2 className="text-2xl font-bold">{selectedDocument.docType}</h2>
+                  <Badge className={colorClasses[selectedDocument.color]}>
+                    {getClientType(selectedDocument.client_id || selectedDocument.staff_id)}
+                  </Badge>
+                </div>
+                <Button variant="ghost" size="icon" onClick={() => setSelectedDocument(null)}>
+                  <X className="w-5 h-5" />
+                </Button>
+              </div>
+
+              <div className="p-6">
+                <div className="mb-6">
+                  <h3 className="text-lg font-semibold mb-2">Client Information</h3>
+                  <p className="text-gray-700">
+                    <strong>Name:</strong> {getClientName(selectedDocument.client_id || selectedDocument.staff_id)}
+                  </p>
+                </div>
+
+                <div className="space-y-4">
+                  {Object.entries(selectedDocument).map(([key, value]) => {
+                    if (key === 'id' || key === 'docType' || key === 'icon' || key === 'color' || !value) return null;
+                    
+                    return (
+                      <div key={key} className="border-b pb-3">
+                        <h4 className="font-semibold text-sm text-gray-600 uppercase mb-1">
+                          {key.replace(/_/g, ' ')}
+                        </h4>
+                        <div className="text-gray-900">
+                          {typeof value === 'object' ? (
+                            <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
+                              {JSON.stringify(value, null, 2)}
+                            </pre>
+                          ) : (
+                            <p>{String(value)}</p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+
+              <div className="sticky bottom-0 bg-white border-t p-4">
+                <Button onClick={() => setSelectedDocument(null)} className="w-full">
+                  Close
+                </Button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );
