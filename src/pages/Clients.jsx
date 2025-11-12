@@ -17,6 +17,13 @@ import DocumentManager from "../components/clients/DocumentManager";
 import ClientAlertManager from "../components/clients/ClientAlertManager";
 import AlertBanner from "../components/clients/AlertBanner";
 import AICareplanGenerator from "../components/clients/AICareplanGenerator";
+import CarePlanManager from "../components/clients/CarePlanManager";
+import RiskAssessmentManager from "../components/clients/RiskAssessmentManager";
+import PEEPManager from "../components/clients/PEEPManager";
+import RepositioningChartManager from "../components/clients/RepositioningChartManager";
+import BehaviorChartManager from "../components/clients/BehaviorChartManager";
+import MentalCapacityManager from "../components/clients/MentalCapacityManager";
+import SafeguardingManager from "../components/clients/SafeguardingManager";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -328,8 +335,36 @@ export default function Clients() {
             <ClientAlertManager client={selectedClient} />
           )}
 
+          {activeTab === "care_plan" && (
+            <CarePlanManager client={selectedClient} />
+          )}
+
+          {activeTab === "risk_assessments" && (
+            <RiskAssessmentManager client={selectedClient} />
+          )}
+
           {activeTab === "medication" && (
             <MedicationManagement client={selectedClient} />
+          )}
+
+          {activeTab === "peep" && (
+            <PEEPManager client={selectedClient} />
+          )}
+
+          {activeTab === "repositioning" && (
+            <RepositioningChartManager client={selectedClient} />
+          )}
+
+          {activeTab === "behavior" && (
+            <BehaviorChartManager client={selectedClient} />
+          )}
+
+          {activeTab === "mental_capacity" && (
+            <MentalCapacityManager client={selectedClient} />
+          )}
+
+          {activeTab === "safeguarding" && (
+            <SafeguardingManager client={selectedClient} />
           )}
 
           {activeTab === "consent" && (
