@@ -30,6 +30,7 @@ import { format, parseISO, isToday, isPast, addDays, startOfMonth, endOfMonth, e
 import { Link } from "react-router-dom"; // Import Link from react-router-dom
 
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
+import PredictiveScheduling from "../components/schedule/PredictiveScheduling"; // Added import
 
 const DEFAULT_PREFERENCES = {
   occupancy: true,
@@ -314,8 +315,8 @@ COMMUNICATION
   };
 
   return (
-    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
-      <div className="max-w-[98%] mx-auto">
+    <div className="p-4 md:p-8">
+      <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -365,6 +366,15 @@ COMMUNICATION
             </CardContent>
           </Card>
         )}
+
+        {/* Add Predictive Insights Section */}
+        <div className="mb-8">
+          <PredictiveScheduling
+            shifts={shifts}
+            carers={carers}
+            clients={clients}
+          />
+        </div>
 
         {/* Module 1: Occupancy & Compliance */}
         {modulePreferences.occupancy && (
