@@ -5,7 +5,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
 import { Calendar, ClipboardList, Clock } from "lucide-react";
 
-export default function RecentActivity({ shifts, leaveRequests, carers, clients, isLoading }) {
+export default function RecentActivity({ shifts = [], leaveRequests = [], carers = [], clients = [], isLoading }) {
   if (isLoading) {
     return (
       <Card>
@@ -24,30 +24,32 @@ export default function RecentActivity({ shifts, leaveRequests, carers, clients,
   }
 
   const getCarerName = (carerId) => {
-    const carer = carers.find(c => c.id === carerId);
+    if (!carerId || !Array.isArray(carers)) return "Unknown";
+    const carer = carers.find(c => c && c.id === carerId);
     return carer?.full_name || "Unknown";
   };
 
   const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
+    if (!clientId || !Array.isArray(clients)) return "Unknown";
+    const client = clients.find(c => c && c.id === clientId);
     return client?.full_name || "Unknown";
   };
 
   const activities = [
-    ...shifts.map(shift => ({
+    ...(Array.isArray(shifts) ? shifts : []).map(shift => ({
       type: 'shift',
-      date: shift.created_date,
-      title: `Shift ${shift.status}`,
-      description: `${getCarerName(shift.carer_id)} → ${getClientName(shift.client_id)}`,
-      status: shift.status,
+      date: shift?.created_date || new Date().toISOString(),
+      title: `Shift ${shift?.status || 'scheduled'}`,
+      description: `${getCarerName(shift?.carer_id)} → ${getClientName(shift?.client_id)}`,
+      status: shift?.status || 'scheduled',
       icon: Calendar,
     })),
-    ...leaveRequests.map(request => ({
+    ...(Array.isArray(leaveRequests) ? leaveRequests : []).map(request => ({
       type: 'leave',
-      date: request.created_date,
-      title: `${request.leave_type} request`,
-      description: getCarerName(request.carer_id),
-      status: request.status,
+      date: request?.created_date || new Date().toISOString(),
+      title: `${request?.leave_type || 'Leave'} request`,
+      description: getCarerName(request?.carer_id),
+      status: request?.status || 'pending',
       icon: ClipboardList,
     })),
   ]
@@ -96,7 +98,7 @@ export default function RecentActivity({ shifts, leaveRequests, carers, clients,
                 <div className="flex-1">
                   <div className="flex items-start justify-between mb-1">
                     <p className="font-medium text-gray-900">{activity.title}</p>
-                    <Badge className={`${statusColors[activity.status]} text-xs`}>
+                    <Badge className={`${statusColors[activity.status] || statusColors.scheduled} text-xs`}>
                       {activity.status}
                     </Badge>
                   </div>

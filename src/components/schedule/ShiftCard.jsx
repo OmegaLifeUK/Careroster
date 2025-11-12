@@ -13,9 +13,8 @@ const statusColors = {
   unfilled: "bg-orange-100 text-orange-800",
 };
 
-export default function ShiftCard({ shift, carers, clients, onEdit, onDelete }) {
-  const carer = carers.find(c => c.id === shift.carer_id);
-  const client = clients.find(c => c.id === shift.client_id);
+export default function ShiftCard({ shift, carer, client, onEdit, onDelete }) {
+  if (!shift) return null;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -27,12 +26,12 @@ export default function ShiftCard({ shift, carers, clients, onEdit, onDelete }) 
             </div>
             <div>
               <p className="font-semibold text-lg">
-                {shift.date && format(parseISO(shift.date), "EEEE, MMM d, yyyy")}
+                {shift.date ? format(parseISO(shift.date), "EEEE, MMM d, yyyy") : 'No date'}
               </p>
               <div className="flex items-center gap-2 text-gray-600 mt-1">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm">
-                  {shift.start_time} - {shift.end_time}
+                  {shift.start_time || 'N/A'} - {shift.end_time || 'N/A'}
                 </span>
                 <span className="text-xs text-gray-400">
                   ({shift.duration_hours || 0}h)
@@ -42,10 +41,10 @@ export default function ShiftCard({ shift, carers, clients, onEdit, onDelete }) 
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={statusColors[shift.status]}>
-              {shift.status.replace('_', ' ')}
+            <Badge className={statusColors[shift.status] || statusColors.scheduled}>
+              {shift.status?.replace('_', ' ') || 'scheduled'}
             </Badge>
-            <Badge variant="outline">{shift.shift_type}</Badge>
+            <Badge variant="outline">{shift.shift_type || 'standard'}</Badge>
           </div>
         </div>
 
@@ -67,7 +66,7 @@ export default function ShiftCard({ shift, carers, clients, onEdit, onDelete }) 
           </div>
         </div>
 
-        {shift.tasks && shift.tasks.length > 0 && (
+        {shift.tasks && Array.isArray(shift.tasks) && shift.tasks.length > 0 && (
           <div className="mb-4 pb-4 border-b">
             <p className="text-xs text-gray-500 mb-2">Tasks:</p>
             <div className="flex flex-wrap gap-2">

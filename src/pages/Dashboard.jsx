@@ -62,45 +62,59 @@ export default function Dashboard() {
 
   const { data: carers = [], isLoading: carersLoading } = useQuery({
     queryKey: ['carers'],
-    queryFn: () => base44.entities.Carer.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts'],
-    queryFn: () => base44.entities.Shift.list('-date'),
+    queryFn: async () => {
+      const data = await base44.entities.Shift.list('-date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: leaveRequests = [], isLoading: leaveLoading } = useQuery({
     queryKey: ['leave-requests'],
-    queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
+    queryFn: async () => {
+      const data = await base44.entities.LeaveRequest.list('-created_date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
-  const activeCarers = carers.filter(c => c.status === 'active').length;
-  const activeClients = clients.filter(c => c.status === 'active').length;
+  const activeCarers = Array.isArray(carers) ? carers.filter(c => c && c.status === 'active').length : 0;
+  const activeClients = Array.isArray(clients) ? clients.filter(c => c && c.status === 'active').length : 0;
   
-  const todayShifts = shifts.filter(shift => {
+  const todayShifts = Array.isArray(shifts) ? shifts.filter(shift => {
+    if (!shift || !shift.date) return false;
     try {
       return isToday(parseISO(shift.date));
     } catch {
       return false;
     }
-  });
+  }) : [];
 
-  const upcomingShifts = shifts.filter(shift => {
+  const upcomingShifts = Array.isArray(shifts) ? shifts.filter(shift => {
+    if (!shift || !shift.date) return false;
     try {
       return isFuture(parseISO(shift.date));
     } catch {
       return false;
     }
-  }).length;
+  }).length : 0;
 
-  const unfilledShifts = shifts.filter(s => s.status === 'unfilled').length;
-  const pendingLeave = leaveRequests.filter(r => r.status === 'pending').length;
+  const unfilledShifts = Array.isArray(shifts) ? shifts.filter(s => s && s.status === 'unfilled').length : 0;
+  const pendingLeave = Array.isArray(leaveRequests) ? leaveRequests.filter(r => r && r.status === 'pending').length : 0;
 
   const isLoading = carersLoading || clientsLoading || shiftsLoading || leaveLoading;
 
