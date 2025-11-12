@@ -16,7 +16,13 @@ import {
   TrendingUp,
   Calendar,
   Filter,
-  Eye
+  Eye,
+  X,
+  Users,
+  UserCircle,
+  Shield,
+  GraduationCap,
+  Activity
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
@@ -150,7 +156,6 @@ export default function CustomReportBuilder({ onRunReport }) {
 
   return (
     <div className="grid lg:grid-cols-3 gap-6">
-      {/* Report Builder */}
       <div className="lg:col-span-2 space-y-6">
         <Card>
           <CardHeader className="bg-gradient-to-r from-blue-50 to-purple-50">
@@ -160,7 +165,6 @@ export default function CustomReportBuilder({ onRunReport }) {
             </CardTitle>
           </CardHeader>
           <CardContent className="p-6 space-y-6">
-            {/* Report Name */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Report Name
@@ -172,7 +176,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               />
             </div>
 
-            {/* Data Source */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Data Source
@@ -202,7 +205,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               </div>
             </div>
 
-            {/* Fields Selection */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Select Fields ({reportConfig.selectedFields.length} selected)
@@ -226,7 +228,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               </div>
             </div>
 
-            {/* Date Range */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Date Range
@@ -253,7 +254,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               </div>
             </div>
 
-            {/* Filters */}
             <div>
               <div className="flex items-center justify-between mb-2">
                 <label className="text-sm font-medium text-gray-700">
@@ -305,7 +305,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               </div>
             </div>
 
-            {/* Visualization Type */}
             <div>
               <label className="text-sm font-medium text-gray-700 mb-2 block">
                 Visualization Type
@@ -331,7 +330,6 @@ export default function CustomReportBuilder({ onRunReport }) {
               </div>
             </div>
 
-            {/* Actions */}
             <div className="flex gap-3 pt-4 border-t">
               <Button
                 onClick={runReport}
@@ -352,7 +350,6 @@ export default function CustomReportBuilder({ onRunReport }) {
         </Card>
       </div>
 
-      {/* Saved Reports */}
       <div>
         <Card>
           <CardHeader className="bg-gradient-to-r from-purple-50 to-pink-50">

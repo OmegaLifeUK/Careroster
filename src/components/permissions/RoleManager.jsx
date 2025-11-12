@@ -14,7 +14,13 @@ import {
   Lock,
   Unlock,
   CheckCircle,
-  X
+  X,
+  Calendar,
+  FileText,
+  Settings,
+  GraduationCap,
+  Activity,
+  DollarSign
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 

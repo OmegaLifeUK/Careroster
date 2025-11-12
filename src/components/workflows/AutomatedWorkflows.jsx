@@ -16,7 +16,12 @@ import {
   AlertCircle,
   Settings,
   Plus,
-  Zap
+  Zap,
+  Users,
+  Shield,
+  FileText,
+  Activity,
+  GraduationCap
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
@@ -110,17 +115,6 @@ export default function AutomatedWorkflows() {
   });
   const [expandedWorkflow, setExpandedWorkflow] = useState(null);
   const { toast } = useToast();
-  const queryClient = useQueryClient();
-
-  // Query for workflow execution history
-  const { data: workflowHistory = [] } = useQuery({
-    queryKey: ['workflow-history'],
-    queryFn: async () => {
-      // This would fetch from a WorkflowExecution entity
-      // For now, return mock data
-      return [];
-    },
-  });
 
   const toggleWorkflow = (workflowId) => {
     const updated = activeWorkflows.includes(workflowId)
@@ -142,7 +136,6 @@ export default function AutomatedWorkflows() {
     
     toast.info("Testing Workflow", `Sending test notification for ${workflow.name}...`);
     
-    // Simulate workflow execution
     setTimeout(() => {
       toast.success("Test Complete", "Workflow executed successfully");
     }, 2000);
@@ -178,7 +171,6 @@ export default function AutomatedWorkflows() {
 
   return (
     <div className="space-y-6">
-      {/* Header Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
         <Card>
           <CardContent className="p-4">
@@ -234,7 +226,6 @@ export default function AutomatedWorkflows() {
         </Card>
       </div>
 
-      {/* Workflows by Category */}
       {Object.entries(groupedWorkflows).map(([category, workflows]) => {
         const CategoryIcon = categoryIcons[category] || Settings;
         const activeCount = workflows.filter(w => activeWorkflows.includes(w.id)).length;

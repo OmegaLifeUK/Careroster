@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -22,15 +21,15 @@ import {
   Download,
   Settings,
   BarChart3,
-  PieChart as PieChartIcon,
   MessageSquare,
   Shield
 } from "lucide-react";
 import { format, parseISO, isToday, isPast, addDays, startOfMonth, endOfMonth, eachMonthOfInterval, subMonths } from "date-fns";
-import { Link } from "react-router-dom"; // Import Link from react-router-dom
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
-import PredictiveScheduling from "../components/schedule/PredictiveScheduling"; // Added import
+import PredictiveScheduling from "../components/schedule/PredictiveScheduling";
 
 const DEFAULT_PREFERENCES = {
   occupancy: true,
@@ -48,40 +47,12 @@ export default function ManagerDashboard() {
   const [user, setUser] = useState(null);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
 
-  // Helper function to create dynamic page URLs
-  const createPageUrl = (pageName) => {
-    // This is a placeholder for your actual routing logic
-    // You'll need to define your routes appropriately
-    switch (pageName) {
-      case "Clients":
-        return "/dashboard/clients"; // Example path
-      case "Schedule":
-        return "/dashboard/schedule"; // Example path
-      case "LeaveRequests":
-        return "/dashboard/leave-requests"; // Example path
-      case "StaffTraining":
-        return "/dashboard/staff/training"; // Example path
-      case "IncidentManagement":
-        return "/dashboard/incidents"; // Example path
-      case "StaffList":
-        return "/dashboard/staff";
-      case "Reports":
-        return "/dashboard/reports";
-      case "Notifications":
-        return "/dashboard/notifications";
-      default:
-        return "/dashboard"; // Default to dashboard or a generic error page
-    }
-  };
-
-  // Load user and preferences
   useEffect(() => {
     const loadUserData = async () => {
       try {
         const userData = await base44.auth.me();
         setUser(userData);
 
-        // Load dashboard preferences from user data
         if (userData.dashboard_preferences) {
           setModulePreferences(userData.dashboard_preferences);
         }
@@ -142,15 +113,13 @@ export default function ManagerDashboard() {
     queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
   });
 
-  // Calculate Occupancy & Compliance Metrics
   const occupancyStats = {
-    totalBeds: 50, // This would come from settings/config
+    totalBeds: 50,
     occupied: clients.filter(c => c.status === 'active').length,
-    plannedAdmissions: 3, // This would come from admissions entity
+    plannedAdmissions: 3,
   };
   occupancyStats.occupancyRate = ((occupancyStats.occupied / occupancyStats.totalBeds) * 100).toFixed(1);
 
-  // Medication Compliance
   const todayMeds = medications.filter(m => {
     try {
       return isToday(parseISO(m.administration_time));
@@ -168,7 +137,6 @@ export default function ManagerDashboard() {
     }
   }).length;
 
-  // Staff Management Metrics
   const todayShifts = shifts.filter(shift => {
     try {
       return isToday(parseISO(shift.date));
@@ -181,7 +149,6 @@ export default function ManagerDashboard() {
     ? (((todayShifts.length - todayShifts.filter(s => s.status === 'unfilled').length) / todayShifts.length) * 100).toFixed(1)
     : 100;
 
-  // Training & Certification
   const expiringCerts = trainingAssignments.filter(a => {
     if (!a.expiry_date) return false;
     try {
@@ -205,7 +172,6 @@ export default function ManagerDashboard() {
     ? ((trainingAssignments.filter(a => a.status === 'completed').length / trainingAssignments.length) * 100).toFixed(1)
     : 0;
 
-  // Incident Metrics
   const recentIncidents = incidents.filter(inc => {
     try {
       return parseISO(inc.incident_date) > subMonths(new Date(), 1);
@@ -216,7 +182,6 @@ export default function ManagerDashboard() {
   const unresolvedIncidents = incidents.filter(i => i.status !== 'resolved' && i.status !== 'closed').length;
   const criticalIncidents = incidents.filter(i => i.severity === 'critical' && i.status !== 'closed').length;
 
-  // Incident Trends (last 12 months)
   const incidentTrends = eachMonthOfInterval({
     start: subMonths(new Date(), 11),
     end: new Date()
@@ -236,7 +201,6 @@ export default function ManagerDashboard() {
     };
   });
 
-  // Finance Metrics (Mock data - would come from billing system)
   const financeStats = {
     overdue: 15,
     pending: 25,
@@ -244,7 +208,6 @@ export default function ManagerDashboard() {
     totalRevenue: 125000,
   };
 
-  // Communication Metrics
   const pendingLeave = leaveRequests.filter(r => r.status === 'pending').length;
   const newFeedback = feedback.filter(f => f.status === 'new').length;
   const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
@@ -308,16 +271,15 @@ COMMUNICATION
     const link = document.createElement('a');
     link.href = url;
     link.download = `dashboard-report-${format(new Date(), 'yyyy-MM-dd')}.txt`;
-    document.body.appendChild(link); // Append to body to ensure it's clickable in all browsers
+    document.body.appendChild(link);
     link.click();
-    document.body.removeChild(link); // Clean up
-    URL.revokeObjectURL(url); // Release object URL
+    document.body.removeChild(link);
+    URL.revokeObjectURL(url);
   };
 
   return (
     <div className="p-4 md:p-8">
       <div className="max-w-7xl mx-auto">
-        {/* Header */}
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2 flex items-center gap-2">
@@ -342,7 +304,6 @@ COMMUNICATION
           </div>
         </div>
 
-        {/* Critical Alerts Banner */}
         {(criticalAlerts > 0 || criticalIncidents > 0 || overdueMeds > 0) && (
           <Card className="mb-6 border-l-4 border-red-500 bg-red-50">
             <CardContent className="p-4">
@@ -367,7 +328,6 @@ COMMUNICATION
           </Card>
         )}
 
-        {/* Add Predictive Insights Section */}
         <div className="mb-8">
           <PredictiveScheduling
             shifts={shifts}
@@ -376,7 +336,6 @@ COMMUNICATION
           />
         </div>
 
-        {/* Module 1: Occupancy & Compliance */}
         {modulePreferences.occupancy && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -456,7 +415,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Module 2: Staff Management */}
         {modulePreferences.staff && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -555,7 +513,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Module 3: Training & Certification */}
         {modulePreferences.training && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -631,7 +588,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Module 4: Incident Reporting */}
         {modulePreferences.incidents && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -729,7 +685,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Module 5: Finance & Billing */}
         {modulePreferences.finance && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -766,46 +721,10 @@ COMMUNICATION
                 <CardContent className="p-6 flex items-center justify-center">
                   <div className="relative w-48 h-48">
                     <svg viewBox="0 0 100 100" className="transform -rotate-90">
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#dcfce7"
-                        strokeWidth="20"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#22c55e"
-                        strokeWidth="20"
-                        strokeDasharray={`${financeStats.paid * 2.51} 251`}
-                        className="transition-all duration-500"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#eab308"
-                        strokeWidth="20"
-                        strokeDasharray={`${financeStats.pending * 2.51} 251`}
-                        strokeDashoffset={`-${financeStats.paid * 2.51}`}
-                        className="transition-all duration-500"
-                      />
-                      <circle
-                        cx="50"
-                        cy="50"
-                        r="40"
-                        fill="none"
-                        stroke="#ef4444"
-                        strokeWidth="20"
-                        strokeDasharray={`${financeStats.overdue * 2.51} 251`}
-                        strokeDashoffset={`-${(financeStats.paid + financeStats.pending) * 2.51}`}
-                        className="transition-all duration-500"
-                      />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#dcfce7" strokeWidth="20" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#22c55e" strokeWidth="20" strokeDasharray={`${financeStats.paid * 2.51} 251`} className="transition-all duration-500" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#eab308" strokeWidth="20" strokeDasharray={`${financeStats.pending * 2.51} 251`} strokeDashoffset={`-${financeStats.paid * 2.51}`} className="transition-all duration-500" />
+                      <circle cx="50" cy="50" r="40" fill="none" stroke="#ef4444" strokeWidth="20" strokeDasharray={`${financeStats.overdue * 2.51} 251`} strokeDashoffset={`-${(financeStats.paid + financeStats.pending) * 2.51}`} className="transition-all duration-500" />
                     </svg>
                     <div className="absolute inset-0 flex items-center justify-center">
                       <div className="text-center">
@@ -849,7 +768,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Module 6: Communication */}
         {modulePreferences.communication && (
           <div className="mb-6">
             <h2 className="text-xl font-bold text-gray-900 mb-4 flex items-center gap-2">
@@ -949,7 +867,6 @@ COMMUNICATION
           </div>
         )}
 
-        {/* Quick Actions */}
         <Card className="bg-gradient-to-r from-indigo-50 to-purple-50">
           <CardHeader className="border-b">
             <CardTitle className="text-lg">Quick Actions</CardTitle>
@@ -968,7 +885,7 @@ COMMUNICATION
                   <span className="text-xs">Manage Roster</span>
                 </Button>
               </Link>
-              <Link to={createPageUrl("StaffList")} className="block">
+              <Link to={createPageUrl("Carers")} className="block">
                 <Button variant="outline" className="h-auto py-4 flex-col gap-2 w-full hover:shadow-md hover:scale-105 transition-all">
                   <Users className="w-5 h-5" />
                   <span className="text-xs">Staff List</span>
@@ -996,7 +913,6 @@ COMMUNICATION
           </CardContent>
         </Card>
 
-        {/* Customizer Dialog */}
         {showCustomizer && (
           <DashboardCustomizer
             currentPreferences={modulePreferences}
