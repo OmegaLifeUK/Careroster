@@ -1,72 +1,65 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Textarea } from "@/components/ui/textarea";
-import { X, Sparkles, Loader2, FileText, CheckCircle, Download, Edit } from "lucide-react";
+import { Sparkles, X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function AICareplanGenerator({ client, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
-  const [isEditing, setIsEditing] = useState(false);
-  const [editedPlan, setEditedPlan] = useState("");
-  const queryClient = useQueryClient();
+  const [additionalNotes, setAdditionalNotes] = useState("");
   const { toast } = useToast();
-
-  const updateClientMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Client.update(id, data),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['clients'] });
-      toast.success("Success", "Care plan saved successfully");
-    },
-  });
 
   const generateCarePlan = async () => {
     setIsGenerating(true);
     try {
-      // Prepare context for AI
-      const context = {
-        client_name: client.full_name,
-        age: client.date_of_birth ? calculateAge(client.date_of_birth) : "Unknown",
-        care_needs: client.care_needs || [],
-        mobility: client.mobility || "Not specified",
-        medical_notes: client.medical_notes || "None provided",
-        funding_type: client.funding_type || "Not specified"
-      };
+      const prompt = `Generate a comprehensive care plan for the following client:
 
-      const prompt = `Generate a comprehensive, professional care plan for the following client:
+Name: ${client.full_name}
+Date of Birth: ${client.date_of_birth || 'Not provided'}
+Mobility: ${client.mobility || 'Not specified'}
+Care Needs: ${client.care_needs?.join(', ') || 'Not specified'}
+Medical Notes: ${client.medical_notes || 'None provided'}
+Funding Type: ${client.funding_type || 'Not specified'}
+Additional Context: ${additionalNotes}
 
-Client Information:
-- Name: ${context.client_name}
-- Age: ${context.age}
-- Mobility: ${context.mobility}
-- Care Needs: ${context.care_needs.join(', ') || 'Not specified'}
-- Medical Notes: ${context.medical_notes}
-- Funding: ${context.funding_type}
+Please provide a detailed care plan with the following sections:
+1. Assessment Summary
+2. Care Goals (short-term and long-term)
+3. Daily Care Routine
+4. Risk Assessment
+5. Support Requirements
+6. Review Schedule
 
-Please create a detailed care plan that includes:
-1. Overview and Assessment Summary
-2. Care Goals (Short-term and Long-term)
-3. Daily Care Activities Schedule
-4. Risk Assessment and Management
-5. Medication Management (if applicable)
-6. Support Requirements
-7. Communication Plan
-8. Review Schedule
+Format the response as JSON with these sections.`;
 
-Format the plan professionally with clear sections and actionable items.`;
-
-      const result = await base44.integrations.Core.InvokeLLM({
+      const response = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
         add_context_from_internet: false,
+        response_json_schema: {
+          type: "object",
+          properties: {
+            assessment_summary: { type: "string" },
+            care_goals: {
+              type: "object",
+              properties: {
+                short_term: { type: "array", items: { type: "string" } },
+                long_term: { type: "array", items: { type: "string" } }
+              }
+            },
+            daily_routine: { type: "array", items: { type: "string" } },
+            risk_assessment: { type: "array", items: { type: "string" } },
+            support_requirements: { type: "array", items: { type: "string" } },
+            review_schedule: { type: "string" }
+          }
+        }
       });
 
-      setGeneratedPlan(result);
-      setEditedPlan(result);
-      toast.success("Care Plan Generated", "Review and edit before saving");
+      setGeneratedPlan(response);
+      toast.success("Success", "Care plan generated successfully!");
     } catch (error) {
       console.error("Error generating care plan:", error);
       toast.error("Error", "Failed to generate care plan. Please try again.");
@@ -75,15 +68,52 @@ Format the plan professionally with clear sections and actionable items.`;
     }
   };
 
-  const savePlan = async () => {
+  const saveToDocs = async () => {
     try {
-      await updateClientMutation.mutateAsync({
-        id: client.id,
-        data: {
-          care_plan: editedPlan,
-          care_plan_last_updated: new Date().toISOString(),
-        }
+      const planText = `
+CARE PLAN FOR ${client.full_name}
+Generated: ${new Date().toLocaleDateString()}
+
+ASSESSMENT SUMMARY
+${generatedPlan.assessment_summary}
+
+CARE GOALS
+Short-term:
+${generatedPlan.care_goals.short_term.map(g => `- ${g}`).join('\n')}
+
+Long-term:
+${generatedPlan.care_goals.long_term.map(g => `- ${g}`).join('\n')}
+
+DAILY CARE ROUTINE
+${generatedPlan.daily_routine.map(r => `- ${r}`).join('\n')}
+
+RISK ASSESSMENT
+${generatedPlan.risk_assessment.map(r => `- ${r}`).join('\n')}
+
+SUPPORT REQUIREMENTS
+${generatedPlan.support_requirements.map(r => `- ${r}`).join('\n')}
+
+REVIEW SCHEDULE
+${generatedPlan.review_schedule}
+`;
+
+      const blob = new Blob([planText], { type: 'text/plain' });
+      const file = new File([blob], `care-plan-${client.full_name}-${Date.now()}.txt`);
+
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+
+      await base44.entities.ClientDocument.create({
+        client_id: client.id,
+        document_type: 'care_plan',
+        document_name: `AI Generated Care Plan - ${new Date().toLocaleDateString()}`,
+        file_url: file_url,
+        file_type: 'text/plain',
+        file_size: blob.size,
+        uploaded_by_staff_id: 'system',
+        notes: 'AI generated care plan'
       });
+
+      toast.success("Saved", "Care plan saved to client documents");
       onClose();
     } catch (error) {
       console.error("Error saving care plan:", error);
@@ -91,185 +121,183 @@ Format the plan professionally with clear sections and actionable items.`;
     }
   };
 
-  const downloadPlan = () => {
-    const blob = new Blob([editedPlan], { type: 'text/plain' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `${client.full_name.replace(/\s+/g, '_')}_Care_Plan.txt`;
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
-    URL.revokeObjectURL(url);
-    toast.success("Downloaded", "Care plan downloaded successfully");
-  };
-
-  const calculateAge = (dob) => {
-    const birthDate = new Date(dob);
-    const today = new Date();
-    let age = today.getFullYear() - birthDate.getFullYear();
-    const monthDiff = today.getMonth() - birthDate.getMonth();
-    if (monthDiff < 0 || (monthDiff === 0 && today.getDate() < birthDate.getDate())) {
-      age--;
-    }
-    return age;
-  };
-
   return (
-    <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4 overflow-y-auto">
-      <Card className="w-full max-w-4xl my-8">
-        <CardHeader className="bg-gradient-to-r from-purple-600 to-blue-600 text-white">
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col">
+        <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-blue-50">
           <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-12 h-12 bg-white/20 rounded-lg flex items-center justify-center">
-                <Sparkles className="w-6 h-6" />
-              </div>
-              <div>
-                <CardTitle className="text-2xl">AI Care Plan Generator</CardTitle>
-                <p className="text-sm text-white/80 mt-1">
-                  For {client.full_name}
-                </p>
-              </div>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              onClick={onClose}
-              className="text-white hover:bg-white/20"
-            >
-              <X className="w-5 h-5" />
+            <CardTitle className="flex items-center gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600" />
+              AI Care Plan Generator
+            </CardTitle>
+            <Button variant="ghost" size="sm" onClick={onClose}>
+              <X className="w-4 h-4" />
             </Button>
           </div>
         </CardHeader>
 
-        <CardContent className="p-6">
-          {!generatedPlan ? (
-            <div className="text-center py-12">
-              <div className="w-20 h-20 bg-gradient-to-br from-purple-100 to-blue-100 rounded-full mx-auto mb-4 flex items-center justify-center">
-                <FileText className="w-10 h-10 text-purple-600" />
-              </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">
-                Ready to Generate Care Plan?
-              </h3>
-              <p className="text-gray-600 mb-2 max-w-lg mx-auto">
-                Our AI will analyze the client's information and create a comprehensive, 
-                professional care plan tailored to their needs.
-              </p>
-              
-              {/* Client Info Preview */}
-              <div className="max-w-md mx-auto mt-6 p-4 bg-gray-50 rounded-lg text-left">
-                <p className="text-sm font-semibold text-gray-700 mb-3">Client Information:</p>
-                <div className="space-y-2 text-sm text-gray-600">
-                  <div className="flex justify-between">
-                    <span>Care Needs:</span>
-                    <Badge variant="outline">{client.care_needs?.length || 0}</Badge>
-                  </div>
-                  <div className="flex justify-between">
-                    <span>Mobility:</span>
-                    <Badge variant="outline">{client.mobility || 'Not specified'}</Badge>
-                  </div>
-                  {client.medical_notes && (
-                    <div className="flex justify-between">
-                      <span>Medical Notes:</span>
-                      <CheckCircle className="w-4 h-4 text-green-600" />
-                    </div>
-                  )}
+        <CardContent className="p-6 overflow-y-auto flex-1">
+          <div className="mb-6">
+            <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+              <h3 className="font-semibold text-blue-900 mb-2">Client Information</h3>
+              <div className="grid grid-cols-2 gap-2 text-sm">
+                <div>
+                  <span className="text-blue-700">Name:</span>
+                  <span className="ml-2 font-medium">{client.full_name}</span>
                 </div>
+                <div>
+                  <span className="text-blue-700">Mobility:</span>
+                  <span className="ml-2 font-medium">{client.mobility || 'Not specified'}</span>
+                </div>
+                {client.care_needs && client.care_needs.length > 0 && (
+                  <div className="col-span-2">
+                    <span className="text-blue-700">Care Needs:</span>
+                    <div className="flex flex-wrap gap-1 mt-1">
+                      {client.care_needs.map((need, idx) => (
+                        <Badge key={idx} variant="outline" className="text-xs">
+                          {need}
+                        </Badge>
+                      ))}
+                    </div>
+                  </div>
+                )}
               </div>
+            </div>
+          </div>
 
+          {!generatedPlan && !isGenerating && (
+            <div>
+              <label className="text-sm font-medium text-gray-700 mb-2 block">
+                Additional Notes (Optional)
+              </label>
+              <textarea
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Add any specific requirements, preferences, or considerations..."
+                className="w-full p-3 border rounded-lg text-sm"
+                rows="4"
+              />
               <Button
                 onClick={generateCarePlan}
-                disabled={isGenerating}
-                className="mt-6 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-                size="lg"
+                className="w-full mt-4 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
-                {isGenerating ? (
-                  <>
-                    <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                    Generating Care Plan...
-                  </>
-                ) : (
-                  <>
-                    <Sparkles className="w-5 h-5 mr-2" />
-                    Generate Care Plan
-                  </>
-                )}
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Care Plan with AI
               </Button>
             </div>
-          ) : (
-            <div>
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <h3 className="text-lg font-semibold text-gray-900">Care Plan Generated</h3>
-                </div>
-                <div className="flex gap-2">
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => setIsEditing(!isEditing)}
-                  >
-                    <Edit className="w-4 h-4 mr-2" />
-                    {isEditing ? 'Preview' : 'Edit'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={downloadPlan}
-                  >
-                    <Download className="w-4 h-4 mr-2" />
-                    Download
-                  </Button>
-                </div>
+          )}
+
+          {isGenerating && (
+            <div className="flex flex-col items-center justify-center py-12">
+              <Loader2 className="w-12 h-12 text-purple-600 animate-spin mb-4" />
+              <p className="text-lg font-medium text-gray-900 mb-2">Generating Care Plan...</p>
+              <p className="text-sm text-gray-500">This may take 10-20 seconds</p>
+            </div>
+          )}
+
+          {generatedPlan && (
+            <div className="space-y-6">
+              <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
+                <CheckCircle className="w-5 h-5 text-green-600" />
+                <span className="text-green-900 font-medium">Care plan generated successfully!</span>
               </div>
 
-              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
-                <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> This is an AI-generated care plan. 
-                  Please review and edit as needed before saving to ensure accuracy and compliance.
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Assessment Summary</h3>
+                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                  {generatedPlan.assessment_summary}
                 </p>
               </div>
 
-              {isEditing ? (
-                <Textarea
-                  value={editedPlan}
-                  onChange={(e) => setEditedPlan(e.target.value)}
-                  className="min-h-[500px] font-mono text-sm"
-                  placeholder="Edit the care plan..."
-                />
-              ) : (
-                <div className="max-h-[500px] overflow-y-auto p-4 bg-gray-50 rounded-lg border">
-                  <pre className="whitespace-pre-wrap font-sans text-sm text-gray-800">
-                    {editedPlan}
-                  </pre>
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Care Goals</h3>
+                <div className="grid md:grid-cols-2 gap-4">
+                  <div className="bg-blue-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-blue-900 mb-2">Short-term</h4>
+                    <ul className="space-y-1">
+                      {generatedPlan.care_goals.short_term.map((goal, idx) => (
+                        <li key={idx} className="text-sm text-blue-800 flex items-start gap-2">
+                          <span className="text-blue-600 mt-0.5">•</span>
+                          <span>{goal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                  <div className="bg-purple-50 p-4 rounded-lg">
+                    <h4 className="font-medium text-purple-900 mb-2">Long-term</h4>
+                    <ul className="space-y-1">
+                      {generatedPlan.care_goals.long_term.map((goal, idx) => (
+                        <li key={idx} className="text-sm text-purple-800 flex items-start gap-2">
+                          <span className="text-purple-600 mt-0.5">•</span>
+                          <span>{goal}</span>
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
                 </div>
-              )}
+              </div>
 
-              <div className="flex gap-3 mt-6 pt-6 border-t">
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Daily Care Routine</h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <ul className="space-y-2">
+                    {generatedPlan.daily_routine.map((item, idx) => (
+                      <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
+                        <span>{item}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Risk Assessment</h3>
+                <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
+                  <ul className="space-y-2">
+                    {generatedPlan.risk_assessment.map((risk, idx) => (
+                      <li key={idx} className="text-sm text-orange-900 flex items-start gap-2">
+                        <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
+                        <span>{risk}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Support Requirements</h3>
+                <div className="bg-gray-50 p-4 rounded-lg">
+                  <ul className="space-y-2">
+                    {generatedPlan.support_requirements.map((req, idx) => (
+                      <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
+                        <span className="text-gray-600 mt-0.5">•</span>
+                        <span>{req}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold text-gray-900 mb-2">Review Schedule</h3>
+                <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
+                  {generatedPlan.review_schedule}
+                </p>
+              </div>
+
+              <div className="flex gap-3 pt-4 border-t">
                 <Button
-                  variant="outline"
-                  onClick={generateCarePlan}
-                  disabled={isGenerating}
+                  onClick={saveToDocs}
+                  className="flex-1 bg-green-600 hover:bg-green-700"
                 >
-                  <Sparkles className="w-4 h-4 mr-2" />
-                  Regenerate
+                  Save to Client Documents
                 </Button>
                 <Button
-                  onClick={savePlan}
-                  disabled={updateClientMutation.isPending}
-                  className="flex-1 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+                  onClick={() => setGeneratedPlan(null)}
+                  variant="outline"
                 >
-                  {updateClientMutation.isPending ? (
-                    <>
-                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                      Saving...
-                    </>
-                  ) : (
-                    <>
-                      <CheckCircle className="w-4 h-4 mr-2" />
-                      Save Care Plan
-                    </>
-                  )}
+                  Generate New
                 </Button>
               </div>
             </div>
