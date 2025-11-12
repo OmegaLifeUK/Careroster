@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -22,9 +21,7 @@ import {
   Activity,
   Settings,
   X,
-  Search,
-  TrendingUp, // Added
-  Zap // Added
+  Search
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -41,9 +38,7 @@ const residentialCareNav = [
   { title: "Carers", url: createPageUrl("Carers"), icon: Users },
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
   { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
-  { title: "Analytics", url: createPageUrl("AnalyticsPage"), icon: Activity },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
-  { title: "Custom Reports", url: createPageUrl("CustomReportsPage"), icon: TrendingUp },
   { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
   { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
 ];
@@ -87,8 +82,6 @@ const clientPortalNav = [
 ];
 
 const systemNavigation = [
-  { title: "Automated Workflows", url: createPageUrl("WorkflowsPage"), icon: Zap, adminOnly: true },
-  { title: "Permissions", url: createPageUrl("PermissionsPage"), icon: Shield, adminOnly: true },
   { title: "Module Settings", url: createPageUrl("ModuleSettings"), icon: Settings, adminOnly: true },
   { title: "User Management", url: createPageUrl("UserManagement"), icon: Users, adminOnly: true },
 ];
@@ -124,7 +117,6 @@ export default function Layout({ children, currentPageName }) {
     loadUser();
   }, []);
 
-  // Listen for Ctrl/Cmd + K to open search
   React.useEffect(() => {
     const handleKeyDown = (e) => {
       if ((e.ctrlKey || e.metaKey) && e.key === 'k') {
@@ -202,7 +194,6 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </div>
               
-              {/* Search button in sidebar */}
               <button
                 onClick={() => setSearchOpen(true)}
                 className="w-full mt-4 flex items-center gap-2 px-3 py-2 bg-gray-100 hover:bg-gray-200 rounded-lg transition-colors text-left text-sm text-gray-600"
@@ -458,10 +449,7 @@ export default function Layout({ children, currentPageName }) {
             </div>
           </main>
 
-          {/* Keyboard Shortcuts Component */}
           <KeyboardShortcuts />
-          
-          {/* Global Search Component */}
           <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
         </div>
       </div>
