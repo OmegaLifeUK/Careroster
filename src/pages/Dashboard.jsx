@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -14,9 +13,7 @@ import {
   CheckCircle,
   XCircle,
   Settings,
-  Download,
-  Plus, // Added for Command Palette
-  ClipboardList // Added for Command Palette
+  Download
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -25,13 +22,11 @@ import { Badge } from "@/components/ui/badge";
 import { format, parseISO, isToday, isFuture } from "date-fns";
 
 import StatsCard from "../components/dashboard/StatsCard";
-import TodayShifts from "../components/dashboard/TodayShifts"; // Keep original import for now, replaced in JSX
-import EnhancedTodayShifts from "../components/dashboard/EnhancedTodayShifts"; // New import
+import TodayShifts from "../components/dashboard/TodayShifts";
 import RecentActivity from "../components/dashboard/RecentActivity";
 import QuickActions from "../components/dashboard/QuickActions";
 import MainDashboardCustomizer from "../components/dashboard/MainDashboardCustomizer";
 import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
-import { CommandPalette } from "@/components/ui/command"; // New import
 
 const DEFAULT_PREFERENCES = {
   statsCards: true,
@@ -45,7 +40,6 @@ export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
-  const [showCommandPalette, setShowCommandPalette] = useState(false); // New state
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -64,18 +58,6 @@ export default function Dashboard() {
       }
     };
     loadUserData();
-  }, []);
-
-  // Listen for Cmd+K
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
-        e.preventDefault();
-        setShowCommandPalette(true);
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
 
   const { data: carers = [], isLoading: carersLoading } = useQuery({
@@ -97,45 +79,6 @@ export default function Dashboard() {
     queryKey: ['leave-requests'],
     queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
   });
-
-  // Command Palette Actions
-  const commands = [
-    {
-      label: "Create New Shift",
-      description: "Add a new shift to the schedule",
-      icon: Plus,
-      url: createPageUrl("Schedule"),
-      keywords: ["shift", "schedule", "create", "add", "new"],
-    },
-    {
-      label: "Add Carer",
-      description: "Register a new carer",
-      icon: Users,
-      url: createPageUrl("Carers"),
-      keywords: ["carer", "staff", "add", "new", "employee"],
-    },
-    {
-      label: "Add Client",
-      description: "Register a new client",
-      icon: UserCircle,
-      url: createPageUrl("Clients"),
-      keywords: ["client", "patient", "add", "new", "service user"],
-    },
-    {
-      label: "View Leave Requests",
-      description: "Manage staff leave requests",
-      icon: ClipboardList,
-      url: createPageUrl("LeaveRequests"),
-      keywords: ["leave", "time off", "holiday", "absence", "request"],
-    },
-    {
-      label: "Open Schedule",
-      description: "View full shift schedule",
-      icon: Calendar,
-      url: createPageUrl("Schedule"),
-      keywords: ["schedule", "calendar", "shifts", "roster", "timetabe"],
-    },
-  ];
 
   const activeCarers = carers.filter(c => c.status === 'active').length;
   const activeClients = clients.filter(c => c.status === 'active').length;
@@ -192,7 +135,6 @@ export default function Dashboard() {
           </Button>
         </div>
 
-        {/* Smart Suggestions - New! */}
         {modulePreferences.smartSuggestions && (
           <div className="mb-8">
             <SmartSuggestionsWidget
@@ -245,12 +187,7 @@ export default function Dashboard() {
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {modulePreferences.todayShifts && (
             <div className="lg:col-span-2">
-              <EnhancedTodayShifts // Replaced TodayShifts with EnhancedTodayShifts
-                shifts={todayShifts} 
-                carers={carers} 
-                clients={clients} 
-                isLoading={isLoading} 
-              />
+              <TodayShifts shifts={todayShifts} carers={carers} clients={clients} isLoading={isLoading} />
             </div>
           )}
           {modulePreferences.quickActions && (
@@ -280,13 +217,6 @@ export default function Dashboard() {
             onClose={() => setShowCustomizer(false)}
           />
         )}
-
-        {/* Command Palette */}
-        <CommandPalette
-          isOpen={showCommandPalette}
-          onClose={() => setShowCommandPalette(false)}
-          commands={commands}
-        />
       </div>
     </div>
   );
