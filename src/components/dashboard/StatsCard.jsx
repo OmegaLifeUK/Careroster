@@ -18,12 +18,9 @@ export default function StatsCard({ title, value, icon: Icon, bgColor, isLoading
 
   const cardContent = (
     <Card 
-      className={`relative overflow-hidden transition-all duration-300 ${
-        (onClick || linkTo) 
-          ? 'hover:shadow-xl hover:scale-105 cursor-pointer' 
-          : 'hover:shadow-lg'
+      className={`relative overflow-hidden card-interactive ${
+        alert ? 'ring-2 ring-orange-200' : ''
       }`}
-      onClick={onClick}
     >
       <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${bgColor} opacity-10 rounded-full transform translate-x-12 -translate-y-12`} />
       <CardHeader className="p-6">
@@ -45,7 +42,20 @@ export default function StatsCard({ title, value, icon: Icon, bgColor, isLoading
 
   // If there's a linkTo prop, wrap in Link component
   if (linkTo && !onClick) {
-    return <Link to={linkTo}>{cardContent}</Link>;
+    return (
+      <Link to={linkTo} className="block">
+        {cardContent}
+      </Link>
+    );
+  }
+
+  // If there's an onClick handler
+  if (onClick) {
+    return (
+      <div onClick={onClick} className="cursor-pointer">
+        {cardContent}
+      </div>
+    );
   }
 
   return cardContent;
