@@ -105,11 +105,18 @@ export default function Layout({ children, currentPageName }) {
         const userData = await base44.auth.me();
         setUser(userData);
         
-        const allAccess = await base44.entities.ClientPortalAccess.list();
-        const userAccess = allAccess.find(a => 
-          a.user_email === userData.email && a.is_active
-        );
-        setPortalAccess(userAccess);
+        try {
+          const allAccess = await base44.entities.ClientPortalAccess.list();
+          if (allAccess && Array.isArray(allAccess)) {
+            const userAccess = allAccess.find(a => 
+              a.user_email === userData.email && a.is_active
+            );
+            setPortalAccess(userAccess);
+          }
+        } catch (portalError) {
+          console.log("Portal access not configured");
+          setPortalAccess(null);
+        }
       } catch (error) {
         console.error("Error loading user:", error);
       }
@@ -134,17 +141,20 @@ export default function Layout({ children, currentPageName }) {
     queryFn: async () => {
       try {
         const allSettings = await base44.entities.AppSettings.list();
-        return allSettings;
+        return Array.isArray(allSettings) ? allSettings : [];
       } catch (error) {
+        console.log("App settings not configured");
         return [];
       }
     },
   });
 
   React.useEffect(() => {
-    const moduleSettings = settings.find(s => s.setting_key === 'enabled_modules');
-    if (moduleSettings?.setting_value) {
-      setEnabledModules(moduleSettings.setting_value);
+    if (settings && Array.isArray(settings) && settings.length > 0) {
+      const moduleSettings = settings.find(s => s.setting_key === 'enabled_modules');
+      if (moduleSettings?.setting_value) {
+        setEnabledModules(moduleSettings.setting_value);
+      }
     }
   }, [settings]);
 
@@ -152,8 +162,12 @@ export default function Layout({ children, currentPageName }) {
     queryKey: ['unread-notifications'],
     queryFn: async () => {
       if (!user) return 0;
-      const notifications = await base44.entities.Notification.filter({ is_read: false });
-      return notifications.length;
+      try {
+        const notifications = await base44.entities.Notification.filter({ is_read: false });
+        return Array.isArray(notifications) ? notifications.length : 0;
+      } catch (error) {
+        return 0;
+      }
     },
     enabled: !!user && enabledModules.residential_care,
     refetchInterval: 30000,
@@ -214,7 +228,7 @@ export default function Layout({ children, currentPageName }) {
                   </p>
                   <nav className="space-y-1">
                     {clientPortalNav.map((item) => {
-                      if (item.title === "Booking Requests" && !portalAccess.can_request_bookings) {
+                      if (item.title === "Booking Requests" && portalAccess && !portalAccess.can_request_bookings) {
                         return null;
                       }
                       
@@ -405,7 +419,7 @@ export default function Layout({ children, currentPageName }) {
                   </p>
                   <p className="text-xs text-gray-500 truncate">
                     {isPortalUser 
-                      ? `${portalAccess.relationship} - Portal User`
+                      ? `${portalAccess?.relationship || 'Portal User'}`
                       : (user?.role || 'Staff')
                     }
                   </p>
