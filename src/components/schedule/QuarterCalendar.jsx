@@ -13,7 +13,7 @@ import {
   eachWeekOfInterval
 } from "date-fns";
 
-export default function QuarterCalendar({ shifts, carers, clients, onShiftClick }) {
+export default function QuarterCalendar({ shifts = [], carers = [], clients = [], onShiftClick }) {
   const [startDate, setStartDate] = useState(new Date());
   const endDate = addDays(startDate, 89); // 90 days
 
@@ -21,28 +21,31 @@ export default function QuarterCalendar({ shifts, carers, clients, onShiftClick 
 
   const getShiftsForWeek = (weekStart) => {
     const weekEnd = addDays(weekStart, 6);
-    return shifts.filter(shift => {
+    return Array.isArray(shifts) ? shifts.filter(shift => {
       try {
         const shiftDate = parseISO(shift.date);
         return isWithinInterval(shiftDate, { start: weekStart, end: weekEnd });
       } catch {
         return false;
       }
-    });
+    }) : [];
   };
 
   const getWeekStats = (weekShifts) => {
+    const shiftsArray = Array.isArray(weekShifts) ? weekShifts : [];
     return {
-      total: weekShifts.length,
-      filled: weekShifts.filter(s => s.carer_id).length,
-      completed: weekShifts.filter(s => s.status === 'completed').length,
-      unfilled: weekShifts.filter(s => !s.carer_id).length,
+      total: shiftsArray.length,
+      filled: shiftsArray.filter(s => s.carer_id).length,
+      completed: shiftsArray.filter(s => s.status === 'completed').length,
+      unfilled: shiftsArray.filter(s => !s.carer_id).length,
     };
   };
 
   const navigatePeriod = (days) => {
     setStartDate(addDays(startDate, days));
   };
+
+  const shiftsArray = Array.isArray(shifts) ? shifts : [];
 
   return (
     <div className="space-y-4">
@@ -92,14 +95,14 @@ export default function QuarterCalendar({ shifts, carers, clients, onShiftClick 
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Total Shifts</p>
-            <p className="text-2xl font-bold">{shifts.length}</p>
+            <p className="text-2xl font-bold">{shiftsArray.length}</p>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Filled</p>
             <p className="text-2xl font-bold text-green-600">
-              {shifts.filter(s => s.carer_id).length}
+              {shiftsArray.filter(s => s.carer_id).length}
             </p>
           </CardContent>
         </Card>
@@ -107,7 +110,7 @@ export default function QuarterCalendar({ shifts, carers, clients, onShiftClick 
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Unfilled</p>
             <p className="text-2xl font-bold text-orange-600">
-              {shifts.filter(s => !s.carer_id).length}
+              {shiftsArray.filter(s => !s.carer_id).length}
             </p>
           </CardContent>
         </Card>
@@ -115,8 +118,8 @@ export default function QuarterCalendar({ shifts, carers, clients, onShiftClick 
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Fill Rate</p>
             <p className="text-2xl font-bold text-blue-600">
-              {shifts.length > 0 
-                ? Math.round((shifts.filter(s => s.carer_id).length / shifts.length) * 100)
+              {shiftsArray.length > 0 
+                ? Math.round((shiftsArray.filter(s => s.carer_id).length / shiftsArray.length) * 100)
                 : 0}%
             </p>
           </CardContent>

@@ -5,29 +5,29 @@ import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Clock, User, MapPin } from "lucide-react";
 import { format, addDays, startOfDay, isSameDay, parseISO } from "date-fns";
 
-export default function DayCalendar({ shifts, carers, clients, onShiftClick, onShiftUpdate }) {
+export default function DayCalendar({ shifts = [], carers = [], clients = [], onShiftClick, onShiftUpdate }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
-  const dayShifts = shifts.filter(shift => {
+  const dayShifts = Array.isArray(shifts) ? shifts.filter(shift => {
     try {
       return isSameDay(parseISO(shift.date), currentDate);
     } catch {
       return false;
     }
-  });
+  }) : [];
 
   // Sort shifts by start time
   const sortedShifts = [...dayShifts].sort((a, b) => {
-    return a.start_time.localeCompare(b.start_time);
+    return (a.start_time || '').localeCompare(b.start_time || '');
   });
 
   const getCarerName = (carerId) => {
-    const carer = carers.find(c => c.id === carerId);
+    const carer = Array.isArray(carers) ? carers.find(c => c.id === carerId) : null;
     return carer?.full_name || 'Unassigned';
   };
 
   const getClientName = (clientId) => {
-    const client = clients.find(c => c.id === clientId);
+    const client = Array.isArray(clients) ? clients.find(c => c.id === clientId) : null;
     return client?.full_name || 'Unknown';
   };
 
@@ -40,9 +40,6 @@ export default function DayCalendar({ shifts, carers, clients, onShiftClick, onS
     cancelled: 'bg-red-100 text-red-800',
     unfilled: 'bg-orange-100 text-orange-800',
   };
-
-  // Group shifts by hour for timeline view
-  const hours = Array.from({ length: 24 }, (_, i) => i);
   
   return (
     <div className="space-y-4">

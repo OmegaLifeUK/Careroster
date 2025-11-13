@@ -16,7 +16,7 @@ import {
   isSameMonth
 } from "date-fns";
 
-export default function MonthCalendar({ shifts, carers, clients, onShiftClick }) {
+export default function MonthCalendar({ shifts = [], carers = [], clients = [], onShiftClick }) {
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const monthStart = startOfMonth(currentDate);
@@ -27,13 +27,13 @@ export default function MonthCalendar({ shifts, carers, clients, onShiftClick })
   const calendarDays = eachDayOfInterval({ start: calendarStart, end: calendarEnd });
 
   const getShiftsForDay = (date) => {
-    return shifts.filter(shift => {
+    return Array.isArray(shifts) ? shifts.filter(shift => {
       try {
         return isSameDay(parseISO(shift.date), date);
       } catch {
         return false;
       }
-    });
+    }) : [];
   };
 
   const statusColors = {
@@ -125,7 +125,7 @@ export default function MonthCalendar({ shifts, carers, clients, onShiftClick })
                         } text-white truncate`}
                         onClick={() => onShiftClick && onShiftClick(shift)}
                         title={`${shift.start_time} - ${
-                          carers.find(c => c.id === shift.carer_id)?.full_name || 'Unassigned'
+                          Array.isArray(carers) ? carers.find(c => c.id === shift.carer_id)?.full_name || 'Unassigned' : 'Unassigned'
                         }`}
                       >
                         {shift.start_time} {shift.carer_id ? '✓' : '!'}
