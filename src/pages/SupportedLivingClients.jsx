@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -5,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Home, Clock, Target, Trash2, Mail } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Home, Clock, Target, Trash2, Mail, Eye } from "lucide-react";
 
 export default function SupportedLivingClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -14,30 +15,49 @@ export default function SupportedLivingClients() {
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['supported-living-clients'],
-    queryFn: () => base44.entities.SupportedLivingClient.list(),
+    queryFn: async () => {
+      const data = await base44.entities.SupportedLivingClient.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: properties = [] } = useQuery({
     queryKey: ['supported-living-properties'],
-    queryFn: () => base44.entities.SupportedLivingProperty.list(),
+    queryFn: async () => {
+      const data = await base44.entities.SupportedLivingProperty.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
-    queryFn: () => base44.entities.Staff.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
-  const filteredClients = clients.filter(client => {
+  const handleViewDetails = (client) => {
+    if (!client) {
+      console.error("No client provided to handleViewDetails");
+      return;
+    }
+    console.log("Viewing supported living client details:", client);
+    setSelectedClient(client);
+  };
+
+  const filteredClients = Array.isArray(clients) ? clients.filter(client => {
+    if (!client) return false;
     const matchesSearch = client.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || client.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    onNotice: clients.filter(c => c.status === 'on_notice').length,
-    ended: clients.filter(c => c.status === 'ended').length,
+    total: filteredClients.length,
+    active: filteredClients.filter(c => c && c.status === 'active').length,
+    onNotice: filteredClients.filter(c => c && c.status === 'on_notice').length,
+    ended: filteredClients.filter(c => c && c.status === 'ended').length,
   };
 
   const statusColors = {
@@ -55,12 +75,12 @@ export default function SupportedLivingClients() {
   };
 
   if (selectedClient) {
-    const clientProperty = properties.find(p => p.id === selectedClient.property_id);
-    const keyWorker = staff.find(s => s.id === selectedClient.key_worker_id);
-    const preferredStaff = staff.filter(s => selectedClient.preferred_staff?.includes(s.id));
+    const clientProperty = Array.isArray(properties) ? properties.find(p => p && p.id === selectedClient.property_id) : null;
+    const keyWorker = Array.isArray(staff) ? staff.find(s => s && s.id === selectedClient.key_worker_id) : null;
+    const preferredStaff = Array.isArray(staff) ? staff.filter(s => s && selectedClient.preferred_staff?.includes(s.id)) : [];
 
     return (
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <Button
             variant="outline"
@@ -74,7 +94,7 @@ export default function SupportedLivingClients() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
             <div className="flex items-center gap-2 flex-wrap">
               <Badge className={statusColors[selectedClient.status]}>
-                {selectedClient.status.replace('_', ' ')}
+                {selectedClient.status?.replace('_', ' ')}
               </Badge>
               <Badge className={supportLevelColors[selectedClient.support_level]}>
                 {selectedClient.support_level} support
@@ -264,7 +284,7 @@ export default function SupportedLivingClients() {
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -345,8 +365,10 @@ export default function SupportedLivingClients() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map((client) => {
-            const clientProperty = properties.find(p => p.id === client.property_id);
-            const keyWorker = staff.find(s => s.id === client.key_worker_id);
+            if (!client) return null;
+            
+            const clientProperty = Array.isArray(properties) ? properties.find(p => p && p.id === client.property_id) : null;
+            const keyWorker = Array.isArray(staff) ? staff.find(s => s && s.id === client.key_worker_id) : null;
 
             return (
               <Card key={client.id} className="hover:shadow-lg transition-all">
@@ -354,7 +376,7 @@ export default function SupportedLivingClients() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-indigo-400 to-purple-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {client.full_name?.charAt(0)}
+                        {client.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{client.full_name}</h3>
@@ -363,8 +385,8 @@ export default function SupportedLivingClients() {
                         </p>
                       </div>
                     </div>
-                    <Badge className={statusColors[client.status]}>
-                      {client.status.replace('_', ' ')}
+                    <Badge className={statusColors[client.status] || statusColors.ended}>
+                      {client.status?.replace('_', ' ')}
                     </Badge>
                   </div>
 
@@ -382,7 +404,7 @@ export default function SupportedLivingClients() {
                       </div>
                     )}
                     <div className="flex items-center gap-2">
-                      <Badge className={supportLevelColors[client.support_level]}>
+                      <Badge className={supportLevelColors[client.support_level] || supportLevelColors.medium}>
                         {client.support_level} support
                       </Badge>
                     </div>
@@ -395,7 +417,7 @@ export default function SupportedLivingClients() {
                     </div>
                   )}
 
-                  {client.life_skills_goals && client.life_skills_goals.length > 0 && (
+                  {client.life_skills_goals && Array.isArray(client.life_skills_goals) && client.life_skills_goals.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
                         <Target className="w-4 h-4" />
@@ -421,11 +443,22 @@ export default function SupportedLivingClients() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => setSelectedClient(client)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(client);
+                      }}
                     >
+                      <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Edit clicked for:", client);
+                      }}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
@@ -436,9 +469,11 @@ export default function SupportedLivingClients() {
         </div>
 
         {filteredClients.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No clients found</p>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No clients found</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>

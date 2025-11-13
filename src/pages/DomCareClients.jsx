@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -6,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Heart, Key, Trash2 } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Heart, Key, Trash2, Eye } from "lucide-react";
 
 import AlertBanner from "../components/clients/AlertBanner";
 
@@ -17,28 +16,40 @@ export default function DomCareClients() {
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['domcare-clients'],
-    queryFn: () => base44.entities.DomCareClient.list(),
+    queryFn: async () => {
+      const data = await base44.entities.DomCareClient.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
-    queryFn: () => base44.entities.Staff.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const handleViewDetails = (client) => {
+    if (!client) {
+      console.error("No client provided to handleViewDetails");
+      return;
+    }
+    console.log("Viewing dom care client details:", client);
     setSelectedClient(client);
   };
 
-  const filteredClients = clients.filter(client => {
+  const filteredClients = Array.isArray(clients) ? clients.filter(client => {
+    if (!client) return false;
     const matchesSearch = client.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || client.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    inactive: clients.filter(c => c.status === 'inactive').length,
+    total: filteredClients.length,
+    active: filteredClients.filter(c => c && c.status === 'active').length,
+    inactive: filteredClients.filter(c => c && c.status === 'inactive').length,
   };
 
   const statusColors = {
@@ -49,7 +60,7 @@ export default function DomCareClients() {
 
   if (selectedClient) {
     return (
-      <div className="p-4 md:p-8">
+      <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
         <div className="max-w-7xl mx-auto">
           <Button
             variant="outline"
@@ -145,7 +156,7 @@ export default function DomCareClients() {
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -220,9 +231,11 @@ export default function DomCareClients() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map((client) => {
-            const preferredStaff = staff.filter(s =>
-              client.preferred_staff?.includes(s.id)
-            );
+            if (!client) return null;
+            
+            const preferredStaff = Array.isArray(staff) ? staff.filter(s =>
+              s && client.preferred_staff?.includes(s.id)
+            ) : [];
 
             return (
               <Card key={client.id} className="hover:shadow-lg transition-all">
@@ -230,14 +243,14 @@ export default function DomCareClients() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {client.full_name?.charAt(0)}
+                        {client.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{client.full_name}</h3>
                         <p className="text-sm text-gray-500">{client.funding_type?.replace('_', ' ')}</p>
                       </div>
                     </div>
-                    <Badge className={statusColors[client.status]}>
+                    <Badge className={statusColors[client.status] || statusColors.inactive}>
                       {client.status}
                     </Badge>
                   </div>
@@ -263,7 +276,7 @@ export default function DomCareClients() {
                     )}
                   </div>
 
-                  {client.care_needs && client.care_needs.length > 0 && (
+                  {client.care_needs && Array.isArray(client.care_needs) && client.care_needs.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
                         <Heart className="w-4 h-4" />
@@ -296,15 +309,33 @@ export default function DomCareClients() {
                       variant="outline"
                       size="sm"
                       className="flex-1"
-                      onClick={() => handleViewDetails(client)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(client);
+                      }}
                     >
+                      <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm">
-                      <Edit className="w-4 h-4 mr-2" />
-                      Edit
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Edit clicked for:", client);
+                      }}
+                    >
+                      <Edit className="w-4 h-4" />
                     </Button>
-                    <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      className="text-red-600 hover:text-red-700"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Delete clicked for:", client);
+                      }}
+                    >
                       <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
@@ -315,9 +346,11 @@ export default function DomCareClients() {
         </div>
 
         {filteredClients.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No clients found</p>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No clients found</p>
+            </CardContent>
+          </Card>
         )}
       </div>
     </div>
