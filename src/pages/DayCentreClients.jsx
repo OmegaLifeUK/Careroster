@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -19,13 +18,30 @@ import {
   Bus,
   Clock,
   User,
-  Eye
+  Eye,
+  Sparkles
 } from "lucide-react";
+
+import MedicationManagement from "../components/clients/MedicationManagement";
+import ConsentManagement from "../components/clients/ConsentManagement";
+import EmergencyContactsManager from "../components/clients/EmergencyContactsManager";
+import DocumentManager from "../components/clients/DocumentManager";
+import ClientAlertManager from "../components/clients/ClientAlertManager";
+import AICareplanGenerator from "../components/clients/AICareplanGenerator";
+import CarePlanManager from "../components/clients/CarePlanManager";
+import RiskAssessmentManager from "../components/clients/RiskAssessmentManager";
+import PEEPManager from "../components/clients/PEEPManager";
+import RepositioningChartManager from "../components/clients/RepositioningChartManager";
+import BehaviorChartManager from "../components/clients/BehaviorChartManager";
+import MentalCapacityManager from "../components/clients/MentalCapacityManager";
+import SafeguardingManager from "../components/clients/SafeguardingManager";
 
 export default function DayCentreClients() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedClient, setSelectedClient] = useState(null);
+  const [activeTab, setActiveTab] = useState("details");
+  const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['daycentre-clients'],
@@ -50,6 +66,7 @@ export default function DayCentreClients() {
     }
     console.log("Viewing day centre client details:", client);
     setSelectedClient(client);
+    setActiveTab("details");
   };
 
   const filteredClients = Array.isArray(clients) ? clients.filter(client => {
@@ -108,226 +125,323 @@ export default function DayCentreClients() {
             ← Back to Clients List
           </Button>
 
-          <div className="mb-6">
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
-            <div className="flex items-center gap-2 flex-wrap">
-              <Badge className={statusColors[selectedClient.status]}>
-                {selectedClient.status.replace('_', ' ')}
-              </Badge>
-              <Badge className={mobilityColors[selectedClient.mobility]}>
-                {selectedClient.mobility?.replace('_', ' ')}
-              </Badge>
-              <span className="text-gray-500">•</span>
-              <span className="text-gray-500">{selectedClient.contracted_sessions_per_week} sessions/week</span>
+          <div className="mb-6 flex items-center justify-between">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">{selectedClient.full_name}</h1>
+              <div className="flex items-center gap-2 flex-wrap">
+                <Badge className={statusColors[selectedClient.status]}>
+                  {selectedClient.status?.replace('_', ' ')}
+                </Badge>
+                <Badge className={mobilityColors[selectedClient.mobility]}>
+                  {selectedClient.mobility?.replace('_', ' ')}
+                </Badge>
+                <span className="text-gray-500">•</span>
+                <span className="text-gray-500">{selectedClient.contracted_sessions_per_week} sessions/week</span>
+              </div>
+            </div>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => console.log("Edit client:", selectedClient)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Client
+              </Button>
+              <Button
+                onClick={() => setShowCarePlanGenerator(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Care Plan
+              </Button>
             </div>
           </div>
 
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-            <Card className="lg:col-span-2">
-              <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-yellow-50">
-                <CardTitle>Client Information</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-                  <div>
-                    <h3 className="font-semibold mb-4 text-amber-900">Personal Details</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-600">Full Name</p>
-                        <p className="font-medium">{selectedClient.full_name}</p>
-                      </div>
-                      {selectedClient.date_of_birth && (
+          {/* Tabs */}
+          <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
+            <Button
+              variant={activeTab === "details" ? "default" : "ghost"}
+              onClick={() => setActiveTab("details")}
+              className="flex-shrink-0"
+            >
+              Details
+            </Button>
+            <Button
+              variant={activeTab === "alerts" ? "default" : "ghost"}
+              onClick={() => setActiveTab("alerts")}
+              className="flex-shrink-0"
+            >
+              Alerts
+            </Button>
+            <Button
+              variant={activeTab === "care_plan" ? "default" : "ghost"}
+              onClick={() => setActiveTab("care_plan")}
+              className="flex-shrink-0"
+            >
+              Care Plan
+            </Button>
+            <Button
+              variant={activeTab === "risk_assessments" ? "default" : "ghost"}
+              onClick={() => setActiveTab("risk_assessments")}
+              className="flex-shrink-0"
+            >
+              Risk Assessments
+            </Button>
+            <Button
+              variant={activeTab === "medication" ? "default" : "ghost"}
+              onClick={() => setActiveTab("medication")}
+              className="flex-shrink-0"
+            >
+              Medication
+            </Button>
+            <Button
+              variant={activeTab === "peep" ? "default" : "ghost"}
+              onClick={() => setActiveTab("peep")}
+              className="flex-shrink-0"
+            >
+              PEEP
+            </Button>
+            <Button
+              variant={activeTab === "repositioning" ? "default" : "ghost"}
+              onClick={() => setActiveTab("repositioning")}
+              className="flex-shrink-0"
+            >
+              Repositioning
+            </Button>
+            <Button
+              variant={activeTab === "behavior" ? "default" : "ghost"}
+              onClick={() => setActiveTab("behavior")}
+              className="flex-shrink-0"
+            >
+              Behavior
+            </Button>
+            <Button
+              variant={activeTab === "mental_capacity" ? "default" : "ghost"}
+              onClick={() => setActiveTab("mental_capacity")}
+              className="flex-shrink-0"
+            >
+              Mental Capacity
+            </Button>
+            <Button
+              variant={activeTab === "safeguarding" ? "default" : "ghost"}
+              onClick={() => setActiveTab("safeguarding")}
+              className="flex-shrink-0"
+            >
+              Safeguarding
+            </Button>
+            <Button
+              variant={activeTab === "consent" ? "default" : "ghost"}
+              onClick={() => setActiveTab("consent")}
+              className="flex-shrink-0"
+            >
+              Consent
+            </Button>
+            <Button
+              variant={activeTab === "emergency" ? "default" : "ghost"}
+              onClick={() => setActiveTab("emergency")}
+              className="flex-shrink-0"
+            >
+              Emergency
+            </Button>
+            <Button
+              variant={activeTab === "documents" ? "default" : "ghost"}
+              onClick={() => setActiveTab("documents")}
+              className="flex-shrink-0"
+            >
+              Documents
+            </Button>
+          </div>
+
+          {/* Tab Content */}
+          {activeTab === "details" && (
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+              <Card className="lg:col-span-2">
+                <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+                  <CardTitle>Client Information</CardTitle>
+                </CardHeader>
+                <CardContent className="p-6">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div>
+                      <h3 className="font-semibold mb-4 text-amber-900">Personal Details</h3>
+                      <div className="space-y-3">
                         <div>
-                          <p className="text-sm text-gray-600">Date of Birth</p>
-                          <p className="font-medium">{selectedClient.date_of_birth}</p>
+                          <p className="text-sm text-gray-600">Full Name</p>
+                          <p className="font-medium">{selectedClient.full_name}</p>
                         </div>
-                      )}
-                      {selectedClient.phone && (
-                        <div className="flex items-center gap-2">
-                          <Phone className="w-4 h-4 text-gray-400" />
-                          <span className="font-medium">{selectedClient.phone}</span>
-                        </div>
-                      )}
-                      {selectedClient.address && (
-                        <div className="flex items-start gap-2">
-                          <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                        {selectedClient.date_of_birth && (
                           <div>
-                            <p className="font-medium">{selectedClient.address.street}</p>
-                            <p className="text-gray-600">
-                              {selectedClient.address.city} {selectedClient.address.postcode}
-                            </p>
+                            <p className="text-sm text-gray-600">Date of Birth</p>
+                            <p className="font-medium">{selectedClient.date_of_birth}</p>
+                          </div>
+                        )}
+                        {selectedClient.phone && (
+                          <div className="flex items-center gap-2">
+                            <Phone className="w-4 h-4 text-gray-400" />
+                            <span className="font-medium">{selectedClient.phone}</span>
+                          </div>
+                        )}
+                        {selectedClient.address && (
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-gray-400 mt-1" />
+                            <div>
+                              <p className="font-medium">{selectedClient.address.street}</p>
+                              <p className="text-gray-600">
+                                {selectedClient.address.city} {selectedClient.address.postcode}
+                              </p>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    <div>
+                      <h3 className="font-semibold mb-4 text-amber-900">Attendance Details</h3>
+                      <div className="space-y-3">
+                        <div>
+                          <p className="text-sm text-gray-600 mb-2">Attendance Days</p>
+                          <div className="flex flex-wrap gap-1">
+                            {selectedClient.attendance_days?.map((day, idx) => (
+                              <Badge key={idx} variant="outline" className="bg-amber-50">
+                                {dayLabels[day]}
+                              </Badge>
+                            ))}
                           </div>
                         </div>
-                      )}
-                    </div>
-                  </div>
-
-                  <div>
-                    <h3 className="font-semibold mb-4 text-amber-900">Attendance Details</h3>
-                    <div className="space-y-3">
-                      <div>
-                        <p className="text-sm text-gray-600 mb-2">Attendance Days</p>
-                        <div className="flex flex-wrap gap-1">
-                          {selectedClient.attendance_days?.map((day, idx) => (
-                            <Badge key={idx} variant="outline" className="bg-amber-50">
-                              {dayLabels[day]}
-                            </Badge>
-                          ))}
+                        <div>
+                          <p className="text-sm text-gray-600">Sessions Per Week</p>
+                          <p className="text-2xl font-bold text-amber-600">
+                            {selectedClient.contracted_sessions_per_week}
+                          </p>
+                        </div>
+                        <div>
+                          <p className="text-sm text-gray-600">Funding Type</p>
+                          <p className="font-medium capitalize">
+                            {selectedClient.funding_type?.replace('_', ' ')}
+                          </p>
                         </div>
                       </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Sessions Per Week</p>
-                        <p className="text-2xl font-bold text-amber-600">
-                          {selectedClient.contracted_sessions_per_week}
-                        </p>
-                      </div>
-                      <div>
-                        <p className="text-sm text-gray-600">Funding Type</p>
-                        <p className="font-medium capitalize">
-                          {selectedClient.funding_type?.replace('_', ' ')}
-                        </p>
-                      </div>
                     </div>
                   </div>
-                </div>
 
-                {selectedClient.emergency_contact && (
-                  <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
-                    <h3 className="font-semibold text-red-900 mb-3">Emergency Contact</h3>
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                      <div>
-                        <p className="text-red-700">Name</p>
-                        <p className="font-medium text-red-900">{selectedClient.emergency_contact.name}</p>
+                  {selectedClient.emergency_contact && (
+                    <div className="mt-6 p-4 bg-red-50 rounded-lg border border-red-200">
+                      <h3 className="font-semibold text-red-900 mb-3">Emergency Contact</h3>
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div>
+                          <p className="text-red-700">Name</p>
+                          <p className="font-medium text-red-900">{selectedClient.emergency_contact.name}</p>
+                        </div>
+                        <div>
+                          <p className="text-red-700">Phone</p>
+                          <p className="font-medium text-red-900">{selectedClient.emergency_contact.phone}</p>
+                        </div>
+                        <div>
+                          <p className="text-red-700">Relationship</p>
+                          <p className="font-medium text-red-900">{selectedClient.emergency_contact.relationship}</p>
+                        </div>
                       </div>
-                      <div>
-                        <p className="text-red-700">Phone</p>
-                        <p className="font-medium text-red-900">{selectedClient.emergency_contact.phone}</p>
-                      </div>
-                      <div>
-                        <p className="text-red-700">Relationship</p>
-                        <p className="font-medium text-red-900">{selectedClient.emergency_contact.relationship}</p>
-                      </div>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            <div className="space-y-6">
-              <Card>
-                <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-cyan-50">
-                  <CardTitle className="text-lg">Support Team</CardTitle>
-                </CardHeader>
-                <CardContent className="p-4 space-y-3">
-                  {keyWorker && (
-                    <div className="p-3 bg-blue-50 rounded-lg">
-                      <p className="text-sm text-blue-700 font-medium mb-1">Key Worker</p>
-                      <p className="text-blue-900 font-semibold">{keyWorker.full_name}</p>
-                    </div>
-                  )}
-                  <div className="p-3 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Bus className="w-4 h-4 text-purple-600" />
-                      <p className="text-sm text-purple-700 font-medium">Transport</p>
-                    </div>
-                    <Badge className={transportColors[selectedClient.transport_arrangement]}>
-                      {selectedClient.transport_arrangement?.replace('_', ' ')}
-                    </Badge>
-                  </div>
-                  {selectedClient.pick_up_time && (
-                    <div className="p-3 bg-green-50 rounded-lg">
-                      <p className="text-sm text-green-700 font-medium mb-1">Pick-up Time</p>
-                      <p className="text-green-900 font-semibold">{selectedClient.pick_up_time}</p>
-                    </div>
-                  )}
-                  {selectedClient.drop_off_time && (
-                    <div className="p-3 bg-orange-50 rounded-lg">
-                      <p className="text-sm text-orange-700 font-medium mb-1">Drop-off Time</p>
-                      <p className="text-orange-900 font-semibold">{selectedClient.drop_off_time}</p>
                     </div>
                   )}
                 </CardContent>
               </Card>
-            </div>
-          </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {selectedClient.interests_and_hobbies && selectedClient.interests_and_hobbies.length > 0 && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2">
-                    <Heart className="w-5 h-5 text-pink-600" />
-                    Interests & Hobbies
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedClient.interests_and_hobbies.map((interest, idx) => (
-                      <Badge key={idx} variant="outline" className="bg-pink-50">
-                        {interest}
+              <div className="space-y-6">
+                <Card>
+                  <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-cyan-50">
+                    <CardTitle className="text-lg">Support Team</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-4 space-y-3">
+                    {keyWorker && (
+                      <div className="p-3 bg-blue-50 rounded-lg">
+                        <p className="text-sm text-blue-700 font-medium mb-1">Key Worker</p>
+                        <p className="text-blue-900 font-semibold">{keyWorker.full_name}</p>
+                      </div>
+                    )}
+                    <div className="p-3 bg-purple-50 rounded-lg">
+                      <div className="flex items-center gap-2 mb-1">
+                        <Bus className="w-4 h-4 text-purple-600" />
+                        <p className="text-sm text-purple-700 font-medium">Transport</p>
+                      </div>
+                      <Badge className={transportColors[selectedClient.transport_arrangement]}>
+                        {selectedClient.transport_arrangement?.replace('_', ' ')}
                       </Badge>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            )}
+                    </div>
+                    {selectedClient.pick_up_time && (
+                      <div className="p-3 bg-green-50 rounded-lg">
+                        <p className="text-sm text-green-700 font-medium mb-1">Pick-up Time</p>
+                        <p className="text-green-900 font-semibold">{selectedClient.pick_up_time}</p>
+                      </div>
+                    )}
+                    {selectedClient.drop_off_time && (
+                      <div className="p-3 bg-orange-50 rounded-lg">
+                        <p className="text-sm text-orange-700 font-medium mb-1">Drop-off Time</p>
+                        <p className="text-orange-900 font-semibold">{selectedClient.drop_off_time}</p>
+                      </div>
+                    )}
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
+          )}
 
-            {selectedClient.support_goals && selectedClient.support_goals.length > 0 && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2">
-                    <Activity className="w-5 h-5 text-green-600" />
-                    Support Goals
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <ul className="space-y-2">
-                    {selectedClient.support_goals.map((goal, idx) => (
-                      <li key={idx} className="flex items-start gap-2">
-                        <span className="text-green-600 mt-1">•</span>
-                        <span>{goal}</span>
-                      </li>
-                    ))}
-                  </ul>
-                </CardContent>
-              </Card>
-            )}
+          {activeTab === "alerts" && (
+            <ClientAlertManager client={selectedClient} />
+          )}
 
-            {selectedClient.dietary_requirements && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle className="flex items-center gap-2">
-                    <Utensils className="w-5 h-5 text-orange-600" />
-                    Dietary Requirements
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <p className="text-gray-700">{selectedClient.dietary_requirements}</p>
-                </CardContent>
-              </Card>
-            )}
+          {activeTab === "care_plan" && (
+            <CarePlanManager client={selectedClient} />
+          )}
 
-            {selectedClient.communication_needs && (
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle>Communication Needs</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <p className="text-gray-700">{selectedClient.communication_needs}</p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
+          {activeTab === "risk_assessments" && (
+            <RiskAssessmentManager client={selectedClient} />
+          )}
 
-          {selectedClient.medical_needs && (
-            <Card className="mt-6">
-              <CardHeader className="border-b bg-yellow-50">
-                <CardTitle className="text-yellow-900">Medical Needs</CardTitle>
-              </CardHeader>
-              <CardContent className="p-6">
-                <p className="text-gray-700 whitespace-pre-line">{selectedClient.medical_needs}</p>
-              </CardContent>
-            </Card>
+          {activeTab === "medication" && (
+            <MedicationManagement client={selectedClient} />
+          )}
+
+          {activeTab === "peep" && (
+            <PEEPManager client={selectedClient} />
+          )}
+
+          {activeTab === "repositioning" && (
+            <RepositioningChartManager client={selectedClient} />
+          )}
+
+          {activeTab === "behavior" && (
+            <BehaviorChartManager client={selectedClient} />
+          )}
+
+          {activeTab === "mental_capacity" && (
+            <MentalCapacityManager client={selectedClient} />
+          )}
+
+          {activeTab === "safeguarding" && (
+            <SafeguardingManager client={selectedClient} />
+          )}
+
+          {activeTab === "consent" && (
+            <ConsentManagement client={selectedClient} />
+          )}
+
+          {activeTab === "emergency" && (
+            <EmergencyContactsManager 
+              client={selectedClient}
+              onUpdate={(data) => {
+                console.log("Updating client emergency contacts:", selectedClient.id, data);
+              }}
+            />
+          )}
+
+          {activeTab === "documents" && (
+            <DocumentManager client={selectedClient} />
+          )}
+
+          {showCarePlanGenerator && (
+            <AICareplanGenerator
+              client={selectedClient}
+              onClose={() => setShowCarePlanGenerator(false)}
+            />
           )}
         </div>
       </div>
