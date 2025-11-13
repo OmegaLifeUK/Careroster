@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient } from "@tantml:react-query";
 import {
   Dialog,
   DialogContent,
@@ -24,7 +24,7 @@ import { format } from "date-fns";
 
 import CarerSuggestions from "./CarerSuggestions";
 
-export default function ShiftDialog({ shift, carers, clients, shifts, leaveRequests, onClose }) {
+export default function ShiftDialog({ shift, carers = [], clients = [], shifts = [], leaveRequests = [], onClose }) {
   const [formData, setFormData] = useState({
     client_id: shift?.client_id || "",
     carer_id: shift?.carer_id || "",
@@ -97,7 +97,8 @@ export default function ShiftDialog({ shift, carers, clients, shifts, leaveReque
     saveMutation.mutate(formData);
   };
 
-  const selectedClient = clients.find(c => c.id === formData.client_id);
+  const selectedClient = Array.isArray(clients) ? clients.find(c => c && c.id === formData.client_id) : null;
+  const activeClients = Array.isArray(clients) ? clients.filter(c => c && c.status === 'active') : [];
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -121,7 +122,7 @@ export default function ShiftDialog({ shift, carers, clients, shifts, leaveReque
                     <SelectValue placeholder="Select client" />
                   </SelectTrigger>
                   <SelectContent>
-                    {clients.filter(c => c.status === 'active').map((client) => (
+                    {activeClients.map((client) => (
                       <SelectItem key={client.id} value={client.id}>
                         {client.full_name}
                       </SelectItem>
@@ -223,7 +224,7 @@ export default function ShiftDialog({ shift, carers, clients, shifts, leaveReque
                 <div className="p-4 border rounded-lg bg-green-50">
                   <p className="text-sm text-gray-600 mb-1">Currently Assigned:</p>
                   <p className="font-medium text-lg">
-                    {carers.find(c => c.id === formData.carer_id)?.full_name}
+                    {Array.isArray(carers) && carers.find(c => c && c.id === formData.carer_id)?.full_name}
                   </p>
                   <Button
                     type="button"

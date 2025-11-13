@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -12,7 +13,7 @@ import { Badge } from "@/components/ui/badge";
 import { X, Calendar, Repeat, AlertCircle, CalendarX, Plus, Trash2 } from "lucide-react";
 import { format, addDays, addWeeks, addMonths, parseISO, isBefore, isSameDay, getDay, differenceInDays } from "date-fns";
 
-export default function RecurringShiftDialog({ onClose, clients, carers }) {
+export default function RecurringShiftDialog({ onClose, clients = [], carers = [] }) {
   const [step, setStep] = useState(1);
   const [formData, setFormData] = useState({
     client_id: "",
@@ -48,8 +49,11 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
   const queryClient = useQueryClient();
 
   const createShiftsMutation = useMutation({
-    mutationFn: async (shifts) => {
-      return await base44.entities.Shift.bulkCreate(shifts);
+    mutationFn: async (shiftsToCreate) => {
+      if (!Array.isArray(shiftsToCreate) || shiftsToCreate.length === 0) {
+        throw new Error("No shifts to create");
+      }
+      return await base44.entities.Shift.bulkCreate(shiftsToCreate);
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
@@ -58,7 +62,7 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
   });
 
   const generateShifts = () => {
-    const shifts = [];
+    const shiftsToCreate = [];
     let currentDate = parseISO(recurrenceData.start_date);
     const endDate = recurrenceData.end_type === 'date' ? parseISO(recurrenceData.end_date) : null;
     const maxOccurrences = recurrenceData.end_type === 'occurrences' ? recurrenceData.occurrences : 
@@ -75,9 +79,14 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
       if (endDate && isBefore(endDate, currentDate)) break;
 
       // Check if this date should be excluded
-      const isExcluded = recurrenceData.exclude_dates.some(excludeDate => 
-        isSameDay(parseISO(excludeDate), currentDate)
-      );
+      const isExcluded = Array.isArray(recurrenceData.exclude_dates) && 
+        recurrenceData.exclude_dates.some(excludeDate => {
+          try {
+            return isSameDay(parseISO(excludeDate), currentDate);
+          } catch {
+            return false;
+          }
+        });
 
       if (isExcluded) {
         currentDate = addDays(currentDate, 1);
@@ -101,14 +110,14 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
           break;
 
         case 'weekly':
-          if (recurrenceData.days_of_week.length > 0) {
+          if (Array.isArray(recurrenceData.days_of_week) && recurrenceData.days_of_week.length > 0) {
             const dayOfWeek = getDay(currentDate);
             shouldCreate = recurrenceData.days_of_week.includes(dayOfWeek);
           }
           break;
 
         case 'biweekly':
-          if (recurrenceData.days_of_week.length > 0) {
+          if (Array.isArray(recurrenceData.days_of_week) && recurrenceData.days_of_week.length > 0) {
             const weekNumber = Math.floor(differenceInDays(currentDate, parseISO(recurrenceData.start_date)) / 7);
             if (weekNumber % 2 === 0) {
               const dayOfWeek = getDay(currentDate);
@@ -128,8 +137,8 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
           } else if (recurrenceData.custom_unit === 'weeks') {
             const weeksDiff = Math.floor(daysDiff / 7);
             shouldCreate = weeksDiff % recurrenceData.custom_interval === 0 && 
-                          (recurrenceData.days_of_week.length === 0 || 
-                           recurrenceData.days_of_week.includes(getDay(currentDate)));
+                          ((Array.isArray(recurrenceData.days_of_week) && recurrenceData.days_of_week.length === 0) || 
+                           (Array.isArray(recurrenceData.days_of_week) && recurrenceData.days_of_week.includes(getDay(currentDate))));
           } else if (recurrenceData.custom_unit === 'months') {
             const monthsDiff = (currentDate.getFullYear() - parseISO(recurrenceData.start_date).getFullYear()) * 12 + 
                               (currentDate.getMonth() - parseISO(recurrenceData.start_date).getMonth());
@@ -140,7 +149,7 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
       }
 
       if (shouldCreate) {
-        shifts.push({
+        shiftsToCreate.push({
           ...formData,
           date: format(currentDate, 'yyyy-MM-dd'),
         });
@@ -150,19 +159,19 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
       currentDate = addDays(currentDate, 1);
     }
 
-    return shifts;
+    return shiftsToCreate;
   };
 
   const generatePreview = () => {
     setGenerating(true);
-    const shifts = generateShifts();
-    setPreview(shifts.slice(0, 100)); // Show first 100 for preview
+    const shiftsToCreate = generateShifts();
+    setPreview(Array.isArray(shiftsToCreate) ? shiftsToCreate.slice(0, 100) : []); // Show first 100 for preview
     setGenerating(false);
   };
 
   const handleSubmit = async () => {
-    const shifts = generateShifts();
-    await createShiftsMutation.mutate(shifts);
+    const shiftsToCreate = generateShifts();
+    await createShiftsMutation.mutate(shiftsToCreate);
   };
 
   const addTask = () => {
@@ -232,6 +241,9 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
     { value: 6, label: 'Saturday', short: 'Sat' },
   ];
 
+  const activeClients = Array.isArray(clients) ? clients.filter(c => c && c.status === 'active') : [];
+  const activeCarers = Array.isArray(carers) ? carers.filter(c => c && c.status === 'active') : [];
+
   return (
     <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
       <Card className="max-w-4xl w-full max-h-[90vh] overflow-y-auto">
@@ -264,7 +276,7 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
                       <SelectValue placeholder="Select client" />
                     </SelectTrigger>
                     <SelectContent>
-                      {clients.map(client => (
+                      {activeClients.map(client => (
                         <SelectItem key={client.id} value={client.id}>
                           {client.full_name}
                         </SelectItem>
@@ -284,7 +296,7 @@ export default function RecurringShiftDialog({ onClose, clients, carers }) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value={null}>Unassigned</SelectItem>
-                      {carers.map(carer => (
+                      {activeCarers.map(carer => (
                         <SelectItem key={carer.id} value={carer.id}>
                           {carer.full_name}
                         </SelectItem>

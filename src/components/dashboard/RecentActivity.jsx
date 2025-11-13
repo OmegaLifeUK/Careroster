@@ -24,36 +24,45 @@ export default function RecentActivity({ shifts = [], leaveRequests = [], carers
   }
 
   const getCarerName = (carerId) => {
-    if (!carerId || !Array.isArray(carers)) return "Unknown";
-    const carer = carers.find(c => c && c.id === carerId);
+    if (!carerId) return "Unknown";
+    const carer = Array.isArray(carers) ? carers.find(c => c && c.id === carerId) : null;
     return carer?.full_name || "Unknown";
   };
 
   const getClientName = (clientId) => {
-    if (!clientId || !Array.isArray(clients)) return "Unknown";
-    const client = clients.find(c => c && c.id === clientId);
+    if (!clientId) return "Unknown";
+    const client = Array.isArray(clients) ? clients.find(c => c && c.id === clientId) : null;
     return client?.full_name || "Unknown";
   };
 
+  const shiftsArray = Array.isArray(shifts) ? shifts.filter(s => s) : [];
+  const leaveRequestsArray = Array.isArray(leaveRequests) ? leaveRequests.filter(r => r) : [];
+
   const activities = [
-    ...(Array.isArray(shifts) ? shifts : []).map(shift => ({
+    ...shiftsArray.map(shift => ({
       type: 'shift',
-      date: shift?.created_date || new Date().toISOString(),
-      title: `Shift ${shift?.status || 'scheduled'}`,
-      description: `${getCarerName(shift?.carer_id)} → ${getClientName(shift?.client_id)}`,
-      status: shift?.status || 'scheduled',
+      date: shift.created_date,
+      title: `Shift ${shift.status}`,
+      description: `${getCarerName(shift.carer_id)} → ${getClientName(shift.client_id)}`,
+      status: shift.status,
       icon: Calendar,
     })),
-    ...(Array.isArray(leaveRequests) ? leaveRequests : []).map(request => ({
+    ...leaveRequestsArray.map(request => ({
       type: 'leave',
-      date: request?.created_date || new Date().toISOString(),
-      title: `${request?.leave_type || 'Leave'} request`,
-      description: getCarerName(request?.carer_id),
-      status: request?.status || 'pending',
+      date: request.created_date,
+      title: `${request.leave_type} request`,
+      description: getCarerName(request.carer_id),
+      status: request.status,
       icon: ClipboardList,
     })),
   ]
-    .sort((a, b) => new Date(b.date) - new Date(a.date))
+    .sort((a, b) => {
+      try {
+        return new Date(b.date) - new Date(a.date);
+      } catch {
+        return 0;
+      }
+    })
     .slice(0, 8);
 
   const statusColors = {
@@ -79,36 +88,42 @@ export default function RecentActivity({ shifts = [], leaveRequests = [], carers
           </div>
         ) : (
           <div className="space-y-4">
-            {activities.map((activity, idx) => (
-              <div 
-                key={idx}
-                className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
-              >
-                <div className={`p-2 rounded-lg ${
-                  activity.type === 'shift' 
-                    ? 'bg-blue-100' 
-                    : 'bg-purple-100'
-                }`}>
-                  <activity.icon className={`w-5 h-5 ${
+            {activities.map((activity, idx) => {
+              if (!activity) return null;
+              
+              return (
+                <div 
+                  key={idx}
+                  className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                >
+                  <div className={`p-2 rounded-lg ${
                     activity.type === 'shift' 
-                      ? 'text-blue-600' 
-                      : 'text-purple-600'
-                  }`} />
-                </div>
-                <div className="flex-1">
-                  <div className="flex items-start justify-between mb-1">
-                    <p className="font-medium text-gray-900">{activity.title}</p>
-                    <Badge className={`${statusColors[activity.status] || statusColors.scheduled} text-xs`}>
-                      {activity.status}
-                    </Badge>
+                      ? 'bg-blue-100' 
+                      : 'bg-purple-100'
+                  }`}>
+                    <activity.icon className={`w-5 h-5 ${
+                      activity.type === 'shift' 
+                        ? 'text-blue-600' 
+                        : 'text-purple-600'
+                    }`} />
                   </div>
-                  <p className="text-sm text-gray-600">{activity.description}</p>
-                  <p className="text-xs text-gray-400 mt-1">
-                    {format(parseISO(activity.date), "MMM d, yyyy 'at' h:mm a")}
-                  </p>
+                  <div className="flex-1">
+                    <div className="flex items-start justify-between mb-1">
+                      <p className="font-medium text-gray-900">{activity.title}</p>
+                      <Badge className={`${statusColors[activity.status]} text-xs`}>
+                        {activity.status}
+                      </Badge>
+                    </div>
+                    <p className="text-sm text-gray-600">{activity.description}</p>
+                    {activity.date && (
+                      <p className="text-xs text-gray-400 mt-1">
+                        {format(parseISO(activity.date), "MMM d, yyyy 'at' h:mm a")}
+                      </p>
+                    )}
+                  </div>
                 </div>
-              </div>
-            ))}
+              );
+            })}
           </div>
         )}
       </CardContent>
