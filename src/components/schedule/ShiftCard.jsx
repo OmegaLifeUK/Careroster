@@ -11,10 +11,15 @@ const statusColors = {
   completed: "bg-gray-100 text-gray-800",
   cancelled: "bg-red-100 text-red-800",
   unfilled: "bg-orange-100 text-orange-800",
+  published: "bg-purple-100 text-purple-800",
+  draft: "bg-gray-100 text-gray-800",
 };
 
-export default function ShiftCard({ shift, carer, client, onEdit, onDelete }) {
+export default function ShiftCard({ shift, carers = [], clients = [], onEdit, onDelete }) {
   if (!shift) return null;
+  
+  const carer = Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id) : null;
+  const client = Array.isArray(clients) ? clients.find(c => c && c.id === shift.client_id) : null;
 
   return (
     <Card className="hover:shadow-lg transition-shadow">
@@ -26,12 +31,12 @@ export default function ShiftCard({ shift, carer, client, onEdit, onDelete }) {
             </div>
             <div>
               <p className="font-semibold text-lg">
-                {shift.date ? format(parseISO(shift.date), "EEEE, MMM d, yyyy") : 'No date'}
+                {shift.date && format(parseISO(shift.date), "EEEE, MMM d, yyyy")}
               </p>
               <div className="flex items-center gap-2 text-gray-600 mt-1">
                 <Clock className="w-4 h-4" />
                 <span className="text-sm">
-                  {shift.start_time || 'N/A'} - {shift.end_time || 'N/A'}
+                  {shift.start_time} - {shift.end_time}
                 </span>
                 <span className="text-xs text-gray-400">
                   ({shift.duration_hours || 0}h)
@@ -41,10 +46,12 @@ export default function ShiftCard({ shift, carer, client, onEdit, onDelete }) {
           </div>
           
           <div className="flex items-center gap-2">
-            <Badge className={statusColors[shift.status] || statusColors.scheduled}>
-              {shift.status?.replace('_', ' ') || 'scheduled'}
+            <Badge className={statusColors[shift.status] || statusColors.draft}>
+              {(shift.status || 'draft').replace('_', ' ')}
             </Badge>
-            <Badge variant="outline">{shift.shift_type || 'standard'}</Badge>
+            {shift.shift_type && (
+              <Badge variant="outline">{shift.shift_type}</Badge>
+            )}
           </div>
         </div>
 
@@ -66,7 +73,7 @@ export default function ShiftCard({ shift, carer, client, onEdit, onDelete }) {
           </div>
         </div>
 
-        {shift.tasks && Array.isArray(shift.tasks) && shift.tasks.length > 0 && (
+        {shift.tasks && shift.tasks.length > 0 && (
           <div className="mb-4 pb-4 border-b">
             <p className="text-xs text-gray-500 mb-2">Tasks:</p>
             <div className="flex flex-wrap gap-2">
