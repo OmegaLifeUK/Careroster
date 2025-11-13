@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -54,10 +55,11 @@ export default function ClientPortalBookings() {
     queryKey: ['booking-requests', portalAccess?.client_id],
     queryFn: async () => {
       if (!portalAccess) return [];
-      return base44.entities.SessionBookingRequest.filter(
+      const data = await base44.entities.SessionBookingRequest.filter(
         { client_id: portalAccess.client_id },
         '-created_date'
       );
+      return Array.isArray(data) ? data : [];
     },
     enabled: !!portalAccess,
   });
@@ -284,9 +286,10 @@ export default function ClientPortalBookings() {
     );
   }
 
-  const pendingRequests = bookingRequests.filter(r => r.status === 'pending');
-  const approvedRequests = bookingRequests.filter(r => r.status === 'approved');
-  const completedRequests = bookingRequests.filter(r => r.status === 'completed');
+  const safeBookingRequests = Array.isArray(bookingRequests) ? bookingRequests : [];
+  const pendingRequests = safeBookingRequests.filter(r => r && r.status === 'pending');
+  const approvedRequests = safeBookingRequests.filter(r => r && r.status === 'approved');
+  const completedRequests = safeBookingRequests.filter(r => r && r.status === 'completed');
 
   return (
     <div className="p-4 md:p-8">
@@ -314,7 +317,7 @@ export default function ClientPortalBookings() {
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Requests</p>
-                  <p className="text-2xl font-bold text-blue-600">{bookingRequests.length}</p>
+                  <p className="text-2xl font-bold text-blue-600">{safeBookingRequests.length}</p>
                 </div>
               </div>
             </CardContent>
@@ -368,7 +371,7 @@ export default function ClientPortalBookings() {
             <CardTitle>All Requests</CardTitle>
           </CardHeader>
           <CardContent className="p-6">
-            {bookingRequests.length === 0 ? (
+            {safeBookingRequests.length === 0 ? (
               <div className="text-center py-12 text-gray-500">
                 <Calendar className="w-12 h-12 mx-auto mb-3 text-gray-300" />
                 <p>No booking requests yet</p>
@@ -382,7 +385,9 @@ export default function ClientPortalBookings() {
               </div>
             ) : (
               <div className="space-y-3">
-                {bookingRequests.map((request) => {
+                {safeBookingRequests.map((request) => {
+                  if (!request) return null;
+                  
                   const StatusIcon = statusIcons[request.status];
                   
                   return (
