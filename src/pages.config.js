@@ -33,6 +33,7 @@ import ClientPortalMessages from './pages/ClientPortalMessages';
 import ClientPortalBookings from './pages/ClientPortalBookings';
 import UserManagement from './pages/UserManagement';
 import CareDocuments from './pages/CareDocuments';
+import MessagingCenter from './pages/MessagingCenter';
 import Layout from './Layout.jsx';
 
 
@@ -72,6 +73,7 @@ export const PAGES = {
     "ClientPortalBookings": ClientPortalBookings,
     "UserManagement": UserManagement,
     "CareDocuments": CareDocuments,
+    "MessagingCenter": MessagingCenter,
 }
 
 export const pagesConfig = {
