@@ -65,6 +65,14 @@ export default function Schedule() {
     },
   });
 
+  const { data: properties = [] } = useQuery({
+    queryKey: ['supported-living-properties'],
+    queryFn: async () => {
+      const data = await base44.entities.SupportedLivingProperty.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests'],
     queryFn: async () => {
@@ -414,6 +422,7 @@ export default function Schedule() {
             shifts={filteredShifts} 
             carers={carers} 
             clients={clients}
+            properties={properties}
             onShiftClick={handleEdit}
             onShiftUpdate={handleShiftUpdate}
           />
@@ -422,6 +431,7 @@ export default function Schedule() {
             shifts={filteredShifts} 
             carers={carers} 
             clients={clients}
+            properties={properties}
             onShiftClick={handleEdit}
             onShiftUpdate={handleShiftUpdate}
           />
@@ -430,6 +440,7 @@ export default function Schedule() {
             shifts={filteredShifts} 
             carers={carers} 
             clients={clients}
+            properties={properties}
             onShiftClick={handleEdit}
           />
         ) : viewMode === "90days" ? (
@@ -437,6 +448,7 @@ export default function Schedule() {
             shifts={filteredShifts} 
             carers={carers} 
             clients={clients}
+            properties={properties}
             onShiftClick={handleEdit}
           />
         ) : viewMode === "dragdrop" ? (
@@ -444,6 +456,7 @@ export default function Schedule() {
             shifts={filteredShifts}
             carers={carers}
             clients={clients}
+            properties={properties}
             onShiftUpdate={handleShiftUpdate}
             onShiftEdit={handleEdit}
             onShiftDelete={handleDelete}
@@ -454,6 +467,7 @@ export default function Schedule() {
             shifts={filteredShifts}
             carers={carers}
             clients={clients}
+            properties={properties}
             onShiftClick={handleEdit}
             onShiftUpdate={handleShiftUpdate}
           />
@@ -484,6 +498,7 @@ export default function Schedule() {
                     shift={shift}
                     carers={carers}
                     clients={clients}
+                    properties={properties}
                     onEdit={() => handleEdit(shift)}
                     onDelete={() => handleDelete(shift.id)}
                     onSendRequest={() => handleSendRequest(shift)}
@@ -499,6 +514,8 @@ export default function Schedule() {
             shift={editingShift}
             carers={carers}
             clients={clients}
+            shifts={shifts}
+            leaveRequests={leaveRequests}
             onClose={() => {
               setShowShiftDialog(false);
               setEditingShift(null);
