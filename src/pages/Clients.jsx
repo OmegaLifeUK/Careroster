@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles, Eye } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { useToast } from "@/components/ui/toast";
 
@@ -39,46 +39,54 @@ export default function Clients() {
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['clients'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: carers = [] } = useQuery({
     queryKey: ['carers'],
-    queryFn: () => base44.entities.Carer.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      toast({
-        title: "Success",
-        description: "Client removed successfully",
-        variant: "default",
-      });
+      toast.success("Client Deleted", "Client removed successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to remove client",
-        variant: "destructive",
-      });
+      toast.error("Error", "Failed to remove client");
       console.error("Delete error:", error);
     },
   });
 
-  const filteredClients = clients.filter(client => {
+  const filteredClients = Array.isArray(clients) ? clients.filter(client => {
+    if (!client) return false;
     const matchesSearch = client.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || client.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const handleEdit = (client) => {
+    if (!client) {
+      console.error("No client provided to handleEdit");
+      return;
+    }
+    console.log("Editing client:", client);
     setEditingClient(client);
     setShowDialog(true);
   };
 
   const handleDelete = (id) => {
+    if (!id) {
+      console.error("No client ID provided to handleDelete");
+      return;
+    }
     if (confirm("Are you sure you want to delete this client?")) {
       deleteClientMutation.mutate(id);
     }
@@ -90,14 +98,19 @@ export default function Clients() {
   };
 
   const handleViewDetails = (client) => {
+    if (!client) {
+      console.error("No client provided to handleViewDetails");
+      return;
+    }
+    console.log("Viewing client details:", client);
     setSelectedClient(client);
     setActiveTab("details");
   };
 
   const stats = {
-    total: clients.length,
-    active: clients.filter(c => c.status === 'active').length,
-    inactive: clients.filter(c => c.status === 'inactive').length,
+    total: filteredClients.length,
+    active: filteredClients.filter(c => c && c.status === 'active').length,
+    inactive: filteredClients.filter(c => c && c.status === 'inactive').length,
   };
 
   const statusColors = {
@@ -108,15 +121,15 @@ export default function Clients() {
 
   // Prepare data for export
   const exportData = filteredClients.map(client => ({
-    full_name: client.full_name,
-    date_of_birth: client.date_of_birth,
-    phone: client.phone,
-    status: client.status,
-    mobility: client.mobility,
-    funding_type: client.funding_type,
-    care_needs: client.care_needs?.join('; ') || '',
-    city: client.address?.city || '',
-    postcode: client.address?.postcode || '',
+    full_name: client?.full_name || '',
+    date_of_birth: client?.date_of_birth || '',
+    phone: client?.phone || '',
+    status: client?.status || '',
+    mobility: client?.mobility || '',
+    funding_type: client?.funding_type || '',
+    care_needs: client?.care_needs?.join('; ') || '',
+    city: client?.address?.city || '',
+    postcode: client?.address?.postcode || '',
   }));
 
   const exportColumns = [
@@ -154,13 +167,22 @@ export default function Clients() {
                 <span className="text-gray-500 capitalize">{selectedClient.funding_type?.replace('_', ' ')}</span>
               </div>
             </div>
-            <Button
-              onClick={() => setShowCarePlanGenerator(true)}
-              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              Generate Care Plan
-            </Button>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                onClick={() => handleEdit(selectedClient)}
+              >
+                <Edit className="w-4 h-4 mr-2" />
+                Edit Client
+              </Button>
+              <Button
+                onClick={() => setShowCarePlanGenerator(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Care Plan
+              </Button>
+            </div>
           </div>
 
           {/* Alert Banner */}
@@ -375,11 +397,7 @@ export default function Clients() {
             <EmergencyContactsManager 
               client={selectedClient}
               onUpdate={(data) => {
-                // Placeholder for handling emergency contact update,
-                // you might want to call a mutation here or update client data in some other way.
                 console.log("Updating client emergency contacts:", selectedClient.id, data);
-                // Example: base44.entities.Client.update(selectedClient.id, { emergency_contacts: data });
-                // Make sure to invalidate queries or refetch to update UI if needed
               }}
             />
           )}
@@ -400,7 +418,7 @@ export default function Clients() {
   }
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -488,9 +506,11 @@ export default function Clients() {
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           {filteredClients.map((client) => {
-            const preferredCarers = carers.filter(c => 
-              client.preferred_carers?.includes(c.id)
-            );
+            if (!client) return null;
+            
+            const preferredCarers = Array.isArray(carers) ? carers.filter(c => 
+              c && client.preferred_carers?.includes(c.id)
+            ) : [];
 
             return (
               <Card key={client.id} className="hover:shadow-lg transition-all">
@@ -498,14 +518,14 @@ export default function Clients() {
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">
                       <div className="w-12 h-12 rounded-full bg-gradient-to-br from-green-400 to-green-500 flex items-center justify-center text-white font-semibold text-lg">
-                        {client.full_name?.charAt(0)}
+                        {client.full_name?.charAt(0) || '?'}
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{client.full_name}</h3>
                         <p className="text-sm text-gray-500">{client.funding_type?.replace('_', ' ')}</p>
                       </div>
                     </div>
-                    <Badge className={statusColors[client.status]}>
+                    <Badge className={statusColors[client.status] || statusColors.inactive}>
                       {client.status}
                     </Badge>
                   </div>
@@ -525,7 +545,7 @@ export default function Clients() {
                     )}
                   </div>
 
-                  {client.care_needs && client.care_needs.length > 0 && (
+                  {client.care_needs && Array.isArray(client.care_needs) && client.care_needs.length > 0 && (
                     <div className="mb-4">
                       <div className="flex items-center gap-1 text-sm text-gray-600 mb-2">
                         <Heart className="w-4 h-4" />
@@ -559,18 +579,32 @@ export default function Clients() {
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleViewDetails(client)} 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleViewDetails(client);
+                      }}
                       className="flex-1"
                     >
+                      <Eye className="w-4 h-4 mr-2" />
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => handleEdit(client)}>
+                    <Button 
+                      variant="outline" 
+                      size="sm" 
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleEdit(client);
+                      }}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
                       size="sm" 
-                      onClick={() => handleDelete(client.id)}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleDelete(client.id);
+                      }}
                       className="text-red-600 hover:text-red-700 hover:bg-red-50"
                     >
                       <Trash2 className="w-4 h-4" />
@@ -583,9 +617,14 @@ export default function Clients() {
         </div>
 
         {filteredClients.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No clients found</p>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No clients found</p>
+              <p className="text-sm text-gray-400 mt-2">
+                {searchQuery ? "Try adjusting your search" : "Add your first client to get started"}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {showDialog && (
