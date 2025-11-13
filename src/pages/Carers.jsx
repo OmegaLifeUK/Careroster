@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,46 +23,54 @@ export default function Carers() {
 
   const { data: carers = [], isLoading } = useQuery({
     queryKey: ['carers'],
-    queryFn: () => base44.entities.Carer.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: qualifications = [] } = useQuery({
     queryKey: ['qualifications'],
-    queryFn: () => base44.entities.Qualification.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Qualification.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const deleteCarerMutation = useMutation({
     mutationFn: (id) => base44.entities.Carer.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carers'] });
-      toast({
-        title: "Success",
-        description: "Carer deleted successfully",
-        variant: "success",
-      });
+      toast.success("Carer Deleted", "Carer deleted successfully");
     },
     onError: (error) => {
-      toast({
-        title: "Error",
-        description: "Failed to delete carer",
-        variant: "destructive",
-      });
+      toast.error("Error", "Failed to delete carer");
       console.error("Delete error:", error);
     },
   });
 
-  const filteredCarers = carers.filter(carer => {
+  const filteredCarers = Array.isArray(carers) ? carers.filter(carer => {
+    if (!carer) return false;
     const matchesSearch = carer.full_name?.toLowerCase().includes(searchQuery.toLowerCase());
     const matchesStatus = statusFilter === "all" || carer.status === statusFilter;
     return matchesSearch && matchesStatus;
-  });
+  }) : [];
 
   const handleEdit = (carer) => {
+    if (!carer) {
+      console.error("No carer provided to handleEdit");
+      return;
+    }
+    console.log("Editing carer:", carer);
     setEditingCarer(carer);
     setShowDialog(true);
   };
 
   const handleDelete = (id) => {
+    if (!id) {
+      console.error("No carer ID provided to handleDelete");
+      return;
+    }
     if (confirm("Are you sure you want to delete this carer?")) {
       deleteCarerMutation.mutate(id);
     }
@@ -75,23 +82,23 @@ export default function Carers() {
   };
 
   const stats = {
-    total: carers.length,
-    active: carers.filter(c => c.status === 'active').length,
-    onLeave: carers.filter(c => c.status === 'on_leave').length,
-    inactive: carers.filter(c => c.status === 'inactive').length,
+    total: filteredCarers.length,
+    active: filteredCarers.filter(c => c && c.status === 'active').length,
+    onLeave: filteredCarers.filter(c => c && c.status === 'on_leave').length,
+    inactive: filteredCarers.filter(c => c && c.status === 'inactive').length,
   };
 
   // Prepare data for export
   const exportData = filteredCarers.map(carer => ({
-    full_name: carer.full_name,
-    email: carer.email,
-    phone: carer.phone,
-    status: carer.status,
-    employment_type: carer.employment_type,
-    hourly_rate: carer.hourly_rate,
-    qualifications: carer.qualifications?.length || 0,
-    city: carer.address?.city || '',
-    postcode: carer.address?.postcode || '',
+    full_name: carer?.full_name || '',
+    email: carer?.email || '',
+    phone: carer?.phone || '',
+    status: carer?.status || '',
+    employment_type: carer?.employment_type || '',
+    hourly_rate: carer?.hourly_rate || '',
+    qualifications: carer?.qualifications?.length || 0,
+    city: carer?.address?.city || '',
+    postcode: carer?.address?.postcode || '',
   }));
 
   const exportColumns = [
@@ -107,7 +114,7 @@ export default function Carers() {
   ];
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -207,21 +214,30 @@ export default function Carers() {
         </Card>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredCarers.map((carer) => (
-            <CarerCard
-              key={carer.id}
-              carer={carer}
-              qualifications={qualifications}
-              onEdit={() => handleEdit(carer)}
-              onDelete={() => handleDelete(carer.id)}
-            />
-          ))}
+          {filteredCarers.map((carer) => {
+            if (!carer) return null;
+            
+            return (
+              <CarerCard
+                key={carer.id}
+                carer={carer}
+                qualifications={qualifications}
+                onEdit={() => handleEdit(carer)}
+                onDelete={() => handleDelete(carer.id)}
+              />
+            );
+          })}
         </div>
 
         {filteredCarers.length === 0 && !isLoading && (
-          <div className="text-center py-12 text-gray-500">
-            <p>No carers found</p>
-          </div>
+          <Card>
+            <CardContent className="p-12 text-center">
+              <p className="text-gray-500 text-lg">No carers found</p>
+              <p className="text-sm text-gray-400 mt-2">
+                {searchQuery ? "Try adjusting your search" : "Add your first carer to get started"}
+              </p>
+            </CardContent>
+          </Card>
         )}
 
         {showDialog && (

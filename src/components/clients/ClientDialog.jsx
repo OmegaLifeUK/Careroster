@@ -16,7 +16,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 
-export default function ClientDialog({ client, carers, onClose }) {
+export default function ClientDialog({ client, carers = [], onClose }) {
   const [formData, setFormData] = useState({
     full_name: client?.full_name || "",
     date_of_birth: client?.date_of_birth || "",
@@ -35,7 +35,7 @@ export default function ClientDialog({ client, carers, onClose }) {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      if (client) {
+      if (client && client.id) {
         return base44.entities.Client.update(client.id, data);
       } else {
         return base44.entities.Client.create(data);
@@ -45,6 +45,10 @@ export default function ClientDialog({ client, carers, onClose }) {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
       onClose();
     },
+    onError: (error) => {
+      console.error("Error saving client:", error);
+      alert("Failed to save client. Please try again.");
+    }
   });
 
   const handleInputChange = (field, value) => {
@@ -78,10 +82,16 @@ export default function ClientDialog({ client, carers, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    if (!formData.full_name) {
+      alert("Please enter client name");
+      return;
+    }
+    
     saveMutation.mutate(formData);
   };
 
-  const activeCarers = carers.filter(c => c.status === 'active');
+  const activeCarers = Array.isArray(carers) ? carers.filter(c => c && c.status === 'active') : [];
 
   return (
     <Dialog open onOpenChange={onClose}>
@@ -192,30 +202,32 @@ export default function ClientDialog({ client, carers, onClose }) {
               <Label htmlFor="care_needs">Care Needs (comma separated)</Label>
               <Textarea
                 id="care_needs"
-                value={formData.care_needs.join(', ')}
+                value={Array.isArray(formData.care_needs) ? formData.care_needs.join(', ') : ''}
                 onChange={(e) => handleCareNeedsChange(e.target.value)}
                 placeholder="e.g., Personal care, Medication management, Meal preparation"
                 className="h-20"
               />
             </div>
 
-            <div>
-              <Label className="mb-2 block">Preferred Carers (for continuity of care)</Label>
-              <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-gray-50 max-h-48 overflow-y-auto">
-                {activeCarers.map(carer => (
-                  <div key={carer.id} className="flex items-center gap-2">
-                    <Checkbox
-                      id={`carer-${carer.id}`}
-                      checked={formData.preferred_carers?.includes(carer.id)}
-                      onCheckedChange={() => handlePreferredCarerToggle(carer.id)}
-                    />
-                    <Label htmlFor={`carer-${carer.id}`} className="cursor-pointer">
-                      {carer.full_name}
-                    </Label>
-                  </div>
-                ))}
+            {activeCarers.length > 0 && (
+              <div>
+                <Label className="mb-2 block">Preferred Carers (for continuity of care)</Label>
+                <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-gray-50 max-h-48 overflow-y-auto">
+                  {activeCarers.map(carer => (
+                    <div key={carer.id} className="flex items-center gap-2">
+                      <Checkbox
+                        id={`carer-${carer.id}`}
+                        checked={formData.preferred_carers?.includes(carer.id)}
+                        onCheckedChange={() => handlePreferredCarerToggle(carer.id)}
+                      />
+                      <Label htmlFor={`carer-${carer.id}`} className="cursor-pointer text-sm">
+                        {carer.full_name}
+                      </Label>
+                    </div>
+                  ))}
+                </div>
               </div>
-            </div>
+            )}
 
             <div>
               <Label htmlFor="medical_notes">Medical Notes</Label>
