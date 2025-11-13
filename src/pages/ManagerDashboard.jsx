@@ -51,7 +51,7 @@ export default function ManagerDashboard() {
         setUser(userData);
 
         if (userData.dashboard_preferences) {
-          setModulePreferences(userData.dashboard_preferences);
+          setModulePreferences({ ...DEFAULT_PREFERENCES, ...userData.dashboard_preferences });
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -62,65 +62,94 @@ export default function ManagerDashboard() {
 
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: carers = [] } = useQuery({
     queryKey: ['carers'],
-    queryFn: () => base44.entities.Carer.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: shifts = [] } = useQuery({
     queryKey: ['shifts'],
-    queryFn: () => base44.entities.Shift.list('-date'),
+    queryFn: async () => {
+      const data = await base44.entities.Shift.list('-date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: medications = [] } = useQuery({
     queryKey: ['medications'],
-    queryFn: () => base44.entities.MedicationLog.list('-administration_time'),
+    queryFn: async () => {
+      const data = await base44.entities.MedicationLog.list('-administration_time');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: incidents = [] } = useQuery({
     queryKey: ['incidents'],
-    queryFn: () => base44.entities.Incident.list('-incident_date'),
+    queryFn: async () => {
+      const data = await base44.entities.Incident.list('-incident_date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: trainingAssignments = [] } = useQuery({
     queryKey: ['training-assignments'],
-    queryFn: () => base44.entities.TrainingAssignment.list('-assigned_date'),
+    queryFn: async () => {
+      const data = await base44.entities.TrainingAssignment.list('-assigned_date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: feedback = [] } = useQuery({
     queryKey: ['client-feedback'],
-    queryFn: () => base44.entities.ClientFeedback.list('-created_date'),
+    queryFn: async () => {
+      const data = await base44.entities.ClientFeedback.list('-created_date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: alerts = [] } = useQuery({
     queryKey: ['client-alerts'],
-    queryFn: () => base44.entities.ClientAlert.filter({ status: 'active' }),
+    queryFn: async () => {
+      const data = await base44.entities.ClientAlert.filter({ status: 'active' });
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests'],
-    queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
+    queryFn: async () => {
+      const data = await base44.entities.LeaveRequest.list('-created_date');
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const occupancyStats = {
     totalBeds: 50,
-    occupied: clients.filter(c => c.status === 'active').length,
+    occupied: clients.filter(c => c && c.status === 'active').length,
     plannedAdmissions: 3,
   };
   occupancyStats.occupancyRate = ((occupancyStats.occupied / occupancyStats.totalBeds) * 100).toFixed(1);
 
   const todayMeds = medications.filter(m => {
+    if (!m || !m.administration_time) return false;
     try {
       return isToday(parseISO(m.administration_time));
     } catch {
       return false;
     }
   });
-  const overdueMeds = todayMeds.filter(m => m.status === 'missed').length;
+  const overdueMeds = todayMeds.filter(m => m && m.status === 'missed').length;
   const upcomingMeds = medications.filter(m => {
+    if (!m || !m.administration_time) return false;
     try {
       const medTime = parseISO(m.administration_time);
       return medTime > new Date() && medTime < addDays(new Date(), 1);
@@ -130,19 +159,20 @@ export default function ManagerDashboard() {
   }).length;
 
   const todayShifts = shifts.filter(shift => {
+    if (!shift || !shift.date) return false;
     try {
       return isToday(parseISO(shift.date));
     } catch {
       return false;
     }
   });
-  const unfilledShifts = shifts.filter(s => s.status === 'unfilled').length;
+  const unfilledShifts = shifts.filter(s => s && s.status === 'unfilled').length;
   const shiftFillRate = todayShifts.length > 0
-    ? (((todayShifts.length - todayShifts.filter(s => s.status === 'unfilled').length) / todayShifts.length) * 100).toFixed(1)
+    ? (((todayShifts.length - todayShifts.filter(s => s && s.status === 'unfilled').length) / todayShifts.length) * 100).toFixed(1)
     : 100;
 
   const expiringCerts = trainingAssignments.filter(a => {
-    if (!a.expiry_date) return false;
+    if (!a || !a.expiry_date) return false;
     try {
       const expiry = parseISO(a.expiry_date);
       return expiry < addDays(new Date(), 30) && expiry > new Date();
@@ -152,7 +182,7 @@ export default function ManagerDashboard() {
   }).length;
 
   const overdueTraining = trainingAssignments.filter(a => {
-    if (!a.due_date) return false;
+    if (!a || !a.due_date) return false;
     try {
       return isPast(parseISO(a.due_date)) && a.status !== 'completed';
     } catch {
@@ -161,24 +191,26 @@ export default function ManagerDashboard() {
   }).length;
 
   const trainingCompletionRate = trainingAssignments.length > 0
-    ? ((trainingAssignments.filter(a => a.status === 'completed').length / trainingAssignments.length) * 100).toFixed(1)
+    ? ((trainingAssignments.filter(a => a && a.status === 'completed').length / trainingAssignments.length) * 100).toFixed(1)
     : 0;
 
   const recentIncidents = incidents.filter(inc => {
+    if (!inc || !inc.incident_date) return false;
     try {
       return parseISO(inc.incident_date) > subMonths(new Date(), 1);
     } catch {
       return false;
     }
   });
-  const unresolvedIncidents = incidents.filter(i => i.status !== 'resolved' && i.status !== 'closed').length;
-  const criticalIncidents = incidents.filter(i => i.severity === 'critical' && i.status !== 'closed').length;
+  const unresolvedIncidents = incidents.filter(i => i && i.status !== 'resolved' && i.status !== 'closed').length;
+  const criticalIncidents = incidents.filter(i => i && i.severity === 'critical' && i.status !== 'closed').length;
 
   const incidentTrends = eachMonthOfInterval({
     start: subMonths(new Date(), 11),
     end: new Date()
   }).map(month => {
     const monthIncidents = incidents.filter(inc => {
+      if (!inc || !inc.incident_date) return false;
       try {
         const incDate = parseISO(inc.incident_date);
         return incDate >= startOfMonth(month) && incDate <= endOfMonth(month);
@@ -189,7 +221,7 @@ export default function ManagerDashboard() {
     return {
       month: format(month, 'MMM'),
       count: monthIncidents.length,
-      critical: monthIncidents.filter(i => i.severity === 'critical').length
+      critical: monthIncidents.filter(i => i && i.severity === 'critical').length
     };
   });
 
@@ -200,9 +232,9 @@ export default function ManagerDashboard() {
     totalRevenue: 125000,
   };
 
-  const pendingLeave = leaveRequests.filter(r => r.status === 'pending').length;
-  const newFeedback = feedback.filter(f => f.status === 'new').length;
-  const criticalAlerts = alerts.filter(a => a.severity === 'critical').length;
+  const pendingLeave = leaveRequests.filter(r => r && r.status === 'pending').length;
+  const newFeedback = feedback.filter(f => f && f.status === 'new').length;
+  const criticalAlerts = alerts.filter(a => a && a.severity === 'critical').length;
 
   const handleSavePreferences = async (preferences) => {
     try {
@@ -227,6 +259,22 @@ OCCUPANCY & COMPLIANCE
 STAFF MANAGEMENT
 - Today's Shifts: ${todayShifts.length}
 - Unfilled Shifts: ${unfilledShifts}
+- Fill Rate: ${shiftFillRate}%
+
+TRAINING COMPLIANCE
+- Completion Rate: ${trainingCompletionRate}%
+- Expiring Certificates: ${expiringCerts}
+- Overdue Training: ${overdueTraining}
+
+INCIDENTS & SAFETY
+- Recent Incidents: ${recentIncidents.length}
+- Unresolved: ${unresolvedIncidents}
+- Critical: ${criticalIncidents}
+
+COMMUNICATION
+- Pending Leave Requests: ${pendingLeave}
+- New Feedback: ${newFeedback}
+- Critical Alerts: ${criticalAlerts}
 `;
 
     const blob = new Blob([report], { type: 'text/plain' });
@@ -241,52 +289,322 @@ STAFF MANAGEMENT
   };
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Manager Dashboard</h1>
-            <p className="text-gray-500">Operational overview</p>
+            <p className="text-gray-500">Operational overview and key metrics</p>
           </div>
           <div className="flex gap-2">
             <Button variant="outline" size="sm" onClick={exportDashboard}>
               <Download className="w-4 h-4 mr-2" />
-              Export
+              Export Report
             </Button>
             <Button variant="outline" size="sm" onClick={() => setShowCustomizer(true)}>
               <Settings className="w-4 h-4 mr-2" />
-              Customize
+              Customize Dashboard
             </Button>
           </div>
         </div>
 
+        {/* Quick Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-600 mb-1">Active Clients</p>
-              <p className="text-2xl font-bold">{clients.filter(c => c.status === 'active').length}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Active Clients</p>
+                  <p className="text-2xl font-bold">{clients.filter(c => c && c.status === 'active').length}</p>
+                </div>
+                <UserCircle className="w-8 h-8 text-blue-500" />
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-600 mb-1">Active Carers</p>
-              <p className="text-2xl font-bold">{carers.filter(c => c.status === 'active').length}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Active Carers</p>
+                  <p className="text-2xl font-bold">{carers.filter(c => c && c.status === 'active').length}</p>
+                </div>
+                <Users className="w-8 h-8 text-green-500" />
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-600 mb-1">Today's Shifts</p>
-              <p className="text-2xl font-bold">{todayShifts.length}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Today's Shifts</p>
+                  <p className="text-2xl font-bold">{todayShifts.length}</p>
+                </div>
+                <Calendar className="w-8 h-8 text-purple-500" />
+              </div>
             </CardContent>
           </Card>
           <Card>
             <CardContent className="p-4">
-              <p className="text-sm text-gray-600 mb-1">Unfilled Shifts</p>
-              <p className="text-2xl font-bold text-orange-600">{unfilledShifts}</p>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Unfilled Shifts</p>
+                  <p className="text-2xl font-bold text-orange-600">{unfilledShifts}</p>
+                </div>
+                <AlertTriangle className="w-8 h-8 text-orange-500" />
+              </div>
             </CardContent>
           </Card>
         </div>
 
+        {/* Dynamic Widgets Based on Preferences */}
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* Occupancy Widget */}
+          {modulePreferences.occupancy && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Home className="w-5 h-5 text-blue-600" />
+                  Occupancy & Capacity
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Current Occupancy</span>
+                    <span className="text-2xl font-bold text-blue-600">
+                      {occupancyStats.occupied}/{occupancyStats.totalBeds}
+                    </span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
+                      style={{ width: `${occupancyStats.occupancyRate}%` }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-sm text-gray-600">Occupancy Rate</p>
+                      <p className="text-xl font-semibold">{occupancyStats.occupancyRate}%</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Planned Admissions</p>
+                      <p className="text-xl font-semibold">{occupancyStats.plannedAdmissions}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Staff Management Widget */}
+          {modulePreferences.staff && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-green-50 to-teal-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Users className="w-5 h-5 text-green-600" />
+                  Staff & Shifts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Today's Shifts</p>
+                      <p className="text-2xl font-bold">{todayShifts.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Fill Rate</p>
+                      <p className="text-2xl font-bold text-green-600">{shiftFillRate}%</p>
+                    </div>
+                  </div>
+                  {unfilledShifts > 0 && (
+                    <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-orange-600" />
+                        <div>
+                          <p className="font-semibold text-orange-900">
+                            {unfilledShifts} Unfilled Shift{unfilledShifts > 1 ? 's' : ''}
+                          </p>
+                          <p className="text-sm text-orange-700">Requires immediate attention</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <Link to={createPageUrl("Schedule")}>
+                    <Button className="w-full" variant="outline">
+                      <Calendar className="w-4 h-4 mr-2" />
+                      View Full Schedule
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Training Compliance Widget */}
+          {modulePreferences.training && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                <CardTitle className="flex items-center gap-2">
+                  <GraduationCap className="w-5 h-5 text-purple-600" />
+                  Training Compliance
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Completion Rate</span>
+                    <span className="text-2xl font-bold text-purple-600">{trainingCompletionRate}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-3">
+                    <div 
+                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all"
+                      style={{ width: `${trainingCompletionRate}%` }}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                    <div>
+                      <p className="text-sm text-gray-600">Expiring Soon</p>
+                      <p className="text-xl font-semibold text-orange-600">{expiringCerts}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Overdue</p>
+                      <p className="text-xl font-semibold text-red-600">{overdueTraining}</p>
+                    </div>
+                  </div>
+                  <Link to={createPageUrl("StaffTraining")}>
+                    <Button className="w-full" variant="outline">
+                      <GraduationCap className="w-4 h-4 mr-2" />
+                      View Training
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Incidents & Safety Widget */}
+          {modulePreferences.incidents && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
+                <CardTitle className="flex items-center gap-2">
+                  <Shield className="w-5 h-5 text-red-600" />
+                  Incidents & Safety
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">This Month</p>
+                      <p className="text-2xl font-bold">{recentIncidents.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Unresolved</p>
+                      <p className="text-2xl font-bold text-orange-600">{unresolvedIncidents}</p>
+                    </div>
+                  </div>
+                  {criticalIncidents > 0 && (
+                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                        <div>
+                          <p className="font-semibold text-red-900">
+                            {criticalIncidents} Critical Incident{criticalIncidents > 1 ? 's' : ''}
+                          </p>
+                          <p className="text-sm text-red-700">Requires immediate review</p>
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                  <Link to={createPageUrl("IncidentManagement")}>
+                    <Button className="w-full" variant="outline">
+                      <Shield className="w-4 h-4 mr-2" />
+                      View All Incidents
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Financial Overview Widget */}
+          {modulePreferences.finance && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-green-50">
+                <CardTitle className="flex items-center gap-2">
+                  <DollarSign className="w-5 h-5 text-emerald-600" />
+                  Financial Summary
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="flex justify-between items-center">
+                    <span className="text-gray-600">Total Revenue</span>
+                    <span className="text-2xl font-bold text-emerald-600">
+                      £{financeStats.totalRevenue.toLocaleString()}
+                    </span>
+                  </div>
+                  <div className="grid grid-cols-3 gap-3 pt-4 border-t">
+                    <div className="text-center">
+                      <p className="text-xs text-gray-600 mb-1">Paid</p>
+                      <p className="text-lg font-semibold text-green-600">{financeStats.paid}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-600 mb-1">Pending</p>
+                      <p className="text-lg font-semibold text-yellow-600">{financeStats.pending}</p>
+                    </div>
+                    <div className="text-center">
+                      <p className="text-xs text-gray-600 mb-1">Overdue</p>
+                      <p className="text-lg font-semibold text-red-600">{financeStats.overdue}</p>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Communication & Alerts Widget */}
+          {modulePreferences.communication && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+                <CardTitle className="flex items-center gap-2">
+                  <MessageSquare className="w-5 h-5 text-amber-600" />
+                  Communication & Alerts
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <Bell className="w-5 h-5 text-blue-600" />
+                      <span className="text-sm font-medium">Pending Leave Requests</span>
+                    </div>
+                    <Badge className="bg-blue-600">{pendingLeave}</Badge>
+                  </div>
+                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                    <div className="flex items-center gap-2">
+                      <MessageSquare className="w-5 h-5 text-purple-600" />
+                      <span className="text-sm font-medium">New Feedback</span>
+                    </div>
+                    <Badge className="bg-purple-600">{newFeedback}</Badge>
+                  </div>
+                  {criticalAlerts > 0 && (
+                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5 text-red-600" />
+                        <span className="text-sm font-medium">Critical Alerts</span>
+                      </div>
+                      <Badge className="bg-red-600">{criticalAlerts}</Badge>
+                    </div>
+                  )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+        </div>
+
+        {/* Customizer Dialog */}
         {showCustomizer && (
           <DashboardCustomizer
             currentPreferences={modulePreferences}
