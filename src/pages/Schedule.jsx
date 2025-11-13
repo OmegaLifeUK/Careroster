@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, Sparkles, List, Grid, Shuffle } from "lucide-react";
+import { Calendar, Plus, Sparkles, List, Grid, Shuffle, CalendarDays, CalendarRange, Repeat } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { QuickFilters } from "@/components/ui/quick-filters";
 import { useToast } from "@/components/ui/toast";
@@ -15,10 +15,14 @@ import { SmartSuggestion } from "@/components/ui/smart-suggestions";
 
 import ShiftDialog from "../components/schedule/ShiftDialog";
 import ShiftCard from "../components/schedule/ShiftCard";
+import DayCalendar from "../components/schedule/DayCalendar";
 import WeekCalendar from "../components/schedule/WeekCalendar";
+import MonthCalendar from "../components/schedule/MonthCalendar";
+import QuarterCalendar from "../components/schedule/QuarterCalendar";
 import AIScheduleGenerator from "../components/schedule/AIScheduleGenerator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
+import RecurringShiftDialog from "../components/schedule/RecurringShiftDialog";
 import { DragDropScheduler } from "../components/schedule/DragDropScheduler";
 
 export default function Schedule() {
@@ -27,6 +31,7 @@ export default function Schedule() {
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [showRecurringDialog, setShowRecurringDialog] = useState(false);
   const [savedViews, setSavedViews] = useState([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -257,6 +262,16 @@ export default function Schedule() {
                 AI Generate
               </Button>
             </Tooltip>
+            <Tooltip content="Create recurring shifts">
+              <Button
+                onClick={() => setShowRecurringDialog(true)}
+                variant="outline"
+                className="bg-gradient-to-r from-green-50 to-teal-50"
+              >
+                <Repeat className="w-4 h-4 mr-2" />
+                Recurring
+              </Button>
+            </Tooltip>
             <Button
               onClick={() => {
                 setEditingShift(null);
@@ -286,7 +301,17 @@ export default function Schedule() {
           appliedFilters={filters.advanced || []}
         />
 
-        <div className="flex items-center gap-2 my-6">
+        <div className="flex items-center gap-2 my-6 flex-wrap">
+          <Tooltip content="Day view">
+            <Button
+              variant={viewMode === "day" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("day")}
+            >
+              <CalendarDays className="w-4 h-4 mr-2" />
+              Day
+            </Button>
+          </Tooltip>
           <Tooltip content="Week calendar view">
             <Button
               variant={viewMode === "week" ? "default" : "outline"}
@@ -295,6 +320,26 @@ export default function Schedule() {
             >
               <Calendar className="w-4 h-4 mr-2" />
               Week
+            </Button>
+          </Tooltip>
+          <Tooltip content="Month calendar view">
+            <Button
+              variant={viewMode === "month" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("month")}
+            >
+              <CalendarRange className="w-4 h-4 mr-2" />
+              Month
+            </Button>
+          </Tooltip>
+          <Tooltip content="90-day overview">
+            <Button
+              variant={viewMode === "90days" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("90days")}
+            >
+              <CalendarRange className="w-4 h-4 mr-2" />
+              90 Days
             </Button>
           </Tooltip>
           <Tooltip content="List view">
@@ -337,6 +382,14 @@ export default function Schedule() {
               <SkeletonCard key={i} />
             ))}
           </div>
+        ) : viewMode === "day" ? (
+          <DayCalendar 
+            shifts={filteredShifts} 
+            carers={carers} 
+            clients={clients}
+            onShiftClick={handleEdit}
+            onShiftUpdate={handleShiftUpdate}
+          />
         ) : viewMode === "week" ? (
           <WeekCalendar 
             shifts={filteredShifts} 
@@ -344,6 +397,20 @@ export default function Schedule() {
             clients={clients}
             onShiftClick={handleEdit}
             onShiftUpdate={handleShiftUpdate}
+          />
+        ) : viewMode === "month" ? (
+          <MonthCalendar 
+            shifts={filteredShifts} 
+            carers={carers} 
+            clients={clients}
+            onShiftClick={handleEdit}
+          />
+        ) : viewMode === "90days" ? (
+          <QuarterCalendar 
+            shifts={filteredShifts} 
+            carers={carers} 
+            clients={clients}
+            onShiftClick={handleEdit}
           />
         ) : viewMode === "dragdrop" ? (
           <DragDropScheduler
@@ -417,6 +484,14 @@ export default function Schedule() {
           <AIScheduleGenerator
             onClose={() => setShowAIGenerator(false)}
             shifts={shifts}
+            carers={carers}
+            clients={clients}
+          />
+        )}
+
+        {showRecurringDialog && (
+          <RecurringShiftDialog
+            onClose={() => setShowRecurringDialog(false)}
             carers={carers}
             clients={clients}
           />
