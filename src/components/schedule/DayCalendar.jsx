@@ -9,6 +9,7 @@ export default function DayCalendar({ shifts = [], carers = [], clients = [], on
   const [currentDate, setCurrentDate] = useState(new Date());
 
   const dayShifts = Array.isArray(shifts) ? shifts.filter(shift => {
+    if (!shift || !shift.date) return false;
     try {
       return isSameDay(parseISO(shift.date), currentDate);
     } catch {
@@ -17,17 +18,21 @@ export default function DayCalendar({ shifts = [], carers = [], clients = [], on
   }) : [];
 
   // Sort shifts by start time
-  const sortedShifts = [...dayShifts].sort((a, b) => {
-    return (a.start_time || '').localeCompare(b.start_time || '');
-  });
+  const sortedShifts = Array.isArray(dayShifts) 
+    ? [...dayShifts].sort((a, b) => {
+        return ((a && a.start_time) || '').localeCompare((b && b.start_time) || '');
+      })
+    : [];
 
   const getCarerName = (carerId) => {
-    const carer = Array.isArray(carers) ? carers.find(c => c.id === carerId) : null;
+    if (!carerId) return 'Unassigned';
+    const carer = Array.isArray(carers) ? carers.find(c => c && c.id === carerId) : null;
     return carer?.full_name || 'Unassigned';
   };
 
   const getClientName = (clientId) => {
-    const client = Array.isArray(clients) ? clients.find(c => c.id === clientId) : null;
+    if (!clientId) return 'Unknown';
+    const client = Array.isArray(clients) ? clients.find(c => c && c.id === clientId) : null;
     return client?.full_name || 'Unknown';
   };
 
@@ -90,73 +95,77 @@ export default function DayCalendar({ shifts = [], carers = [], clients = [], on
             </CardContent>
           </Card>
         ) : (
-          sortedShifts.map((shift) => (
-            <Card 
-              key={shift.id} 
-              className="hover:shadow-md transition-shadow cursor-pointer"
-              onClick={() => onShiftClick && onShiftClick(shift)}
-            >
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between">
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={statusColors[shift.status] || 'bg-gray-100 text-gray-800'}>
-                        {shift.status}
-                      </Badge>
-                      {shift.shift_type && (
-                        <Badge variant="outline" className="capitalize">
-                          {shift.shift_type}
+          sortedShifts.map((shift) => {
+            if (!shift) return null;
+            
+            return (
+              <Card 
+                key={shift.id} 
+                className="hover:shadow-md transition-shadow cursor-pointer"
+                onClick={() => onShiftClick && onShiftClick(shift)}
+              >
+                <CardContent className="p-4">
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Badge className={statusColors[shift.status] || 'bg-gray-100 text-gray-800'}>
+                          {shift.status}
                         </Badge>
+                        {shift.shift_type && (
+                          <Badge variant="outline" className="capitalize">
+                            {shift.shift_type}
+                          </Badge>
+                        )}
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                        <div className="flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-gray-500" />
+                          <span className="font-semibold">
+                            {shift.start_time} - {shift.end_time}
+                          </span>
+                          {shift.duration_hours && (
+                            <span className="text-gray-500">({shift.duration_hours}h)</span>
+                          )}
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <User className="w-4 h-4 text-gray-500" />
+                          <span className={shift.carer_id ? '' : 'text-red-600 font-semibold'}>
+                            {getCarerName(shift.carer_id)}
+                          </span>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <MapPin className="w-4 h-4 text-gray-500" />
+                          <span>{getClientName(shift.client_id)}</span>
+                        </div>
+                      </div>
+
+                      {shift.tasks && Array.isArray(shift.tasks) && shift.tasks.length > 0 && (
+                        <div className="mt-2 flex flex-wrap gap-1">
+                          {shift.tasks.slice(0, 3).map((task, idx) => (
+                            <Badge key={idx} variant="outline" className="text-xs">
+                              {task}
+                            </Badge>
+                          ))}
+                          {shift.tasks.length > 3 && (
+                            <Badge variant="outline" className="text-xs">
+                              +{shift.tasks.length - 3} more
+                            </Badge>
+                          )}
+                        </div>
+                      )}
+
+                      {shift.notes && (
+                        <p className="mt-2 text-sm text-gray-600 line-clamp-1">{shift.notes}</p>
                       )}
                     </div>
-
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                      <div className="flex items-center gap-2">
-                        <Clock className="w-4 h-4 text-gray-500" />
-                        <span className="font-semibold">
-                          {shift.start_time} - {shift.end_time}
-                        </span>
-                        {shift.duration_hours && (
-                          <span className="text-gray-500">({shift.duration_hours}h)</span>
-                        )}
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <User className="w-4 h-4 text-gray-500" />
-                        <span className={shift.carer_id ? '' : 'text-red-600 font-semibold'}>
-                          {getCarerName(shift.carer_id)}
-                        </span>
-                      </div>
-
-                      <div className="flex items-center gap-2">
-                        <MapPin className="w-4 h-4 text-gray-500" />
-                        <span>{getClientName(shift.client_id)}</span>
-                      </div>
-                    </div>
-
-                    {shift.tasks && shift.tasks.length > 0 && (
-                      <div className="mt-2 flex flex-wrap gap-1">
-                        {shift.tasks.slice(0, 3).map((task, idx) => (
-                          <Badge key={idx} variant="outline" className="text-xs">
-                            {task}
-                          </Badge>
-                        ))}
-                        {shift.tasks.length > 3 && (
-                          <Badge variant="outline" className="text-xs">
-                            +{shift.tasks.length - 3} more
-                          </Badge>
-                        )}
-                      </div>
-                    )}
-
-                    {shift.notes && (
-                      <p className="mt-2 text-sm text-gray-600 line-clamp-1">{shift.notes}</p>
-                    )}
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))
+                </CardContent>
+              </Card>
+            );
+          })
         )}
       </div>
     </div>

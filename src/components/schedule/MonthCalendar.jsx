@@ -28,6 +28,7 @@ export default function MonthCalendar({ shifts = [], carers = [], clients = [], 
 
   const getShiftsForDay = (date) => {
     return Array.isArray(shifts) ? shifts.filter(shift => {
+      if (!shift || !shift.date) return false;
       try {
         return isSameDay(parseISO(shift.date), date);
       } catch {
@@ -117,20 +118,24 @@ export default function MonthCalendar({ shifts = [], carers = [], clients = [], 
                   </div>
 
                   <div className="space-y-1">
-                    {dayShifts.slice(0, 3).map((shift) => (
-                      <div
-                        key={shift.id}
-                        className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${
-                          statusColors[shift.status] || 'bg-gray-400'
-                        } text-white truncate`}
-                        onClick={() => onShiftClick && onShiftClick(shift)}
-                        title={`${shift.start_time} - ${
-                          Array.isArray(carers) ? carers.find(c => c.id === shift.carer_id)?.full_name || 'Unassigned' : 'Unassigned'
-                        }`}
-                      >
-                        {shift.start_time} {shift.carer_id ? '✓' : '!'}
-                      </div>
-                    ))}
+                    {Array.isArray(dayShifts) && dayShifts.slice(0, 3).map((shift) => {
+                      if (!shift) return null;
+                      
+                      return (
+                        <div
+                          key={shift.id}
+                          className={`text-xs p-1 rounded cursor-pointer hover:opacity-80 ${
+                            statusColors[shift.status] || 'bg-gray-400'
+                          } text-white truncate`}
+                          onClick={() => onShiftClick && onShiftClick(shift)}
+                          title={`${shift.start_time} - ${
+                            Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id)?.full_name || 'Unassigned' : 'Unassigned'
+                          }`}
+                        >
+                          {shift.start_time} {shift.carer_id ? '✓' : '!'}
+                        </div>
+                      );
+                    })}
                     {dayShifts.length > 3 && (
                       <div className="text-xs text-gray-500 pl-1">
                         +{dayShifts.length - 3} more

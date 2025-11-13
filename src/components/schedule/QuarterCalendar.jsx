@@ -22,6 +22,7 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
   const getShiftsForWeek = (weekStart) => {
     const weekEnd = addDays(weekStart, 6);
     return Array.isArray(shifts) ? shifts.filter(shift => {
+      if (!shift || !shift.date) return false;
       try {
         const shiftDate = parseISO(shift.date);
         return isWithinInterval(shiftDate, { start: weekStart, end: weekEnd });
@@ -32,12 +33,12 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
   };
 
   const getWeekStats = (weekShifts) => {
-    const shiftsArray = Array.isArray(weekShifts) ? weekShifts : [];
+    const shiftsArray = Array.isArray(weekShifts) ? weekShifts.filter(s => s) : [];
     return {
       total: shiftsArray.length,
-      filled: shiftsArray.filter(s => s.carer_id).length,
-      completed: shiftsArray.filter(s => s.status === 'completed').length,
-      unfilled: shiftsArray.filter(s => !s.carer_id).length,
+      filled: shiftsArray.filter(s => s && s.carer_id).length,
+      completed: shiftsArray.filter(s => s && s.status === 'completed').length,
+      unfilled: shiftsArray.filter(s => s && !s.carer_id).length,
     };
   };
 
@@ -45,7 +46,7 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
     setStartDate(addDays(startDate, days));
   };
 
-  const shiftsArray = Array.isArray(shifts) ? shifts : [];
+  const shiftsArray = Array.isArray(shifts) ? shifts.filter(s => s) : [];
 
   return (
     <div className="space-y-4">
@@ -102,7 +103,7 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Filled</p>
             <p className="text-2xl font-bold text-green-600">
-              {shiftsArray.filter(s => s.carer_id).length}
+              {shiftsArray.filter(s => s && s.carer_id).length}
             </p>
           </CardContent>
         </Card>
@@ -110,7 +111,7 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
           <CardContent className="p-4">
             <p className="text-sm text-gray-600 mb-1">Unfilled</p>
             <p className="text-2xl font-bold text-orange-600">
-              {shiftsArray.filter(s => !s.carer_id).length}
+              {shiftsArray.filter(s => s && !s.carer_id).length}
             </p>
           </CardContent>
         </Card>
@@ -119,7 +120,7 @@ export default function QuarterCalendar({ shifts = [], carers = [], clients = []
             <p className="text-sm text-gray-600 mb-1">Fill Rate</p>
             <p className="text-2xl font-bold text-blue-600">
               {shiftsArray.length > 0 
-                ? Math.round((shiftsArray.filter(s => s.carer_id).length / shiftsArray.length) * 100)
+                ? Math.round((shiftsArray.filter(s => s && s.carer_id).length / shiftsArray.length) * 100)
                 : 0}%
             </p>
           </CardContent>
