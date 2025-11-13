@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -24,6 +25,7 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
+import TaskManager from "../components/tasks/TaskManager";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -198,6 +200,13 @@ export default function Clients() {
               Details
             </Button>
             <Button
+              variant={activeTab === "tasks" ? "default" : "ghost"}
+              onClick={() => setActiveTab("tasks")}
+              className="flex-shrink-0"
+            >
+              Care Tasks
+            </Button>
+            <Button
               variant={activeTab === "alerts" ? "default" : "ghost"}
               onClick={() => setActiveTab("alerts")}
               className="flex-shrink-0"
@@ -351,6 +360,10 @@ export default function Clients() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === "tasks" && (
+            <TaskManager client={selectedClient} />
           )}
 
           {activeTab === "alerts" && (
