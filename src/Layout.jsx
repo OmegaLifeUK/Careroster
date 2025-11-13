@@ -1,3 +1,4 @@
+
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -36,6 +37,7 @@ const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
   { title: "Manager Dashboard", url: createPageUrl("ManagerDashboard"), icon: LayoutDashboard },
   { title: "Schedule", url: createPageUrl("Schedule"), icon: Calendar },
+  { title: "Messaging Center", url: createPageUrl("MessagingCenter"), icon: MessageSquare },
   { title: "Carers", url: createPageUrl("Carers"), icon: Users },
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
   { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
