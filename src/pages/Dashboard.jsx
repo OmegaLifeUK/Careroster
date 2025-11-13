@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -27,6 +28,8 @@ import RecentActivity from "../components/dashboard/RecentActivity";
 import QuickActions from "../components/dashboard/QuickActions";
 import MainDashboardCustomizer from "../components/dashboard/MainDashboardCustomizer";
 import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
+import AlertBanner from "../components/alerts/AlertBanner";
+import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
 
 const DEFAULT_PREFERENCES = {
   statsCards: true,
@@ -62,59 +65,62 @@ export default function Dashboard() {
 
   const { data: carers = [], isLoading: carersLoading } = useQuery({
     queryKey: ['carers'],
-    queryFn: async () => {
-      const data = await base44.entities.Carer.list();
-      return Array.isArray(data) ? data : [];
-    },
+    queryFn: () => base44.entities.Carer.list(),
   });
 
   const { data: clients = [], isLoading: clientsLoading } = useQuery({
     queryKey: ['clients'],
-    queryFn: async () => {
-      const data = await base44.entities.Client.list();
-      return Array.isArray(data) ? data : [];
-    },
+    queryFn: () => base44.entities.Client.list(),
   });
 
   const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
     queryKey: ['shifts'],
-    queryFn: async () => {
-      const data = await base44.entities.Shift.list('-date');
-      return Array.isArray(data) ? data : [];
-    },
+    queryFn: () => base44.entities.Shift.list('-date'),
   });
 
   const { data: leaveRequests = [], isLoading: leaveLoading } = useQuery({
     queryKey: ['leave-requests'],
+    queryFn: () => base44.entities.LeaveRequest.list('-created_date'),
+  });
+
+  const { data: alerts = [] } = useQuery({
+    queryKey: ['client-alerts'],
     queryFn: async () => {
-      const data = await base44.entities.LeaveRequest.list('-created_date');
+      const data = await base44.entities.ClientAlert.filter({ status: 'active' });
+      return Array.isArray(data) ? data : [];
+    },
+    refetchInterval: 60000,
+  });
+
+  const { data: medications = [] } = useQuery({
+    queryKey: ['medications'],
+    queryFn: async () => {
+      const data = await base44.entities.MedicationLog.list('-administration_time');
       return Array.isArray(data) ? data : [];
     },
   });
 
-  const activeCarers = Array.isArray(carers) ? carers.filter(c => c && c.status === 'active').length : 0;
-  const activeClients = Array.isArray(clients) ? clients.filter(c => c && c.status === 'active').length : 0;
+  const activeCarers = carers.filter(c => c.status === 'active').length;
+  const activeClients = clients.filter(c => c.status === 'active').length;
   
-  const todayShifts = Array.isArray(shifts) ? shifts.filter(shift => {
-    if (!shift || !shift.date) return false;
+  const todayShifts = shifts.filter(shift => {
     try {
       return isToday(parseISO(shift.date));
     } catch {
       return false;
     }
-  }) : [];
+  });
 
-  const upcomingShifts = Array.isArray(shifts) ? shifts.filter(shift => {
-    if (!shift || !shift.date) return false;
+  const upcomingShifts = shifts.filter(shift => {
     try {
       return isFuture(parseISO(shift.date));
     } catch {
       return false;
     }
-  }).length : 0;
+  }).length;
 
-  const unfilledShifts = Array.isArray(shifts) ? shifts.filter(s => s && s.status === 'unfilled').length : 0;
-  const pendingLeave = Array.isArray(leaveRequests) ? leaveRequests.filter(r => r && r.status === 'pending').length : 0;
+  const unfilledShifts = shifts.filter(s => s.status === 'unfilled').length;
+  const pendingLeave = leaveRequests.filter(r => r.status === 'pending').length;
 
   const isLoading = carersLoading || clientsLoading || shiftsLoading || leaveLoading;
 
@@ -132,7 +138,15 @@ export default function Dashboard() {
   };
 
   return (
-    <div className="p-4 md:p-8">
+    <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+      {/* System Alert Monitor */}
+      <SystemAlertMonitor 
+        shifts={shifts} 
+        medications={medications} 
+        clients={clients}
+        carers={carers}
+      />
+
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
@@ -148,6 +162,9 @@ export default function Dashboard() {
             Customize
           </Button>
         </div>
+
+        {/* Alert Banner */}
+        <AlertBanner alerts={alerts} />
 
         {modulePreferences.smartSuggestions && (
           <div className="mb-8">

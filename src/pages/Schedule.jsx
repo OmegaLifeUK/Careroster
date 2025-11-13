@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -25,6 +26,7 @@ import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
 import RecurringShiftDialog from "../components/schedule/RecurringShiftDialog";
 import { DragDropScheduler } from "../components/schedule/DragDropScheduler";
 import ShiftRequestDialog from "../components/messaging/ShiftRequestDialog";
+import AlertBanner from "../components/alerts/AlertBanner";
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState("week");
@@ -69,6 +71,18 @@ export default function Schedule() {
       const data = await base44.entities.LeaveRequest.list();
       return Array.isArray(data) ? data : [];
     },
+  });
+
+  const { data: alerts = [] } = useQuery({
+    queryKey: ['client-alerts'],
+    queryFn: async () => {
+      const data = await base44.entities.ClientAlert.filter({
+        status: 'active',
+        display_on_sections: 'schedule'
+      });
+      return Array.isArray(data) ? data : [];
+    },
+    refetchInterval: 60000,
   });
 
   const deleteShiftMutation = useMutation({
@@ -294,6 +308,9 @@ export default function Schedule() {
             </Button>
           </div>
         </div>
+
+        {/* Alert Banner - Show schedule-related alerts */}
+        <AlertBanner alerts={alerts} />
 
         {suggestions.length > 0 && (
           <div className="mb-6">

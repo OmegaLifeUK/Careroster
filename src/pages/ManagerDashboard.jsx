@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -29,6 +30,8 @@ import { Link } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
+import AlertsWidget from "../components/alerts/AlertsWidget";
+import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
 
 const DEFAULT_PREFERENCES = {
   occupancy: true,
@@ -37,6 +40,7 @@ const DEFAULT_PREFERENCES = {
   incidents: true,
   finance: true,
   communication: true,
+  alerts: true,
 };
 
 export default function ManagerDashboard() {
@@ -122,6 +126,7 @@ export default function ManagerDashboard() {
       const data = await base44.entities.ClientAlert.filter({ status: 'active' });
       return Array.isArray(data) ? data : [];
     },
+    refetchInterval: 60000, // Refetch every minute
   });
 
   const { data: leaveRequests = [] } = useQuery({
@@ -290,6 +295,14 @@ COMMUNICATION
 
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
+      {/* System Alert Monitor - runs in background */}
+      <SystemAlertMonitor 
+        shifts={shifts} 
+        medications={medications} 
+        clients={clients}
+        carers={carers}
+      />
+
       <div className="max-w-7xl mx-auto">
         <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-4">
           <div>
@@ -358,6 +371,13 @@ COMMUNICATION
 
         {/* Dynamic Widgets Based on Preferences */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+          {/* System Alerts Widget - Always show if enabled and has alerts */}
+          {modulePreferences.alerts && (
+            <div className="md:col-span-2">
+              <AlertsWidget alerts={alerts} compact={false} showAll={false} />
+            </div>
+          )}
+
           {/* Occupancy Widget */}
           {modulePreferences.occupancy && (
             <Card className="shadow-lg">
