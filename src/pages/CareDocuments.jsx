@@ -20,7 +20,10 @@ import {
   ThumbsUp,
   MessageSquare,
   Zap,
-  X
+  X,
+  CheckCircle,
+  XCircle,
+  Clock
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
@@ -166,6 +169,113 @@ export default function CareDocuments() {
     teal: 'bg-teal-100 text-teal-800 border-teal-300',
     cyan: 'bg-cyan-100 text-cyan-800 border-cyan-300',
     violet: 'bg-violet-100 text-violet-800 border-violet-300',
+  };
+
+  // Helper to render complex field values
+  const renderFieldValue = (key, value) => {
+    // Special handling for administration_records in MAR sheets
+    if (key === 'administration_records' && Array.isArray(value)) {
+      return (
+        <div className="space-y-3">
+          {value.map((record, idx) => (
+            <div key={idx} className="bg-white p-4 rounded border">
+              <div className="grid grid-cols-2 gap-3 text-sm">
+                <div>
+                  <span className="font-semibold">Date:</span> {record.date}
+                </div>
+                <div>
+                  <span className="font-semibold">Time Slot:</span> {record.time_slot}
+                </div>
+                <div className="flex items-center gap-2">
+                  <span className="font-semibold">Status:</span>
+                  {record.given ? (
+                    <Badge className="bg-green-100 text-green-800 flex items-center gap-1">
+                      <CheckCircle className="w-3 h-3" />
+                      Given
+                    </Badge>
+                  ) : (
+                    <Badge className="bg-red-100 text-red-800 flex items-center gap-1">
+                      <XCircle className="w-3 h-3" />
+                      Not Given
+                    </Badge>
+                  )}
+                </div>
+                <div>
+                  <span className="font-semibold">Dose:</span> {record.dose_given}
+                </div>
+                <div>
+                  <span className="font-semibold">Staff:</span> {record.staff_initials} ({record.staff_signature})
+                </div>
+                <div>
+                  <span className="font-semibold">Code:</span> <Badge variant="outline">{record.code}</Badge>
+                </div>
+                {record.notes && (
+                  <div className="col-span-2 bg-blue-50 p-2 rounded">
+                    <span className="font-semibold">Notes:</span> {record.notes}
+                  </div>
+                )}
+              </div>
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle arrays
+    if (Array.isArray(value)) {
+      if (value.length === 0) return <span className="text-gray-400">None</span>;
+      
+      // Check if array of objects
+      if (typeof value[0] === 'object') {
+        return (
+          <div className="space-y-2">
+            {value.map((item, idx) => (
+              <div key={idx} className="bg-gray-50 p-3 rounded text-sm">
+                {Object.entries(item).map(([k, v]) => (
+                  <div key={k} className="mb-1">
+                    <span className="font-semibold">{k.replace(/_/g, ' ')}:</span> {String(v)}
+                  </div>
+                ))}
+              </div>
+            ))}
+          </div>
+        );
+      }
+      
+      // Simple array
+      return (
+        <div className="flex flex-wrap gap-1">
+          {value.map((item, idx) => (
+            <Badge key={idx} variant="outline">{String(item)}</Badge>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle objects
+    if (typeof value === 'object' && value !== null) {
+      return (
+        <div className="bg-gray-50 p-3 rounded space-y-1 text-sm">
+          {Object.entries(value).map(([k, v]) => (
+            <div key={k}>
+              <span className="font-semibold">{k.replace(/_/g, ' ')}:</span> {String(v)}
+            </div>
+          ))}
+        </div>
+      );
+    }
+
+    // Handle dates
+    if (typeof value === 'string' && (key.includes('date') || key.includes('time'))) {
+      try {
+        return format(parseISO(value), 'PPP');
+      } catch {
+        return String(value);
+      }
+    }
+
+    // Default: plain text
+    return <p>{String(value)}</p>;
   };
 
   return (
@@ -380,7 +490,7 @@ export default function CareDocuments() {
         {selectedDocument && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
             <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
-              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between">
+              <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-3">
                   <selectedDocument.icon className="w-6 h-6 text-blue-600" />
                   <h2 className="text-2xl font-bold">{selectedDocument.docType}</h2>
@@ -407,17 +517,11 @@ export default function CareDocuments() {
                     
                     return (
                       <div key={key} className="border-b pb-3">
-                        <h4 className="font-semibold text-sm text-gray-600 uppercase mb-1">
+                        <h4 className="font-semibold text-sm text-gray-600 uppercase mb-2">
                           {key.replace(/_/g, ' ')}
                         </h4>
                         <div className="text-gray-900">
-                          {typeof value === 'object' ? (
-                            <pre className="bg-gray-50 p-3 rounded text-xs overflow-x-auto">
-                              {JSON.stringify(value, null, 2)}
-                            </pre>
-                          ) : (
-                            <p>{String(value)}</p>
-                          )}
+                          {renderFieldValue(key, value)}
                         </div>
                       </div>
                     );
