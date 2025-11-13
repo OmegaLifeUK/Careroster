@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -140,6 +141,7 @@ export default function Schedule() {
     if (!Array.isArray(data) || !Array.isArray(filterList)) return data;
     
     return data.filter(item => {
+      if (!item) return false; // Added check for null/undefined items
       return filterList.every(filter => {
         const value = item[filter.field];
         const filterValue = filter.value;
@@ -374,7 +376,7 @@ export default function Schedule() {
           </Tooltip>
         </div>
 
-        <ConflictDetector shifts={filteredShifts} carers={carers} leaveRequests={leaveRequests} />
+        <ConflictDetector shifts={filteredShifts} carers={carers} clients={clients} leaveRequests={leaveRequests} />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
@@ -428,6 +430,7 @@ export default function Schedule() {
             carers={carers}
             clients={clients}
             onShiftClick={handleEdit}
+            onShiftUpdate={handleShiftUpdate}
           />
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -450,15 +453,13 @@ export default function Schedule() {
               filteredShifts.map((shift) => {
                 if (!shift) return null;
                 
-                const carer = Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id) : null;
-                const client = Array.isArray(clients) ? clients.find(c => c && c.id === shift.client_id) : null;
-                
+                // Removed direct carer/client lookup here, ShiftCard will now handle it from arrays
                 return (
                   <ShiftCard
                     key={shift.id}
                     shift={shift}
-                    carer={carer}
-                    client={client}
+                    carers={carers} // Pass full carers array
+                    clients={clients} // Pass full clients array
                     onEdit={() => handleEdit(shift)}
                     onDelete={() => handleDelete(shift.id)}
                   />
