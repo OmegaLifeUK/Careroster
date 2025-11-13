@@ -23,15 +23,19 @@ import {
   X,
   CheckCircle,
   XCircle,
-  Clock
+  Clock,
+  Table,
+  List
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import MARSheetTableView from "../components/clients/MARSheetTableView";
 
 export default function CareDocuments() {
   const [searchQuery, setSearchQuery] = useState("");
   const [documentTypeFilter, setDocumentTypeFilter] = useState("all");
   const [selectedClient, setSelectedClient] = useState("all");
   const [selectedDocument, setSelectedDocument] = useState(null);
+  const [marViewMode, setMarViewMode] = useState("list"); // "list" or "table"
 
   // Fetch all clients
   const { data: clients = [] } = useQuery({
@@ -150,6 +154,10 @@ export default function CareDocuments() {
   const getClientName = (clientId) => {
     const client = clients.find(c => c.id === clientId);
     return client?.full_name || 'Unknown Client';
+  };
+
+  const getClient = (clientId) => {
+    return clients.find(c => c.id === clientId);
   };
 
   const getClientType = (clientId) => {
@@ -474,7 +482,10 @@ export default function CareDocuments() {
                       <Button 
                         variant="outline" 
                         size="sm"
-                        onClick={() => setSelectedDocument(doc)}
+                        onClick={() => {
+                          setSelectedDocument(doc);
+                          setMarViewMode("list");
+                        }}
                       >
                         View Details
                       </Button>
@@ -489,7 +500,7 @@ export default function CareDocuments() {
         {/* Document Detail Modal */}
         {selectedDocument && (
           <div className="fixed inset-0 bg-black/50 z-50 flex items-center justify-center p-4">
-            <div className="bg-white rounded-lg max-w-4xl w-full max-h-[90vh] overflow-y-auto">
+            <div className="bg-white rounded-lg max-w-6xl w-full max-h-[90vh] overflow-y-auto">
               <div className="sticky top-0 bg-white border-b p-4 flex items-center justify-between z-10">
                 <div className="flex items-center gap-3">
                   <selectedDocument.icon className="w-6 h-6 text-blue-600" />
@@ -498,35 +509,66 @@ export default function CareDocuments() {
                     {getClientType(selectedDocument.client_id || selectedDocument.staff_id)}
                   </Badge>
                 </div>
-                <Button variant="ghost" size="icon" onClick={() => setSelectedDocument(null)}>
-                  <X className="w-5 h-5" />
-                </Button>
+                <div className="flex items-center gap-2">
+                  {selectedDocument.docType === 'MAR Sheet' && (
+                    <div className="flex gap-1 mr-4">
+                      <Button
+                        variant={marViewMode === "list" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setMarViewMode("list")}
+                      >
+                        <List className="w-4 h-4 mr-1" />
+                        List
+                      </Button>
+                      <Button
+                        variant={marViewMode === "table" ? "default" : "outline"}
+                        size="sm"
+                        onClick={() => setMarViewMode("table")}
+                      >
+                        <Table className="w-4 h-4 mr-1" />
+                        Table
+                      </Button>
+                    </div>
+                  )}
+                  <Button variant="ghost" size="icon" onClick={() => setSelectedDocument(null)}>
+                    <X className="w-5 h-5" />
+                  </Button>
+                </div>
               </div>
 
               <div className="p-6">
-                <div className="mb-6">
-                  <h3 className="text-lg font-semibold mb-2">Client Information</h3>
-                  <p className="text-gray-700">
-                    <strong>Name:</strong> {getClientName(selectedDocument.client_id || selectedDocument.staff_id)}
-                  </p>
-                </div>
+                {selectedDocument.docType === 'MAR Sheet' && marViewMode === 'table' ? (
+                  <MARSheetTableView 
+                    marSheet={selectedDocument} 
+                    client={getClient(selectedDocument.client_id)} 
+                  />
+                ) : (
+                  <>
+                    <div className="mb-6">
+                      <h3 className="text-lg font-semibold mb-2">Client Information</h3>
+                      <p className="text-gray-700">
+                        <strong>Name:</strong> {getClientName(selectedDocument.client_id || selectedDocument.staff_id)}
+                      </p>
+                    </div>
 
-                <div className="space-y-4">
-                  {Object.entries(selectedDocument).map(([key, value]) => {
-                    if (key === 'id' || key === 'docType' || key === 'icon' || key === 'color' || !value) return null;
-                    
-                    return (
-                      <div key={key} className="border-b pb-3">
-                        <h4 className="font-semibold text-sm text-gray-600 uppercase mb-2">
-                          {key.replace(/_/g, ' ')}
-                        </h4>
-                        <div className="text-gray-900">
-                          {renderFieldValue(key, value)}
-                        </div>
-                      </div>
-                    );
-                  })}
-                </div>
+                    <div className="space-y-4">
+                      {Object.entries(selectedDocument).map(([key, value]) => {
+                        if (key === 'id' || key === 'docType' || key === 'icon' || key === 'color' || !value) return null;
+                        
+                        return (
+                          <div key={key} className="border-b pb-3">
+                            <h4 className="font-semibold text-sm text-gray-600 uppercase mb-2">
+                              {key.replace(/_/g, ' ')}
+                            </h4>
+                            <div className="text-gray-900">
+                              {renderFieldValue(key, value)}
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </>
+                )}
               </div>
 
               <div className="sticky bottom-0 bg-white border-t p-4">
