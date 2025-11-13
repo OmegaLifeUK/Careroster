@@ -14,6 +14,23 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/components/ui/toast";
 import { Checkbox } from "@/components/ui/checkbox";
 
+const priorityColors = {
+  low: "bg-blue-100 text-blue-800",
+  medium: "bg-yellow-100 text-yellow-800",
+  high: "bg-orange-100 text-orange-800",
+  critical: "bg-red-100 text-red-800",
+};
+
+const frequencyLabels = {
+  every_visit: "Every Visit/Shift",
+  daily: "Daily",
+  twice_daily: "Twice Daily",
+  three_times_daily: "3x Daily",
+  weekly: "Weekly",
+  as_needed: "As Needed",
+  specific_times: "Specific Times",
+};
+
 export default function GenerateTasksDialog({ client, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedTasks, setGeneratedTasks] = useState([]);
@@ -122,13 +139,6 @@ Be specific and practical. Cover all aspects of their care needs.`;
     createTasksMutation.mutate(tasksToCreate);
   };
 
-  const priorityColors = {
-    low: "bg-blue-100 text-blue-800",
-    medium: "bg-yellow-100 text-yellow-800",
-    high: "bg-orange-100 text-orange-800",
-    critical: "bg-red-100 text-red-800",
-  };
-
   return (
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
@@ -224,29 +234,26 @@ Be specific and practical. Cover all aspects of their care needs.`;
                         <p className="text-sm text-gray-600 mb-2">{task.description}</p>
                         
                         <div className="flex flex-wrap gap-2 text-xs">
-                          <Badge variant="outline">{frequencyLabels[task.frequency]}</Badge>
+                          <Badge variant="outline">{frequencyLabels[task.frequency] || task.frequency}</Badge>
                           {task.category && (
                             <Badge variant="outline" className="capitalize">
                               {task.category.replace('_', ' ')}
                             </Badge>
                           )}
                           {task.estimated_duration_minutes && (
-                            <div className="flex items-center gap-1 text-gray-500">
-                              <Clock className="w-3 h-3" />
+                            <Badge variant="outline">
                               {task.estimated_duration_minutes}min
-                            </div>
+                            </Badge>
                           )}
                           {task.requires_two_staff && (
-                            <div className="flex items-center gap-1 text-purple-700">
-                              <Users className="w-3 h-3" />
+                            <Badge className="bg-purple-100 text-purple-800">
                               2 Staff
-                            </div>
+                            </Badge>
                           )}
                           {(task.alerts_if_missed || task.alerts_if_refused) && (
-                            <div className="flex items-center gap-1 text-orange-700">
-                              <AlertCircle className="w-3 h-3" />
+                            <Badge className="bg-orange-100 text-orange-800">
                               Alerts
-                            </div>
+                            </Badge>
                           )}
                         </div>
 
