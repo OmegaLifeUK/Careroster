@@ -1,10 +1,9 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, Sparkles, List, Grid, Shuffle, CalendarDays, CalendarRange, Repeat } from "lucide-react";
+import { Calendar, Plus, Sparkles, List, Grid, Shuffle, CalendarDays, CalendarRange, Repeat, Send } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { QuickFilters } from "@/components/ui/quick-filters";
 import { useToast } from "@/components/ui/toast";
@@ -25,6 +24,7 @@ import ConflictDetector from "../components/schedule/ConflictDetector";
 import SplitScreenScheduler from "../components/schedule/SplitScreenScheduler";
 import RecurringShiftDialog from "../components/schedule/RecurringShiftDialog";
 import { DragDropScheduler } from "../components/schedule/DragDropScheduler";
+import ShiftRequestDialog from "../components/messaging/ShiftRequestDialog";
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState("week");
@@ -33,6 +33,8 @@ export default function Schedule() {
   const [editingShift, setEditingShift] = useState(null);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [showRecurringDialog, setShowRecurringDialog] = useState(false);
+  const [showShiftRequest, setShowShiftRequest] = useState(false);
+  const [requestingShift, setRequestingShift] = useState(null);
   const [savedViews, setSavedViews] = useState([]);
   const { toast } = useToast();
   const queryClient = useQueryClient();
@@ -137,11 +139,17 @@ export default function Schedule() {
     updateShiftMutation.mutate({ id: shiftId, data: updates });
   };
 
+  const handleSendRequest = (shift) => {
+    const client = Array.isArray(clients) ? clients.find(c => c && c.id === shift.client_id) : null;
+    setRequestingShift({ ...shift, client });
+    setShowShiftRequest(true);
+  };
+
   const applyAdvancedFilters = (data, filterList) => {
     if (!Array.isArray(data) || !Array.isArray(filterList)) return data;
     
     return data.filter(item => {
-      if (!item) return false; // Added check for null/undefined items
+      if (!item) return false;
       return filterList.every(filter => {
         const value = item[filter.field];
         const filterValue = filter.value;
@@ -453,15 +461,15 @@ export default function Schedule() {
               filteredShifts.map((shift) => {
                 if (!shift) return null;
                 
-                // Removed direct carer/client lookup here, ShiftCard will now handle it from arrays
                 return (
                   <ShiftCard
                     key={shift.id}
                     shift={shift}
-                    carers={carers} // Pass full carers array
-                    clients={clients} // Pass full clients array
+                    carers={carers}
+                    clients={clients}
                     onEdit={() => handleEdit(shift)}
                     onDelete={() => handleDelete(shift.id)}
+                    onSendRequest={() => handleSendRequest(shift)}
                   />
                 );
               })
@@ -495,6 +503,18 @@ export default function Schedule() {
             onClose={() => setShowRecurringDialog(false)}
             carers={carers}
             clients={clients}
+          />
+        )}
+
+        {showShiftRequest && requestingShift && (
+          <ShiftRequestDialog
+            shift={requestingShift}
+            client={requestingShift.client}
+            carers={carers}
+            onClose={() => {
+              setShowShiftRequest(false);
+              setRequestingShift(null);
+            }}
           />
         )}
       </div>

@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, MapPin, Edit, Trash2, Calendar } from "lucide-react";
+import { Clock, User, MapPin, Edit, Trash2, Calendar, Send } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 const statusColors = {
@@ -15,7 +15,7 @@ const statusColors = {
   draft: "bg-gray-100 text-gray-800",
 };
 
-export default function ShiftCard({ shift, carers = [], clients = [], onEdit, onDelete }) {
+export default function ShiftCard({ shift, carers = [], clients = [], onEdit, onDelete, onSendRequest }) {
   if (!shift) return null;
   
   const carer = Array.isArray(carers) ? carers.find(c => c && c.id === shift.carer_id) : null;
@@ -94,6 +94,17 @@ export default function ShiftCard({ shift, carers = [], clients = [], onEdit, on
         )}
 
         <div className="flex gap-2">
+          {(shift.status === 'unfilled' || !shift.carer_id) && onSendRequest && (
+            <Button
+              variant="default"
+              size="sm"
+              onClick={onSendRequest}
+              className="flex-1 bg-purple-600 hover:bg-purple-700"
+            >
+              <Send className="w-4 h-4 mr-2" />
+              Request Carers
+            </Button>
+          )}
           <Button
             variant="outline"
             size="sm"
