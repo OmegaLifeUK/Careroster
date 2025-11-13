@@ -26,8 +26,15 @@ export default function SmartSuggestionsWidget({
     const today = new Date();
     const nextWeek = addDays(today, 7);
 
+    // Ensure all data is arrays
+    const shiftsArray = Array.isArray(shifts) ? shifts : [];
+    const carersArray = Array.isArray(carers) ? carers : [];
+    const clientsArray = Array.isArray(clients) ? clients : [];
+    const leaveRequestsArray = Array.isArray(leaveRequests) ? leaveRequests : [];
+
     // 1. Check for unfilled shifts in the next 7 days
-    const upcomingUnfilled = shifts.filter(s => {
+    const upcomingUnfilled = shiftsArray.filter(s => {
+      if (!s) return false;
       if (s.status !== 'unfilled' && !s.carer_id) return false;
       if (!s.date) return false;
       try {
@@ -55,8 +62,8 @@ export default function SmartSuggestionsWidget({
 
     // 2. Check for overworked carers
     const carerWorkload = {};
-    shifts.forEach(shift => {
-      if (!shift.carer_id || shift.status === 'cancelled') return;
+    shiftsArray.forEach(shift => {
+      if (!shift || !shift.carer_id || shift.status === 'cancelled') return;
       if (!carerWorkload[shift.carer_id]) {
         carerWorkload[shift.carer_id] = { hours: 0, days: new Set() };
       }
@@ -69,7 +76,7 @@ export default function SmartSuggestionsWidget({
     );
 
     if (overworkedCarers.length > 0) {
-      const carer = carers.find(c => c.id === overworkedCarers[0][0]);
+      const carer = carersArray.find(c => c && c.id === overworkedCarers[0][0]);
       suggs.push({
         type: 'warning',
         title: 'Carer Workload Alert',
@@ -81,7 +88,7 @@ export default function SmartSuggestionsWidget({
     }
 
     // 3. Check for pending leave requests
-    const pendingLeave = leaveRequests.filter(r => r.status === 'pending');
+    const pendingLeave = leaveRequestsArray.filter(r => r && r.status === 'pending');
     if (pendingLeave.length > 0) {
       suggs.push({
         type: 'info',
@@ -96,8 +103,8 @@ export default function SmartSuggestionsWidget({
     }
 
     // 4. Check carer-to-client ratio
-    const activeCarers = carers.filter(c => c.status === 'active').length;
-    const activeClients = clients.filter(c => c.status === 'active').length;
+    const activeCarers = carersArray.filter(c => c && c.status === 'active').length;
+    const activeClients = clientsArray.filter(c => c && c.status === 'active').length;
     const ratio = activeClients / (activeCarers || 1);
 
     if (ratio > 5) {
@@ -114,9 +121,8 @@ export default function SmartSuggestionsWidget({
     }
 
     // 5. Check for shifts requiring specific qualifications
-    const qualifiedShifts = shifts.filter(s => 
-      s.required_qualification && 
-      s.status === 'unfilled'
+    const qualifiedShifts = shiftsArray.filter(s => 
+      s && s.required_qualification && s.status === 'unfilled'
     );
 
     if (qualifiedShifts.length > 0) {
@@ -130,8 +136,8 @@ export default function SmartSuggestionsWidget({
     }
 
     // 6. Positive insights
-    const completedThisWeek = shifts.filter(s => {
-      if (s.status !== 'completed') return false;
+    const completedThisWeek = shiftsArray.filter(s => {
+      if (!s || s.status !== 'completed') return false;
       if (!s.date) return false;
       try {
         const shiftDate = parseISO(s.date);
@@ -156,8 +162,8 @@ export default function SmartSuggestionsWidget({
     const conflictingShifts = [];
     const carerDateMap = {};
     
-    shifts.forEach(shift => {
-      if (!shift.carer_id || !shift.date) return;
+    shiftsArray.forEach(shift => {
+      if (!shift || !shift.carer_id || !shift.date) return;
       const key = `${shift.carer_id}-${shift.date}`;
       if (!carerDateMap[key]) {
         carerDateMap[key] = [];
@@ -166,11 +172,13 @@ export default function SmartSuggestionsWidget({
     });
 
     Object.values(carerDateMap).forEach(dayShifts => {
-      if (dayShifts.length < 2) return;
+      if (!Array.isArray(dayShifts) || dayShifts.length < 2) return;
       for (let i = 0; i < dayShifts.length; i++) {
         for (let j = i + 1; j < dayShifts.length; j++) {
           const s1 = dayShifts[i];
           const s2 = dayShifts[j];
+          if (!s1 || !s2) continue;
+          
           const overlap = (
             (s1.start_time >= s2.start_time && s1.start_time < s2.end_time) ||
             (s1.end_time > s2.start_time && s1.end_time <= s2.end_time) ||
@@ -197,8 +205,8 @@ export default function SmartSuggestionsWidget({
     }
 
     // 8. Optimization tip - Shift patterns
-    const morningShifts = shifts.filter(s => s.shift_type === 'morning').length;
-    const eveningShifts = shifts.filter(s => s.shift_type === 'evening').length;
+    const morningShifts = shiftsArray.filter(s => s && s.shift_type === 'morning').length;
+    const eveningShifts = shiftsArray.filter(s => s && s.shift_type === 'evening').length;
     
     if (Math.abs(morningShifts - eveningShifts) > 20) {
       suggs.push({
