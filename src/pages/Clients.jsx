@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -121,7 +120,6 @@ export default function Clients() {
     archived: "bg-red-100 text-red-800",
   };
 
-  // Prepare data for export
   const exportData = filteredClients.map(client => ({
     full_name: client?.full_name || '',
     date_of_birth: client?.date_of_birth || '',
@@ -187,10 +185,8 @@ export default function Clients() {
             </div>
           </div>
 
-          {/* Alert Banner */}
           <AlertBanner clientId={selectedClient.id} section={activeTab} compact={true} />
 
-          {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
             <Button
               variant={activeTab === "details" ? "default" : "ghost"}
@@ -292,7 +288,6 @@ export default function Clients() {
             </Button>
           </div>
 
-          {/* Tab Content */}
           {activeTab === "details" && (
             <Card>
               <CardContent className="p-6">

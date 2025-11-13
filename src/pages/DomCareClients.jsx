@@ -21,6 +21,7 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
+import TaskManager from "../components/tasks/TaskManager";
 
 export default function DomCareClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -115,10 +116,8 @@ export default function DomCareClients() {
             </div>
           </div>
 
-          {/* Alert Banner */}
           <AlertBanner clientId={selectedClient.id} section={activeTab} compact={true} />
 
-          {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
             <Button
               variant={activeTab === "details" ? "default" : "ghost"}
@@ -126,6 +125,13 @@ export default function DomCareClients() {
               className="flex-shrink-0"
             >
               Details
+            </Button>
+            <Button
+              variant={activeTab === "tasks" ? "default" : "ghost"}
+              onClick={() => setActiveTab("tasks")}
+              className="flex-shrink-0"
+            >
+              Care Tasks
             </Button>
             <Button
               variant={activeTab === "alerts" ? "default" : "ghost"}
@@ -213,7 +219,6 @@ export default function DomCareClients() {
             </Button>
           </div>
 
-          {/* Tab Content */}
           {activeTab === "details" && (
             <Card>
               <CardContent className="p-6">
@@ -281,6 +286,10 @@ export default function DomCareClients() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === "tasks" && (
+            <TaskManager client={selectedClient} />
           )}
 
           {activeTab === "alerts" && (

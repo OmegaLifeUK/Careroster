@@ -16,8 +16,6 @@ import {
   Utensils,
   Activity,
   Bus,
-  Clock,
-  User,
   Eye,
   Sparkles
 } from "lucide-react";
@@ -35,6 +33,7 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
+import TaskManager from "../components/tasks/TaskManager";
 
 export default function DayCentreClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -157,7 +156,6 @@ export default function DayCentreClients() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
             <Button
               variant={activeTab === "details" ? "default" : "ghost"}
@@ -165,6 +163,13 @@ export default function DayCentreClients() {
               className="flex-shrink-0"
             >
               Details
+            </Button>
+            <Button
+              variant={activeTab === "tasks" ? "default" : "ghost"}
+              onClick={() => setActiveTab("tasks")}
+              className="flex-shrink-0"
+            >
+              Care Tasks
             </Button>
             <Button
               variant={activeTab === "alerts" ? "default" : "ghost"}
@@ -252,7 +257,6 @@ export default function DayCentreClients() {
             </Button>
           </div>
 
-          {/* Tab Content */}
           {activeTab === "details" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <Card className="lg:col-span-2">
@@ -382,6 +386,10 @@ export default function DayCentreClients() {
                 </Card>
               </div>
             </div>
+          )}
+
+          {activeTab === "tasks" && (
+            <TaskManager client={selectedClient} />
           )}
 
           {activeTab === "alerts" && (

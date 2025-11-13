@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Home, Clock, Target, Trash2, Mail, Eye, Sparkles } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Home, Target, Trash2, Mail, Eye, Sparkles } from "lucide-react";
 
 import MedicationManagement from "../components/clients/MedicationManagement";
 import ConsentManagement from "../components/clients/ConsentManagement";
@@ -20,6 +20,7 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
+import TaskManager from "../components/tasks/TaskManager";
 
 export default function SupportedLivingClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -138,7 +139,6 @@ export default function SupportedLivingClients() {
             </div>
           </div>
 
-          {/* Tabs */}
           <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
             <Button
               variant={activeTab === "details" ? "default" : "ghost"}
@@ -146,6 +146,13 @@ export default function SupportedLivingClients() {
               className="flex-shrink-0"
             >
               Details
+            </Button>
+            <Button
+              variant={activeTab === "tasks" ? "default" : "ghost"}
+              onClick={() => setActiveTab("tasks")}
+              className="flex-shrink-0"
+            >
+              Care Tasks
             </Button>
             <Button
               variant={activeTab === "alerts" ? "default" : "ghost"}
@@ -233,7 +240,6 @@ export default function SupportedLivingClients() {
             </Button>
           </div>
 
-          {/* Tab Content */}
           {activeTab === "details" && (
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
               <Card className="lg:col-span-2">
@@ -358,6 +364,10 @@ export default function SupportedLivingClients() {
                 )}
               </div>
             </div>
+          )}
+
+          {activeTab === "tasks" && (
+            <TaskManager client={selectedClient} />
           )}
 
           {activeTab === "alerts" && (
