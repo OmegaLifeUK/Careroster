@@ -168,12 +168,22 @@ export default function IncidentManagement() {
 
   if (selectedIncident) {
     return (
-      <IncidentDetail
-        incident={selectedIncident}
-        clients={allClients}
-        staff={allStaff}
-        onClose={() => setSelectedIncident(null)}
-      />
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <Button variant="outline" onClick={() => setSelectedIncident(null)} className="mb-4">
+            ← Back to Incidents
+          </Button>
+          <IncidentDetail
+            incident={selectedIncident}
+            clients={allClients}
+            staff={allStaff}
+            onClose={() => setSelectedIncident(null)}
+          />
+          <div className="mt-6">
+            <AIIncidentAnalyzer incident={selectedIncident} />
+          </div>
+        </div>
+      </div>
     );
   }
 

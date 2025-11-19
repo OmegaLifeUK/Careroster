@@ -148,6 +148,14 @@ export default function StaffTraining() {
             <Users className="w-4 h-4 mr-2" />
             Compliance Report
           </Button>
+          <Button
+            variant={activeTab === "ai_insights" ? "default" : "ghost"}
+            onClick={() => setActiveTab("ai_insights")}
+            className="flex-shrink-0"
+          >
+            <TrendingUp className="w-4 h-4 mr-2" />
+            AI Insights
+          </Button>
         </div>
 
         {/* Tab Content */}
@@ -170,6 +178,10 @@ export default function StaffTraining() {
             carers={carers}
             isLoading={modulesLoading || assignmentsLoading}
           />
+        )}
+
+        {activeTab === "ai_insights" && (
+          <AITrainingAnalyzer />
         )}
 
         {showAssignDialog && (
