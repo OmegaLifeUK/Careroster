@@ -94,6 +94,8 @@ const complianceNav = [
 const systemNavigation = [
   { title: "Module Settings", url: createPageUrl("ModuleSettings"), icon: Settings, adminOnly: true },
   { title: "User Management", url: createPageUrl("UserManagement"), icon: Users, adminOnly: true },
+  { title: "Role Management", url: createPageUrl("RoleManagement"), icon: Shield, adminOnly: true },
+  { title: "Role Assignments", url: createPageUrl("StaffRoleAssignments"), icon: Shield, adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {
