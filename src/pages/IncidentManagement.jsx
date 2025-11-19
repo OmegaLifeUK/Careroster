@@ -16,7 +16,8 @@ import {
   FileText,
   Eye,
   Clock,
-  CheckCircle
+  CheckCircle,
+  Sparkles
 } from "lucide-react";
 import { format, parseISO, isWithinInterval, subMonths } from "date-fns";
 
@@ -44,6 +45,7 @@ const STATUS_COLORS = {
 export default function IncidentManagement() {
   const [showForm, setShowForm] = useState(false);
   const [selectedIncident, setSelectedIncident] = useState(null);
+  const [showPredictive, setShowPredictive] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
   const [filterStatus, setFilterStatus] = useState("all");
@@ -167,6 +169,23 @@ export default function IncidentManagement() {
     link.click();
   };
 
+  if (showPredictive) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <Button variant="outline" onClick={() => setShowPredictive(false)} className="mb-6">
+            ← Back to Incidents
+          </Button>
+          <PredictiveIncidentAnalyzer 
+            incidents={filteredIncidents}
+            clients={allClients}
+            staff={allStaff}
+          />
+        </div>
+      </div>
+    );
+  }
+
   if (selectedIncident) {
     return (
       <div className="p-4 md:p-8">
@@ -214,6 +233,14 @@ export default function IncidentManagement() {
             <Button onClick={exportToCSV} variant="outline">
               <Download className="w-4 h-4 mr-2" />
               Export
+            </Button>
+            <Button 
+              onClick={() => setShowPredictive(true)}
+              variant="outline"
+              className="border-purple-600 text-purple-600 hover:bg-purple-50"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Prevention
             </Button>
             <Button onClick={() => setShowForm(true)} className="bg-red-600 hover:bg-red-700">
               <Plus className="w-4 h-4 mr-2" />
