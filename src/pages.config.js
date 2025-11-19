@@ -34,7 +34,9 @@ import ClientPortalBookings from './pages/ClientPortalBookings';
 import UserManagement from './pages/UserManagement';
 import CareDocuments from './pages/CareDocuments';
 import MessagingCenter from './pages/MessagingCenter';
-import Layout from './Layout.jsx';
+import ComplianceHub from './pages/ComplianceHub';
+import ActionPlans from './pages/ActionPlans';
+import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
@@ -74,10 +76,12 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "CareDocuments": CareDocuments,
     "MessagingCenter": MessagingCenter,
+    "ComplianceHub": ComplianceHub,
+    "ActionPlans": ActionPlans,
 }
 
 export const pagesConfig = {
     mainPage: "Dashboard",
     Pages: PAGES,
-    Layout: Layout,
+    Layout: __Layout,
 };
