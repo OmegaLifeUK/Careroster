@@ -498,6 +498,13 @@ export default function Layout({ children, currentPageName }) {
                 </div>
               </div>
               <button
+                onClick={() => setAccessibilityOpen(true)}
+                className="w-full flex items-center gap-2 px-3 py-2 mb-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
+              >
+                <Eye className="w-4 h-4" />
+                <span>Accessibility</span>
+              </button>
+              <button
                 onClick={handleLogout}
                 className="w-full flex items-center gap-2 px-3 py-2 text-sm text-gray-700 hover:bg-gray-100 rounded-lg transition-colors"
               >
