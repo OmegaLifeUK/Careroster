@@ -39,6 +39,10 @@ import ActionPlans from './pages/ActionPlans';
 import Audits from './pages/Audits';
 import RegulatoryNotifications from './pages/RegulatoryNotifications';
 import MedicalErrors from './pages/MedicalErrors';
+import MockInspections from './pages/MockInspections';
+import ComplaintsManagement from './pages/ComplaintsManagement';
+import TrainingMatrix from './pages/TrainingMatrix';
+import ComplianceReports from './pages/ComplianceReports';
 import __Layout from './Layout.jsx';
 
 
@@ -84,6 +88,10 @@ export const PAGES = {
     "Audits": Audits,
     "RegulatoryNotifications": RegulatoryNotifications,
     "MedicalErrors": MedicalErrors,
+    "MockInspections": MockInspections,
+    "ComplaintsManagement": ComplaintsManagement,
+    "TrainingMatrix": TrainingMatrix,
+    "ComplianceReports": ComplianceReports,
 }
 
 export const pagesConfig = {
