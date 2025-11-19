@@ -8,33 +8,66 @@ export async function triggerWorkflow(triggerType, entityId, entityType, entityD
     switch (triggerType) {
       case 'audit_failed':
       case 'audit_requires_improvement':
-        actionPlanData = {
-          title: `Action Plan - ${entityData.area_audited}`,
-          description: `Automatically generated from audit on ${entityData.audit_date}`,
+        // Check if there's an existing master audit action plan
+        const existingPlans = await base44.entities.ActionPlan.filter({
           category: 'compliance',
-          priority: triggerType === 'audit_failed' ? 'high' : 'medium',
-          status: 'draft',
-          target_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
           related_entity_type: 'audit',
-          related_entity_id: entityId,
-          actions: entityData.non_compliances?.map(nc => ({
-            action: `Address: ${nc.item}`,
-            responsible_person: '',
-            target_date: '',
-            status: 'pending',
-            notes: nc.description
-          })) || []
-        };
-        
-        const actionPlan = await base44.entities.ActionPlan.create(actionPlanData);
-        actions.push({
-          action_type: 'create_action_plan',
-          action_details: { action_plan_id: actionPlan.id },
-          completed: true,
-          completed_at: new Date().toISOString()
+          status: { $in: ['active', 'in_progress', 'draft'] }
         });
         
-        await base44.entities.AuditRecord.update(entityId, { action_plan_id: actionPlan.id });
+        const masterPlan = Array.isArray(existingPlans) && existingPlans.length > 0 
+          ? existingPlans.find(p => p.title === 'Master Audit Action Plan')
+          : null;
+
+        const newActions = entityData.non_compliances?.map(nc => ({
+          action: `[${entityData.area_audited} - ${entityData.audit_date}] ${nc.item}`,
+          responsible_person: '',
+          target_date: '',
+          status: 'pending',
+          notes: nc.description,
+          audit_id: entityId
+        })) || [];
+
+        if (masterPlan) {
+          // Add to existing master plan
+          const updatedActions = [...(masterPlan.actions || []), ...newActions];
+          await base44.entities.ActionPlan.update(masterPlan.id, {
+            actions: updatedActions,
+            description: `Consolidated audit action plan. Last updated from audit on ${entityData.audit_date}`
+          });
+          
+          actions.push({
+            action_type: 'update_action_plan',
+            action_details: { action_plan_id: masterPlan.id, actions_added: newActions.length },
+            completed: true,
+            completed_at: new Date().toISOString()
+          });
+          
+          await base44.entities.AuditRecord.update(entityId, { action_plan_id: masterPlan.id });
+        } else {
+          // Create new master plan
+          actionPlanData = {
+            title: 'Master Audit Action Plan',
+            description: `Consolidated action plan for all audit findings. Created from audit on ${entityData.audit_date}`,
+            category: 'compliance',
+            priority: triggerType === 'audit_failed' ? 'high' : 'medium',
+            status: 'active',
+            target_completion_date: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            related_entity_type: 'audit',
+            related_entity_id: entityId,
+            actions: newActions
+          };
+          
+          const actionPlan = await base44.entities.ActionPlan.create(actionPlanData);
+          actions.push({
+            action_type: 'create_action_plan',
+            action_details: { action_plan_id: actionPlan.id },
+            completed: true,
+            completed_at: new Date().toISOString()
+          });
+          
+          await base44.entities.AuditRecord.update(entityId, { action_plan_id: actionPlan.id });
+        }
         break;
 
       case 'notification_submitted':
