@@ -36,6 +36,9 @@ import CareDocuments from './pages/CareDocuments';
 import MessagingCenter from './pages/MessagingCenter';
 import ComplianceHub from './pages/ComplianceHub';
 import ActionPlans from './pages/ActionPlans';
+import Audits from './pages/Audits';
+import RegulatoryNotifications from './pages/RegulatoryNotifications';
+import MedicalErrors from './pages/MedicalErrors';
 import __Layout from './Layout.jsx';
 
 
@@ -78,6 +81,9 @@ export const PAGES = {
     "MessagingCenter": MessagingCenter,
     "ComplianceHub": ComplianceHub,
     "ActionPlans": ActionPlans,
+    "Audits": Audits,
+    "RegulatoryNotifications": RegulatoryNotifications,
+    "MedicalErrors": MedicalErrors,
 }
 
 export const pagesConfig = {
