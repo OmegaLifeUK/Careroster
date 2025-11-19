@@ -22,6 +22,7 @@ import {
   Save
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import AIIncidentReportGenerator from "./AIIncidentReportGenerator";
 
 const SEVERITY_COLORS = {
   low: "bg-blue-100 text-blue-800",
@@ -297,6 +298,9 @@ export default function IncidentDetail({ incident, clients, staff, onClose }) {
                 )}
               </CardContent>
             </Card>
+
+            {/* AI Report Generator */}
+            <AIIncidentReportGenerator incident={incident} />
           </div>
 
           {/* Sidebar */}
