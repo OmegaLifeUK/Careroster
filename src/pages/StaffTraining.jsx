@@ -18,6 +18,7 @@ import {
 import TrainingModuleManager from "../components/training/TrainingModuleManager";
 import AssignTrainingDialog from "../components/training/AssignTrainingDialog";
 import TrainingComplianceReport from "../components/training/TrainingComplianceReport";
+import AITrainingAnalyzer from "../components/training/AITrainingAnalyzer";
 
 export default function StaffTraining() {
   const [activeTab, setActiveTab] = useState("modules");

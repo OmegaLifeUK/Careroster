@@ -22,6 +22,7 @@ import { format, parseISO, isWithinInterval, subMonths } from "date-fns";
 
 import IncidentForm from "../components/incidents/IncidentForm";
 import IncidentDetail from "../components/incidents/IncidentDetail";
+import AIIncidentAnalyzer from "../components/incidents/AIIncidentAnalyzer";
 
 const SEVERITY_COLORS = {
   low: "bg-blue-100 text-blue-800",

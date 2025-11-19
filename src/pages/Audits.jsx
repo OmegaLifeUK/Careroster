@@ -9,6 +9,7 @@ import AuditList from "@/components/compliance/AuditList";
 import AuditDetail from "@/components/compliance/AuditDetail";
 import PermissionGuard from "@/components/permissions/PermissionGuard";
 import RecurringAuditScheduler from "@/components/compliance/RecurringAuditScheduler";
+import AIAuditAnalyzer from "@/components/compliance/AIAuditAnalyzer";
 
 export default function Audits() {
   const [view, setView] = useState("records"); // "records" or "templates"
