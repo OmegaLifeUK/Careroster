@@ -22,7 +22,8 @@ import {
   Settings,
   X,
   Search,
-  FolderOpen
+  FolderOpen,
+  Eye
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -31,6 +32,7 @@ import { useQuery } from "@tanstack/react-query";
 import KeyboardShortcuts from "@/components/ui/keyboard-shortcuts";
 import GlobalSearch from "@/components/ui/global-search";
 import { ToastProvider } from "@/components/ui/toast";
+import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -105,6 +107,7 @@ export default function Layout({ children, currentPageName }) {
   const [user, setUser] = React.useState(null);
   const [sidebarOpen, setSidebarOpen] = React.useState(false);
   const [searchOpen, setSearchOpen] = React.useState(false);
+  const [accessibilityOpen, setAccessibilityOpen] = React.useState(false);
   const [enabledModules, setEnabledModules] = React.useState({
     residential_care: true,
     domiciliary_care: true,
@@ -149,6 +152,38 @@ export default function Layout({ children, currentPageName }) {
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, []);
+
+  React.useEffect(() => {
+    // Load and apply accessibility settings
+    const loadAccessibility = async () => {
+      if (!user?.email) return;
+      try {
+        const settings = await base44.entities.AccessibilitySettings.filter({ user_email: user.email });
+        if (Array.isArray(settings) && settings.length > 0) {
+          applyAccessibilitySettings(settings[0]);
+        }
+      } catch (error) {
+        console.log("No accessibility settings found");
+      }
+    };
+    loadAccessibility();
+  }, [user]);
+
+  const applyAccessibilitySettings = (settings) => {
+    const root = document.documentElement;
+    if (settings.theme_mode === 'dark') {
+      root.style.setProperty('--bg-color', '#1a1a1a');
+      root.style.setProperty('--text-color', '#ffffff');
+    } else if (settings.theme_mode === 'dyslexia') {
+      root.style.setProperty('--bg-color', '#faf4e8');
+      root.style.setProperty('--text-color', '#2c2c2c');
+    } else {
+      root.style.setProperty('--bg-color', settings.background_color || '#ffffff');
+      root.style.setProperty('--text-color', settings.text_color || '#000000');
+    }
+    const sizes = { small: '14px', medium: '16px', large: '18px', xlarge: '20px' };
+    root.style.fontSize = sizes[settings.text_size] || '16px';
+  };
 
   const { data: settings = [] } = useQuery({
     queryKey: ['app-settings'],
@@ -502,8 +537,11 @@ export default function Layout({ children, currentPageName }) {
 
           <KeyboardShortcuts />
           <GlobalSearch isOpen={searchOpen} onClose={() => setSearchOpen(false)} />
-        </div>
-      </div>
-    </ToastProvider>
-  );
-}
+          {accessibilityOpen && (
+            <AccessibilityPanel onClose={() => setAccessibilityOpen(false)} />
+          )}
+          </div>
+          </div>
+          </ToastProvider>
+          );
+          }
