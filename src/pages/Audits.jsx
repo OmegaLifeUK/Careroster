@@ -8,11 +8,13 @@ import { Plus, FileText } from "lucide-react";
 import AuditList from "@/components/compliance/AuditList";
 import AuditDetail from "@/components/compliance/AuditDetail";
 import PermissionGuard from "@/components/permissions/PermissionGuard";
+import RecurringAuditScheduler from "@/components/compliance/RecurringAuditScheduler";
 
 export default function Audits() {
   const [view, setView] = useState("records"); // "records" or "templates"
   const [showDialog, setShowDialog] = useState(false);
   const [selectedAudit, setSelectedAudit] = useState(null);
+  const [showScheduler, setShowScheduler] = useState(false);
 
   const { data: auditRecords = [] } = useQuery({
     queryKey: ['audit-records'],
@@ -59,7 +61,11 @@ export default function Audits() {
               <h1 className="text-3xl font-bold text-gray-900 mb-2">Audits</h1>
               <p className="text-gray-500">Manage audit templates and records</p>
             </div>
-          </div>
+            <Button onClick={() => setShowScheduler(true)} className="bg-indigo-600">
+              <Plus className="w-4 h-4 mr-2" />
+              Schedule Recurring Audit
+            </Button>
+            </div>
 
         <div className="flex gap-3 mb-6">
           <Button
@@ -73,6 +79,12 @@ export default function Audits() {
             onClick={() => setView("templates")}
           >
             Templates ({templates.length})
+          </Button>
+          <Button
+            variant="outline"
+            onClick={() => window.location.href = '/audit-templates'}
+          >
+            Manage Templates
           </Button>
         </div>
 
@@ -107,6 +119,10 @@ export default function Audits() {
               </Card>
             ))}
           </div>
+        )}
+
+        {showScheduler && (
+          <RecurringAuditScheduler onClose={() => setShowScheduler(false)} />
         )}
         </div>
       </div>

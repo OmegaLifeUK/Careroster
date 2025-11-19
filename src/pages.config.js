@@ -44,6 +44,8 @@ import ComplaintsManagement from './pages/ComplaintsManagement';
 import TrainingMatrix from './pages/TrainingMatrix';
 import ComplianceReports from './pages/ComplianceReports';
 import RoleManagement from './pages/RoleManagement';
+import AuditTemplates from './pages/AuditTemplates';
+import ActionPlanProgress from './pages/ActionPlanProgress';
 import __Layout from './Layout.jsx';
 
 
@@ -94,6 +96,8 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "ComplianceReports": ComplianceReports,
     "RoleManagement": RoleManagement,
+    "AuditTemplates": AuditTemplates,
+    "ActionPlanProgress": ActionPlanProgress,
 }
 
 export const pagesConfig = {

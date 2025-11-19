@@ -89,6 +89,8 @@ const clientPortalNav = [
 
 const complianceNav = [
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
+  { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
+  { title: "Audit Templates", url: createPageUrl("AuditTemplates"), icon: FileText },
 ];
 
 const systemNavigation = [
