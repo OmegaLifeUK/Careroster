@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -86,6 +85,10 @@ const clientPortalNav = [
   { title: "My Schedule", url: createPageUrl("ClientPortalSchedule"), icon: Calendar },
   { title: "Messages", url: createPageUrl("ClientPortalMessages"), icon: MessageSquare },
   { title: "Booking Requests", url: createPageUrl("ClientPortalBookings"), icon: ClipboardList },
+];
+
+const complianceNav = [
+  { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
 ];
 
 const systemNavigation = [
