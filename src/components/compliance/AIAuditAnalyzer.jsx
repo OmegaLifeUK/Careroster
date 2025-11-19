@@ -1,14 +1,27 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, TrendingDown, AlertTriangle, Target } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function AIAuditAnalyzer({ auditRecords }) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
 
   const analyzeAudits = async () => {
     setIsAnalyzing(true);
@@ -83,7 +96,56 @@ Provide a structured analysis with clear sections for patterns, high-risk areas,
     } catch (error) {
       console.error("Analysis error:", error);
     } finally {
-      setIsAnalyizing(false);
+      setIsAnalyzing(false);
+    }
+  };
+
+  const generateTasks = async () => {
+    if (!analysis) return;
+    
+    setIsGeneratingTasks(true);
+    try {
+      const tasksToCreate = [];
+
+      // Generate tasks from high-risk areas
+      analysis.high_risk_areas?.forEach(area => {
+        tasksToCreate.push({
+          title: `Address High-Risk Area: ${area.area}`,
+          description: area.reason,
+          source_type: 'audit_ai',
+          priority: area.risk_level === 'high' ? 'urgent' : 'high',
+          status: 'pending',
+          due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: staff[0]?.id, // Will need reassignment
+          assigned_by: 'AI Analysis'
+        });
+      });
+
+      // Generate tasks from recommendations
+      analysis.recommendations?.forEach(rec => {
+        const priority = rec.priority?.toLowerCase() === 'urgent' ? 'urgent' :
+                        rec.priority?.toLowerCase() === 'high' ? 'high' : 'medium';
+        
+        tasksToCreate.push({
+          title: rec.target_area,
+          description: rec.recommendation,
+          source_type: 'audit_ai',
+          priority,
+          status: 'pending',
+          due_date: new Date(Date.now() + 21 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: staff[0]?.id,
+          assigned_by: 'AI Analysis'
+        });
+      });
+
+      await base44.entities.ComplianceTask.bulkCreate(tasksToCreate);
+      queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
+      toast.success("Success", `Generated ${tasksToCreate.length} tasks from AI analysis`);
+    } catch (error) {
+      console.error("Task generation error:", error);
+      toast.error("Error", "Failed to generate tasks");
+    } finally {
+      setIsGeneratingTasks(false);
     }
   };
 
@@ -108,13 +170,25 @@ Provide a structured analysis with clear sections for patterns, high-risk areas,
             <Sparkles className="w-5 h-5 text-purple-600" />
             AI Audit Analysis
           </CardTitle>
-          <Button 
-            onClick={analyzeAudits} 
-            disabled={isAnalyzing || auditRecords.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-pink-600"
-          >
-            {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={analyzeAudits} 
+              disabled={isAnalyzing || auditRecords.length === 0}
+              className="bg-gradient-to-r from-purple-600 to-pink-600"
+            >
+              {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
+            </Button>
+            {analysis && (
+              <Button 
+                onClick={generateTasks}
+                disabled={isGeneratingTasks}
+                variant="outline"
+                className="border-purple-600 text-purple-600"
+              >
+                {isGeneratingTasks ? "Generating..." : "Generate Tasks"}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-6">

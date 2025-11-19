@@ -46,6 +46,7 @@ import ComplianceReports from './pages/ComplianceReports';
 import RoleManagement from './pages/RoleManagement';
 import AuditTemplates from './pages/AuditTemplates';
 import ActionPlanProgress from './pages/ActionPlanProgress';
+import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
 import __Layout from './Layout.jsx';
 
 
@@ -98,6 +99,7 @@ export const PAGES = {
     "RoleManagement": RoleManagement,
     "AuditTemplates": AuditTemplates,
     "ActionPlanProgress": ActionPlanProgress,
+    "ComplianceTaskCenter": ComplianceTaskCenter,
 }
 
 export const pagesConfig = {

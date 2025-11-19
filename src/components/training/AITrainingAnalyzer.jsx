@@ -1,14 +1,19 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, Users, TrendingDown, Target } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function AITrainingAnalyzer() {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: assignments = [] } = useQuery({
     queryKey: ['training-assignments'],
@@ -131,6 +136,46 @@ Provide actionable insights to improve training outcomes.`;
     }
   };
 
+  const generateTasks = async () => {
+    if (!analysis) return;
+    
+    setIsGeneratingTasks(true);
+    try {
+      const tasksToCreate = [];
+
+      // Generate tasks for staff needing support
+      analysis.staff_needing_support?.forEach(staffMember => {
+        const targetStaff = staff.find(s => s.full_name === staffMember.staff_name);
+        if (!targetStaff) return;
+
+        staffMember.recommended_actions?.forEach(action => {
+          const priority = staffMember.support_level?.toLowerCase() === 'urgent' ? 'urgent' :
+                          staffMember.support_level?.toLowerCase() === 'high' ? 'high' : 'medium';
+          
+          tasksToCreate.push({
+            title: `Support: ${staffMember.staff_name} - ${action.substring(0, 50)}`,
+            description: action,
+            source_type: 'training_ai',
+            priority,
+            status: 'pending',
+            due_date: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+            assigned_to_staff_id: targetStaff.id,
+            assigned_by: 'AI Training Analysis'
+          });
+        });
+      });
+
+      await base44.entities.ComplianceTask.bulkCreate(tasksToCreate);
+      queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
+      toast.success("Success", `Generated ${tasksToCreate.length} support tasks`);
+    } catch (error) {
+      console.error("Task generation error:", error);
+      toast.error("Error", "Failed to generate tasks");
+    } finally {
+      setIsGeneratingTasks(false);
+    }
+  };
+
   const supportLevelColors = {
     urgent: "bg-red-100 text-red-800",
     high: "bg-orange-100 text-orange-800",
@@ -146,13 +191,25 @@ Provide actionable insights to improve training outcomes.`;
             <Sparkles className="w-5 h-5 text-purple-600" />
             AI Training Intelligence
           </CardTitle>
-          <Button 
-            onClick={analyzeTraining} 
-            disabled={isAnalyzing || assignments.length === 0}
-            className="bg-gradient-to-r from-purple-600 to-indigo-600"
-          >
-            {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={analyzeTraining} 
+              disabled={isAnalyzing || assignments.length === 0}
+              className="bg-gradient-to-r from-purple-600 to-indigo-600"
+            >
+              {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
+            </Button>
+            {analysis && (
+              <Button 
+                onClick={generateTasks}
+                disabled={isGeneratingTasks}
+                variant="outline"
+                className="border-purple-600 text-purple-600"
+              >
+                {isGeneratingTasks ? "Generating..." : "Generate Tasks"}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-6">

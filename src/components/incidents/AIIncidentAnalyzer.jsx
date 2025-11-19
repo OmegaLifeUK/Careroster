@@ -1,13 +1,27 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Sparkles, AlertCircle, Lightbulb, Shield } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
 
 export default function AIIncidentAnalyzer({ incident }) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
 
   const analyzeIncident = async () => {
     setIsAnalyzing(true);
@@ -89,6 +103,57 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
     }
   };
 
+  const generateTasks = async () => {
+    if (!analysis) return;
+    
+    setIsGeneratingTasks(true);
+    try {
+      const tasksToCreate = [];
+
+      // Immediate actions
+      analysis.immediate_actions?.forEach(action => {
+        tasksToCreate.push({
+          title: `Immediate Action: ${action.substring(0, 50)}`,
+          description: action,
+          source_type: 'incident_ai',
+          source_entity_id: incident.id,
+          priority: 'urgent',
+          status: 'pending',
+          due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: staff[0]?.id,
+          assigned_by: 'AI Analysis'
+        });
+      });
+
+      // Preventative measures
+      analysis.preventative_measures?.forEach(measure => {
+        const daysToAdd = measure.timeframe?.includes('immediate') ? 7 :
+                         measure.timeframe?.includes('short') ? 14 : 30;
+        
+        tasksToCreate.push({
+          title: measure.measure.substring(0, 100),
+          description: `${measure.measure}\n\nTimeframe: ${measure.timeframe}\nResponsibility: ${measure.responsibility}`,
+          source_type: 'incident_ai',
+          source_entity_id: incident.id,
+          priority: 'high',
+          status: 'pending',
+          due_date: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: staff[0]?.id,
+          assigned_by: 'AI Analysis'
+        });
+      });
+
+      await base44.entities.ComplianceTask.bulkCreate(tasksToCreate);
+      queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
+      toast.success("Success", `Generated ${tasksToCreate.length} tasks from AI analysis`);
+    } catch (error) {
+      console.error("Task generation error:", error);
+      toast.error("Error", "Failed to generate tasks");
+    } finally {
+      setIsGeneratingTasks(false);
+    }
+  };
+
   const likelihoodColors = {
     high: "bg-red-100 text-red-800",
     medium: "bg-orange-100 text-orange-800",
@@ -103,13 +168,25 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
             <Sparkles className="w-5 h-5 text-purple-600" />
             AI Root Cause Analysis
           </CardTitle>
-          <Button 
-            onClick={analyzeIncident} 
-            disabled={isAnalyzing}
-            className="bg-gradient-to-r from-purple-600 to-blue-600"
-          >
-            {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={analyzeIncident} 
+              disabled={isAnalyzing}
+              className="bg-gradient-to-r from-purple-600 to-blue-600"
+            >
+              {isAnalyzing ? "Analyzing..." : "Run AI Analysis"}
+            </Button>
+            {analysis && (
+              <Button 
+                onClick={generateTasks}
+                disabled={isGeneratingTasks}
+                variant="outline"
+                className="border-purple-600 text-purple-600"
+              >
+                {isGeneratingTasks ? "Generating..." : "Generate Tasks"}
+              </Button>
+            )}
+          </div>
         </div>
       </CardHeader>
       <CardContent className="p-6">
