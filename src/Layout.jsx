@@ -388,6 +388,29 @@ export default function Layout({ children, currentPageName }) {
                     </nav>
                   </div>
 
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                      Compliance & Quality
+                    </p>
+                    <nav className="space-y-1">
+                      {complianceNav.map((item) => (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            location.pathname === item.url 
+                              ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
+                              : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                          }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </div>
+
                   {user?.role === 'admin' && (
                     <div>
                       <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
