@@ -8,6 +8,8 @@ import { Badge } from "@/components/ui/badge";
 import { Bell, Plus } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import NotificationForm from "@/components/compliance/NotificationForm";
+import PermissionGuard from "@/components/permissions/PermissionGuard";
+import { triggerWorkflow } from "@/components/compliance/AutoWorkflowTrigger";
 
 export default function RegulatoryNotifications() {
   const [showDialog, setShowDialog] = useState(false);
@@ -41,8 +43,9 @@ export default function RegulatoryNotifications() {
       notification_date: new Date().toISOString(),
       status: 'submitted'
     }),
-    onSuccess: () => {
+    onSuccess: async (newNotification) => {
       queryClient.invalidateQueries({ queryKey: ['regulatory-notifications'] });
+      await triggerWorkflow('notification_submitted', newNotification.id, 'notification', newNotification);
       setShowDialog(false);
       resetForm();
       toast.success("Success", "Notification submitted successfully");
@@ -173,8 +176,9 @@ export default function RegulatoryNotifications() {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
+    <PermissionGuard module="compliance" action="view_notifications">
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
         <div className="flex justify-between items-start mb-6">
           <div>
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Regulatory Notifications</h1>
@@ -240,7 +244,8 @@ export default function RegulatoryNotifications() {
             isSubmitting={createMutation.isPending}
           />
         )}
+        </div>
       </div>
-    </div>
+    </PermissionGuard>
   );
 }

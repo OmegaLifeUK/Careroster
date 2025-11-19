@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, FileText } from "lucide-react";
 import AuditList from "@/components/compliance/AuditList";
 import AuditDetail from "@/components/compliance/AuditDetail";
+import PermissionGuard from "@/components/permissions/PermissionGuard";
 
 export default function Audits() {
   const [view, setView] = useState("records"); // "records" or "templates"
@@ -50,14 +51,15 @@ export default function Audits() {
   }
 
   return (
-    <div className="p-4 md:p-8">
-      <div className="max-w-7xl mx-auto">
-        <div className="flex justify-between items-start mb-6">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Audits</h1>
-            <p className="text-gray-500">Manage audit templates and records</p>
+    <PermissionGuard module="compliance" action="view_audits">
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex justify-between items-start mb-6">
+            <div>
+              <h1 className="text-3xl font-bold text-gray-900 mb-2">Audits</h1>
+              <p className="text-gray-500">Manage audit templates and records</p>
+            </div>
           </div>
-        </div>
 
         <div className="flex gap-3 mb-6">
           <Button
@@ -106,7 +108,8 @@ export default function Audits() {
             ))}
           </div>
         )}
+        </div>
       </div>
-    </div>
+    </PermissionGuard>
   );
 }

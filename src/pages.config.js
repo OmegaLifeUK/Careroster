@@ -44,7 +44,6 @@ import ComplaintsManagement from './pages/ComplaintsManagement';
 import TrainingMatrix from './pages/TrainingMatrix';
 import ComplianceReports from './pages/ComplianceReports';
 import RoleManagement from './pages/RoleManagement';
-import StaffRoleAssignments from './pages/StaffRoleAssignments';
 import __Layout from './Layout.jsx';
 
 
@@ -95,7 +94,6 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "ComplianceReports": ComplianceReports,
     "RoleManagement": RoleManagement,
-    "StaffRoleAssignments": StaffRoleAssignments,
 }
 
 export const pagesConfig = {
