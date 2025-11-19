@@ -17,12 +17,17 @@ export default function AccessibilityPanel({ onClose }) {
     queryFn: () => base44.auth.me(),
   });
 
-  const { data: settings } = useQuery({
+  const { data: settings, isLoading } = useQuery({
     queryKey: ['accessibility-settings', currentUser?.email],
     queryFn: async () => {
       if (!currentUser?.email) return null;
-      const data = await base44.entities.AccessibilitySettings.filter({ user_email: currentUser.email });
-      return Array.isArray(data) && data.length > 0 ? data[0] : null;
+      try {
+        const data = await base44.entities.AccessibilitySettings.filter({ user_email: currentUser.email });
+        return Array.isArray(data) && data.length > 0 ? data[0] : null;
+      } catch (error) {
+        console.log("No settings found, will create new");
+        return null;
+      }
     },
     enabled: !!currentUser?.email,
   });
@@ -129,6 +134,11 @@ export default function AccessibilityPanel({ onClose }) {
           </div>
         </CardHeader>
         <CardContent className="p-6">
+          {isLoading ? (
+            <div className="text-center py-8">
+              <p className="text-gray-500">Loading settings...</p>
+            </div>
+          ) : (
           <div className="space-y-6">
             {/* Preset Themes */}
             <div>
@@ -266,6 +276,7 @@ export default function AccessibilityPanel({ onClose }) {
               </Button>
             </div>
           </div>
+          )}
         </CardContent>
       </Card>
     </div>
