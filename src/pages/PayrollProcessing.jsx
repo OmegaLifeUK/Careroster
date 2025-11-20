@@ -63,9 +63,10 @@ export default function PayrollProcessing() {
     },
   });
 
-  const processPayrollMutation = useMutation({
-    mutationFn: async (periodId) => {
-      setIsProcessing(true);
+  // Automated payroll calculation function
+  const calculatePayroll = async (periodId) => {
+    setIsProcessing(true);
+    try {
       const period = periods.find(p => p.id === periodId);
       
       // Get timesheets for this period
@@ -88,6 +89,14 @@ export default function PayrollProcessing() {
       // Create payslips
       const payslips = [];
       for (const [staffId, staffTimesheets] of Object.entries(staffGroups)) {
+        // Calculate hours by pay bucket
+        const standardHours = staffTimesheets.filter(t => t.pay_bucket === 'standard').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        const overtimeHours = staffTimesheets.filter(t => t.pay_bucket === 'overtime').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        const weekendHours = staffTimesheets.filter(t => t.pay_bucket === 'weekend').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        const nightHours = staffTimesheets.filter(t => t.pay_bucket === 'night').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        const bankHolidayHours = staffTimesheets.filter(t => t.pay_bucket === 'bank_holiday').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        const sleepInHours = staffTimesheets.filter(t => t.pay_bucket === 'sleep_in').reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
+        
         const totalHours = staffTimesheets.reduce((sum, ts) => sum + (ts.actual_hours || 0), 0);
         const grossPay = staffTimesheets.reduce((sum, ts) => sum + (ts.gross_pay || 0), 0);
         
@@ -113,6 +122,12 @@ export default function PayrollProcessing() {
           period_start: period.start_date,
           period_end: period.end_date,
           total_hours: totalHours,
+          standard_hours: standardHours,
+          overtime_hours: overtimeHours,
+          weekend_hours: weekendHours,
+          night_hours: nightHours,
+          bank_holiday_hours: bankHolidayHours,
+          sleep_in_hours: sleepInHours,
           gross_pay: grossPay,
           tax: tax,
           national_insurance: ni,
@@ -146,6 +161,7 @@ export default function PayrollProcessing() {
         total_staff: Object.keys(staffGroups).length,
         total_hours: payslips.reduce((sum, p) => sum + p.total_hours, 0),
         total_gross_pay: payslips.reduce((sum, p) => sum + p.gross_pay, 0),
+        total_deductions: payslips.reduce((sum, p) => sum + (p.tax + p.national_insurance + p.pension), 0),
         total_net_pay: payslips.reduce((sum, p) => sum + p.net_pay, 0)
       });
 
@@ -157,17 +173,33 @@ export default function PayrollProcessing() {
         });
       }
 
-      return payslips.length;
-    },
-    onSuccess: (count) => {
       queryClient.invalidateQueries();
-      toast.success("Payroll Processed", `Generated ${count} payslips successfully`);
+      toast.success("Payroll Processed", `Generated ${payslips.length} payslips successfully`);
       setIsProcessing(false);
-    },
-    onError: (error) => {
+      
+      return payslips.length;
+    } catch (error) {
       toast.error("Processing Failed", error.message);
       setIsProcessing(false);
+      throw error;
     }
+  };
+
+  // Auto-process when period status changes to 'processing'
+  React.useEffect(() => {
+    const processingPeriods = periods.filter(p => p.status === 'processing');
+    
+    if (processingPeriods.length > 0 && !isProcessing) {
+      processingPeriods.forEach(period => {
+        calculatePayroll(period.id);
+      });
+    }
+  }, [periods]);
+
+  const processPayrollMutation = useMutation({
+    mutationFn: calculatePayroll,
+    onSuccess: () => {},
+    onError: () => {}
   });
 
   const exportToCSV = (period) => {
@@ -303,12 +335,26 @@ export default function PayrollProcessing() {
                   <div className="flex gap-2">
                     {period.status === 'draft' && (
                       <Button
-                        onClick={() => processPayrollMutation.mutate(period.id)}
+                        onClick={() => calculatePayroll(period.id)}
                         disabled={pendingCount > 0 || isProcessing}
                         className="bg-green-600"
                       >
                         <Play className="w-4 h-4 mr-2" />
                         {isProcessing ? 'Processing...' : 'Process Payroll'}
+                      </Button>
+                    )}
+                    
+                    {period.status === 'approved' && (
+                      <Button
+                        onClick={async () => {
+                          await base44.entities.PayrollPeriod.update(period.id, { status: 'processing' });
+                          queryClient.invalidateQueries(['payroll-periods']);
+                        }}
+                        disabled={pendingCount > 0 || isProcessing}
+                        className="bg-blue-600"
+                      >
+                        <Play className="w-4 h-4 mr-2" />
+                        Auto-Process Payroll
                       </Button>
                     )}
                     
