@@ -50,6 +50,8 @@ import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
 import FormBuilder from './pages/FormBuilder';
 import PayrollDashboard from './pages/PayrollDashboard';
 import TimesheetReconciliation from './pages/TimesheetReconciliation';
+import PayrollProcessing from './pages/PayrollProcessing';
+import InvoiceManagement from './pages/InvoiceManagement';
 import __Layout from './Layout.jsx';
 
 
@@ -106,6 +108,8 @@ export const PAGES = {
     "FormBuilder": FormBuilder,
     "PayrollDashboard": PayrollDashboard,
     "TimesheetReconciliation": TimesheetReconciliation,
+    "PayrollProcessing": PayrollProcessing,
+    "InvoiceManagement": InvoiceManagement,
 }
 
 export const pagesConfig = {
