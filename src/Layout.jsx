@@ -43,6 +43,7 @@ const residentialCareNav = [
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
   { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
   { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
+  { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
   { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
