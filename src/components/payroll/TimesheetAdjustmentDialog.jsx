@@ -73,7 +73,6 @@ export default function TimesheetAdjustmentDialog({ timesheet, onClose }) {
           </div>
         </CardHeader>
         <CardContent className="p-6 space-y-6">
-          {/* Current Timesheet Info */}
           <div className="grid grid-cols-2 gap-4 p-4 bg-gray-50 rounded">
             <div>
               <p className="text-sm text-gray-600">Planned Hours</p>
@@ -85,7 +84,6 @@ export default function TimesheetAdjustmentDialog({ timesheet, onClose }) {
             </div>
           </div>
 
-          {/* Clock Times */}
           <div className="space-y-3">
             <h3 className="font-semibold">Clock Times</h3>
             <div className="grid grid-cols-2 gap-4">
@@ -108,17 +106,6 @@ export default function TimesheetAdjustmentDialog({ timesheet, onClose }) {
             </div>
           </div>
 
-          {/* Unscheduled Clock Reason */}
-          {!timesheet.shift_id && (
-            <div className="p-4 bg-purple-50 rounded border border-purple-200">
-              <h3 className="font-semibold text-purple-900 mb-2">Unscheduled Clock In Reason</h3>
-              <p className="text-sm text-purple-800">
-                {timesheet.unscheduled_clock_in_reason || "No reason provided"}
-              </p>
-            </div>
-          )}
-
-          {/* Adjustment Rows */}
           <div className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold">Pay Adjustments</h3>
@@ -195,18 +182,16 @@ export default function TimesheetAdjustmentDialog({ timesheet, onClose }) {
             ))}
           </div>
 
-          {/* Adjustment Reason */}
           <div>
             <label className="text-sm font-medium mb-2 block">Adjustment Reason</label>
             <Textarea
               value={adjustmentReason}
               onChange={(e) => setAdjustmentReason(e.target.value)}
-              placeholder="Enter reason for adjustment (e.g., 'Rubbish Manager - Unauthorised Overtime')"
+              placeholder="Enter reason for adjustment..."
               rows={3}
             />
           </div>
 
-          {/* Total */}
           <div className="p-4 bg-blue-50 rounded border border-blue-200">
             <div className="flex items-center justify-between">
               <span className="font-semibold text-blue-900">Total Adjusted Hours</span>
@@ -216,7 +201,6 @@ export default function TimesheetAdjustmentDialog({ timesheet, onClose }) {
             </div>
           </div>
 
-          {/* Actions */}
           <div className="flex gap-3 pt-4 border-t">
             <Button variant="outline" onClick={onClose} className="flex-1">
               Cancel
