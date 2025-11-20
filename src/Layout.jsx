@@ -94,6 +94,7 @@ const complianceNav = [
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
   { title: "Audit Templates", url: createPageUrl("AuditTemplates"), icon: FileText },
+  { title: "Form Builder", url: createPageUrl("FormBuilder"), icon: FileText },
 ];
 
 const systemNavigation = [
