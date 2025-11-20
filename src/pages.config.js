@@ -48,6 +48,8 @@ import AuditTemplates from './pages/AuditTemplates';
 import ActionPlanProgress from './pages/ActionPlanProgress';
 import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
 import FormBuilder from './pages/FormBuilder';
+import PayrollDashboard from './pages/PayrollDashboard';
+import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import __Layout from './Layout.jsx';
 
 
@@ -102,6 +104,8 @@ export const PAGES = {
     "ActionPlanProgress": ActionPlanProgress,
     "ComplianceTaskCenter": ComplianceTaskCenter,
     "FormBuilder": FormBuilder,
+    "PayrollDashboard": PayrollDashboard,
+    "TimesheetReconciliation": TimesheetReconciliation,
 }
 
 export const pagesConfig = {
