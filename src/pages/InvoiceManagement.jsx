@@ -35,12 +35,18 @@ export default function InvoiceManagement() {
 
   const { data: clients = [] } = useQuery({
     queryKey: ['clients'],
-    queryFn: () => base44.entities.Client.list(),
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const { data: domCareClients = [] } = useQuery({
     queryKey: ['domcare-clients'],
-    queryFn: () => base44.entities.DomCareClient.list(),
+    queryFn: async () => {
+      const data = await base44.entities.DomCareClient.list();
+      return Array.isArray(data) ? data : [];
+    },
   });
 
   const allClients = [...clients, ...domCareClients];

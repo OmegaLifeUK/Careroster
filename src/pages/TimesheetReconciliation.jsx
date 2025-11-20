@@ -51,14 +51,6 @@ export default function TimesheetReconciliation() {
     },
   });
 
-  const { data: shifts = [] } = useQuery({
-    queryKey: ['shifts'],
-    queryFn: async () => {
-      const data = await base44.entities.Shift.list('-date', 500);
-      return Array.isArray(data) ? data : [];
-    },
-  });
-
   const updateTimesheetMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.TimesheetEntry.update(id, data),
     onSuccess: () => {
