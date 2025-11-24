@@ -13,9 +13,9 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Sparkles } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
-import { useClientOnboarding } from "@/components/onboarding/ClientOnboardingAutomation";
+import { useClientOnboarding } from "../onboarding/ClientOnboardingAutomation";
 import { useToast } from "@/components/ui/toast";
 
 export default function ClientDialog({ client, carers = [], onClose }) {
@@ -28,12 +28,13 @@ export default function ClientDialog({ client, carers = [], onClose }) {
     funding_type: client?.funding_type || "self_funded",
     mobility: client?.mobility || "independent",
     address: client?.address || { street: "", city: "", postcode: "" },
-    emergency_contact: client?.emergency_contact || { name: "", phone: "", relationship: "" },
+    emergency_contact: client?.emergency_contact || { name: "", phone: "", relationship: "", email: "" },
     care_needs: client?.care_needs || [],
     preferred_carers: client?.preferred_carers || [],
     medical_notes: client?.medical_notes || "",
   });
   const [enableOnboarding, setEnableOnboarding] = useState(!client);
+  const [assignedStaff, setAssignedStaff] = useState("");
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -52,30 +53,29 @@ export default function ClientDialog({ client, carers = [], onClose }) {
       if (client && client.id) {
         return base44.entities.Client.update(client.id, data);
       } else {
-        return base44.entities.Client.create(data);
+        const newClient = await base44.entities.Client.create(data);
+        
+        // Trigger onboarding workflow for new clients
+        if (enableOnboarding && assignedStaff) {
+          try {
+            await initiateOnboarding(newClient, assignedStaff);
+          } catch (error) {
+            console.error("Onboarding error:", error);
+          }
+        }
+        
+        return newClient;
       }
     },
-    onSuccess: async (newClient) => {
+    onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
-      
-      // Trigger onboarding workflow for new clients
-      if (!client && enableOnboarding) {
-        try {
-          const assignedStaff = staff.find(s => s.is_active) || staff[0];
-          if (assignedStaff) {
-            await initiateOnboarding(newClient, assignedStaff.id);
-          }
-        } catch (error) {
-          console.error("Onboarding error:", error);
-          toast.error("Client created but onboarding failed", "Please manually initiate onboarding");
-        }
-      }
-      
+      toast.success(client ? "Client Updated" : "Client Created", 
+        enableOnboarding ? "Onboarding workflow initiated" : "Client saved successfully");
       onClose();
     },
     onError: (error) => {
       console.error("Error saving client:", error);
-      toast.error("Failed to save client", error.message);
+      toast.error("Error", "Failed to save client. Please try again.");
     }
   });
 
@@ -167,7 +167,6 @@ export default function ClientDialog({ client, carers = [], onClose }) {
                   type="email"
                   value={formData.email}
                   onChange={(e) => handleInputChange("email", e.target.value)}
-                  placeholder="client@example.com"
                 />
               </div>
 
@@ -281,7 +280,7 @@ export default function ClientDialog({ client, carers = [], onClose }) {
 
             <div>
               <Label className="mb-2 block">Emergency Contact</Label>
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 <Input
                   placeholder="Name"
                   value={formData.emergency_contact.name}
@@ -293,6 +292,12 @@ export default function ClientDialog({ client, carers = [], onClose }) {
                   onChange={(e) => handleNestedChange("emergency_contact", "phone", e.target.value)}
                 />
                 <Input
+                  placeholder="Email"
+                  type="email"
+                  value={formData.emergency_contact.email}
+                  onChange={(e) => handleNestedChange("emergency_contact", "email", e.target.value)}
+                />
+                <Input
                   placeholder="Relationship"
                   value={formData.emergency_contact.relationship}
                   onChange={(e) => handleNestedChange("emergency_contact", "relationship", e.target.value)}
@@ -301,22 +306,39 @@ export default function ClientDialog({ client, carers = [], onClose }) {
             </div>
 
             {!client && (
-              <div className="border-t pt-4">
-                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+              <div className="border-t pt-4 space-y-4">
+                <div className="flex items-center gap-3 p-4 bg-purple-50 rounded-lg">
                   <Checkbox
-                    id="enable-onboarding"
+                    id="enable_onboarding"
                     checked={enableOnboarding}
                     onCheckedChange={setEnableOnboarding}
                   />
                   <div className="flex-1">
-                    <Label htmlFor="enable-onboarding" className="cursor-pointer font-medium">
-                      Enable Automated Onboarding
+                    <Label htmlFor="enable_onboarding" className="cursor-pointer flex items-center gap-2">
+                      <Sparkles className="w-4 h-4 text-purple-600" />
+                      <span className="font-medium">Enable Automated Onboarding</span>
                     </Label>
-                    <p className="text-sm text-gray-600 mt-1">
+                    <p className="text-xs text-gray-600 mt-1">
                       Automatically send welcome email, create onboarding tasks, and track progress
                     </p>
                   </div>
                 </div>
+
+                {enableOnboarding && (
+                  <div>
+                    <Label htmlFor="assigned_staff">Assign Onboarding Coordinator *</Label>
+                    <Select value={assignedStaff} onValueChange={setAssignedStaff}>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select staff member" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {staff.map(s => (
+                          <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
               </div>
             )}
           </div>
@@ -327,7 +349,7 @@ export default function ClientDialog({ client, carers = [], onClose }) {
             </Button>
             <Button
               type="submit"
-              disabled={saveMutation.isPending}
+              disabled={saveMutation.isPending || (enableOnboarding && !assignedStaff)}
               className="bg-blue-600 hover:bg-blue-700"
             >
               {saveMutation.isPending ? (
@@ -336,7 +358,10 @@ export default function ClientDialog({ client, carers = [], onClose }) {
                   Saving...
                 </>
               ) : (
-                client ? "Update Client" : "Create Client"
+                <>
+                  {client ? "Update Client" : "Create Client"}
+                  {enableOnboarding && !client && <Sparkles className="w-4 h-4 ml-2" />}
+                </>
               )}
             </Button>
           </DialogFooter>

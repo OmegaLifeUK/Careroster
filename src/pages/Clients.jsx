@@ -24,8 +24,8 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
-import OnboardingTracker from "../components/onboarding/OnboardingTracker";
 import TaskManager from "../components/tasks/TaskManager";
+import OnboardingTracker from "../components/onboarding/OnboardingTracker";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -197,6 +197,13 @@ export default function Clients() {
               Details
             </Button>
             <Button
+              variant={activeTab === "onboarding" ? "default" : "ghost"}
+              onClick={() => setActiveTab("onboarding")}
+              className="flex-shrink-0"
+            >
+              Onboarding
+            </Button>
+            <Button
               variant={activeTab === "tasks" ? "default" : "ghost"}
               onClick={() => setActiveTab("tasks")}
               className="flex-shrink-0"
@@ -356,6 +363,10 @@ export default function Clients() {
                 </div>
               </CardContent>
             </Card>
+          )}
+
+          {activeTab === "onboarding" && (
+            <OnboardingTracker clientId={selectedClient.id} />
           )}
 
           {activeTab === "tasks" && (
