@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -15,12 +15,15 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useClientOnboarding } from "@/components/onboarding/ClientOnboardingAutomation";
+import { useToast } from "@/components/ui/toast";
 
 export default function ClientDialog({ client, carers = [], onClose }) {
   const [formData, setFormData] = useState({
     full_name: client?.full_name || "",
     date_of_birth: client?.date_of_birth || "",
     phone: client?.phone || "",
+    email: client?.email || "",
     status: client?.status || "active",
     funding_type: client?.funding_type || "self_funded",
     mobility: client?.mobility || "independent",
@@ -30,8 +33,19 @@ export default function ClientDialog({ client, carers = [], onClose }) {
     preferred_carers: client?.preferred_carers || [],
     medical_notes: client?.medical_notes || "",
   });
+  const [enableOnboarding, setEnableOnboarding] = useState(!client);
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
+  const { initiateOnboarding } = useClientOnboarding();
+
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff-for-onboarding'],
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -41,13 +55,27 @@ export default function ClientDialog({ client, carers = [], onClose }) {
         return base44.entities.Client.create(data);
       }
     },
-    onSuccess: () => {
+    onSuccess: async (newClient) => {
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      
+      // Trigger onboarding workflow for new clients
+      if (!client && enableOnboarding) {
+        try {
+          const assignedStaff = staff.find(s => s.is_active) || staff[0];
+          if (assignedStaff) {
+            await initiateOnboarding(newClient, assignedStaff.id);
+          }
+        } catch (error) {
+          console.error("Onboarding error:", error);
+          toast.error("Client created but onboarding failed", "Please manually initiate onboarding");
+        }
+      }
+      
       onClose();
     },
     onError: (error) => {
       console.error("Error saving client:", error);
-      alert("Failed to save client. Please try again.");
+      toast.error("Failed to save client", error.message);
     }
   });
 
@@ -129,6 +157,17 @@ export default function ClientDialog({ client, carers = [], onClose }) {
                   id="phone"
                   value={formData.phone}
                   onChange={(e) => handleInputChange("phone", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  value={formData.email}
+                  onChange={(e) => handleInputChange("email", e.target.value)}
+                  placeholder="client@example.com"
                 />
               </div>
 
@@ -260,6 +299,26 @@ export default function ClientDialog({ client, carers = [], onClose }) {
                 />
               </div>
             </div>
+
+            {!client && (
+              <div className="border-t pt-4">
+                <div className="flex items-start gap-3 p-4 bg-blue-50 rounded-lg">
+                  <Checkbox
+                    id="enable-onboarding"
+                    checked={enableOnboarding}
+                    onCheckedChange={setEnableOnboarding}
+                  />
+                  <div className="flex-1">
+                    <Label htmlFor="enable-onboarding" className="cursor-pointer font-medium">
+                      Enable Automated Onboarding
+                    </Label>
+                    <p className="text-sm text-gray-600 mt-1">
+                      Automatically send welcome email, create onboarding tasks, and track progress
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
           <DialogFooter>
