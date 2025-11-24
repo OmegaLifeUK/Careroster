@@ -90,6 +90,10 @@ const clientPortalNav = [
   { title: "Booking Requests", url: createPageUrl("ClientPortalBookings"), icon: ClipboardList },
 ];
 
+const crmNav = [
+  { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
+];
+
 const complianceNav = [
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
