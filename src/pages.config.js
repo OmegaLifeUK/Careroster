@@ -52,6 +52,7 @@ import PayrollDashboard from './pages/PayrollDashboard';
 import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import PayrollProcessing from './pages/PayrollProcessing';
 import InvoiceManagement from './pages/InvoiceManagement';
+import CRMDashboard from './pages/CRMDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -110,6 +111,7 @@ export const PAGES = {
     "TimesheetReconciliation": TimesheetReconciliation,
     "PayrollProcessing": PayrollProcessing,
     "InvoiceManagement": InvoiceManagement,
+    "CRMDashboard": CRMDashboard,
 }
 
 export const pagesConfig = {
