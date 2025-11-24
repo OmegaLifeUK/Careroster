@@ -90,16 +90,16 @@ const clientPortalNav = [
   { title: "Booking Requests", url: createPageUrl("ClientPortalBookings"), icon: ClipboardList },
 ];
 
-const crmNav = [
-  { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
-];
-
 const complianceNav = [
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
   { title: "Audit Templates", url: createPageUrl("AuditTemplates"), icon: FileText },
   { title: "Form Builder", url: createPageUrl("FormBuilder"), icon: FileText },
+];
+
+const crmNav = [
+  { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
 ];
 
 const systemNavigation = [
@@ -435,29 +435,6 @@ export default function Layout({ children, currentPageName }) {
 
                   <div className="mb-6">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                      CRM & Intake
-                    </p>
-                    <nav className="space-y-1">
-                      {crmNav.map((item) => (
-                        <Link
-                          key={item.title}
-                          to={item.url}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                            location.pathname === item.url 
-                              ? 'bg-teal-50 text-teal-700 font-medium shadow-sm' 
-                              : 'text-gray-700 hover:bg-teal-50 hover:text-teal-700'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="text-sm">{item.title}</span>
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-
-                  <div className="mb-6">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
                       Compliance & Quality
                     </p>
                     <nav className="space-y-1">
@@ -470,6 +447,29 @@ export default function Layout({ children, currentPageName }) {
                             location.pathname === item.url 
                               ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
                               : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
+                          }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </div>
+
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                      CRM & Intake
+                    </p>
+                    <nav className="space-y-1">
+                      {crmNav.map((item) => (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            location.pathname === item.url 
+                              ? 'bg-cyan-50 text-cyan-700 font-medium shadow-sm' 
+                              : 'text-gray-700 hover:bg-cyan-50 hover:text-cyan-700'
                           }`}
                         >
                           <item.icon className="w-5 h-5" />

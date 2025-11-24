@@ -17,6 +17,10 @@ import {
   Plus
 } from "lucide-react";
 import { format } from "date-fns";
+import EnquiryManager from "../components/crm/EnquiryManager";
+import ReferralManager from "../components/crm/ReferralManager";
+import DocumentTracker from "../components/crm/DocumentTracker";
+import FollowUpManager from "../components/crm/FollowUpManager";
 
 export default function CRMDashboard() {
   const [activeView, setActiveView] = useState("overview");
@@ -260,23 +264,11 @@ export default function CRMDashboard() {
           </div>
         )}
 
-        {/* Placeholder views for other tabs */}
-        {activeView !== "overview" && (
-          <Card>
-            <CardContent className="p-12 text-center">
-              <p className="text-gray-500 mb-4">
-                {activeView === "enquiries" && "Enquiry Management"}
-                {activeView === "referrals" && "Referral Management"}
-                {activeView === "documents" && "Document Tracking"}
-                {activeView === "followups" && "Follow-up Management"}
-              </p>
-              <Button>
-                <Plus className="w-4 h-4 mr-2" />
-                Add {activeView.slice(0, -1)}
-              </Button>
-            </CardContent>
-          </Card>
-        )}
+        {/* Component views for other tabs */}
+        {activeView === "enquiries" && <EnquiryManager />}
+        {activeView === "referrals" && <ReferralManager />}
+        {activeView === "documents" && <DocumentTracker />}
+        {activeView === "followups" && <FollowUpManager />}
       </div>
     </div>
   );
