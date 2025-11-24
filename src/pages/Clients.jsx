@@ -24,8 +24,8 @@ import RepositioningChartManager from "../components/clients/RepositioningChartM
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
-import TaskManager from "../components/tasks/TaskManager";
 import OnboardingTracker from "../components/onboarding/OnboardingTracker";
+import TaskManager from "../components/tasks/TaskManager";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
