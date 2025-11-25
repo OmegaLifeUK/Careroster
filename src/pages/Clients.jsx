@@ -472,6 +472,14 @@ export default function Clients() {
               columns={exportColumns}
             />
             <Button
+              onClick={() => setShowNewClientImporter(true)}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import from Document
+            </Button>
+            <Button
               onClick={() => {
                 setEditingClient(null);
                 setShowDialog(true);
