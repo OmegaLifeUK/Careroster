@@ -368,19 +368,19 @@ Analyze the document and return the JSON structure.`,
         description: processedResult.description || "",
         category: processedResult.category || "other",
         sections: (processedResult.sections || []).map((section, sIdx) => ({
-          section_id: `section_${Date.now()}_${sIdx}`,
+          section_id: section.section_id || `section_${Date.now()}_${sIdx}`,
           section_title: section?.section_title || `Section ${sIdx + 1}`,
           section_description: section?.section_description || "",
           section_order: sIdx,
           is_repeatable: section?.is_repeatable || false,
           fields: (section?.fields || []).map((field, fIdx) => {
-            // Ensure table_columns is properly structured
+            // For table fields, preserve the table_columns exactly as they are
             let tableColumns = [];
             if (field?.field_type === 'table') {
               if (Array.isArray(field?.table_columns) && field.table_columns.length > 0) {
                 tableColumns = field.table_columns.map(col => ({
-                  name: col?.name || 'Column',
-                  type: col?.type || 'text',
+                  name: String(col?.name || 'Column'),
+                  type: String(col?.type || 'text'),
                   options: Array.isArray(col?.options) ? col.options : []
                 }));
               } else {
@@ -391,7 +391,7 @@ Analyze the document and return the JSON structure.`,
                   { name: "Column 3", type: "text", options: [] }
                 ];
               }
-              console.log("Table field columns:", field.field_label, tableColumns);
+              console.log("Final table_columns for", field.field_label, ":", JSON.stringify(tableColumns));
             }
 
             // Process conditional logic
@@ -405,19 +405,21 @@ Analyze the document and return the JSON structure.`,
               };
             }
             
-            return {
-              field_id: fieldIdMap[`field_${sIdx}_${fIdx}`] || `field_${Date.now()}_${sIdx}_${fIdx}`,
+            const finalField = {
+              field_id: field.field_id || fieldIdMap[`field_${sIdx}_${fIdx}`] || `field_${Date.now()}_${sIdx}_${fIdx}`,
               field_label: field?.field_label || `Field ${fIdx + 1}`,
               field_type: field?.field_type || 'text',
-              field_order: fIdx,
+              field_order: field.field_order ?? fIdx,
               required: field?.required || false,
               placeholder: field?.placeholder || "",
               helper_text: field?.helper_text || "",
               options: Array.isArray(field?.options) ? field.options : [],
               table_columns: tableColumns,
-              validation: {},
+              validation: field?.validation || {},
               conditional_logic: conditionalLogic
             };
+            
+            return finalField;
           })
         })),
         workflow_triggers: [],
