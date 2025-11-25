@@ -18,7 +18,9 @@ export default function FormPreview({ template }) {
   const addTableRow = (fieldId, columns) => {
     const currentRows = formValues[fieldId] || [];
     const newRow = {};
-    columns.forEach(col => {
+    // Handle both array and object forms
+    const colArray = Array.isArray(columns) ? columns : Object.values(columns || {});
+    colArray.forEach(col => {
       newRow[col.name] = col.type === 'checkbox' ? false : '';
     });
     updateValue(fieldId, [...currentRows, newRow]);
