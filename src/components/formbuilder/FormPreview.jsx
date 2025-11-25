@@ -36,8 +36,17 @@ export default function FormPreview({ template }) {
   };
 
   const renderTableField = (field) => {
-    const columns = field.table_columns || [];
+    const columns = Array.isArray(field.table_columns) ? field.table_columns : [];
     const rows = formValues[field.field_id] || [];
+
+    // Handle case where table has no columns defined
+    if (columns.length === 0) {
+      return (
+        <div className="border rounded-lg p-4 bg-gray-50 text-center text-gray-500">
+          <p>Table has no columns defined</p>
+        </div>
+      );
+    }
 
     return (
       <div className="border rounded-lg overflow-x-auto">
@@ -46,7 +55,7 @@ export default function FormPreview({ template }) {
             <tr>
               {columns.map((col, idx) => (
                 <th key={idx} className="px-3 py-2 text-left text-sm font-medium text-gray-700 border-b">
-                  {col.name}
+                  {col?.name || `Column ${idx + 1}`}
                 </th>
               ))}
               <th className="px-3 py-2 text-right text-sm font-medium text-gray-700 border-b w-16">
