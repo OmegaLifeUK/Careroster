@@ -301,18 +301,6 @@ Analyze the document and return the JSON structure.`,
           tableColumns.push({ name: "Evening", type: "textarea", options: [] });
         }
         
-        const tableField = {
-          field_id: `table_${Date.now()}`,
-          field_label: result.form_name || "Weekly Activity Schedule",
-          field_type: "table",
-          required: false,
-          table_columns: tableColumns,
-          options: [],
-          placeholder: ""
-        };
-        
-        console.log("Created table field with columns:", tableColumns);
-        
         // Find non-schedule-related fields to keep
         const otherFields = allFields.filter(f => {
           const label = (f.field_label || '').toLowerCase();
@@ -321,18 +309,44 @@ Analyze the document and return the JSON structure.`,
           return !isDayField && !isTimeField;
         });
         
-        // Rebuild sections with table
+        // Rebuild sections with table - insert the full table object directly
         processedResult = {
           ...result,
           sections: [
             {
+              section_id: `section_${Date.now()}`,
               section_title: result.sections?.[0]?.section_title || "Schedule",
               section_description: "",
+              section_order: 0,
               is_repeatable: false,
-              fields: [...otherFields, tableField]
+              fields: [
+                ...otherFields.map((f, idx) => ({
+                  ...f,
+                  field_id: f.field_id || `field_${Date.now()}_${idx}`,
+                  field_order: idx
+                })),
+                {
+                  field_id: `table_${Date.now()}`,
+                  field_label: result.form_name || "Weekly Activity Schedule",
+                  field_type: "table",
+                  field_order: otherFields.length,
+                  required: false,
+                  placeholder: "",
+                  options: [],
+                  table_columns: tableColumns.map(col => ({
+                    name: col.name,
+                    type: col.type,
+                    options: col.options || []
+                  })),
+                  validation: {},
+                  conditional_logic: {}
+                }
+              ]
             }
           ]
         };
+        
+        console.log("Created processedResult with table:", JSON.stringify(processedResult.sections[0].fields.find(f => f.field_type === 'table'), null, 2));
         
         toast.info("Table Created", "Converted schedule/planner fields to table format");
       }
