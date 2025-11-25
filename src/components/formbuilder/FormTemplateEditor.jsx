@@ -19,6 +19,8 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
+import TableFieldEditor from "./TableFieldEditor";
+
 const FIELD_TYPES = [
   { value: "text", label: "Text Input" },
   { value: "textarea", label: "Text Area" },
@@ -34,7 +36,8 @@ const FIELD_TYPES = [
   { value: "signature", label: "Signature" },
   { value: "rating", label: "Rating" },
   { value: "email", label: "Email" },
-  { value: "phone", label: "Phone" }
+  { value: "phone", label: "Phone" },
+  { value: "table", label: "Table" }
 ];
 
 export default function FormTemplateEditor({ template, onClose }) {
@@ -114,15 +117,16 @@ export default function FormTemplateEditor({ template, onClose }) {
     setFormData({ ...formData, sections: newSections });
   };
 
-  const addField = () => {
+  const addField = (fieldType = "text") => {
     const newField = {
       field_id: `field_${Date.now()}`,
-      field_label: "New Field",
-      field_type: "text",
+      field_label: fieldType === "table" ? "New Table" : "New Field",
+      field_type: fieldType,
       field_order: formData.sections[activeSection].fields.length,
       required: false,
       placeholder: "",
       options: [],
+      table_columns: fieldType === "table" ? [{ name: "Column 1", type: "text", options: [] }] : [],
       validation: {},
       conditional_logic: {}
     };
@@ -402,6 +406,13 @@ export default function FormTemplateEditor({ template, onClose }) {
                             />
                           )}
 
+                          {field.field_type === 'table' && (
+                            <TableFieldEditor
+                              columns={field.table_columns || []}
+                              onChange={(cols) => updateField(fieldIdx, 'table_columns', cols)}
+                            />
+                          )}
+
                           <div className="flex items-center gap-3">
                             <label className="flex items-center gap-2">
                               <input
@@ -427,10 +438,16 @@ export default function FormTemplateEditor({ template, onClose }) {
                   </Card>
                 ))}
 
-                <Button onClick={addField} variant="outline" className="w-full">
-                  <Plus className="w-4 h-4 mr-2" />
-                  Add Field
-                </Button>
+                <div className="flex gap-2">
+                  <Button onClick={() => addField("text")} variant="outline" className="flex-1">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Field
+                  </Button>
+                  <Button onClick={() => addField("table")} variant="outline">
+                    <Plus className="w-4 h-4 mr-2" />
+                    Add Table
+                  </Button>
+                </div>
               </CardContent>
             </Card>
 

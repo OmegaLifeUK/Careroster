@@ -12,17 +12,20 @@ import {
   Copy,
   Eye,
   Settings,
-  Sparkles
+  Sparkles,
+  Upload
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import FormTemplateEditor from "../components/formbuilder/FormTemplateEditor";
 import FormPreview from "../components/formbuilder/FormPreview";
+import AIFormGenerator from "../components/formbuilder/AIFormGenerator";
 
 export default function FormBuilder() {
   const [editingTemplate, setEditingTemplate] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [previewTemplate, setPreviewTemplate] = useState(null);
   const [filterCategory, setFilterCategory] = useState("all");
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -130,16 +133,26 @@ export default function FormBuilder() {
             </h1>
             <p className="text-gray-500">Create dynamic forms to digitize paper documents and automate workflows</p>
           </div>
-          <Button
-            onClick={() => {
-              setEditingTemplate(null);
-              setShowEditor(true);
-            }}
-            className="bg-blue-600 hover:bg-blue-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Form
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowAIGenerator(true)}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Upload className="w-4 h-4 mr-2" />
+              Import from Document
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingTemplate(null);
+                setShowEditor(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Create Form
+            </Button>
+          </div>
         </div>
 
         {/* Stats */}
@@ -318,6 +331,17 @@ export default function FormBuilder() {
               </Button>
             </CardContent>
           </Card>
+        )}
+
+        {showAIGenerator && (
+          <AIFormGenerator
+            onFormGenerated={(template) => {
+              setEditingTemplate(template);
+              setShowEditor(true);
+              setShowAIGenerator(false);
+            }}
+            onClose={() => setShowAIGenerator(false)}
+          />
         )}
       </div>
     </div>
