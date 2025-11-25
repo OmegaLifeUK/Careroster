@@ -255,9 +255,17 @@ Be thorough and extract ALL relevant information from the document.`,
         status: "active"
       };
 
-      const newClient = await base44.entities.Client.create(clientData);
-      setCreatedClient(newClient);
-      results.success.push("Client Profile");
+      let newClient;
+      try {
+        newClient = await base44.entities.Client.create(clientData);
+        setCreatedClient(newClient);
+        results.success.push("Client Profile");
+      } catch (clientError) {
+        console.error("CLIENT CREATE ERROR:", clientError);
+        toast.error("Client Creation Failed", String(clientError));
+        setIsProcessing(false);
+        return;
+      }
 
       const clientId = newClient.id;
 
