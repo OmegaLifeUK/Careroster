@@ -155,6 +155,10 @@ Analyze the document and return the JSON structure.`,
             form_name: { type: "string" },
             description: { type: "string" },
             category: { type: "string" },
+            contains_table_or_grid: { 
+              type: "boolean",
+              description: "Set to true if the document contains any table, grid, schedule, or weekly planner layout"
+            },
             sections: {
               type: "array",
               items: {
@@ -169,20 +173,26 @@ Analyze the document and return the JSON structure.`,
                       type: "object",
                       properties: {
                         field_label: { type: "string" },
-                        field_type: { type: "string" },
+                        field_type: { 
+                          type: "string",
+                          enum: ["text", "textarea", "number", "date", "time", "datetime", "select", "multiselect", "checkbox", "radio", "signature", "rating", "email", "phone", "file", "table"],
+                          description: "Use 'table' for any grid, schedule, planner, or tabular data"
+                        },
                         required: { type: "boolean" },
                         placeholder: { type: "string" },
                         helper_text: { type: "string" },
                         options: { type: "array", items: { type: "string" } },
                         table_columns: {
                           type: "array",
+                          description: "Required when field_type is 'table'. Define each column of the table.",
                           items: {
                             type: "object",
                             properties: {
-                              name: { type: "string" },
-                              type: { type: "string" },
+                              name: { type: "string", description: "Column header name" },
+                              type: { type: "string", enum: ["text", "textarea", "number", "date", "time", "select", "checkbox"] },
                               options: { type: "array", items: { type: "string" } }
-                            }
+                            },
+                            required: ["name", "type"]
                           }
                         },
                         conditional_logic: {
@@ -193,26 +203,29 @@ Analyze the document and return the JSON structure.`,
                             show_if_value: { type: "string" }
                           }
                         }
-                      }
+                      },
+                      required: ["field_label", "field_type"]
                     }
                   }
                 }
               }
-            },
-            detected_relationships: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  trigger_field: { type: "string" },
-                  dependent_field: { type: "string" },
-                  condition: { type: "string" }
-                }
-              }
             }
-          }
+          },
+          required: ["form_name", "sections", "contains_table_or_grid"]
         }
       });
+
+      console.log("AI Raw Result:", JSON.stringify(result, null, 2));
+      
+      // If AI detected tables but didn't create table fields, warn user
+      if (result.contains_table_or_grid) {
+        const hasTableFields = (result.sections || []).some(s => 
+          (s.fields || []).some(f => f.field_type === 'table')
+        );
+        if (!hasTableFields) {
+          console.warn("AI detected grid/table but didn't create table fields - this may need manual adjustment");
+        }
+      }
 
       console.log("AI Result:", JSON.stringify(result, null, 2));
 
