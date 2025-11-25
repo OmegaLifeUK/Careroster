@@ -20,6 +20,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 
 import TableFieldEditor from "./TableFieldEditor";
+import WorkflowActionEditor from "./WorkflowActionEditor";
 
 const FIELD_TYPES = [
   { value: "text", label: "Text Input" },
@@ -185,6 +186,30 @@ export default function FormTemplateEditor({ template, onClose }) {
       action_config: {}
     });
     setFormData({ ...formData, workflow_triggers: newTriggers });
+  };
+
+  const updateWorkflowAction = (triggerIndex, actionIndex, updatedAction) => {
+    const newTriggers = [...formData.workflow_triggers];
+    newTriggers[triggerIndex].actions[actionIndex] = updatedAction;
+    setFormData({ ...formData, workflow_triggers: newTriggers });
+  };
+
+  const deleteWorkflowAction = (triggerIndex, actionIndex) => {
+    const newTriggers = [...formData.workflow_triggers];
+    newTriggers[triggerIndex].actions = newTriggers[triggerIndex].actions.filter((_, i) => i !== actionIndex);
+    setFormData({ ...formData, workflow_triggers: newTriggers });
+  };
+
+  // Get all fields for workflow condition selection
+  const allFields = formData.sections.flatMap(s => s.fields);
+
+  // Get field options for condition value when field is selected
+  const getFieldOptions = (fieldId) => {
+    const field = allFields.find(f => f.field_id === fieldId);
+    if (!field) return null;
+    if (field.field_type === 'checkbox') return ['true', 'false'];
+    if (field.options?.length > 0) return field.options;
+    return null;
   };
 
   return (
@@ -453,20 +478,23 @@ export default function FormTemplateEditor({ template, onClose }) {
 
             {/* Workflow Configuration */}
             {showWorkflows && formData.workflow_triggers?.length > 0 && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Workflow Triggers</CardTitle>
+              <Card className="border-purple-200">
+                <CardHeader className="bg-purple-50">
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-purple-600" />
+                    Workflow Triggers
+                  </CardTitle>
                 </CardHeader>
-                <CardContent className="space-y-4">
+                <CardContent className="p-4 space-y-4">
                   {formData.workflow_triggers.map((trigger, idx) => (
-                    <Card key={idx} className="border-purple-200">
-                      <CardContent className="p-4 space-y-3">
-                        <div className="flex items-start justify-between">
+                    <Card key={idx} className="border-2 border-purple-100">
+                      <CardContent className="p-4 space-y-4">
+                        <div className="flex items-start justify-between gap-2">
                           <Input
                             value={trigger.trigger_name}
                             onChange={(e) => updateWorkflowTrigger(idx, 'trigger_name', e.target.value)}
-                            placeholder="Workflow Name"
-                            className="flex-1"
+                            placeholder="Workflow Name (e.g., 'Escalate High Priority')"
+                            className="flex-1 font-medium"
                           />
                           <Button
                             size="sm"
@@ -478,55 +506,95 @@ export default function FormTemplateEditor({ template, onClose }) {
                           </Button>
                         </div>
 
-                        <div className="grid grid-cols-3 gap-2">
-                          <Select
-                            value={trigger.condition_field}
-                            onValueChange={(val) => updateWorkflowTrigger(idx, 'condition_field', val)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue placeholder="Field" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {formData.sections.flatMap(s => s.fields).map(f => (
-                                <SelectItem key={f.field_id} value={f.field_id}>
-                                  {f.field_label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                        <div className="p-3 bg-gray-50 rounded-lg">
+                          <p className="text-xs font-medium text-gray-500 mb-2">WHEN</p>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-2">
+                            <Select
+                              value={trigger.condition_field}
+                              onValueChange={(val) => updateWorkflowTrigger(idx, 'condition_field', val)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue placeholder="Select field..." />
+                              </SelectTrigger>
+                              <SelectContent>
+                                {allFields.map(f => (
+                                  <SelectItem key={f.field_id} value={f.field_id}>
+                                    {f.field_label}
+                                  </SelectItem>
+                                ))}
+                              </SelectContent>
+                            </Select>
 
-                          <Select
-                            value={trigger.condition_operator}
-                            onValueChange={(val) => updateWorkflowTrigger(idx, 'condition_operator', val)}
-                          >
-                            <SelectTrigger>
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="equals">Equals</SelectItem>
-                              <SelectItem value="not_equals">Not Equals</SelectItem>
-                              <SelectItem value="contains">Contains</SelectItem>
-                              <SelectItem value="greater_than">Greater Than</SelectItem>
-                              <SelectItem value="less_than">Less Than</SelectItem>
-                            </SelectContent>
-                          </Select>
+                            <Select
+                              value={trigger.condition_operator}
+                              onValueChange={(val) => updateWorkflowTrigger(idx, 'condition_operator', val)}
+                            >
+                              <SelectTrigger>
+                                <SelectValue />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="equals">Equals</SelectItem>
+                                <SelectItem value="not_equals">Not Equals</SelectItem>
+                                <SelectItem value="contains">Contains</SelectItem>
+                                <SelectItem value="is_checked">Is Checked</SelectItem>
+                                <SelectItem value="is_not_checked">Is Not Checked</SelectItem>
+                                <SelectItem value="greater_than">Greater Than</SelectItem>
+                                <SelectItem value="less_than">Less Than</SelectItem>
+                                <SelectItem value="is_empty">Is Empty</SelectItem>
+                                <SelectItem value="is_not_empty">Is Not Empty</SelectItem>
+                              </SelectContent>
+                            </Select>
 
-                          <Input
-                            value={trigger.condition_value}
-                            onChange={(e) => updateWorkflowTrigger(idx, 'condition_value', e.target.value)}
-                            placeholder="Value"
-                          />
+                            {!['is_checked', 'is_not_checked', 'is_empty', 'is_not_empty'].includes(trigger.condition_operator) && (
+                              getFieldOptions(trigger.condition_field) ? (
+                                <Select
+                                  value={trigger.condition_value}
+                                  onValueChange={(val) => updateWorkflowTrigger(idx, 'condition_value', val)}
+                                >
+                                  <SelectTrigger>
+                                    <SelectValue placeholder="Select value..." />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {getFieldOptions(trigger.condition_field).map((opt, i) => (
+                                      <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              ) : (
+                                <Input
+                                  value={trigger.condition_value}
+                                  onChange={(e) => updateWorkflowTrigger(idx, 'condition_value', e.target.value)}
+                                  placeholder="Value"
+                                />
+                              )
+                            )}
+                          </div>
                         </div>
 
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => addWorkflowAction(idx)}
-                          className="w-full"
-                        >
-                          <Plus className="w-4 h-4 mr-1" />
-                          Add Action
-                        </Button>
+                        <div>
+                          <p className="text-xs font-medium text-gray-500 mb-2">THEN DO</p>
+                          <div className="space-y-2">
+                            {trigger.actions?.map((action, actionIdx) => (
+                              <WorkflowActionEditor
+                                key={actionIdx}
+                                action={action}
+                                onChange={(updated) => updateWorkflowAction(idx, actionIdx, updated)}
+                                onDelete={() => deleteWorkflowAction(idx, actionIdx)}
+                                staff={staff}
+                                roles={roles}
+                              />
+                            ))}
+                          </div>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => addWorkflowAction(idx)}
+                            className="w-full mt-2"
+                          >
+                            <Plus className="w-4 h-4 mr-1" />
+                            Add Action
+                          </Button>
+                        </div>
                       </CardContent>
                     </Card>
                   ))}
