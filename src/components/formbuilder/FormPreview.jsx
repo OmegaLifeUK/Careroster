@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
+import { Plus, Trash2 } from "lucide-react";
 
 export default function FormPreview({ template }) {
   const [formValues, setFormValues] = useState({});
@@ -12,6 +13,124 @@ export default function FormPreview({ template }) {
 
   const updateValue = (fieldId, value) => {
     setFormValues({ ...formValues, [fieldId]: value });
+  };
+
+  const addTableRow = (fieldId, columns) => {
+    const currentRows = formValues[fieldId] || [];
+    const newRow = {};
+    columns.forEach(col => {
+      newRow[col.name] = col.type === 'checkbox' ? false : '';
+    });
+    updateValue(fieldId, [...currentRows, newRow]);
+  };
+
+  const updateTableCell = (fieldId, rowIndex, columnName, value) => {
+    const currentRows = [...(formValues[fieldId] || [])];
+    currentRows[rowIndex] = { ...currentRows[rowIndex], [columnName]: value };
+    updateValue(fieldId, currentRows);
+  };
+
+  const deleteTableRow = (fieldId, rowIndex) => {
+    const currentRows = formValues[fieldId] || [];
+    updateValue(fieldId, currentRows.filter((_, i) => i !== rowIndex));
+  };
+
+  const renderTableField = (field) => {
+    const columns = field.table_columns || [];
+    const rows = formValues[field.field_id] || [];
+
+    return (
+      <div className="border rounded-lg overflow-x-auto">
+        <table className="w-full min-w-[500px]">
+          <thead className="bg-gray-50">
+            <tr>
+              {columns.map((col, idx) => (
+                <th key={idx} className="px-3 py-2 text-left text-sm font-medium text-gray-700 border-b">
+                  {col.name}
+                </th>
+              ))}
+              <th className="px-3 py-2 text-right text-sm font-medium text-gray-700 border-b w-16">
+                Actions
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            {rows.map((row, rowIdx) => (
+              <tr key={rowIdx} className="border-b last:border-b-0">
+                {columns.map((col, colIdx) => (
+                  <td key={colIdx} className="px-3 py-2">
+                    {col.type === 'select' ? (
+                      <Select
+                        value={row[col.name] || ''}
+                        onValueChange={(val) => updateTableCell(field.field_id, rowIdx, col.name, val)}
+                      >
+                        <SelectTrigger className="h-8">
+                          <SelectValue placeholder="Select..." />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {col.options?.map((opt, i) => (
+                            <SelectItem key={i} value={opt}>{opt}</SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    ) : col.type === 'checkbox' ? (
+                      <input
+                        type="checkbox"
+                        checked={row[col.name] || false}
+                        onChange={(e) => updateTableCell(field.field_id, rowIdx, col.name, e.target.checked)}
+                        className="w-4 h-4 rounded"
+                      />
+                    ) : col.type === 'number' ? (
+                      <Input
+                        type="number"
+                        value={row[col.name] || ''}
+                        onChange={(e) => updateTableCell(field.field_id, rowIdx, col.name, e.target.value)}
+                        className="h-8"
+                      />
+                    ) : col.type === 'date' ? (
+                      <Input
+                        type="date"
+                        value={row[col.name] || ''}
+                        onChange={(e) => updateTableCell(field.field_id, rowIdx, col.name, e.target.value)}
+                        className="h-8"
+                      />
+                    ) : (
+                      <Input
+                        type="text"
+                        value={row[col.name] || ''}
+                        onChange={(e) => updateTableCell(field.field_id, rowIdx, col.name, e.target.value)}
+                        className="h-8"
+                      />
+                    )}
+                  </td>
+                ))}
+                <td className="px-3 py-2 text-right">
+                  <Button
+                    size="icon"
+                    variant="ghost"
+                    onClick={() => deleteTableRow(field.field_id, rowIdx)}
+                    className="h-8 w-8 text-red-600"
+                  >
+                    <Trash2 className="w-4 h-4" />
+                  </Button>
+                </td>
+              </tr>
+            ))}
+          </tbody>
+        </table>
+        <div className="p-2 bg-gray-50 border-t">
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={() => addTableRow(field.field_id, columns)}
+            className="w-full"
+          >
+            <Plus className="w-4 h-4 mr-1" />
+            Add Row
+          </Button>
+        </div>
+      </div>
+    );
   };
 
   const shouldShowField = (field) => {
@@ -124,6 +243,9 @@ export default function FormPreview({ template }) {
             ))}
           </div>
         );
+
+      case 'table':
+        return renderTableField(field);
 
       default:
         return <Input {...commonProps} />;
