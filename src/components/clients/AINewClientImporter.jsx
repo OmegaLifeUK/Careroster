@@ -264,39 +264,47 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Care Plan
       if (selectedTypes.includes("care_plan") && extractedData.care_plan) {
         try {
-          await base44.entities.CarePlan.create({
+          const carePlanData = {
             client_id: clientId,
             care_setting: "residential",
             plan_type: "initial",
             assessment_date: new Date().toISOString().split('T')[0],
             assessed_by: "AI Import",
-            status: "active",
-            care_needs: (extractedData.care_plan.care_needs || []).map(need => ({
+            status: "active"
+          };
+          
+          // Only add optional fields if they have data
+          if (extractedData.care_plan.care_needs?.length > 0) {
+            carePlanData.care_needs = extractedData.care_plan.care_needs.map(need => ({
               category: "personal_care",
               need: need,
               support_required: "",
               frequency: "daily"
-            })),
-            goals: extractedData.care_plan.goals || [],
-            daily_routine: {
-              morning: extractedData.care_plan.daily_routine || "",
+            }));
+          }
+          if (extractedData.care_plan.goals?.length > 0) {
+            carePlanData.goals = extractedData.care_plan.goals;
+          }
+          if (extractedData.care_plan.daily_routine) {
+            carePlanData.daily_routine = {
+              morning: extractedData.care_plan.daily_routine,
               afternoon: "",
               evening: "",
               night: ""
-            },
-            mental_health: {
-              communication_needs: extractedData.care_plan.communication_needs || ""
-            },
-            physical_health: {
-              nutrition: extractedData.care_plan.dietary_requirements || ""
-            },
-            preferences: {
-              likes: [],
-              dislikes: [],
-              hobbies: [],
-              social_preferences: extractedData.care_plan.preferences || ""
-            }
-          });
+            };
+          }
+          if (extractedData.care_plan.communication_needs) {
+            carePlanData.mental_health = {
+              communication_needs: extractedData.care_plan.communication_needs
+            };
+          }
+          if (extractedData.care_plan.dietary_requirements) {
+            carePlanData.physical_health = {
+              nutrition: extractedData.care_plan.dietary_requirements
+            };
+          }
+          
+          await base44.entities.CarePlan.create(carePlanData);
           results.success.push("Care Plan");
         } catch (e) {
           console.error("Care plan error:", e);
