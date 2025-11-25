@@ -442,6 +442,14 @@ export default function Clients() {
               onClose={() => setShowCarePlanGenerator(false)}
             />
           )}
+
+          {showDocumentImporter && (
+            <AIDocumentImporter
+              clientId={selectedClient.id}
+              clientName={selectedClient.full_name}
+              onClose={() => setShowDocumentImporter(false)}
+            />
+          )}
         </div>
       </div>
     );
