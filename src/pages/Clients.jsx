@@ -36,6 +36,7 @@ export default function Clients() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
+  const [showDocumentImporter, setShowDocumentImporter] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
