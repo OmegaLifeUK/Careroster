@@ -230,38 +230,90 @@ Analyze the document and return the JSON structure.`,
       // Post-process: If document has grid structure but AI didn't create table, try to detect and fix
       let processedResult = { ...result };
       
-      // Check if we have many similar fields that should be a table (e.g., "Monday - Morning", "Tuesday - Morning")
+      // Check if we have many similar fields that should be a table
       const allFields = (result.sections || []).flatMap(s => s.fields || []);
-      const dayPatterns = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
-      const timePatterns = ['morning', 'afternoon', 'evening', 'appointments', 'contacts'];
+      const hasTableField = allFields.some(f => f.field_type === 'table');
       
-      const hasDayTimePattern = allFields.some(f => {
+      // Patterns that indicate a weekly schedule/planner
+      const dayPatterns = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday', 'mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'];
+      const timePatterns = ['morning', 'afternoon', 'evening', 'night', 'am', 'pm', 'appointments', 'contacts', 'activity', 'activities'];
+      
+      // Count how many fields match day or time patterns
+      const dayFieldCount = allFields.filter(f => {
         const label = (f.field_label || '').toLowerCase();
-        return dayPatterns.some(d => label.includes(d)) && timePatterns.some(t => label.includes(t));
-      });
+        return dayPatterns.some(d => label.includes(d));
+      }).length;
       
-      if (hasDayTimePattern && !allFields.some(f => f.field_type === 'table')) {
-        console.log("Detected day/time pattern - converting to table structure");
+      const timeFieldCount = allFields.filter(f => {
+        const label = (f.field_label || '').toLowerCase();
+        return timePatterns.some(t => label.includes(t));
+      }).length;
+      
+      // If we have multiple day-related fields OR the AI said it contains a table but didn't create one
+      const shouldConvertToTable = !hasTableField && (
+        (dayFieldCount >= 3) || // Multiple day fields
+        (result.contains_table_or_grid === true) || // AI detected table
+        (allFields.length > 15 && (dayFieldCount > 0 || timeFieldCount > 0)) // Many fields with day/time hints
+      );
+      
+      if (shouldConvertToTable) {
+        console.log("Converting to table structure - dayFields:", dayFieldCount, "timeFields:", timeFieldCount, "contains_table:", result.contains_table_or_grid);
         
-        // Create a proper table structure
+        // Try to extract column names from field labels
+        const extractedTimeSlots = new Set();
+        const extractedDays = new Set();
+        
+        allFields.forEach(f => {
+          const label = (f.field_label || '').toLowerCase();
+          timePatterns.forEach(t => {
+            if (label.includes(t)) {
+              // Capitalize first letter
+              extractedTimeSlots.add(t.charAt(0).toUpperCase() + t.slice(1));
+            }
+          });
+          dayPatterns.forEach(d => {
+            if (label.includes(d)) {
+              const fullDay = {
+                'mon': 'Monday', 'tue': 'Tuesday', 'wed': 'Wednesday', 
+                'thu': 'Thursday', 'fri': 'Friday', 'sat': 'Saturday', 'sun': 'Sunday',
+                'monday': 'Monday', 'tuesday': 'Tuesday', 'wednesday': 'Wednesday',
+                'thursday': 'Thursday', 'friday': 'Friday', 'saturday': 'Saturday', 'sunday': 'Sunday'
+              }[d] || d.charAt(0).toUpperCase() + d.slice(1);
+              extractedDays.add(fullDay);
+            }
+          });
+        });
+        
+        // Build table columns based on what we found
+        const tableColumns = [
+          { name: "Day", type: "select", options: extractedDays.size > 0 ? Array.from(extractedDays) : ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] }
+        ];
+        
+        // Add time-based columns
+        if (extractedTimeSlots.size > 0) {
+          Array.from(extractedTimeSlots).forEach(slot => {
+            tableColumns.push({ name: slot, type: "textarea", options: [] });
+          });
+        } else {
+          // Default time slots
+          tableColumns.push({ name: "Morning", type: "textarea", options: [] });
+          tableColumns.push({ name: "Afternoon", type: "textarea", options: [] });
+          tableColumns.push({ name: "Evening", type: "textarea", options: [] });
+        }
+        
         const tableField = {
-          field_label: "Weekly Activity Schedule",
+          field_label: result.form_name || "Weekly Activity Schedule",
           field_type: "table",
           required: false,
-          table_columns: [
-            { name: "Day", type: "select", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] },
-            { name: "Appointments/Contacts", type: "textarea", options: [] },
-            { name: "Morning", type: "textarea", options: [] },
-            { name: "Afternoon", type: "textarea", options: [] },
-            { name: "Evening", type: "textarea", options: [] }
-          ]
+          table_columns: tableColumns
         };
         
-        // Find non-day-related fields to keep
+        // Find non-schedule-related fields to keep
         const otherFields = allFields.filter(f => {
           const label = (f.field_label || '').toLowerCase();
           const isDayField = dayPatterns.some(d => label.includes(d));
-          return !isDayField;
+          const isTimeField = timePatterns.some(t => label.includes(t));
+          return !isDayField && !isTimeField;
         });
         
         // Rebuild sections with table
@@ -269,7 +321,7 @@ Analyze the document and return the JSON structure.`,
           ...result,
           sections: [
             {
-              section_title: result.sections?.[0]?.section_title || "Weekly Schedule",
+              section_title: result.sections?.[0]?.section_title || "Schedule",
               section_description: "",
               is_repeatable: false,
               fields: [...otherFields, tableField]
@@ -277,7 +329,7 @@ Analyze the document and return the JSON structure.`,
           ]
         };
         
-        toast.info("Table Detected", "Converted weekly schedule pattern to table format");
+        toast.info("Table Created", "Converted schedule/planner fields to table format");
       }
 
       // Build field ID map for conditional logic references
