@@ -36,14 +36,27 @@ export default function FormPreview({ template }) {
   };
 
   const renderTableField = (field) => {
-    const columns = Array.isArray(field.table_columns) ? field.table_columns : [];
+    // Debug: log the field to see what we're getting
+    console.log("Rendering table field:", field.field_label, "table_columns:", field.table_columns);
+    
+    // Handle both array and object forms of table_columns
+    let columns = [];
+    if (Array.isArray(field.table_columns)) {
+      columns = field.table_columns;
+    } else if (field.table_columns && typeof field.table_columns === 'object') {
+      // If it's an object with numeric keys, convert to array
+      columns = Object.values(field.table_columns);
+    }
+    
     const rows = formValues[field.field_id] || [];
 
     // Handle case where table has no columns defined
     if (columns.length === 0) {
+      console.log("No columns found for table:", field);
       return (
         <div className="border rounded-lg p-4 bg-gray-50 text-center text-gray-500">
           <p>Table has no columns defined</p>
+          <p className="text-xs mt-2">Debug: table_columns = {JSON.stringify(field.table_columns)}</p>
         </div>
       );
     }
