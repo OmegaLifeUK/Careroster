@@ -133,27 +133,41 @@ Return ONLY a valid JSON object with this structure:
         }
       });
 
+      console.log("AI Result:", JSON.stringify(result, null, 2));
+
       // Transform to proper form template structure
       const formTemplate = {
         form_name: result.form_name || "Imported Form",
         description: result.description || "",
         category: result.category || "other",
-        sections: result.sections.map((section, sIdx) => ({
+        sections: (result.sections || []).map((section, sIdx) => ({
           section_id: `section_${Date.now()}_${sIdx}`,
-          section_title: section.section_title,
+          section_title: section?.section_title || `Section ${sIdx + 1}`,
           section_order: sIdx,
-          fields: section.fields.map((field, fIdx) => ({
-            field_id: `field_${Date.now()}_${sIdx}_${fIdx}`,
-            field_label: field.field_label,
-            field_type: field.field_type,
-            field_order: fIdx,
-            required: field.required || false,
-            placeholder: field.placeholder || "",
-            options: field.options || [],
-            table_columns: field.table_columns || [],
-            validation: {},
-            conditional_logic: {}
-          }))
+          fields: (section?.fields || []).map((field, fIdx) => {
+            // Ensure table_columns is properly structured
+            let tableColumns = [];
+            if (field?.field_type === 'table' && Array.isArray(field?.table_columns)) {
+              tableColumns = field.table_columns.map(col => ({
+                name: col?.name || 'Column',
+                type: col?.type || 'text',
+                options: Array.isArray(col?.options) ? col.options : []
+              }));
+            }
+            
+            return {
+              field_id: `field_${Date.now()}_${sIdx}_${fIdx}`,
+              field_label: field?.field_label || `Field ${fIdx + 1}`,
+              field_type: field?.field_type || 'text',
+              field_order: fIdx,
+              required: field?.required || false,
+              placeholder: field?.placeholder || "",
+              options: Array.isArray(field?.options) ? field.options : [],
+              table_columns: tableColumns,
+              validation: {},
+              conditional_logic: {}
+            };
+          })
         })),
         workflow_triggers: [],
         auto_routing: { enabled: false, routes: [] },
@@ -161,6 +175,8 @@ Return ONLY a valid JSON object with this structure:
         requires_approval: false,
         version: 1
       };
+
+      console.log("Generated Template:", JSON.stringify(formTemplate, null, 2));
 
       toast.success("Form Generated", "AI has created a form template from your document");
       onFormGenerated(formTemplate);
