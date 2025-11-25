@@ -682,6 +682,16 @@ export default function Clients() {
             onClose={handleCloseDialog}
           />
         )}
+
+        {showNewClientImporter && (
+          <AINewClientImporter
+            onClose={() => setShowNewClientImporter(false)}
+            onClientCreated={(client) => {
+              setShowNewClientImporter(false);
+              setSelectedClient(client);
+            }}
+          />
+        )}
       </div>
     </div>
   );
