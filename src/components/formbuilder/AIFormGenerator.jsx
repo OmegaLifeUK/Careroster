@@ -357,12 +357,22 @@ Analyze the document and return the JSON structure.`,
           fields: (section?.fields || []).map((field, fIdx) => {
             // Ensure table_columns is properly structured
             let tableColumns = [];
-            if (field?.field_type === 'table' && Array.isArray(field?.table_columns)) {
-              tableColumns = field.table_columns.map(col => ({
-                name: col?.name || 'Column',
-                type: col?.type || 'text',
-                options: Array.isArray(col?.options) ? col.options : []
-              }));
+            if (field?.field_type === 'table') {
+              if (Array.isArray(field?.table_columns) && field.table_columns.length > 0) {
+                tableColumns = field.table_columns.map(col => ({
+                  name: col?.name || 'Column',
+                  type: col?.type || 'text',
+                  options: Array.isArray(col?.options) ? col.options : []
+                }));
+              } else {
+                // Default columns if none provided
+                tableColumns = [
+                  { name: "Column 1", type: "text", options: [] },
+                  { name: "Column 2", type: "text", options: [] },
+                  { name: "Column 3", type: "text", options: [] }
+                ];
+              }
+              console.log("Table field columns:", field.field_label, tableColumns);
             }
 
             // Process conditional logic
