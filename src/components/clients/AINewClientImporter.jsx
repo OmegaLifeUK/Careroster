@@ -386,16 +386,18 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.MentalCapacityAssessment.create({
             client_id: clientId,
-            has_capacity: extractedData.mental_capacity.has_capacity,
-            assessment_areas: extractedData.mental_capacity.assessment_areas || [],
-            decisions_assessed: extractedData.mental_capacity.decisions_assessed || [],
-            restrictions: extractedData.mental_capacity.restrictions || "",
-            notes: extractedData.mental_capacity.notes || "",
             assessment_date: new Date().toISOString().split('T')[0],
-            status: "active"
+            assessor: "AI Import",
+            specific_decision: (extractedData.mental_capacity.assessment_areas || []).join(', ') || "General capacity",
+            reason_for_assessment: "Imported from client documentation",
+            conclusion: extractedData.mental_capacity.has_capacity ? "has_capacity" : "lacks_capacity",
+            reasons_for_conclusion: extractedData.mental_capacity.notes || "",
+            steps_taken: extractedData.mental_capacity.assessment_areas || [],
+            review_date: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           });
           results.success.push("Mental Capacity Assessment");
         } catch (e) {
+          console.error("Mental capacity error:", e);
           results.failed.push("Mental Capacity Assessment");
         }
       }
