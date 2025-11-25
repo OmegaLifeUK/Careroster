@@ -391,8 +391,24 @@ export default function FormPreview({ template, clientId, onSubmitSuccess }) {
               Next Section
             </Button>
           ) : (
-            <Button className="bg-blue-600">
-              Submit Form
+            <Button 
+              className="bg-blue-600" 
+              onClick={handleSubmit}
+              disabled={submitMutation.isPending || submitted}
+            >
+              {submitMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Submitting...
+                </>
+              ) : submitted ? (
+                <>
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Submitted
+                </>
+              ) : (
+                "Submit Form"
+              )}
             </Button>
           )}
         </div>
