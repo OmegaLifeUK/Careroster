@@ -10,9 +10,53 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
-export default function FormPreview({ template }) {
+export default function FormPreview({ template, clientId, onSubmitSuccess }) {
   const [formValues, setFormValues] = useState({});
   const [activeSection, setActiveSection] = useState(0);
+  const [submitted, setSubmitted] = useState(false);
+  
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  const submitMutation = useMutation({
+    mutationFn: async (data) => {
+      return base44.entities.FormSubmission.create(data);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['form-submissions'] });
+      toast.success("Form Submitted", "Your response has been saved successfully");
+      setSubmitted(true);
+      if (onSubmitSuccess) onSubmitSuccess();
+    },
+    onError: (error) => {
+      console.error("Submission error:", error);
+      toast.error("Submission Failed", "Could not save form response");
+    }
+  });
+
+  const handleSubmit = async () => {
+    // Validate required fields
+    const allFields = template.sections.flatMap(s => s.fields || []);
+    const missingRequired = allFields.filter(f => 
+      f.required && !formValues[f.field_id] && formValues[f.field_id] !== false
+    );
+
+    if (missingRequired.length > 0) {
+      toast.error("Required Fields", `Please fill in: ${missingRequired.map(f => f.field_label).join(', ')}`);
+      return;
+    }
+
+    const submission = {
+      form_template_id: template.id,
+      form_name: template.form_name,
+      submitted_date: new Date().toISOString(),
+      client_id: clientId || null,
+      form_data: formValues,
+      status: template.requires_approval ? "submitted" : "approved"
+    };
+
+    submitMutation.mutate(submission);
+  };
 
   const updateValue = (fieldId, value) => {
     setFormValues({ ...formValues, [fieldId]: value });
