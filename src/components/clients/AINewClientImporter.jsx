@@ -405,19 +405,35 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import PEEP
       if (selectedTypes.includes("peep") && extractedData.peep) {
         try {
+          const mobilityMap = {
+            "independent": "fully_mobile",
+            "requires_assistance": "slow_mobility",
+            "wheelchair_user": "wheelchair_assistance",
+            "bed_bound": "immobile"
+          };
+          const evacMethodMap = {
+            "independent": "independent",
+            "with_supervision": "with_supervision",
+            "with_assistance": "with_physical_assistance",
+            "evacuation_chair": "evacuation_chair",
+            "carried": "carried"
+          };
           await base44.entities.PEEP.create({
             client_id: clientId,
-            mobility_level: extractedData.peep.mobility_level || "",
-            evacuation_method: extractedData.peep.evacuation_method || "",
+            assessment_date: new Date().toISOString().split('T')[0],
+            assessed_by: "AI Import",
+            mobility_level: mobilityMap[extractedData.peep.mobility_level] || "slow_mobility",
+            evacuation_method: evacMethodMap[extractedData.peep.evacuation_method] || "with_physical_assistance",
             equipment_required: extractedData.peep.equipment_required || [],
             staff_required: extractedData.peep.staff_required || 1,
             special_instructions: extractedData.peep.special_instructions || "",
-            meeting_point: extractedData.peep.meeting_point || "",
+            assembly_point: extractedData.peep.meeting_point || "",
             status: "active",
             review_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
           });
           results.success.push("PEEP");
         } catch (e) {
+          console.error("PEEP error:", e);
           results.failed.push("PEEP");
         }
       }
