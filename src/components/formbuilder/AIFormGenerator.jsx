@@ -283,7 +283,7 @@ Analyze the document and return the JSON structure.`,
       // Build field ID map for conditional logic references
       const fieldIdMap = {};
       let fieldCounter = 0;
-      (result.sections || []).forEach((section, sIdx) => {
+      (processedResult.sections || []).forEach((section, sIdx) => {
         (section?.fields || []).forEach((field, fIdx) => {
           const fieldId = `field_${Date.now()}_${sIdx}_${fIdx}_${fieldCounter++}`;
           fieldIdMap[field?.field_label?.toLowerCase().replace(/\s+/g, '_')] = fieldId;
