@@ -227,7 +227,58 @@ Analyze the document and return the JSON structure.`,
         }
       }
 
-      console.log("AI Result:", JSON.stringify(result, null, 2));
+      // Post-process: If document has grid structure but AI didn't create table, try to detect and fix
+      let processedResult = { ...result };
+      
+      // Check if we have many similar fields that should be a table (e.g., "Monday - Morning", "Tuesday - Morning")
+      const allFields = (result.sections || []).flatMap(s => s.fields || []);
+      const dayPatterns = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+      const timePatterns = ['morning', 'afternoon', 'evening', 'appointments', 'contacts'];
+      
+      const hasDayTimePattern = allFields.some(f => {
+        const label = (f.field_label || '').toLowerCase();
+        return dayPatterns.some(d => label.includes(d)) && timePatterns.some(t => label.includes(t));
+      });
+      
+      if (hasDayTimePattern && !allFields.some(f => f.field_type === 'table')) {
+        console.log("Detected day/time pattern - converting to table structure");
+        
+        // Create a proper table structure
+        const tableField = {
+          field_label: "Weekly Activity Schedule",
+          field_type: "table",
+          required: false,
+          table_columns: [
+            { name: "Day", type: "select", options: ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"] },
+            { name: "Appointments/Contacts", type: "textarea", options: [] },
+            { name: "Morning", type: "textarea", options: [] },
+            { name: "Afternoon", type: "textarea", options: [] },
+            { name: "Evening", type: "textarea", options: [] }
+          ]
+        };
+        
+        // Find non-day-related fields to keep
+        const otherFields = allFields.filter(f => {
+          const label = (f.field_label || '').toLowerCase();
+          const isDayField = dayPatterns.some(d => label.includes(d));
+          return !isDayField;
+        });
+        
+        // Rebuild sections with table
+        processedResult = {
+          ...result,
+          sections: [
+            {
+              section_title: result.sections?.[0]?.section_title || "Weekly Schedule",
+              section_description: "",
+              is_repeatable: false,
+              fields: [...otherFields, tableField]
+            }
+          ]
+        };
+        
+        toast.info("Table Detected", "Converted weekly schedule pattern to table format");
+      }
 
       // Build field ID map for conditional logic references
       const fieldIdMap = {};
