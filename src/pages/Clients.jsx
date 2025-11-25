@@ -5,7 +5,7 @@ import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles, Eye } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Heart, Trash2, Sparkles, Eye, Upload } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { useToast } from "@/components/ui/toast";
 
