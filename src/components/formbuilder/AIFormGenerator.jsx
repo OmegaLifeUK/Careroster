@@ -293,10 +293,10 @@ Analyze the document and return the JSON structure.`,
 
       // Transform to proper form template structure
       const formTemplate = {
-        form_name: result.form_name || "Imported Form",
-        description: result.description || "",
-        category: result.category || "other",
-        sections: (result.sections || []).map((section, sIdx) => ({
+        form_name: processedResult.form_name || "Imported Form",
+        description: processedResult.description || "",
+        category: processedResult.category || "other",
+        sections: (processedResult.sections || []).map((section, sIdx) => ({
           section_id: `section_${Date.now()}_${sIdx}`,
           section_title: section?.section_title || `Section ${sIdx + 1}`,
           section_description: section?.section_description || "",
