@@ -68,27 +68,7 @@ Create a form template with sections and fields. For each field, determine the b
 
 For tables, identify repeating row structures and define columns.
 
-Return ONLY a valid JSON object with this structure:
-{
-  "form_name": "Name of the form",
-  "description": "Brief description",
-  "category": "one of: care_plan, assessment, incident, consent, medication, daily_log, audit, training, other",
-  "sections": [
-    {
-      "section_title": "Section Name",
-      "fields": [
-        {
-          "field_label": "Field Label",
-          "field_type": "text|textarea|number|date|time|select|multiselect|checkbox|radio|signature|rating|email|phone|table",
-          "required": true or false,
-          "placeholder": "optional placeholder text",
-          "options": ["option1", "option2"] // for select/multiselect/radio only
-          "table_columns": [{"name": "Column Name", "type": "text|number|date|select", "options": []}] // for table type only
-        }
-      ]
-    }
-  ]
-}`,
+IMPORTANT: You MUST return a valid form structure with at least one section containing at least one field.`,
         file_urls: [uploadedUrl],
         response_json_schema: {
           type: "object",
@@ -129,31 +109,41 @@ Return ONLY a valid JSON object with this structure:
                 }
               }
             }
-          }
+          },
+          required: ["form_name", "sections"]
         }
       });
 
-      // Transform to proper form template structure
+      console.log("AI Result:", result);
+
+      // Validate the result
+      if (!result || !result.sections || !Array.isArray(result.sections) || result.sections.length === 0) {
+        toast.error("Generation Failed", "AI could not extract form structure from this document. Try a clearer document or image.");
+        setIsGenerating(false);
+        return;
+      }
+
+      // Transform to proper form template structure with safe defaults
       const formTemplate = {
         form_name: result.form_name || "Imported Form",
         description: result.description || "",
         category: result.category || "other",
         sections: result.sections.map((section, sIdx) => ({
           section_id: `section_${Date.now()}_${sIdx}`,
-          section_title: section.section_title,
+          section_title: section?.section_title || `Section ${sIdx + 1}`,
           section_order: sIdx,
-          fields: section.fields.map((field, fIdx) => ({
+          fields: Array.isArray(section?.fields) ? section.fields.map((field, fIdx) => ({
             field_id: `field_${Date.now()}_${sIdx}_${fIdx}`,
-            field_label: field.field_label,
-            field_type: field.field_type,
+            field_label: field?.field_label || `Field ${fIdx + 1}`,
+            field_type: field?.field_type || "text",
             field_order: fIdx,
-            required: field.required || false,
-            placeholder: field.placeholder || "",
-            options: field.options || [],
-            table_columns: field.table_columns || [],
+            required: field?.required || false,
+            placeholder: field?.placeholder || "",
+            options: Array.isArray(field?.options) ? field.options : [],
+            table_columns: Array.isArray(field?.table_columns) ? field.table_columns : [],
             validation: {},
             conditional_logic: {}
-          }))
+          })) : []
         })),
         workflow_triggers: [],
         auto_routing: { enabled: false, routes: [] },
@@ -162,11 +152,18 @@ Return ONLY a valid JSON object with this structure:
         version: 1
       };
 
+      // Ensure at least one section has fields
+      if (formTemplate.sections.every(s => s.fields.length === 0)) {
+        toast.error("Generation Failed", "AI could not identify any form fields in this document. Try a different document.");
+        setIsGenerating(false);
+        return;
+      }
+
       toast.success("Form Generated", "AI has created a form template from your document");
       onFormGenerated(formTemplate);
     } catch (error) {
       console.error("Generation error:", error);
-      toast.error("Generation Failed", "Could not generate form from document");
+      toast.error("Generation Failed", error.message || "Could not generate form from document. Please try again.");
     } finally {
       setIsGenerating(false);
     }
