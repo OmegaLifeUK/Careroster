@@ -344,7 +344,7 @@ Analyze the document and return the JSON structure.`,
         is_active: true,
         requires_approval: false,
         version: 1,
-        detected_relationships: result.detected_relationships || []
+        detected_relationships: processedResult.detected_relationships || []
       };
 
       console.log("Generated Template:", JSON.stringify(formTemplate, null, 2));
