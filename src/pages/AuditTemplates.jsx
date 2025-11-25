@@ -7,12 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Plus, Edit, Trash2 } from "lucide-react";
+import { FileText, Plus, Edit, Trash2, Sparkles } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import AIAuditTemplateGenerator from "@/components/audit/AIAuditTemplateGenerator";
 
 export default function AuditTemplates() {
   const [showDialog, setShowDialog] = useState(false);
   const [editingTemplate, setEditingTemplate] = useState(null);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -56,10 +58,16 @@ export default function AuditTemplates() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Audit Templates</h1>
             <p className="text-gray-500">Create and manage audit templates</p>
           </div>
-          <Button onClick={() => { setEditingTemplate(null); setShowDialog(true); }} className="bg-blue-600">
-            <Plus className="w-4 h-4 mr-2" />
-            Create Template
-          </Button>
+          <div className="flex gap-2">
+            <Button variant="outline" onClick={() => setShowAIGenerator(true)}>
+              <Sparkles className="w-4 h-4 mr-2" />
+              Import with AI
+            </Button>
+            <Button onClick={() => { setEditingTemplate(null); setShowDialog(true); }} className="bg-blue-600">
+              <Plus className="w-4 h-4 mr-2" />
+              Create Template
+            </Button>
+          </div>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -100,6 +108,17 @@ export default function AuditTemplates() {
             onSave={(data) => saveMutation.mutate(data)}
             onCancel={() => { setShowDialog(false); setEditingTemplate(null); }}
             isSaving={saveMutation.isPending}
+          />
+        )}
+
+        {showAIGenerator && (
+          <AIAuditTemplateGenerator
+            onTemplateGenerated={(template) => {
+              setShowAIGenerator(false);
+              setEditingTemplate(template);
+              setShowDialog(true);
+            }}
+            onClose={() => setShowAIGenerator(false)}
           />
         )}
       </div>
