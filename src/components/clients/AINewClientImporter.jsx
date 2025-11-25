@@ -339,18 +339,22 @@ Be thorough and extract ALL relevant information from the document.`,
           for (const risk of extractedData.risk_assessment) {
             await base44.entities.RiskAssessment.create({
               client_id: clientId,
-              risk_area: risk.risk_area,
+              assessment_type: "general",
+              assessment_date: new Date().toISOString().split('T')[0],
+              assessed_by: "AI Import",
+              risk_identified: risk.risk_area + (risk.description ? ": " + risk.description : ""),
               risk_level: risk.risk_level || "medium",
-              description: risk.description || "",
-              triggers: risk.triggers || [],
-              control_measures: risk.control_measures || [],
-              review_date: risk.review_date || "",
-              status: "active",
-              assessed_date: new Date().toISOString().split('T')[0]
+              existing_controls: (risk.control_measures || []).map(m => ({
+                control_measure: m,
+                effectiveness: "effective"
+              })),
+              review_date: risk.review_date || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              status: "active"
             });
           }
           results.success.push(`Risk Assessments (${extractedData.risk_assessment.length})`);
         } catch (e) {
+          console.error("Risk assessment error:", e);
           results.failed.push("Risk Assessments");
         }
       }
