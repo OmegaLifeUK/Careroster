@@ -449,10 +449,126 @@ Be thorough and extract ALL relevant information from the document.`,
         }
       }
 
+      // Generate Care Tasks from extracted data
+      let taskCount = 0;
+      const today = new Date().toISOString().split('T')[0];
+      
+      // Medication tasks
+      if (extractedData.medication?.length > 0) {
+        for (const med of extractedData.medication) {
+          try {
+            const times = med.time_slots?.length > 0 ? med.time_slots : ["08:00", "20:00"];
+            await base44.entities.CareTask.create({
+              client_id: clientId,
+              task_name: `Administer ${med.drug_name}`,
+              description: `Give ${med.dosage} ${med.drug_name} (${med.frequency || 'as prescribed'}). ${med.special_instructions || ''}`.trim(),
+              category: "medication",
+              frequency: med.is_prn ? "as_needed" : (times.length >= 3 ? "three_times_daily" : times.length === 2 ? "twice_daily" : "daily"),
+              specific_times: times,
+              priority: "high",
+              estimated_duration_minutes: 5,
+              alerts_if_missed: true,
+              alerts_if_refused: true,
+              is_active: true,
+              start_date: today,
+              source: "ai_generated"
+            });
+            taskCount++;
+          } catch (e) {
+            console.error("Task creation error:", e);
+          }
+        }
+      }
+
+      // Personal care tasks from care plan
+      if (extractedData.care_plan?.care_needs?.length > 0) {
+        for (const need of extractedData.care_plan.care_needs) {
+          try {
+            const needLower = need.toLowerCase();
+            let category = "personal_care";
+            let frequency = "daily";
+            let priority = "medium";
+            let times = ["08:00"];
+            
+            if (needLower.includes("wash") || needLower.includes("bath") || needLower.includes("shower") || needLower.includes("hygiene")) {
+              category = "hygiene";
+              times = ["07:30"];
+            } else if (needLower.includes("dress") || needLower.includes("clothing")) {
+              times = ["08:00", "20:00"];
+              frequency = "twice_daily";
+            } else if (needLower.includes("toilet") || needLower.includes("continence") || needLower.includes("pad")) {
+              frequency = "every_visit";
+              priority = "high";
+            } else if (needLower.includes("eat") || needLower.includes("meal") || needLower.includes("feed") || needLower.includes("nutrition")) {
+              category = "nutrition";
+              frequency = "three_times_daily";
+              times = ["08:00", "12:30", "18:00"];
+            } else if (needLower.includes("mobil") || needLower.includes("walk") || needLower.includes("transfer")) {
+              category = "mobility";
+              frequency = "every_visit";
+            } else if (needLower.includes("turn") || needLower.includes("reposition")) {
+              category = "mobility";
+              frequency = "specific_times";
+              times = ["08:00", "10:00", "12:00", "14:00", "16:00", "18:00", "20:00", "22:00"];
+              priority = "high";
+            }
+            
+            await base44.entities.CareTask.create({
+              client_id: clientId,
+              task_name: need.length > 50 ? need.substring(0, 47) + "..." : need,
+              description: need,
+              category: category,
+              frequency: frequency,
+              specific_times: times,
+              priority: priority,
+              estimated_duration_minutes: 15,
+              alerts_if_missed: priority === "high",
+              is_active: true,
+              start_date: today,
+              source: "ai_generated"
+            });
+            taskCount++;
+          } catch (e) {
+            console.error("Care task creation error:", e);
+          }
+        }
+      }
+
+      // Safety/observation tasks from risk assessments  
+      if (extractedData.risk_assessment?.length > 0) {
+        for (const risk of extractedData.risk_assessment) {
+          if ((risk.risk_level || "").toLowerCase() === "high" || (risk.risk_level || "").toLowerCase() === "critical") {
+            try {
+              await base44.entities.CareTask.create({
+                client_id: clientId,
+                task_name: `Monitor: ${risk.risk_area || "Risk observation"}`,
+                description: `Risk monitoring for ${risk.risk_area}. ${risk.description || ''} Control measures: ${(risk.control_measures || []).join(', ')}`.trim(),
+                category: "observation",
+                frequency: "every_visit",
+                priority: "high",
+                estimated_duration_minutes: 5,
+                alerts_if_missed: true,
+                is_active: true,
+                start_date: today,
+                source: "ai_generated"
+              });
+              taskCount++;
+            } catch (e) {
+              console.error("Risk task creation error:", e);
+            }
+          }
+        }
+      }
+
+      if (taskCount > 0) {
+        results.success.push(`Care Tasks (${taskCount})`);
+      }
+
       setImportResults(results);
       queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
 
-      toast.success("Client Created", `${extractedData.client.full_name} has been added with all care records`);
+      toast.success("Client Created", `${extractedData.client.full_name} has been added with all care records and ${taskCount} tasks`);
     } catch (error) {
       console.error("Import error:", error);
       toast.error("Import Failed", "Could not create client");
