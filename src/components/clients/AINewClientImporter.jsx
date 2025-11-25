@@ -266,20 +266,40 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.CarePlan.create({
             client_id: clientId,
-            plan_type: "general",
+            care_setting: "residential",
+            plan_type: "initial",
+            assessment_date: new Date().toISOString().split('T')[0],
+            assessed_by: "AI Import",
             status: "active",
-            start_date: new Date().toISOString().split('T')[0],
-            care_needs: extractedData.care_plan.care_needs || [],
+            care_needs: (extractedData.care_plan.care_needs || []).map(need => ({
+              category: "personal_care",
+              need: need,
+              support_required: "",
+              frequency: "daily"
+            })),
             goals: extractedData.care_plan.goals || [],
-            daily_routine: extractedData.care_plan.daily_routine || "",
-            personal_care: extractedData.care_plan.personal_care_needs || "",
-            communication_needs: extractedData.care_plan.communication_needs || "",
-            dietary_requirements: extractedData.care_plan.dietary_requirements || "",
-            preferences: extractedData.care_plan.preferences || "",
-            notes: extractedData.care_plan.notes || ""
+            daily_routine: {
+              morning: extractedData.care_plan.daily_routine || "",
+              afternoon: "",
+              evening: "",
+              night: ""
+            },
+            mental_health: {
+              communication_needs: extractedData.care_plan.communication_needs || ""
+            },
+            physical_health: {
+              nutrition: extractedData.care_plan.dietary_requirements || ""
+            },
+            preferences: {
+              likes: [],
+              dislikes: [],
+              hobbies: [],
+              social_preferences: extractedData.care_plan.preferences || ""
+            }
           });
           results.success.push("Care Plan");
         } catch (e) {
+          console.error("Care plan error:", e);
           results.failed.push("Care Plan");
         }
       }
