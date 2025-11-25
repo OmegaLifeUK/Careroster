@@ -315,8 +315,8 @@ Be thorough and extract ALL relevant information from the document.`,
           await base44.entities.CarePlan.create(carePlanData);
           results.success.push("Care Plan");
         } catch (e) {
-          console.error("Care plan error:", e);
-          results.failed.push("Care Plan");
+          console.error("Care plan error:", JSON.stringify(e));
+          results.failed.push("Care Plan: " + (e.message || String(e)));
         }
       }
 
@@ -342,11 +342,11 @@ Be thorough and extract ALL relevant information from the document.`,
             });
             medCount++;
           } catch (e) {
-            console.error("Medication error:", med.drug_name, e);
+            console.error("Medication error:", med.drug_name, JSON.stringify(e));
           }
         }
         if (medCount > 0) results.success.push(`Medications (${medCount})`);
-        else results.failed.push("Medications");
+        else results.failed.push("Medications: check console");
       }
 
       // Import Risk Assessments
@@ -371,11 +371,11 @@ Be thorough and extract ALL relevant information from the document.`,
             });
             riskCount++;
           } catch (e) {
-            console.error("Risk assessment error:", risk.risk_area, e);
+            console.error("Risk assessment error:", risk.risk_area, JSON.stringify(e));
           }
         }
         if (riskCount > 0) results.success.push(`Risk Assessments (${riskCount})`);
-        else results.failed.push("Risk Assessments");
+        else results.failed.push("Risk Assessments: check console");
       }
 
       // Import Behavior Chart
@@ -395,8 +395,8 @@ Be thorough and extract ALL relevant information from the document.`,
           });
           results.success.push("Behaviour Support Plan");
         } catch (e) {
-          console.error("Behavior chart error:", e);
-          results.failed.push("Behaviour Support Plan");
+          console.error("Behavior chart error:", JSON.stringify(e));
+          results.failed.push("Behaviour Support Plan: " + (e.message || String(e)));
         }
       }
 
@@ -416,8 +416,8 @@ Be thorough and extract ALL relevant information from the document.`,
           });
           results.success.push("Mental Capacity Assessment");
         } catch (e) {
-          console.error("Mental capacity error:", e);
-          results.failed.push("Mental Capacity Assessment");
+          console.error("Mental capacity error:", JSON.stringify(e));
+          results.failed.push("Mental Capacity Assessment: " + (e.message || String(e)));
         }
       }
 
@@ -452,8 +452,8 @@ Be thorough and extract ALL relevant information from the document.`,
           });
           results.success.push("PEEP");
         } catch (e) {
-          console.error("PEEP error:", e);
-          results.failed.push("PEEP");
+          console.error("PEEP error:", JSON.stringify(e));
+          results.failed.push("PEEP: " + (e.message || String(e)));
         }
       }
 
