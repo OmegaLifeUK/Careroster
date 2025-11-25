@@ -302,11 +302,16 @@ Analyze the document and return the JSON structure.`,
         }
         
         const tableField = {
+          field_id: `table_${Date.now()}`,
           field_label: result.form_name || "Weekly Activity Schedule",
           field_type: "table",
           required: false,
-          table_columns: tableColumns
+          table_columns: tableColumns,
+          options: [],
+          placeholder: ""
         };
+        
+        console.log("Created table field with columns:", tableColumns);
         
         // Find non-schedule-related fields to keep
         const otherFields = allFields.filter(f => {
