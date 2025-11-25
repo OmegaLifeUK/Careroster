@@ -307,24 +307,28 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Medications
       if (selectedTypes.includes("medication") && extractedData.medication?.length > 0) {
         try {
+          const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
           for (const med of extractedData.medication) {
             await base44.entities.MARSheet.create({
               client_id: clientId,
-              drug_name: med.drug_name,
-              dosage: med.dosage,
+              month_year: currentMonth,
+              medication_name: med.drug_name,
+              dose: med.dosage,
               frequency: med.frequency,
               route: med.route || "oral",
               time_slots: med.time_slots || [],
               prescriber: med.prescriber || "",
               start_date: med.start_date || new Date().toISOString().split('T')[0],
-              is_prn: med.is_prn || false,
-              prn_reason: med.prn_reason || "",
-              special_instructions: med.special_instructions || "",
-              status: "active"
+              as_required: med.is_prn || false,
+              prn_details: med.is_prn ? {
+                indications: med.prn_reason || ""
+              } : {},
+              reason_for_medication: med.special_instructions || ""
             });
           }
           results.success.push(`Medications (${extractedData.medication.length})`);
         } catch (e) {
+          console.error("Medication error:", e);
           results.failed.push("Medications");
         }
       }
