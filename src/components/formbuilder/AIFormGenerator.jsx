@@ -33,10 +33,17 @@ export default function AIFormGenerator({ onFormGenerated, onClose }) {
 
     // Upload file first
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: selectedFile });
-      setUploadedUrl(file_url);
+      const result = await base44.integrations.Core.UploadFile({ file: selectedFile });
+      console.log("Upload result:", result);
+      if (result?.file_url) {
+        setUploadedUrl(result.file_url);
+        toast.success("File Uploaded", "Document ready for AI analysis");
+      } else {
+        throw new Error("No file URL returned");
+      }
     } catch (error) {
-      toast.error("Upload Failed", "Could not upload file");
+      console.error("Upload error:", error);
+      toast.error("Upload Failed", error.message || "Could not upload file. Please try again.");
       setFile(null);
     }
   };
