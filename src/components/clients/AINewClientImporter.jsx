@@ -306,57 +306,60 @@ Be thorough and extract ALL relevant information from the document.`,
 
       // Import Medications
       if (selectedTypes.includes("medication") && extractedData.medication?.length > 0) {
-        try {
-          const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
-          for (const med of extractedData.medication) {
+        const currentMonth = new Date().toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+        let medCount = 0;
+        for (const med of extractedData.medication) {
+          try {
+            const routeMap = { "oral": "oral", "sublingual": "sublingual", "topical": "topical", "inhaled": "inhaled", "injection": "injection_sc", "rectal": "rectal", "transdermal": "transdermal", "eye drops": "eye_drops", "ear drops": "ear_drops", "nasal": "nasal" };
             await base44.entities.MARSheet.create({
               client_id: clientId,
               month_year: currentMonth,
-              medication_name: med.drug_name,
-              dose: med.dosage,
-              frequency: med.frequency,
-              route: med.route || "oral",
+              medication_name: med.drug_name || "Unknown",
+              dose: med.dosage || "As prescribed",
+              frequency: med.frequency || "daily",
+              route: routeMap[(med.route || "oral").toLowerCase()] || "oral",
               time_slots: med.time_slots || [],
               prescriber: med.prescriber || "",
               start_date: med.start_date || new Date().toISOString().split('T')[0],
               as_required: med.is_prn || false,
-              prn_details: med.is_prn ? {
-                indications: med.prn_reason || ""
-              } : {},
-              reason_for_medication: med.special_instructions || ""
+              reason_for_medication: med.special_instructions || med.prn_reason || ""
             });
+            medCount++;
+          } catch (e) {
+            console.error("Medication error:", med.drug_name, e);
           }
-          results.success.push(`Medications (${extractedData.medication.length})`);
-        } catch (e) {
-          console.error("Medication error:", e);
-          results.failed.push("Medications");
         }
+        if (medCount > 0) results.success.push(`Medications (${medCount})`);
+        else results.failed.push("Medications");
       }
 
       // Import Risk Assessments
       if (selectedTypes.includes("risk_assessment") && extractedData.risk_assessment?.length > 0) {
-        try {
-          for (const risk of extractedData.risk_assessment) {
+        let riskCount = 0;
+        for (const risk of extractedData.risk_assessment) {
+          try {
+            const riskLevelMap = { "low": "low", "medium": "medium", "high": "high", "critical": "critical" };
             await base44.entities.RiskAssessment.create({
               client_id: clientId,
               assessment_type: "general",
               assessment_date: new Date().toISOString().split('T')[0],
               assessed_by: "AI Import",
-              risk_identified: risk.risk_area + (risk.description ? ": " + risk.description : ""),
-              risk_level: risk.risk_level || "medium",
+              risk_identified: (risk.risk_area || "General risk") + (risk.description ? ": " + risk.description : ""),
+              risk_level: riskLevelMap[(risk.risk_level || "medium").toLowerCase()] || "medium",
               existing_controls: (risk.control_measures || []).map(m => ({
                 control_measure: m,
                 effectiveness: "effective"
               })),
-              review_date: risk.review_date || new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+              review_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
               status: "active"
             });
+            riskCount++;
+          } catch (e) {
+            console.error("Risk assessment error:", risk.risk_area, e);
           }
-          results.success.push(`Risk Assessments (${extractedData.risk_assessment.length})`);
-        } catch (e) {
-          console.error("Risk assessment error:", e);
-          results.failed.push("Risk Assessments");
         }
+        if (riskCount > 0) results.success.push(`Risk Assessments (${riskCount})`);
+        else results.failed.push("Risk Assessments");
       }
 
       // Import Behavior Chart
