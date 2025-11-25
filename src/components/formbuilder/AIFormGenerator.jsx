@@ -93,45 +93,82 @@ REPEATING SECTIONS & NESTED STRUCTURES:
     try {
       const result = await base44.integrations.Core.InvokeLLM({
         prompt: `Analyze this document and extract a comprehensive form structure.
-${contextInfo}
+        ${contextInfo}
 
-FIELD TYPES AVAILABLE:
-- text (short text input)
-- textarea (long text, multi-line)
-- number (numeric input)
-- date (date picker)
-- time (time picker)
-- datetime (date and time)
-- select (dropdown - provide options array)
-- multiselect (multiple selection - provide options array)
-- checkbox (yes/no toggle)
-- radio (single choice from options - provide options array)
-- signature (digital signature capture)
-- rating (1-5 star rating)
-- email (email address with validation)
-- phone (phone number)
-- file (file upload)
-- table (tabular data with multiple rows - define table_columns)
+        FIELD TYPES AVAILABLE:
+        - text (short text input)
+        - textarea (long text, multi-line)
+        - number (numeric input)
+        - date (date picker)
+        - time (time picker)
+        - datetime (date and time)
+        - select (dropdown - provide options array)
+        - multiselect (multiple selection - provide options array)
+        - checkbox (yes/no toggle)
+        - radio (single choice from options - provide options array)
+        - signature (digital signature capture)
+        - rating (1-5 star rating)
+        - email (email address with validation)
+        - phone (phone number)
+        - file (file upload)
+        - table (tabular data with multiple rows - define table_columns)
 
-TABLE STRUCTURE:
-For tables, identify column headers and row patterns. Each table_column needs:
-- name: column header text
-- type: "text", "number", "date", "time", "select", "checkbox"
-- options: array of options (for select type columns only)
+        CRITICAL - TABLE DETECTION:
+        You MUST use field_type "table" when you detect:
+        - Weekly schedules or planners (days as columns or rows)
+        - Grids with row headers and column headers
+        - Repeated structured data (e.g., medication lists, activity schedules)
+        - Any layout with cells arranged in rows and columns
+        - Timetables, rosters, or calendars
 
-${conditionalLogicInstructions}
-${repeatingSectionInstructions}
+        DO NOT flatten tables into individual text/textarea fields!
 
-EXTRACTION GUIDELINES:
-1. Group related fields into logical sections
-2. Preserve the document's original structure and field ordering
-3. Infer required fields from asterisks (*), "required", or bold text
-4. Extract dropdown options from listed choices
-5. Identify signature lines and date fields
-6. Detect rating scales and convert to appropriate field types
-7. For complex nested tables, break into multiple table fields if needed
+        TABLE STRUCTURE:
+        When you detect a table/grid/schedule, create ONE table field with table_columns matching the column headers.
+        Each table_column needs:
+        - name: column header text (e.g., "Monday", "Morning", "Medication Name")
+        - type: "text", "textarea", "number", "date", "time", "select", "checkbox"
+        - options: array of options (for select type columns only)
 
-Return a complete JSON structure with all detected fields, sections, and relationships.`,
+        EXAMPLE - Weekly Activity Planner:
+        If the document shows a grid with days (Mon-Sun) and time slots (Morning, Afternoon, Evening), create:
+        {
+        "field_type": "table",
+        "field_label": "Weekly Activity Schedule",
+        "table_columns": [
+        {"name": "Day", "type": "select", "options": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"]},
+        {"name": "Time Slot", "type": "select", "options": ["Morning", "Afternoon", "Evening"]},
+        {"name": "Activity", "type": "textarea"},
+        {"name": "Notes", "type": "text"}
+        ]
+        }
+
+        OR if rows represent days:
+        {
+        "field_type": "table",
+        "field_label": "Weekly Schedule",
+        "table_columns": [
+        {"name": "Day", "type": "text"},
+        {"name": "Morning", "type": "textarea"},
+        {"name": "Afternoon", "type": "textarea"},
+        {"name": "Evening", "type": "textarea"},
+        {"name": "Appointments", "type": "textarea"}
+        ]
+        }
+
+        ${conditionalLogicInstructions}
+        ${repeatingSectionInstructions}
+
+        EXTRACTION GUIDELINES:
+        1. ALWAYS use table field_type for grid/schedule layouts - never flatten to individual fields
+        2. Group related fields into logical sections
+        3. Preserve the document's original structure and field ordering
+        4. Infer required fields from asterisks (*), "required", or bold text
+        5. Extract dropdown options from listed choices
+        6. Identify signature lines and date fields
+        7. Detect rating scales and convert to appropriate field types
+
+        Return a complete JSON structure with all detected fields, sections, and relationships.`,
         file_urls: [uploadedUrl],
         response_json_schema: {
           type: "object",
