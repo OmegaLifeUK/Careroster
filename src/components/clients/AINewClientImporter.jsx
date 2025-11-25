@@ -362,20 +362,21 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Behavior Chart
       if (selectedTypes.includes("behavior_chart") && extractedData.behavior_chart) {
         try {
+          const triggersStr = (extractedData.behavior_chart.triggers || []).join(', ');
+          const strategiesStr = (extractedData.behavior_chart.de_escalation_strategies || []).join(', ');
           await base44.entities.BehaviorChart.create({
             client_id: clientId,
-            behaviors_of_concern: extractedData.behavior_chart.behaviors_of_concern || [],
-            triggers: extractedData.behavior_chart.triggers || [],
-            early_warning_signs: extractedData.behavior_chart.early_warning_signs || [],
-            de_escalation_strategies: extractedData.behavior_chart.de_escalation_strategies || [],
-            positive_strategies: extractedData.behavior_chart.positive_strategies || [],
-            crisis_intervention: extractedData.behavior_chart.crisis_intervention || "",
-            post_incident_support: extractedData.behavior_chart.post_incident_support || "",
-            status: "active",
-            created_date: new Date().toISOString()
+            chart_date: new Date().toISOString().split('T')[0],
+            behavior_being_monitored: (extractedData.behavior_chart.behaviors_of_concern || []).join(', ') || "Behavior support",
+            monitoring_reason: "Imported from client documentation",
+            target_outcome: (extractedData.behavior_chart.positive_strategies || []).join(', '),
+            environmental_factors: triggersStr,
+            recommended_actions: strategiesStr + (extractedData.behavior_chart.crisis_intervention ? ". Crisis: " + extractedData.behavior_chart.crisis_intervention : ""),
+            daily_summary: extractedData.behavior_chart.post_incident_support || ""
           });
           results.success.push("Behaviour Support Plan");
         } catch (e) {
+          console.error("Behavior chart error:", e);
           results.failed.push("Behaviour Support Plan");
         }
       }
