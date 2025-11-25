@@ -179,6 +179,14 @@ export default function Clients() {
                 Edit Client
               </Button>
               <Button
+                variant="outline"
+                onClick={() => setShowDocumentImporter(true)}
+                className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              >
+                <Upload className="w-4 h-4 mr-2" />
+                Import Documents
+              </Button>
+              <Button
                 onClick={() => setShowCarePlanGenerator(true)}
                 className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
               >
