@@ -26,6 +26,7 @@ import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
 import OnboardingTracker from "../components/onboarding/OnboardingTracker";
 import TaskManager from "../components/tasks/TaskManager";
+import AIDocumentImporter from "../components/clients/AIDocumentImporter";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
