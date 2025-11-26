@@ -20,10 +20,12 @@ import {
   Upload,
   X,
   CalendarPlus,
-  Loader2
+  Loader2,
+  Paperclip
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addWeeks, addMonths, isPast, differenceInDays } from "date-fns";
+import DocumentAttachment from "@/components/documents/DocumentAttachment";
 
 export default function SupervisionManagement() {
   const [showAddForm, setShowAddForm] = useState(false);
@@ -43,7 +45,8 @@ export default function SupervisionManagement() {
     supervisor_comments: "",
     staff_comments: "",
     actions_agreed: [],
-    document_url: ""
+    document_url: "",
+    attached_documents: []
   });
 
   const [scheduleData, setScheduleData] = useState({
@@ -510,36 +513,12 @@ export default function SupervisionManagement() {
                 />
               </div>
 
-              <div>
-                <label className="text-sm font-medium">Attach Document</label>
-                <div className="mt-2">
-                  {formData.document_url ? (
-                    <div className="flex items-center gap-2 p-2 bg-green-50 border border-green-200 rounded">
-                      <FileText className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-green-800">Document attached</span>
-                      <Button
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => setFormData({ ...formData, document_url: "" })}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  ) : (
-                    <label className="flex items-center justify-center gap-2 p-4 border-2 border-dashed rounded-lg cursor-pointer hover:bg-gray-50">
-                      {uploadingDoc ? (
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                      ) : (
-                        <>
-                          <Upload className="w-5 h-5 text-gray-400" />
-                          <span className="text-sm text-gray-600">Upload supervision document</span>
-                        </>
-                      )}
-                      <input type="file" className="hidden" onChange={handleFileUpload} accept=".pdf,.doc,.docx" />
-                    </label>
-                  )}
-                </div>
-              </div>
+              <DocumentAttachment
+                documents={formData.attached_documents}
+                onDocumentsChange={(docs) => setFormData({ ...formData, attached_documents: docs })}
+                entityType="supervision"
+                showCompletionStatus={false}
+              />
 
               <div className="flex justify-end gap-2 pt-4">
                 <Button variant="outline" onClick={() => { setShowAddForm(false); resetForm(); }}>
@@ -736,18 +715,28 @@ export default function SupervisionManagement() {
                 </div>
               )}
 
-              {selectedSupervision.document_url && (
+              {(selectedSupervision.attached_documents?.length > 0 || selectedSupervision.document_url) && (
                 <div>
-                  <p className="text-sm text-gray-500 mb-2">Attached Document</p>
-                  <a
-                    href={selectedSupervision.document_url}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100"
-                  >
-                    <FileText className="w-4 h-4" />
-                    View Document
-                  </a>
+                  <p className="text-sm text-gray-500 mb-2">Attached Documents</p>
+                  {selectedSupervision.document_url && (
+                    <a
+                      href={selectedSupervision.document_url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="inline-flex items-center gap-2 px-3 py-2 bg-blue-50 text-blue-700 rounded-lg hover:bg-blue-100 mb-2"
+                    >
+                      <FileText className="w-4 h-4" />
+                      View Document
+                    </a>
+                  )}
+                  {selectedSupervision.attached_documents?.length > 0 && (
+                    <DocumentAttachment
+                      documents={selectedSupervision.attached_documents}
+                      onDocumentsChange={() => {}}
+                      entityType="supervision"
+                      editable={false}
+                    />
+                  )}
                 </div>
               )}
 

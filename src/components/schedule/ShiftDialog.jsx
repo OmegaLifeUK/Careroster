@@ -20,10 +20,11 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Home, User, MapPin, Building } from "lucide-react";
+import { Loader2, Home, User, MapPin, Building, Paperclip } from "lucide-react";
 import { format } from "date-fns";
 
 import CarerSuggestions from "./CarerSuggestions";
+import DocumentAttachment from "@/components/documents/DocumentAttachment";
 
 export default function ShiftDialog({ shift, carers = [], clients = [], shifts = [], leaveRequests = [], onClose }) {
   const [formData, setFormData] = useState({
@@ -41,6 +42,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     status: shift?.status || "unfilled",
     tasks: shift?.tasks?.join(", ") || "",
     notes: shift?.notes || "",
+    attached_documents: shift?.attached_documents || [],
   });
 
   const [showSuggestions, setShowSuggestions] = useState(false);
@@ -341,6 +343,13 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   className="h-24"
                 />
               </div>
+
+              <DocumentAttachment
+                documents={formData.attached_documents}
+                onDocumentsChange={(docs) => setFormData(prev => ({ ...prev, attached_documents: docs }))}
+                entityType="shift"
+                showCompletionStatus={true}
+              />
             </div>
 
             <div className="space-y-4">
