@@ -101,6 +101,7 @@ const complianceNav = [
 
 const crmNav = [
   { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
+  { title: "Client Comms Hub", url: createPageUrl("ClientCommunicationHub"), icon: MessageSquare },
 ];
 
 const systemNavigation = [
