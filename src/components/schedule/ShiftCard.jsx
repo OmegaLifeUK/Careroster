@@ -2,7 +2,7 @@ import React from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Clock, User, MapPin, Edit, Trash2, Send, Home, Building } from "lucide-react";
+import { Clock, User, MapPin, Edit, Trash2, Send, Home, Building, Paperclip } from "lucide-react";
 import { format, parseISO } from "date-fns";
 
 const statusColors = {
@@ -128,6 +128,21 @@ export default function ShiftCard({ shift, carers = [], clients = [], properties
               {shift.tasks.length > 3 && (
                 <Badge variant="outline" className="text-xs">
                   +{shift.tasks.length - 3} more
+                </Badge>
+              )}
+            </div>
+          )}
+
+          {/* Attached Documents */}
+          {shift.attached_documents && shift.attached_documents.length > 0 && (
+            <div className="flex items-center gap-2 mt-2">
+              <Paperclip className="w-4 h-4 text-gray-500" />
+              <span className="text-sm text-gray-600">
+                {shift.attached_documents.length} document{shift.attached_documents.length > 1 ? 's' : ''} attached
+              </span>
+              {shift.attached_documents.some(d => d.requires_completion && !d.completed) && (
+                <Badge className="bg-orange-100 text-orange-700 text-xs">
+                  {shift.attached_documents.filter(d => d.requires_completion && !d.completed).length} pending
                 </Badge>
               )}
             </div>
