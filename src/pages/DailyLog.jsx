@@ -60,6 +60,7 @@ export default function DailyLog() {
   const [editingEntry, setEditingEntry] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
   const [filterType, setFilterType] = useState("all");
+  const [viewMode, setViewMode] = useState("timeline"); // "timeline" or "list"
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
@@ -283,6 +284,26 @@ export default function DailyLog() {
                   Family
                 </Button>
               </div>
+              
+              {/* View Mode Toggle */}
+              <div className="flex bg-gray-100 rounded-lg p-1">
+                <button
+                  onClick={() => setViewMode("timeline")}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                    viewMode === "timeline" ? "bg-white shadow text-blue-600 font-medium" : "text-gray-600"
+                  }`}
+                >
+                  Timeline
+                </button>
+                <button
+                  onClick={() => setViewMode("list")}
+                  className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                    viewMode === "list" ? "bg-white shadow text-blue-600 font-medium" : "text-gray-600"
+                  }`}
+                >
+                  List
+                </button>
+              </div>
             </div>
           </CardContent>
         </Card>
@@ -302,7 +323,123 @@ export default function DailyLog() {
               </Button>
             </CardContent>
           </Card>
+        ) : viewMode === "timeline" ? (
+          /* TIMELINE VIEW */
+          <Card>
+            <CardContent className="p-6">
+              <div className="relative">
+                {/* Timeline line */}
+                <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200" />
+                
+                <div className="space-y-6">
+                  {filteredLogs.map((entry, index) => {
+                    const typeConfig = ENTRY_TYPE_CONFIG[entry.entry_type] || ENTRY_TYPE_CONFIG.other;
+                    const Icon = typeConfig.icon;
+                    const clientName = getClientName(entry.client_id);
+                    const isOuting = entry.entry_type?.startsWith('outing_');
+
+                    return (
+                      <div key={entry.id} className="relative pl-16 group">
+                        {/* Time marker */}
+                        <div className="absolute left-0 w-12 text-right pr-2">
+                          <span className="text-sm font-medium text-gray-700">
+                            {entry.arrival_time || '--:--'}
+                          </span>
+                        </div>
+                        
+                        {/* Timeline dot */}
+                        <div className={`absolute left-[18px] w-5 h-5 rounded-full border-2 border-white shadow ${typeConfig.color.replace('text-', 'bg-').split(' ')[0]}`} />
+                        
+                        {/* Entry card */}
+                        <div className={`p-4 rounded-lg border transition-all hover:shadow-md ${
+                          isOuting ? 'bg-cyan-50 border-cyan-200' : 'bg-white border-gray-200'
+                        }`}>
+                          <div className="flex items-start justify-between gap-3">
+                            <div className="flex items-start gap-3 flex-1">
+                              <div className={`w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${typeConfig.color}`}>
+                                <Icon className="w-5 h-5" />
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-2 flex-wrap mb-1">
+                                  <h4 className="font-semibold text-gray-900">
+                                    {isOuting ? (clientName || 'Client Outing') : entry.visitor_name}
+                                  </h4>
+                                  <Badge className={`text-xs ${typeConfig.color}`}>{typeConfig.label}</Badge>
+                                  {entry.departure_time && (
+                                    <span className="text-xs text-gray-500">
+                                      until {entry.departure_time}
+                                    </span>
+                                  )}
+                                </div>
+                                
+                                {!isOuting && entry.visitor_organization && (
+                                  <p className="text-sm text-gray-600">{entry.visitor_organization}</p>
+                                )}
+                                
+                                {!isOuting && clientName && (
+                                  <p className="text-sm text-gray-600 flex items-center gap-1">
+                                    <User className="w-3 h-3" /> {clientName}
+                                  </p>
+                                )}
+                                
+                                {entry.purpose && (
+                                  <p className="text-sm text-gray-700 mt-1">{entry.purpose}</p>
+                                )}
+                                
+                                {isOuting && (
+                                  <div className="flex flex-wrap gap-2 mt-2 text-xs">
+                                    {entry.outing_destination && (
+                                      <span className="flex items-center gap-1 text-cyan-700">
+                                        <MapPin className="w-3 h-3" /> {entry.outing_destination}
+                                      </span>
+                                    )}
+                                    {entry.outing_transport && (
+                                      <span className="flex items-center gap-1 text-cyan-700">
+                                        <Car className="w-3 h-3" /> {entry.outing_transport.replace('_', ' ')}
+                                      </span>
+                                    )}
+                                    {entry.risk_assessment_completed && (
+                                      <Badge className="bg-green-100 text-green-700 text-[10px]">✓ Risk Assessed</Badge>
+                                    )}
+                                  </div>
+                                )}
+                                
+                                {entry.outing_outcome && (
+                                  <p className="text-sm text-gray-600 mt-2 italic">"{entry.outing_outcome}"</p>
+                                )}
+                                
+                                {entry.notes && !entry.outing_outcome && (
+                                  <p className="text-sm text-gray-500 mt-1">{entry.notes}</p>
+                                )}
+                                
+                                {entry.follow_up_required && (
+                                  <div className="flex items-center gap-1 mt-2 text-orange-600 text-sm">
+                                    <AlertCircle className="w-4 h-4" />
+                                    <span className="font-medium">Follow-up: {entry.follow_up_notes || 'Required'}</span>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            
+                            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="icon" className="h-8 w-8" onClick={() => handleEdit(entry)}>
+                                <Pencil className="w-4 h-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" className="h-8 w-8 text-red-600 hover:bg-red-50" onClick={() => handleDelete(entry.id)}>
+                                <Trash2 className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         ) : (
+          /* LIST VIEW */
           <div className="space-y-3">
             {filteredLogs.map(entry => {
               const typeConfig = ENTRY_TYPE_CONFIG[entry.entry_type] || ENTRY_TYPE_CONFIG.other;
