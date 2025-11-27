@@ -39,6 +39,7 @@ const residentialCareNav = [
   { title: "Manager Dashboard", url: createPageUrl("ManagerDashboard"), icon: LayoutDashboard },
   { title: "Schedule", url: createPageUrl("Schedule"), icon: Calendar },
   { title: "Messaging Center", url: createPageUrl("MessagingCenter"), icon: MessageSquare },
+  { title: "Staff Tasks", url: createPageUrl("StaffTasks"), icon: ClipboardList },
   { title: "Carers", url: createPageUrl("Carers"), icon: Users },
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
   { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },

@@ -55,6 +55,7 @@ import InvoiceManagement from './pages/InvoiceManagement';
 import CRMDashboard from './pages/CRMDashboard';
 import SupervisionManagement from './pages/SupervisionManagement';
 import ClientCommunicationHub from './pages/ClientCommunicationHub';
+import StaffTasks from './pages/StaffTasks';
 import __Layout from './Layout.jsx';
 
 
@@ -116,6 +117,7 @@ export const PAGES = {
     "CRMDashboard": CRMDashboard,
     "SupervisionManagement": SupervisionManagement,
     "ClientCommunicationHub": ClientCommunicationHub,
+    "StaffTasks": StaffTasks,
 }
 
 export const pagesConfig = {
