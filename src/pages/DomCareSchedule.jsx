@@ -40,6 +40,11 @@ export default function DomCareSchedule() {
     queryFn: () => base44.entities.Run.list('-run_date'),
   });
 
+  const { data: staffAvailability = [] } = useQuery({
+    queryKey: ['staff-availability'],
+    queryFn: () => base44.entities.CarerAvailability.list(),
+  });
+
   const updateVisitMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Visit.update(id, data),
     onSuccess: () => {
@@ -183,6 +188,7 @@ export default function DomCareSchedule() {
             staff={staff}
             clients={clients}
             runs={runs}
+            staffAvailability={staffAvailability}
             onVisitClick={handleEditVisit}
             onVisitUpdate={handleVisitUpdate}
             onAddVisit={(visitData) => {
