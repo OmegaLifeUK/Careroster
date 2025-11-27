@@ -10,12 +10,36 @@ import { X, Clock, MapPin, User, AlertCircle } from "lucide-react";
 import { format } from "date-fns";
 
 export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
+  // Check if this is an existing visit (has id) or new with pre-filled data
+  const isExistingVisit = visit?.id;
+  
+  // Build default datetime from scheduled_date if provided
+  const getDefaultStart = () => {
+    if (visit?.scheduled_start) {
+      return format(new Date(visit.scheduled_start), "yyyy-MM-dd'T'HH:mm");
+    }
+    if (visit?.scheduled_date) {
+      return `${visit.scheduled_date}T09:00`;
+    }
+    return "";
+  };
+  
+  const getDefaultEnd = () => {
+    if (visit?.scheduled_end) {
+      return format(new Date(visit.scheduled_end), "yyyy-MM-dd'T'HH:mm");
+    }
+    if (visit?.scheduled_date) {
+      return `${visit.scheduled_date}T10:00`;
+    }
+    return "";
+  };
+
   const [formData, setFormData] = useState({
     client_id: visit?.client_id || "",
-    assigned_staff_id: visit?.assigned_staff_id || "",
+    assigned_staff_id: visit?.assigned_staff_id || visit?.staff_id || "",
     run_id: visit?.run_id || "",
-    scheduled_start: visit?.scheduled_start ? format(new Date(visit.scheduled_start), "yyyy-MM-dd'T'HH:mm") : "",
-    scheduled_end: visit?.scheduled_end ? format(new Date(visit.scheduled_end), "yyyy-MM-dd'T'HH:mm") : "",
+    scheduled_start: getDefaultStart(),
+    scheduled_end: getDefaultEnd(),
     status: visit?.status || "draft",
     visit_notes: visit?.visit_notes || "",
     tasks: visit?.tasks || [],
@@ -61,7 +85,7 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
       visitData.run_id = formData.run_id;
     }
 
-    if (visit) {
+    if (isExistingVisit) {
       updateVisitMutation.mutate({ id: visit.id, data: visitData });
     } else {
       createVisitMutation.mutate(visitData);
@@ -87,7 +111,7 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
       <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
         <div className="sticky top-0 bg-white border-b px-6 py-4 flex justify-between items-center">
           <h2 className="text-xl font-bold text-gray-900">
-            {visit ? "Edit Visit" : "Create New Visit"}
+            {isExistingVisit ? "Edit Visit" : "Create New Visit"}
           </h2>
           <button onClick={onClose} className="text-gray-500 hover:text-gray-700">
             <X className="w-5 h-5" />
@@ -202,14 +226,14 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                   Assigned Staff
                 </Label>
                 <Select
-                  value={formData.assigned_staff_id}
-                  onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value })}
+                  value={formData.assigned_staff_id || ""}
+                  onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value === "__unassigned__" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Unassigned" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={null}>Unassigned</SelectItem>
+                    <SelectItem value="__unassigned__">Unassigned</SelectItem>
                     {activeStaff.map(member => (
                       <SelectItem key={member.id} value={member.id}>
                         {member.full_name}
@@ -222,14 +246,14 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
               <div>
                 <Label htmlFor="run_id" className="mb-2 block">Run (Optional)</Label>
                 <Select
-                  value={formData.run_id}
-                  onValueChange={(value) => setFormData({ ...formData, run_id: value })}
+                  value={formData.run_id || ""}
+                  onValueChange={(value) => setFormData({ ...formData, run_id: value === "__none__" ? "" : value })}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="No run" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value={null}>No run</SelectItem>
+                    <SelectItem value="__none__">No run</SelectItem>
                     {runs.map(run => (
                       <SelectItem key={run.id} value={run.id}>
                         {run.run_name} - {run.run_date}
@@ -250,7 +274,7 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
               className="bg-blue-600 hover:bg-blue-700"
               disabled={createVisitMutation.isPending || updateVisitMutation.isPending}
             >
-              {visit ? "Update Visit" : "Create Visit"}
+              {isExistingVisit ? "Update Visit" : "Create Visit"}
             </Button>
           </div>
         </form>
