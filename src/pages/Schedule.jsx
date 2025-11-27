@@ -448,6 +448,20 @@ export default function Schedule() {
               <SkeletonCard key={i} />
             ))}
           </div>
+        ) : viewMode === "roster" ? (
+          <EnhancedRosterView
+            shifts={filteredShifts}
+            carers={carers}
+            clients={clients}
+            properties={properties}
+            onShiftClick={handleEdit}
+            onShiftUpdate={handleShiftUpdate}
+            onAddShift={({ carer_id, date }) => {
+              setEditingShift({ carer_id, date });
+              setShowShiftDialog(true);
+            }}
+            locationName="Care Home"
+          />
         ) : viewMode === "day" ? (
           <DayCalendar 
             shifts={filteredShifts} 
