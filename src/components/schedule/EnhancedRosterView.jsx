@@ -290,7 +290,7 @@ export default function EnhancedRosterView({
       {/* Top Toolbar */}
       <div className="p-3 border-b bg-slate-800 text-white flex items-center justify-between">
         <div className="flex items-center gap-4">
-          <span className="font-semibold text-lg">Planning</span>
+          <span className="font-semibold text-lg">Shift Roster</span>
         </div>
         <div className="flex items-center gap-3">
           <Button 
@@ -298,7 +298,6 @@ export default function EnhancedRosterView({
             size="sm" 
             className="text-white hover:bg-slate-700"
             onClick={() => {
-              // Refresh data
               toast.info("Refreshing", "Data refreshed");
             }}
           >
@@ -306,7 +305,7 @@ export default function EnhancedRosterView({
             Refresh
           </Button>
           <div className="flex items-center gap-2 px-3 py-1 bg-slate-700 rounded">
-            <span className="text-sm">Hide toolbars</span>
+            <span className="text-sm">Compact View</span>
             <button 
               onClick={() => setHideToolbars(!hideToolbars)}
               className={`w-10 h-5 rounded-full transition-colors ${hideToolbars ? 'bg-green-500' : 'bg-slate-500'}`}
@@ -314,12 +313,6 @@ export default function EnhancedRosterView({
               <div className={`w-4 h-4 bg-white rounded-full transition-transform ${hideToolbars ? 'translate-x-5' : 'translate-x-0.5'}`} />
             </button>
           </div>
-          <Button variant="outline" size="sm" className="bg-teal-600 border-teal-600 text-white hover:bg-teal-700">
-            Open Old People Planner
-          </Button>
-          <Button variant="outline" size="sm" className="bg-pink-600 border-pink-600 text-white hover:bg-pink-700">
-            Close Care Rostering Timeline
-          </Button>
         </div>
       </div>
 
