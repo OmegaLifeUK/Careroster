@@ -52,6 +52,11 @@ export default function SupportedLivingSchedule() {
     queryFn: () => base44.entities.Staff.list(),
   });
 
+  const { data: staffAvailability = [] } = useQuery({
+    queryKey: ['staff-availability'],
+    queryFn: () => base44.entities.CarerAvailability.list(),
+  });
+
   const createShiftMutation = useMutation({
     mutationFn: (shiftData) => base44.entities.SupportedLivingShift.create(shiftData),
     onSuccess: () => {
@@ -326,6 +331,7 @@ export default function SupportedLivingSchedule() {
             staff={staff}
             clients={clients}
             properties={properties}
+            staffAvailability={staffAvailability}
             onShiftClick={(shift) => setSelectedShift(shift)}
             onShiftUpdate={({ id, data }) => updateShiftMutation.mutate({ id, data })}
             onAddShift={({ staff_id, date }) => {
