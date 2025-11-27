@@ -81,6 +81,7 @@ const dayCentreNav = [
   { title: "Activities", url: createPageUrl("DayCentreActivities"), icon: Activity },
   { title: "Sessions", url: createPageUrl("DayCentreSessions"), icon: Calendar },
   { title: "Attendance", url: createPageUrl("DayCentreAttendance"), icon: ClipboardList },
+  { title: "Call Transcripts", url: createPageUrl("CallTranscripts"), icon: Phone },
   { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
 ];
 
