@@ -57,6 +57,7 @@ import SupervisionManagement from './pages/SupervisionManagement';
 import ClientCommunicationHub from './pages/ClientCommunicationHub';
 import StaffTasks from './pages/StaffTasks';
 import CarerAvailability from './pages/CarerAvailability';
+import DailyLog from './pages/DailyLog';
 import __Layout from './Layout.jsx';
 
 
@@ -120,6 +121,7 @@ export const PAGES = {
     "ClientCommunicationHub": ClientCommunicationHub,
     "StaffTasks": StaffTasks,
     "CarerAvailability": CarerAvailability,
+    "DailyLog": DailyLog,
 }
 
 export const pagesConfig = {
