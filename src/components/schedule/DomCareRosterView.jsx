@@ -68,18 +68,41 @@ export default function DomCareRosterView({
       .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
   }, [clients]);
 
+  // Helper to extract date string from datetime
+  const getVisitDate = (visit) => {
+    if (!visit) return null;
+    if (visit.scheduled_date) return visit.scheduled_date;
+    if (visit.scheduled_start) {
+      try {
+        const d = new Date(visit.scheduled_start);
+        return format(d, 'yyyy-MM-dd');
+      } catch { return null; }
+    }
+    return null;
+  };
+
+  // Helper to extract time string from datetime
+  const getVisitTime = (visit, field) => {
+    if (!visit || !visit[field]) return null;
+    try {
+      const d = new Date(visit[field]);
+      return format(d, 'HH:mm');
+    } catch { return null; }
+  };
+
   const weeklyStats = useMemo(() => {
     const weekVisits = visits.filter(v => {
-      if (!v?.scheduled_date) return false;
+      const visitDateStr = getVisitDate(v);
+      if (!visitDateStr) return false;
       try {
-        const visitDate = parseISO(v.scheduled_date);
+        const visitDate = parseISO(visitDateStr);
         return visitDate >= currentWeekStart && visitDate < addDays(currentWeekStart, 7);
       } catch { return false; }
     });
 
     const total = weekVisits.length;
     const completed = weekVisits.filter(v => v.status === 'completed').length;
-    const unassigned = weekVisits.filter(v => !v.staff_id).length;
+    const unassigned = weekVisits.filter(v => !v.staff_id && !v.assigned_staff_id).length;
     const totalMileage = weekVisits.reduce((sum, v) => sum + (v.mileage || 0), 0);
     const totalMinutes = weekVisits.reduce((sum, v) => sum + (v.duration_minutes || 0), 0);
 
@@ -89,27 +112,39 @@ export default function DomCareRosterView({
   const getStaffDayVisits = (staffId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
     return visits
-      .filter(v => v?.scheduled_date === dayStr && v.staff_id === staffId)
+      .filter(v => {
+        const visitDateStr = getVisitDate(v);
+        const visitStaffId = v.staff_id || v.assigned_staff_id;
+        return visitDateStr === dayStr && visitStaffId === staffId;
+      })
       .sort((a, b) => (a.scheduled_start || '').localeCompare(b.scheduled_start || ''));
   };
 
   const getClientDayVisits = (clientId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
     return visits
-      .filter(v => v?.scheduled_date === dayStr && v.client_id === clientId)
+      .filter(v => {
+        const visitDateStr = getVisitDate(v);
+        return visitDateStr === dayStr && v.client_id === clientId;
+      })
       .sort((a, b) => (a.scheduled_start || '').localeCompare(b.scheduled_start || ''));
   };
 
   const getUnassignedVisits = (day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
-    return visits.filter(v => v?.scheduled_date === dayStr && !v.staff_id);
+    return visits.filter(v => {
+      const visitDateStr = getVisitDate(v);
+      return visitDateStr === dayStr && !v.staff_id && !v.assigned_staff_id;
+    });
   };
 
   const getStaffWeekHours = (staffId) => {
     return visits
       .filter(v => {
-        if (!v?.scheduled_date || v.staff_id !== staffId) return false;
-        const visitDate = parseISO(v.scheduled_date);
+        const visitDateStr = getVisitDate(v);
+        const visitStaffId = v.staff_id || v.assigned_staff_id;
+        if (!visitDateStr || visitStaffId !== staffId) return false;
+        const visitDate = parseISO(visitDateStr);
         return visitDate >= currentWeekStart && visitDate < addDays(currentWeekStart, 7);
       })
       .reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
@@ -124,6 +159,42 @@ export default function DomCareRosterView({
   const getTimeWidth = (start, duration) => {
     if (!start || !duration) return 8;
     return Math.max((duration / 60 / 18) * 100, 5);
+  };
+
+  // Check for conflicts before updating
+  const checkForConflicts = (staffIdToCheck, dateToCheck, visitToMove) => {
+    if (!staffIdToCheck || !dateToCheck || !visitToMove) return null;
+    
+    const conflictingVisits = visits.filter(v => {
+      if (!v || v.staff_id !== staffIdToCheck || v.scheduled_date !== dateToCheck) return false;
+      if (v.id === visitToMove.id) return false; // Skip the visit being moved
+      
+      const visitStart = v.scheduled_start || "00:00";
+      const visitEnd = v.scheduled_end || "23:59";
+      const moveStart = visitToMove.scheduled_start || "00:00";
+      const moveEnd = visitToMove.scheduled_end || "23:59";
+      
+      // Extract time from datetime strings if needed
+      const getTime = (str) => {
+        if (!str) return "00:00";
+        if (str.includes('T')) return str.split('T')[1]?.substring(0, 5) || "00:00";
+        if (str.includes(' ')) return str.split(' ')[1]?.substring(0, 5) || str;
+        return str;
+      };
+      
+      const start1 = getTime(visitStart);
+      const end1 = getTime(visitEnd);
+      const start2 = getTime(moveStart);
+      const end2 = getTime(moveEnd);
+      
+      return (
+        (start2 >= start1 && start2 < end1) ||
+        (end2 > start1 && end2 <= end1) ||
+        (start2 <= start1 && end2 >= end1)
+      );
+    });
+    
+    return conflictingVisits.length > 0 ? conflictingVisits : null;
   };
 
   const handleDragEnd = (result) => {
@@ -156,11 +227,22 @@ export default function DomCareRosterView({
       targetDate = parts[1];
     }
     
-    const updates = { 
-      scheduled_date: targetDate,
-    };
-    
+    // Check for conflicts if assigning to staff
+    if (newStaffId && parts[0] !== 'client') {
+      const conflicts = checkForConflicts(newStaffId, targetDate, visit);
+      if (conflicts) {
+        const staffName = activeStaff.find(s => s.id === newStaffId)?.full_name || 'This staff member';
+        const proceed = window.confirm(
+          `⚠️ Scheduling Conflict!\n\n${staffName} already has visit(s) at overlapping times on this date.\n\nThis will create overlapping visits. Continue?`
+        );
+        if (!proceed) return;
+      }
+    }
+
+    const updates = {};
+
     if (parts[0] !== 'client') {
+      updates.assigned_staff_id = newStaffId;
       updates.staff_id = newStaffId;
     }
     if (parts[0] === 'client') {
@@ -185,9 +267,12 @@ export default function DomCareRosterView({
 
   const VisitPill = ({ visit, showStaff = false, showClient = true }) => {
     const colors = VISIT_COLORS[visit.status] || VISIT_COLORS.scheduled;
+    const visitStaffId = visit.staff_id || visit.assigned_staff_id;
     const label = showClient 
       ? getClientName(visit.client_id)
-      : (showStaff ? getStaffName(visit.staff_id) : '');
+      : (showStaff ? getStaffName(visitStaffId) : '');
+    
+    const startTime = getVisitTime(visit, 'scheduled_start') || visit.scheduled_start;
 
     return (
       <div
@@ -196,7 +281,7 @@ export default function DomCareRosterView({
           px-2 py-1 rounded-md text-xs cursor-pointer transition-all
           ${colors.bg} ${colors.border} ${colors.text} border
           hover:shadow-md hover:scale-[1.02]
-          ${!visit.staff_id ? 'border-dashed border-orange-400 bg-orange-50' : ''}
+          ${!visitStaffId ? 'border-dashed border-orange-400 bg-orange-50' : ''}
         `}
       >
         <div className="flex items-center gap-1">
@@ -204,7 +289,7 @@ export default function DomCareRosterView({
           <span className="font-medium truncate">{label || 'Visit'}</span>
         </div>
         <div className="text-[10px] opacity-75 mt-0.5 flex items-center gap-1">
-          <span>{visit.scheduled_start}</span>
+          <span>{startTime}</span>
           {visit.duration_minutes && <span>• {visit.duration_minutes}m</span>}
         </div>
       </div>
@@ -213,8 +298,10 @@ export default function DomCareRosterView({
 
   const TimelineVisit = ({ visit }) => {
     const colors = VISIT_COLORS[visit.status] || VISIT_COLORS.scheduled;
-    const left = getTimePosition(visit.scheduled_start);
-    const width = getTimeWidth(visit.scheduled_start, visit.duration_minutes);
+    const startTime = getVisitTime(visit, 'scheduled_start') || visit.scheduled_start;
+    const left = getTimePosition(startTime);
+    const width = getTimeWidth(startTime, visit.duration_minutes);
+    const visitStaffId = visit.staff_id || visit.assigned_staff_id;
 
     return (
       <div
@@ -223,7 +310,7 @@ export default function DomCareRosterView({
           absolute top-1 bottom-1 rounded cursor-pointer transition-all
           ${colors.bg} ${colors.border} border
           hover:shadow-lg hover:z-10
-          ${!visit.staff_id ? 'border-dashed border-orange-400 bg-orange-50/80' : ''}
+          ${!visitStaffId ? 'border-dashed border-orange-400 bg-orange-50/80' : ''}
         `}
         style={{ left: `${left}%`, width: `${width}%`, minWidth: '40px' }}
       >
@@ -617,33 +704,48 @@ export default function DomCareRosterView({
                                 isTodayDate ? 'bg-teal-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-2 ring-inset ring-teal-300' : ''}`}
                             >
-                              <div className="space-y-1">
-                                {dayVisits.map((visit, vIdx) => (
-                                  <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className={snapshot.isDragging ? 'z-50' : ''}
-                                      >
-                                        <VisitPill visit={visit} />
+                              <div className="space-y-1 relative z-10">
+                                    {dayVisits.map((visit, vIdx) => (
+                                      <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
+                                        {(provided, snapshot) => (
+                                          <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={snapshot.isDragging ? 'z-50' : ''}
+                                          >
+                                            <VisitPill visit={visit} />
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                  </div>
+                                  {provided.placeholder}
+
+                                  {/* Add button - only show when no visits */}
+                                  {dayVisits.length === 0 && (
+                                    <button
+                                      onClick={() => onAddVisit?.({ staff_id: staffMember.id, scheduled_date: dayStr })}
+                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-teal-50/50"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-sm">
+                                        <Plus className="w-4 h-4" />
                                       </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              </div>
-                              {provided.placeholder}
-                              
-                              <button
-                                onClick={() => onAddVisit?.({ staff_id: staffMember.id, scheduled_date: dayStr })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-teal-50/50"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-sm">
-                                  <Plus className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {/* Small add button in corner when visits exist */}
+                                  {dayVisits.length > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAddVisit?.({ staff_id: staffMember.id, scheduled_date: dayStr });
+                                      }}
+                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
-                              </button>
-                            </div>
                           )}
                         </Droppable>
                       );
@@ -696,33 +798,48 @@ export default function DomCareRosterView({
                                 isTodayDate ? 'bg-teal-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-300' : ''}`}
                             >
-                              <div className="space-y-1">
-                                {dayVisits.map((visit, vIdx) => (
-                                  <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className={snapshot.isDragging ? 'z-50' : ''}
-                                      >
-                                        <VisitPill visit={visit} showStaff={true} showClient={false} />
+                              <div className="space-y-1 relative z-10">
+                                    {dayVisits.map((visit, vIdx) => (
+                                      <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
+                                        {(provided, snapshot) => (
+                                          <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={snapshot.isDragging ? 'z-50' : ''}
+                                          >
+                                            <VisitPill visit={visit} showStaff={true} showClient={false} />
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                  </div>
+                                  {provided.placeholder}
+
+                                  {/* Add button - only show when no visits */}
+                                  {dayVisits.length === 0 && (
+                                    <button
+                                      onClick={() => onAddVisit?.({ client_id: client.id, scheduled_date: dayStr })}
+                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                                        <Plus className="w-4 h-4" />
                                       </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              </div>
-                              {provided.placeholder}
-                              
-                              <button
-                                onClick={() => onAddVisit?.({ client_id: client.id, scheduled_date: dayStr })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
-                                  <Plus className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {/* Small add button in corner when visits exist */}
+                                  {dayVisits.length > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAddVisit?.({ client_id: client.id, scheduled_date: dayStr });
+                                      }}
+                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
-                              </button>
-                            </div>
                           )}
                         </Droppable>
                       );
