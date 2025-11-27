@@ -239,7 +239,9 @@ export default function DomCareRosterView({
       }
     }
 
-    const updates = {};
+    const updates = {
+      status: newStaffId ? 'published' : 'draft'
+    };
 
     if (parts[0] !== 'client') {
       updates.assigned_staff_id = newStaffId;
@@ -248,7 +250,10 @@ export default function DomCareRosterView({
     if (parts[0] === 'client') {
       updates.client_id = targetClientId;
     }
-    
+
+    // Note: Travel time/mileage calculation is handled in the DomCareTimeline view
+    // For roster view, we just do the assignment - use Timeline view for travel-aware scheduling
+
     onVisitUpdate(draggableId, updates);
     
     if (parts[0] === 'client') {
