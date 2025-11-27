@@ -59,6 +59,20 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     enabled: formData.care_type === "supported_living"
   });
 
+  // Pre-defined locations for residential care / day centre
+  const predefinedLocations = [
+    { name: "Main Building", address: "" },
+    { name: "East Wing", address: "" },
+    { name: "West Wing", address: "" },
+    { name: "North Wing", address: "" },
+    { name: "South Wing", address: "" },
+    { name: "Day Centre", address: "" },
+    { name: "Garden Suite", address: "" },
+    { name: "Dementia Unit", address: "" },
+    { name: "Nursing Unit", address: "" },
+    { name: "Reception", address: "" },
+  ];
+
   // Auto-set assignment type based on care type
   useEffect(() => {
     if (!shift) { // Only auto-set for new shifts
@@ -255,11 +269,35 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   </TabsContent>
 
                   <TabsContent value="location" className="mt-4 space-y-3">
-                    <Input
-                      placeholder="Location name (e.g., Main Building, Day Centre)"
+                    <Select
                       value={formData.location_name}
-                      onChange={(e) => handleInputChange("location_name", e.target.value)}
-                    />
+                      onValueChange={(value) => {
+                        if (value === "__custom__") {
+                          handleInputChange("location_name", "");
+                        } else {
+                          handleInputChange("location_name", value);
+                        }
+                      }}
+                    >
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select location" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {predefinedLocations.map((loc) => (
+                          <SelectItem key={loc.name} value={loc.name}>
+                            {loc.name}
+                          </SelectItem>
+                        ))}
+                        <SelectItem value="__custom__">+ Add Custom Location</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    {formData.location_name === "" && (
+                      <Input
+                        placeholder="Enter custom location name"
+                        value={formData.location_name}
+                        onChange={(e) => handleInputChange("location_name", e.target.value)}
+                      />
+                    )}
                     <Input
                       placeholder="Address (optional)"
                       value={formData.location_address}
