@@ -179,13 +179,14 @@ export default function ComplianceHub() {
         </div>
 
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5 text-orange-600" />
-                Priority Actions
-              </CardTitle>
-            </CardHeader>
+          <Link to={createPageUrl("ActionPlans")}>
+            <Card className="hover:shadow-xl transition-shadow cursor-pointer">
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <AlertTriangle className="w-5 h-5 text-orange-600" />
+                  Priority Actions
+                </CardTitle>
+              </CardHeader>
             <CardContent className="p-6">
               {overdueActionPlans.length === 0 && pendingNotifications.length === 0 && openMedicalErrors.length === 0 ? (
                 <div className="text-center py-8 text-gray-500">
@@ -216,14 +217,16 @@ export default function ComplianceHub() {
               )}
             </CardContent>
           </Card>
+          </Link>
 
-          <Card>
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2">
-                <ClipboardCheck className="w-5 h-5 text-green-600" />
-                Recent Audit Activity
-              </CardTitle>
-            </CardHeader>
+          <Link to={createPageUrl("Audits")}>
+            <Card className="hover:shadow-xl transition-shadow cursor-pointer">
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2">
+                  <ClipboardCheck className="w-5 h-5 text-green-600" />
+                  Recent Audit Activity
+                </CardTitle>
+              </CardHeader>
             <CardContent className="p-6">
               {recentAudits.length === 0 ? (
                 <p className="text-center py-8 text-gray-500">No recent audits</p>
@@ -252,6 +255,7 @@ export default function ComplianceHub() {
               )}
             </CardContent>
           </Card>
+          </Link>
         </div>
       </div>
     </div>

@@ -93,7 +93,10 @@ export default function CRMDashboard() {
 
         {/* Quick Stats */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="border-l-4 border-blue-500">
+          <Card 
+            className="border-l-4 border-blue-500 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveView("enquiries")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-600">New Enquiries</p>
@@ -104,7 +107,10 @@ export default function CRMDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-green-500">
+          <Card 
+            className="border-l-4 border-green-500 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveView("referrals")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-600">Active Referrals</p>
@@ -115,7 +121,10 @@ export default function CRMDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-orange-500">
+          <Card 
+            className="border-l-4 border-orange-500 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveView("documents")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-600">Pending Documents</p>
@@ -126,7 +135,10 @@ export default function CRMDashboard() {
             </CardContent>
           </Card>
 
-          <Card className="border-l-4 border-red-500">
+          <Card 
+            className="border-l-4 border-red-500 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveView("followups")}
+          >
             <CardContent className="p-6">
               <div className="flex items-center justify-between mb-2">
                 <p className="text-sm text-gray-600">Overdue Follow-ups</p>
@@ -202,7 +214,10 @@ export default function CRMDashboard() {
         {activeView === "overview" && (
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Recent Enquiries */}
-            <Card>
+            <Card 
+              className="hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => setActiveView("enquiries")}
+            >
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Recent Enquiries</CardTitle>
                 <Button size="sm">View All</Button>
@@ -231,7 +246,10 @@ export default function CRMDashboard() {
             </Card>
 
             {/* Urgent Follow-ups */}
-            <Card>
+            <Card 
+              className="hover:shadow-xl transition-shadow cursor-pointer"
+              onClick={() => setActiveView("followups")}
+            >
               <CardHeader className="flex flex-row items-center justify-between">
                 <CardTitle>Urgent Follow-ups</CardTitle>
                 <Button size="sm">View All</Button>
