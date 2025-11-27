@@ -3,7 +3,7 @@ import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, Plus, Sparkles, List, Grid, Shuffle, CalendarDays, CalendarRange, Repeat, Send, Wand2 } from "lucide-react";
+import { Calendar, Plus, Sparkles, List, Grid, Shuffle, CalendarDays, CalendarRange, Repeat, Send, Wand2, LayoutGrid } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { QuickFilters } from "@/components/ui/quick-filters";
 import { useToast } from "@/components/ui/toast";
@@ -27,6 +27,7 @@ import { DragDropScheduler } from "../components/schedule/DragDropScheduler";
 import ShiftRequestDialog from "../components/messaging/ShiftRequestDialog";
 import AlertBanner from "../components/alerts/AlertBanner";
 import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
+import EnhancedRosterView from "../components/schedule/EnhancedRosterView";
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState("week");
