@@ -8,9 +8,10 @@ import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 import VisitDialog from "../components/domcare/VisitDialog";
 import RunDialog from "../components/domcare/RunDialog";
 import DomCareTimeline from "../components/domcare/DomCareTimeline";
+import DomCareRosterView from "../components/schedule/DomCareRosterView";
 
 export default function DomCareSchedule() {
-  const [view, setView] = useState("timeline");
+  const [view, setView] = useState("roster");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [showVisitDialog, setShowVisitDialog] = useState(false);
   const [showRunDialog, setShowRunDialog] = useState(false);
@@ -131,11 +132,19 @@ export default function DomCareSchedule() {
         <div className="mb-6 flex flex-col md:flex-row justify-between items-start md:items-center gap-4 bg-white p-4 rounded-lg border shadow-sm">
           <div className="flex gap-2">
             <Button
+              variant={view === "roster" ? "default" : "ghost"}
+              onClick={() => setView("roster")}
+              className="flex items-center gap-2"
+            >
+              <LayoutGrid className="w-4 h-4" />
+              Roster
+            </Button>
+            <Button
               variant={view === "timeline" ? "default" : "ghost"}
               onClick={() => setView("timeline")}
               className="flex items-center gap-2"
             >
-              <LayoutGrid className="w-4 h-4" />
+              <Calendar className="w-4 h-4" />
               Timeline
             </Button>
             <Button
@@ -168,7 +177,21 @@ export default function DomCareSchedule() {
           )}
         </div>
 
-        {view === "timeline" ? (
+        {view === "roster" ? (
+          <DomCareRosterView
+            visits={visits}
+            staff={staff}
+            clients={clients}
+            runs={runs}
+            onVisitClick={handleEditVisit}
+            onVisitUpdate={handleVisitUpdate}
+            onAddVisit={({ staff_id, scheduled_date }) => {
+              setEditingVisit({ staff_id, scheduled_date });
+              setShowVisitDialog(true);
+            }}
+            locationName="Domiciliary Care"
+          />
+        ) : view === "timeline" ? (
           <DomCareTimeline
             visits={visits}
             staff={staff}
