@@ -171,6 +171,29 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     setShowSuggestions(false);
   };
 
+  // Check for conflicts with existing shifts
+  const checkForConflicts = (carerIdToCheck, dateToCheck, startTime, endTime) => {
+    if (!carerIdToCheck || !dateToCheck) return null;
+    
+    const conflictingShifts = shifts.filter(s => {
+      if (!s || s.carer_id !== carerIdToCheck || s.date !== dateToCheck) return false;
+      // Skip the current shift if editing
+      if (isExistingShift && s.id === shift.id) return false;
+      
+      const shiftStart = s.start_time || "00:00";
+      const shiftEnd = s.end_time || "23:59";
+      
+      // Check for time overlap
+      return (
+        (startTime >= shiftStart && startTime < shiftEnd) ||
+        (endTime > shiftStart && endTime <= shiftEnd) ||
+        (startTime <= shiftStart && endTime >= shiftEnd)
+      );
+    });
+    
+    return conflictingShifts.length > 0 ? conflictingShifts : null;
+  };
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -191,6 +214,19 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     if (!formData.date || !formData.start_time || !formData.end_time) {
       alert("Please fill in date and time fields");
       return;
+    }
+
+    // Check for scheduling conflicts
+    if (formData.carer_id) {
+      const conflicts = checkForConflicts(formData.carer_id, formData.date, formData.start_time, formData.end_time);
+      if (conflicts) {
+        const carerName = carers.find(c => c?.id === formData.carer_id)?.full_name || 'This carer';
+        const conflictTimes = conflicts.map(c => `${c.start_time}-${c.end_time}`).join(', ');
+        const proceed = window.confirm(
+          `⚠️ Scheduling Conflict Detected!\n\n${carerName} already has shift(s) at ${conflictTimes} on this date.\n\nThis will create overlapping shifts. Are you sure you want to continue?`
+        );
+        if (!proceed) return;
+      }
     }
 
     saveMutation.mutate(formData);
