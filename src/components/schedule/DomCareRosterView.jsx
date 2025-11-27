@@ -573,7 +573,20 @@ export default function DomCareRosterView({
         </div>
       ) : (
         /* WEEK GRID VIEW */
-        <DragDropContext onDragEnd={handleDragEnd}>
+        <DragDropContext 
+          onDragEnd={handleDragEnd}
+          autoScrollerOptions={{
+            startFromPercentage: 0.2,
+            maxScrollAtPercentage: 0.9,
+            maxPixelScroll: 15,
+            ease: (percentage) => Math.pow(percentage, 2),
+            durationDampening: {
+              damping: 20,
+              accelerateAt: 2000
+            },
+            disabled: false
+          }}
+        >
           <div className="flex flex-col" style={{ overscrollBehavior: 'contain' }}>
             <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
               <div className="p-3 border-r flex items-center gap-2">
