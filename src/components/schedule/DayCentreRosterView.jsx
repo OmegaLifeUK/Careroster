@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,21 +9,34 @@ import {
   Calendar,
   Clock,
   Users,
-  AlertTriangle,
+  AlertCircle,
   Search,
   Plus,
+  User,
   Activity,
+  Maximize2,
   MapPin
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
-const SESSION_STATUS_COLORS = {
-  scheduled: "bg-blue-400 text-blue-900 border-blue-500",
-  in_progress: "bg-green-400 text-green-900 border-green-500",
-  completed: "bg-gray-300 text-gray-700 border-gray-400",
-  cancelled: "bg-red-300 text-red-800 border-red-400",
+const SESSION_COLORS = {
+  scheduled: { bg: "bg-amber-100", border: "border-amber-300", text: "text-amber-800", dot: "bg-amber-500" },
+  in_progress: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-800", dot: "bg-emerald-500" },
+  completed: { bg: "bg-slate-100", border: "border-slate-300", text: "text-slate-600", dot: "bg-slate-400" },
+  cancelled: { bg: "bg-red-100", border: "border-red-300", text: "text-red-800", dot: "bg-red-500" },
 };
+
+const ACTIVITY_COLORS = [
+  { bg: "bg-amber-100", border: "border-amber-300", text: "text-amber-800", dot: "bg-amber-500" },
+  { bg: "bg-rose-100", border: "border-rose-300", text: "text-rose-800", dot: "bg-rose-500" },
+  { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-800", dot: "bg-emerald-500" },
+  { bg: "bg-cyan-100", border: "border-cyan-300", text: "text-cyan-800", dot: "bg-cyan-500" },
+  { bg: "bg-violet-100", border: "border-violet-300", text: "text-violet-800", dot: "bg-violet-500" },
+  { bg: "bg-pink-100", border: "border-pink-300", text: "text-pink-800", dot: "bg-pink-500" },
+];
+
+const TIMELINE_HOURS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17];
 
 export default function DayCentreRosterView({
   sessions = [],
@@ -38,7 +50,9 @@ export default function DayCentreRosterView({
 }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewByActivity, setViewByActivity] = useState(true);
+  const [viewMode, setViewMode] = useState("week");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [activePanel, setActivePanel] = useState("activities");
   const { toast } = useToast();
 
   const weekDays = useMemo(() => 
@@ -56,8 +70,12 @@ export default function DayCentreRosterView({
     return filtered.sort((a, b) => (a.activity_name || '').localeCompare(b.activity_name || ''));
   }, [activities, searchQuery]);
 
-  // Weekly metrics
-  const weeklyMetrics = useMemo(() => {
+  const activeClients = useMemo(() => {
+    return clients.filter(c => c && c.status === 'active')
+      .sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+  }, [clients]);
+
+  const weeklyStats = useMemo(() => {
     const weekSessions = sessions.filter(s => {
       if (!s?.session_date) return false;
       try {
@@ -66,36 +84,19 @@ export default function DayCentreRosterView({
       } catch { return false; }
     });
 
-    const totalSessions = weekSessions.length;
+    const total = weekSessions.length;
     const totalCapacity = weekSessions.reduce((sum, s) => sum + (s.max_capacity || 0), 0);
     const totalRegistered = weekSessions.reduce((sum, s) => sum + (s.registered_clients?.length || 0), 0);
-    const completedSessions = weekSessions.filter(s => s.status === 'completed').length;
+    const completed = weekSessions.filter(s => s.status === 'completed').length;
 
-    return {
-      totalSessions,
-      totalCapacity,
+    return { 
+      total, 
+      completed, 
+      totalCapacity, 
       totalRegistered,
-      completedSessions,
-      occupancyRate: totalCapacity > 0 ? ((totalRegistered / totalCapacity) * 100).toFixed(0) : 0
+      occupancy: totalCapacity > 0 ? Math.round((totalRegistered / totalCapacity) * 100) : 0
     };
   }, [sessions, currentWeekStart]);
-
-  const dailyMetrics = useMemo(() => {
-    return weekDays.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      const daySessions = sessions.filter(s => s?.session_date === dayStr);
-      const totalCapacity = daySessions.reduce((sum, s) => sum + (s.max_capacity || 0), 0);
-      const totalRegistered = daySessions.reduce((sum, s) => sum + (s.registered_clients?.length || 0), 0);
-      
-      return {
-        date: day,
-        totalSessions: daySessions.length,
-        totalCapacity,
-        totalRegistered,
-        occupancy: totalCapacity > 0 ? ((totalRegistered / totalCapacity) * 100).toFixed(0) : 0
-      };
-    });
-  }, [weekDays, sessions]);
 
   const getActivityDaySessions = (activityId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
@@ -104,300 +105,538 @@ export default function DayCentreRosterView({
       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
   };
 
-  const getActivityWeeklyStats = (activityId) => {
-    const weekSessions = sessions.filter(s => {
-      if (!s?.session_date || s.activity_id !== activityId) return false;
-      try {
-        const sessionDate = parseISO(s.session_date);
-        return sessionDate >= currentWeekStart && sessionDate < addDays(currentWeekStart, 7);
-      } catch { return false; }
-    });
-
-    const totalCapacity = weekSessions.reduce((sum, s) => sum + (s.max_capacity || 0), 0);
-    const totalRegistered = weekSessions.reduce((sum, s) => sum + (s.registered_clients?.length || 0), 0);
-
-    return {
-      sessionCount: weekSessions.length,
-      totalRegistered,
-      totalCapacity,
-      occupancy: totalCapacity > 0 ? ((totalRegistered / totalCapacity) * 100).toFixed(0) : 0
-    };
-  };
-
-  const getActivityName = (activityId) => {
-    const activity = activities.find(a => a?.id === activityId);
-    return activity?.activity_name || 'Unknown Activity';
+  const getClientDaySessions = (clientId, day) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return sessions
+      .filter(s => s?.session_date === dayStr && s.registered_clients?.includes(clientId))
+      .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
   };
 
   const getActivityColor = (activityId) => {
     const activity = activities.find(a => a?.id === activityId);
-    // Generate consistent color based on activity name
-    const colors = [
-      'bg-amber-400 text-amber-900',
-      'bg-rose-400 text-rose-900',
-      'bg-emerald-400 text-emerald-900',
-      'bg-cyan-400 text-cyan-900',
-      'bg-violet-400 text-violet-900',
-      'bg-pink-400 text-pink-900',
-    ];
-    const index = (activity?.activity_name?.charCodeAt(0) || 0) % colors.length;
-    return colors[index];
+    const index = (activity?.activity_name?.charCodeAt(0) || 0) % ACTIVITY_COLORS.length;
+    return ACTIVITY_COLORS[index];
+  };
+
+  const getActivityName = (activityId) => activities.find(a => a?.id === activityId)?.activity_name || '';
+
+  const getTimePosition = (time) => {
+    if (!time) return 0;
+    const [hour, min] = time.split(':').map(Number);
+    return ((hour - 8 + min / 60) / 10) * 100;
+  };
+
+  const getTimeWidth = (start, end) => {
+    if (!start || !end) return 10;
+    const startPos = getTimePosition(start);
+    const endPos = getTimePosition(end);
+    return Math.max(endPos - startPos, 8);
   };
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-    // Sessions typically aren't dragged between activities, but we can implement date changes
-    toast.info("Session Moved", "Session date updated");
+    toast.info("Session Updated", "Session has been moved");
+  };
+
+  const SessionPill = ({ session, showActivity = true }) => {
+    const colors = getActivityColor(session.activity_id);
+    const registered = session.registered_clients?.length || 0;
+    const capacity = session.max_capacity || 0;
+    const occupancy = capacity > 0 ? Math.round((registered / capacity) * 100) : 0;
+
+    return (
+      <div
+        onClick={() => onSessionClick?.(session)}
+        className={`
+          px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all
+          ${colors.bg} ${colors.border} ${colors.text} border
+          hover:shadow-md hover:scale-[1.02]
+        `}
+      >
+        <div className="flex items-center gap-1">
+          <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
+          <span className="font-medium truncate">
+            {showActivity ? getActivityName(session.activity_id) : session.start_time}
+          </span>
+        </div>
+        <div className="flex items-center justify-between mt-1">
+          <div className="flex items-center gap-1 text-[10px] opacity-75">
+            <Users className="w-3 h-3" />
+            <span>{registered}/{capacity}</span>
+          </div>
+          <div className="h-1 w-12 bg-white/50 rounded-full overflow-hidden">
+            <div 
+              className={`h-full ${occupancy >= 80 ? 'bg-emerald-500' : occupancy >= 50 ? 'bg-amber-500' : 'bg-gray-400'}`}
+              style={{ width: `${Math.min(occupancy, 100)}%` }}
+            />
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  const TimelineSession = ({ session }) => {
+    const colors = getActivityColor(session.activity_id);
+    const left = getTimePosition(session.start_time);
+    const width = getTimeWidth(session.start_time, session.end_time);
+    const registered = session.registered_clients?.length || 0;
+    const capacity = session.max_capacity || 0;
+
+    return (
+      <div
+        onClick={() => onSessionClick?.(session)}
+        className={`
+          absolute top-1 bottom-1 rounded cursor-pointer transition-all
+          ${colors.bg} ${colors.border} border
+          hover:shadow-lg hover:z-10
+        `}
+        style={{ left: `${left}%`, width: `${width}%`, minWidth: '50px' }}
+      >
+        <div className="px-1.5 py-0.5 text-[10px] truncate h-full flex flex-col justify-between">
+          <span className={`font-semibold ${colors.text}`}>
+            {getActivityName(session.activity_id)}
+          </span>
+          <span className={`${colors.text} opacity-75`}>
+            {registered}/{capacity}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b bg-gradient-to-r from-amber-50 to-orange-50">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Week</span>
-              <Button variant="ghost" size="sm" className="font-semibold text-lg">
-                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d')}
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search activities..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-48"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Summary Stats */}
+      <div className="bg-gradient-to-r from-amber-500 to-orange-500 text-white p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-900">{locationName}</h2>
-            <Badge className="bg-amber-100 text-amber-700">
-              <Activity className="w-3 h-3 mr-1" />
-              Day Centre
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-6 text-sm">
-            <div className="text-center">
-              <p className="text-gray-500">Sessions</p>
-              <p className="font-bold text-lg">{weeklyMetrics.totalSessions}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Registered</p>
-              <p className="font-bold text-lg text-amber-600">{weeklyMetrics.totalRegistered}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Capacity</p>
-              <p className="font-bold text-lg">{weeklyMetrics.totalCapacity}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Occupancy</p>
-              <p className={`font-bold text-lg ${parseInt(weeklyMetrics.occupancyRate) > 80 ? 'text-green-600' : 'text-orange-600'}`}>
-                {weeklyMetrics.occupancyRate}%
-              </p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold">{locationName}</h2>
+              <p className="text-amber-100 text-sm">Activity Schedule</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Daily Metrics */}
-      <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50">
-        <div className="p-3 font-medium text-gray-600 border-r flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          Daily Stats
-        </div>
-        {dailyMetrics.map((metric, idx) => {
-          const isTodayDate = isToday(metric.date);
-          return (
-            <div key={idx} className={`p-2 text-center text-xs border-r ${isTodayDate ? 'bg-amber-50' : ''}`}>
-              <div className="grid grid-cols-2 gap-1">
-                <div>
-                  <p className="text-gray-400">Sessions</p>
-                  <p className="font-semibold">{metric.totalSessions}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Booked</p>
-                  <p className="font-semibold">{metric.totalRegistered}</p>
-                </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="text-center">
+                <p className="text-2xl font-bold">{weeklyStats.total}</p>
+                <p className="text-amber-200 text-xs">Sessions</p>
               </div>
-              <div className="mt-1">
-                <div className="h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                  <div 
-                    className="h-full bg-amber-500 transition-all"
-                    style={{ width: `${metric.occupancy}%` }}
-                  />
-                </div>
-                <p className="text-[10px] text-gray-500 mt-0.5">{metric.occupancy}% full</p>
+              <div className="w-px h-8 bg-amber-400" />
+              <div className="text-center">
+                <p className="text-2xl font-bold">{weeklyStats.totalRegistered}</p>
+                <p className="text-amber-200 text-xs">Registered</p>
+              </div>
+              <div className="w-px h-8 bg-amber-400" />
+              <div className="text-center">
+                <p className="text-2xl font-bold">{weeklyStats.totalCapacity}</p>
+                <p className="text-amber-200 text-xs">Capacity</p>
+              </div>
+              <div className="w-px h-8 bg-amber-400" />
+              <div className="text-center">
+                <p className={`text-2xl font-bold ${weeklyStats.occupancy >= 70 ? 'text-emerald-300' : 'text-amber-200'}`}>
+                  {weeklyStats.occupancy}%
+                </p>
+                <p className="text-amber-200 text-xs">Occupancy</p>
               </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Column Headers */}
-      <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-white sticky top-0 z-20">
-        <div className="p-3 font-medium text-gray-700 border-r flex items-center gap-2">
-          <Activity className="w-4 h-4" />
-          Activities ({activeActivities.length})
+          </div>
         </div>
-        {weekDays.map((day, idx) => {
-          const isTodayDate = isToday(day);
-          return (
-            <div key={idx} className={`p-3 text-center border-r ${isTodayDate ? 'bg-amber-100 font-bold' : ''}`}>
-              <p className={`text-sm ${isTodayDate ? 'text-amber-800' : 'text-gray-500'}`}>
-                {format(day, 'EEE')}
-              </p>
-              <p className={`text-xl font-bold ${isTodayDate ? 'text-amber-900' : 'text-gray-900'}`}>
-                {format(day, 'd')}
-              </p>
-              {isTodayDate && <Badge className="bg-amber-600 text-white text-xs mt-1">Today</Badge>}
-            </div>
-          );
-        })}
       </div>
 
-      <DragDropContext onDragEnd={handleDragEnd}>
-        {/* Activity Rows */}
-        <div className="max-h-[550px] overflow-y-auto">
-          {activeActivities.map((activity) => {
-            const weekStats = getActivityWeeklyStats(activity.id);
-            const activityColor = getActivityColor(activity.id);
-            
-            return (
-              <div key={activity.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50">
-                <div className="p-3 border-r flex items-start gap-3">
-                  <div className={`w-8 h-8 rounded-lg ${activityColor.split(' ')[0]} flex items-center justify-center flex-shrink-0`}>
-                    <Activity className="w-4 h-4 text-white" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate text-sm">{activity.activity_name}</h4>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                      <span>{weekStats.sessionCount} sessions</span>
-                      <span>•</span>
-                      <span>{weekStats.occupancy}% full</span>
-                    </div>
-                    {activity.location && (
-                      <div className="flex items-center gap-1 text-xs text-gray-400 mt-1">
-                        <MapPin className="w-3 h-3" />
-                        {activity.location}
-                      </div>
-                    )}
-                  </div>
+      {/* Controls */}
+      <div className="p-3 border-b bg-gray-50 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => viewMode === "day" 
+              ? setSelectedDate(addDays(selectedDate, -1))
+              : setCurrentWeekStart(subWeeks(currentWeekStart, 1))
+            }
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          <div className="flex bg-white rounded-lg border p-0.5">
+            <button
+              onClick={() => setViewMode("day")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                viewMode === "day" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode("week")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                viewMode === "week" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Week
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <span className="font-medium text-sm">
+              {viewMode === "day" 
+                ? format(selectedDate, 'EEE, d MMM yyyy')
+                : `${format(currentWeekStart, 'd MMM')} - ${format(addDays(currentWeekStart, 6), 'd MMM yyyy')}`
+              }
+            </span>
+          </div>
+
+          <Button 
+            variant="outline" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => viewMode === "day" 
+              ? setSelectedDate(addDays(selectedDate, 1))
+              : setCurrentWeekStart(addWeeks(currentWeekStart, 1))
+            }
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+              setSelectedDate(new Date());
+            }}
+          >
+            Today
+          </Button>
+        </div>
+
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search activities..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 w-48 text-sm"
+            />
+          </div>
+
+          <div className="flex bg-white rounded-lg border p-0.5">
+            <button
+              onClick={() => setActivePanel("activities")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "activities" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Activity className="w-3 h-3" />
+              Activities
+            </button>
+            <button
+              onClick={() => setActivePanel("clients")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "clients" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <User className="w-3 h-3" />
+              Clients
+            </button>
+            <button
+              onClick={() => setActivePanel("both")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "both" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Maximize2 className="w-3 h-3" />
+              Split
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {viewMode === "day" ? (
+        /* DAY TIMELINE VIEW */
+        <div className="flex flex-col">
+          <div className="flex border-b bg-gray-50">
+            <div className="w-56 p-2 border-r flex-shrink-0" />
+            <div className="flex-1 flex">
+              {TIMELINE_HOURS.map(hour => (
+                <div key={hour} className="flex-1 text-center py-2 text-xs text-gray-500 border-r">
+                  {hour.toString().padStart(2, '0')}:00
                 </div>
+              ))}
+            </div>
+          </div>
 
-                {weekDays.map((day, idx) => {
-                  const dayStr = format(day, 'yyyy-MM-dd');
-                  const daySessions = getActivityDaySessions(activity.id, day);
-                  const isTodayDate = isToday(day);
-
+          {(activePanel === "activities" || activePanel === "both") && activeActivities.length > 0 && (
+            <div className={activePanel === "both" ? "border-b" : ""}>
+              <div className="flex items-center gap-2 px-4 py-2 bg-amber-50 border-b">
+                <Activity className="w-4 h-4 text-amber-600" />
+                <span className="font-semibold text-amber-900">Activities</span>
+                <Badge className="bg-amber-100 text-amber-700 text-xs">{activeActivities.length}</Badge>
+              </div>
+              <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
+                {activeActivities.map(activity => {
+                  const daySessions = getActivityDaySessions(activity.id, selectedDate);
+                  const colors = getActivityColor(activity.id);
+                  
                   return (
-                    <Droppable key={`${activity.id}_${dayStr}`} droppableId={`${activity.id}_${dayStr}`}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`p-1 min-h-[80px] border-r transition-colors ${
-                            isTodayDate ? 'bg-amber-50/50' : ''
-                          } ${snapshot.isDraggingOver ? 'bg-amber-50 ring-2 ring-inset ring-amber-300' : ''}`}
-                        >
-                          <div className="space-y-1">
-                            {daySessions.map((session, sIdx) => {
-                              const registeredCount = session.registered_clients?.length || 0;
-                              const capacity = session.max_capacity || 0;
-                              const occupancy = capacity > 0 ? (registeredCount / capacity) * 100 : 0;
-                              const statusColor = SESSION_STATUS_COLORS[session.status] || 'bg-gray-200';
-                              
-                              return (
-                                <Draggable key={session.id} draggableId={session.id} index={sIdx}>
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      onClick={() => onSessionClick?.(session)}
-                                      className={`
-                                        px-2 py-1.5 rounded text-xs cursor-pointer border
-                                        ${activityColor}
-                                        hover:shadow-md transition-all
-                                        ${snapshot.isDragging ? 'shadow-xl ring-2 ring-amber-400 z-50' : ''}
-                                      `}
-                                    >
-                                      <div className="flex items-center justify-between gap-1">
-                                        <span className="font-bold">{session.start_time}-{session.end_time}</span>
-                                      </div>
-                                      <div className="flex items-center gap-1 mt-1">
-                                        <Users className="w-3 h-3" />
-                                        <span className="font-medium">{registeredCount}/{capacity}</span>
-                                      </div>
-                                      {/* Capacity bar */}
-                                      <div className="h-1 bg-white/50 rounded-full mt-1 overflow-hidden">
-                                        <div 
-                                          className={`h-full ${occupancy >= 80 ? 'bg-green-600' : occupancy >= 50 ? 'bg-yellow-500' : 'bg-white/80'}`}
-                                          style={{ width: `${Math.min(occupancy, 100)}%` }}
-                                        />
-                                      </div>
-                                      {session.location && (
-                                        <div className="text-[10px] opacity-75 truncate mt-0.5">
-                                          {session.location}
-                                        </div>
-                                      )}
-                                    </div>
-                                  )}
-                                </Draggable>
-                              );
-                            })}
-                          </div>
-                          {provided.placeholder}
-                          
-                          {daySessions.length === 0 && !snapshot.isDraggingOver && (
-                            <button
-                              onClick={() => onAddSession?.({ activity_id: activity.id, session_date: dayStr })}
-                              className="w-full h-full min-h-[50px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-gray-400 hover:text-amber-500"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
+                    <div key={activity.id} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}>
+                          <Activity className={`w-4 h-4 ${colors.text}`} />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{activity.activity_name}</p>
+                          {activity.location && (
+                            <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                              <MapPin className="w-3 h-3" />
+                              {activity.location}
+                            </p>
                           )}
                         </div>
-                      )}
-                    </Droppable>
+                      </div>
+                      <div className="flex-1 relative h-16 bg-gray-50/50">
+                        <div className="absolute inset-0 flex">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                          ))}
+                        </div>
+                        {daySessions.map(session => (
+                          <TimelineSession key={session.id} session={session} />
+                        ))}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {(activePanel === "clients" || activePanel === "both") && activeClients.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 border-b">
+                <User className="w-4 h-4 text-orange-600" />
+                <span className="font-semibold text-orange-900">Attendees</span>
+                <Badge className="bg-orange-100 text-orange-700 text-xs">{activeClients.length}</Badge>
+              </div>
+              <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
+                {activeClients.map(client => {
+                  const daySessions = getClientDaySessions(client.id, selectedDate);
+                  
+                  return (
+                    <div key={client.id} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                          {client.full_name?.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{client.full_name}</p>
+                          <p className="text-xs text-gray-500">{daySessions.length} sessions</p>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                        <div className="absolute inset-0 flex">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                          ))}
+                        </div>
+                        {daySessions.map(session => (
+                          <TimelineSession key={session.id} session={session} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </DragDropContext>
+      ) : (
+        /* WEEK GRID VIEW */
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex flex-col">
+            <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
+              <div className="p-3 border-r flex items-center gap-2">
+                {activePanel === "clients" ? (
+                  <>
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Attendees</span>
+                  </>
+                ) : (
+                  <>
+                    <Activity className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Activities</span>
+                  </>
+                )}
+              </div>
+              {weekDays.map((day, idx) => {
+                const isTodayDate = isToday(day);
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-2 border-r text-center transition-colors ${
+                      isTodayDate ? 'bg-amber-50' : ''
+                    }`}
+                  >
+                    <p className={`text-xs font-medium ${isTodayDate ? 'text-amber-600' : 'text-gray-500'}`}>
+                      {format(day, 'EEE')}
+                    </p>
+                    <p className={`text-lg font-bold ${isTodayDate ? 'text-amber-700' : 'text-gray-900'}`}>
+                      {format(day, 'd')}
+                    </p>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Activities Rows */}
+            {(activePanel === "activities" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activeActivities.map((activity) => {
+                const colors = getActivityColor(activity.id);
+                
+                return (
+                  <div key={activity.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className={`w-8 h-8 rounded-lg ${colors.bg} ${colors.border} border flex items-center justify-center flex-shrink-0`}>
+                        <Activity className={`w-4 h-4 ${colors.text}`} />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{activity.activity_name}</p>
+                        {activity.location && (
+                          <p className="text-xs text-gray-500 truncate">{activity.location}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const daySessions = getActivityDaySessions(activity.id, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <Droppable key={`${activity.id}_${dayStr}`} droppableId={`${activity.id}_${dayStr}`}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className={`p-1 min-h-[70px] border-r transition-colors relative group ${
+                                isTodayDate ? 'bg-amber-50/30' : ''
+                              } ${snapshot.isDraggingOver ? 'bg-amber-100/50 ring-2 ring-inset ring-amber-300' : ''}`}
+                            >
+                              <div className="space-y-1">
+                                {daySessions.map((session, sIdx) => (
+                                  <Draggable key={session.id} draggableId={session.id} index={sIdx}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={snapshot.isDragging ? 'z-50' : ''}
+                                      >
+                                        <SessionPill session={session} showActivity={false} />
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                              </div>
+                              {provided.placeholder}
+                              
+                              <button
+                                onClick={() => onAddSession?.({ activity_id: activity.id, session_date: dayStr })}
+                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-amber-50/50"
+                              >
+                                <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                                  <Plus className="w-4 h-4" />
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                        </Droppable>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+
+            {/* Clients Rows */}
+            {(activePanel === "clients" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activePanel === "both" && (
+                <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-orange-50">
+                  <div className="p-2 border-r flex items-center gap-2">
+                    <User className="w-4 h-4 text-orange-600" />
+                    <span className="text-sm font-medium text-orange-700">Attendees</span>
+                  </div>
+                  {weekDays.map((day, idx) => (
+                    <div key={idx} className="border-r" />
+                  ))}
+                </div>
+              )}
+              {activeClients.map((client) => {
+                return (
+                  <div key={client.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-orange-400 to-orange-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        {client.full_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{client.full_name}</p>
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const daySessions = getClientDaySessions(client.id, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <div
+                          key={dayStr}
+                          className={`p-1 min-h-[60px] border-r transition-colors ${
+                            isTodayDate ? 'bg-amber-50/30' : ''
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            {daySessions.map((session) => (
+                              <SessionPill key={session.id} session={session} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+          </div>
+        </DragDropContext>
+      )}
 
       {/* Legend */}
-      <div className="p-3 border-t bg-gray-50 flex items-center gap-4 text-xs">
-        <span className="text-gray-500">Capacity:</span>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-green-600" />
-          <span>80%+ Full</span>
+      <div className="p-3 border-t bg-gray-50 flex items-center justify-between">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-gray-500 font-medium">Capacity:</span>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-emerald-500" />
+            <span className="text-gray-600">80%+ Full</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-amber-500" />
+            <span className="text-gray-600">50-80%</span>
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2.5 h-2.5 rounded-full bg-gray-400" />
+            <span className="text-gray-600">&lt;50%</span>
+          </div>
         </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-yellow-500" />
-          <span>50-80%</span>
-        </div>
-        <div className="flex items-center gap-1">
-          <div className="w-3 h-3 rounded bg-gray-300" />
-          <span>&lt;50%</span>
+        <div className="text-xs text-gray-500">
+          Drag sessions to reschedule
         </div>
       </div>
     </div>

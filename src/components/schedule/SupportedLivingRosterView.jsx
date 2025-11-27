@@ -1,6 +1,5 @@
 import React, { useState, useMemo } from "react";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
-import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,32 +9,35 @@ import {
   Calendar,
   Clock,
   Users,
-  AlertTriangle,
-  CheckCircle,
+  AlertCircle,
   Search,
   Plus,
   Home,
   Moon,
-  Sun
+  Sun,
+  Maximize2,
+  User
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
-const SHIFT_TYPE_COLORS = {
-  visiting_support: "bg-blue-400 text-blue-900 border-blue-500",
-  core_hours: "bg-green-400 text-green-900 border-green-500",
-  sleep_in: "bg-indigo-400 text-indigo-900 border-indigo-500",
-  waking_night: "bg-slate-600 text-white border-slate-700",
-  on_call: "bg-orange-400 text-orange-900 border-orange-500",
+const SHIFT_COLORS = {
+  visiting_support: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-800", dot: "bg-sky-500" },
+  core_hours: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-800", dot: "bg-emerald-500" },
+  sleep_in: { bg: "bg-indigo-100", border: "border-indigo-300", text: "text-indigo-800", dot: "bg-indigo-500" },
+  waking_night: { bg: "bg-slate-200", border: "border-slate-400", text: "text-slate-800", dot: "bg-slate-600" },
+  on_call: { bg: "bg-orange-100", border: "border-orange-300", text: "text-orange-800", dot: "bg-orange-500" },
 };
 
-const SHIFT_TYPE_LABELS = {
+const SHIFT_LABELS = {
   visiting_support: "Visiting",
   core_hours: "Core",
   sleep_in: "Sleep-In",
-  waking_night: "Waking",
+  waking_night: "Waking Night",
   on_call: "On-Call",
 };
+
+const TIMELINE_HOURS = [6, 8, 10, 12, 14, 16, 18, 20, 22];
 
 export default function SupportedLivingRosterView({
   shifts = [],
@@ -49,7 +51,9 @@ export default function SupportedLivingRosterView({
 }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [searchQuery, setSearchQuery] = useState("");
-  const [viewByProperty, setViewByProperty] = useState(false);
+  const [viewMode, setViewMode] = useState("week");
+  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [activePanel, setActivePanel] = useState("staff");
   const { toast } = useToast();
 
   const weekDays = useMemo(() => 
@@ -67,8 +71,12 @@ export default function SupportedLivingRosterView({
     return filtered.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
   }, [staff, searchQuery]);
 
-  // Weekly metrics
-  const weeklyMetrics = useMemo(() => {
+  const activeProperties = useMemo(() => {
+    return properties.filter(p => p && p.status === 'active')
+      .sort((a, b) => (a.property_name || '').localeCompare(b.property_name || ''));
+  }, [properties]);
+
+  const weeklyStats = useMemo(() => {
     const weekShifts = shifts.filter(s => {
       if (!s?.date) return false;
       try {
@@ -77,36 +85,13 @@ export default function SupportedLivingRosterView({
       } catch { return false; }
     });
 
-    const totalShifts = weekShifts.length;
-    const filledShifts = weekShifts.filter(s => s.staff_id).length;
+    const total = weekShifts.length;
+    const filled = weekShifts.filter(s => s.staff_id).length;
     const sleepIns = weekShifts.filter(s => s.shift_type === 'sleep_in').length;
     const wakingNights = weekShifts.filter(s => s.shift_type === 'waking_night').length;
 
-    return {
-      totalShifts,
-      filledShifts,
-      unfilledShifts: totalShifts - filledShifts,
-      sleepIns,
-      wakingNights,
-      fillRate: totalShifts > 0 ? ((filledShifts / totalShifts) * 100).toFixed(0) : 100
-    };
+    return { total, filled, unfilled: total - filled, sleepIns, wakingNights };
   }, [shifts, currentWeekStart]);
-
-  const dailyMetrics = useMemo(() => {
-    return weekDays.map(day => {
-      const dayStr = format(day, 'yyyy-MM-dd');
-      const dayShifts = shifts.filter(s => s?.date === dayStr);
-      const filledShifts = dayShifts.filter(s => s.staff_id);
-      
-      return {
-        date: day,
-        totalShifts: dayShifts.length,
-        filledShifts: filledShifts.length,
-        unfilledShifts: dayShifts.length - filledShifts.length,
-        sleepIns: dayShifts.filter(s => s.shift_type === 'sleep_in').length
-      };
-    });
-  }, [weekDays, shifts]);
 
   const getStaffDayShifts = (staffId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
@@ -115,354 +100,603 @@ export default function SupportedLivingRosterView({
       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
   };
 
-  const getUnassignedShifts = (day) => {
+  const getPropertyDayShifts = (propertyId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
     return shifts
-      .filter(s => s?.date === dayStr && !s.staff_id)
+      .filter(s => s?.date === dayStr && s.property_id === propertyId)
       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
   };
 
-  const getStaffWeeklyStats = (staffId) => {
-    const weekShifts = shifts.filter(s => {
-      if (!s?.date || s.staff_id !== staffId) return false;
-      try {
-        const shiftDate = parseISO(s.date);
-        return shiftDate >= currentWeekStart && shiftDate < addDays(currentWeekStart, 7);
-      } catch { return false; }
-    });
-
-    const totalHours = weekShifts.reduce((sum, s) => {
-      if (!s.start_time || !s.end_time) return sum;
-      const [sh, sm] = s.start_time.split(':').map(Number);
-      const [eh, em] = s.end_time.split(':').map(Number);
-      let hours = (eh * 60 + em - sh * 60 - sm) / 60;
-      if (hours < 0) hours += 24;
-      return sum + hours;
-    }, 0);
-
-    return {
-      shiftCount: weekShifts.length,
-      totalHours: totalHours.toFixed(1),
-      sleepIns: weekShifts.filter(s => s.shift_type === 'sleep_in').length
-    };
+  const getUnassignedShifts = (day) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return shifts.filter(s => s?.date === dayStr && !s.staff_id);
   };
 
-  const getPropertyName = (propertyId) => {
-    const property = properties.find(p => p?.id === propertyId);
-    return property?.property_name || 'Unknown';
+  const getStaffWeekHours = (staffId) => {
+    return shifts
+      .filter(s => {
+        if (!s?.date || s.staff_id !== staffId) return false;
+        const shiftDate = parseISO(s.date);
+        return shiftDate >= currentWeekStart && shiftDate < addDays(currentWeekStart, 7);
+      })
+      .reduce((sum, s) => {
+        if (!s.start_time || !s.end_time) return sum;
+        const [sh, sm] = s.start_time.split(':').map(Number);
+        const [eh, em] = s.end_time.split(':').map(Number);
+        let hours = (eh * 60 + em - sh * 60 - sm) / 60;
+        if (hours < 0) hours += 24;
+        return sum + hours;
+      }, 0);
+  };
+
+  const getTimePosition = (time) => {
+    if (!time) return 0;
+    const [hour, min] = time.split(':').map(Number);
+    return ((hour - 6 + min / 60) / 18) * 100;
+  };
+
+  const getTimeWidth = (start, end) => {
+    if (!start || !end) return 8;
+    const startPos = getTimePosition(start);
+    const endPos = getTimePosition(end);
+    return Math.max(endPos - startPos, 5);
   };
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-
     const { draggableId, destination } = result;
     const [targetStaffId, targetDate] = destination.droppableId.split('_');
-
+    
     const shift = shifts.find(s => s.id === draggableId);
-    if (!shift) return;
+    if (!shift || !onShiftUpdate) return;
 
-    if (onShiftUpdate) {
-      const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
-      onShiftUpdate({ id: draggableId, data: { 
-        staff_id: newStaffId,
-        date: targetDate,
-        status: newStaffId ? 'published' : 'draft'
-      }});
-      
-      toast.success("Shift Updated", newStaffId 
-        ? `Shift assigned to ${activeStaff.find(s => s.id === newStaffId)?.full_name || 'staff'}`
-        : "Shift unassigned"
-      );
-    }
+    const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
+    onShiftUpdate({ id: draggableId, data: { 
+      staff_id: newStaffId,
+      date: targetDate,
+      status: newStaffId ? 'published' : 'draft'
+    }});
+    
+    toast.success("Shift Updated", newStaffId 
+      ? `Assigned to ${activeStaff.find(s => s.id === newStaffId)?.full_name}`
+      : "Moved to unassigned"
+    );
+  };
+
+  const getPropertyName = (propertyId) => properties.find(p => p?.id === propertyId)?.property_name || '';
+  const getStaffName = (staffId) => staff.find(s => s?.id === staffId)?.full_name || 'Unassigned';
+
+  const ShiftPill = ({ shift, showStaff = false, showProperty = true }) => {
+    const colors = SHIFT_COLORS[shift.shift_type] || SHIFT_COLORS.core_hours;
+    const label = showProperty 
+      ? getPropertyName(shift.property_id)
+      : (showStaff ? getStaffName(shift.staff_id) : '');
+
+    return (
+      <div
+        onClick={() => onShiftClick?.(shift)}
+        className={`
+          px-2 py-1 rounded-md text-xs cursor-pointer transition-all
+          ${colors.bg} ${colors.border} ${colors.text} border
+          hover:shadow-md hover:scale-[1.02]
+          ${!shift.staff_id ? 'border-dashed border-orange-400 bg-orange-50' : ''}
+        `}
+      >
+        <div className="flex items-center gap-1">
+          <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
+          <span className="font-medium truncate">{label || SHIFT_LABELS[shift.shift_type] || 'Shift'}</span>
+        </div>
+        <div className="text-[10px] opacity-75 mt-0.5">
+          {shift.start_time} - {shift.end_time}
+        </div>
+      </div>
+    );
+  };
+
+  const TimelineShift = ({ shift }) => {
+    const colors = SHIFT_COLORS[shift.shift_type] || SHIFT_COLORS.core_hours;
+    const left = getTimePosition(shift.start_time);
+    const width = getTimeWidth(shift.start_time, shift.end_time);
+
+    return (
+      <div
+        onClick={() => onShiftClick?.(shift)}
+        className={`
+          absolute top-1 bottom-1 rounded cursor-pointer transition-all
+          ${colors.bg} ${colors.border} border
+          hover:shadow-lg hover:z-10
+          ${!shift.staff_id ? 'border-dashed border-orange-400 bg-orange-50/80' : ''}
+        `}
+        style={{ left: `${left}%`, width: `${width}%`, minWidth: '40px' }}
+      >
+        <div className="px-1.5 py-0.5 text-[10px] truncate">
+          <span className={`font-semibold ${colors.text}`}>
+            {getPropertyName(shift.property_id) || SHIFT_LABELS[shift.shift_type]}
+          </span>
+        </div>
+      </div>
+    );
   };
 
   return (
-    <div className="bg-white rounded-xl shadow-sm border">
+    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
       {/* Header */}
-      <div className="p-4 border-b bg-gradient-to-r from-indigo-50 to-purple-50">
-        <div className="flex items-center justify-between mb-4">
-          <div className="flex items-center gap-4">
-            <Button variant="outline" size="sm" onClick={() => setCurrentWeekStart(subWeeks(currentWeekStart, 1))}>
-              <ChevronLeft className="w-4 h-4" />
-            </Button>
-            <div className="flex items-center gap-2">
-              <span className="font-medium">Week</span>
-              <Button variant="ghost" size="sm" className="font-semibold text-lg">
-                {format(currentWeekStart, 'MMM d')} - {format(addDays(currentWeekStart, 6), 'MMM d')}
-              </Button>
-            </div>
-            <Button variant="outline" size="sm" onClick={() => setCurrentWeekStart(addWeeks(currentWeekStart, 1))}>
-              <ChevronRight className="w-4 h-4" />
-            </Button>
-          </div>
-
-          <div className="flex items-center gap-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-              <Input
-                placeholder="Search staff..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9 w-48"
-              />
-            </div>
-            <Button 
-              variant={viewByProperty ? "default" : "outline"} 
-              size="sm"
-              onClick={() => setViewByProperty(!viewByProperty)}
-            >
-              <Home className="w-4 h-4 mr-1" />
-              By Property
-            </Button>
-          </div>
-        </div>
-
-        {/* Summary Stats */}
+      <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-4">
         <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <h2 className="text-lg font-semibold text-gray-900">{locationName}</h2>
-            <Badge className="bg-indigo-100 text-indigo-700">
-              <Home className="w-3 h-3 mr-1" />
-              Supported Living
-            </Badge>
-          </div>
-
-          <div className="flex items-center gap-6 text-sm">
-            <div className="text-center">
-              <p className="text-gray-500">Total Shifts</p>
-              <p className="font-bold text-lg">{weeklyMetrics.totalShifts}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Fill Rate</p>
-              <p className={`font-bold text-lg ${parseInt(weeklyMetrics.fillRate) < 80 ? 'text-orange-600' : 'text-green-600'}`}>
-                {weeklyMetrics.fillRate}%
-              </p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Sleep-Ins</p>
-              <p className="font-bold text-lg text-indigo-600">{weeklyMetrics.sleepIns}</p>
-            </div>
-            <div className="text-center">
-              <p className="text-gray-500">Waking Nights</p>
-              <p className="font-bold text-lg text-slate-600">{weeklyMetrics.wakingNights}</p>
+          <div className="flex items-center gap-4">
+            <div>
+              <h2 className="text-xl font-bold">{locationName}</h2>
+              <p className="text-indigo-100 text-sm">Shift Roster</p>
             </div>
           </div>
-        </div>
-      </div>
-
-      {/* Daily Metrics */}
-      <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50">
-        <div className="p-3 font-medium text-gray-600 border-r flex items-center gap-2">
-          <Clock className="w-4 h-4" />
-          Daily Stats
-        </div>
-        {dailyMetrics.map((metric, idx) => {
-          const isTodayDate = isToday(metric.date);
-          return (
-            <div key={idx} className={`p-2 text-center text-xs border-r ${isTodayDate ? 'bg-indigo-50' : ''}`}>
-              <div className="grid grid-cols-2 gap-1">
-                <div>
-                  <p className="text-gray-400">Shifts</p>
-                  <p className="font-semibold">{metric.totalShifts}</p>
-                </div>
-                <div>
-                  <p className="text-gray-400">Sleep</p>
-                  <p className="font-semibold">{metric.sleepIns}</p>
-                </div>
+          
+          <div className="flex items-center gap-6">
+            <div className="flex items-center gap-4 text-sm">
+              <div className="text-center">
+                <p className="text-2xl font-bold">{weeklyStats.total}</p>
+                <p className="text-indigo-200 text-xs">Total Shifts</p>
               </div>
-              {metric.unfilledShifts > 0 && (
-                <Badge className="mt-1 bg-orange-100 text-orange-700 text-xs">
-                  {metric.unfilledShifts} open
-                </Badge>
-              )}
+              <div className="w-px h-8 bg-indigo-400" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-emerald-300">{weeklyStats.filled}</p>
+                <p className="text-indigo-200 text-xs">Filled</p>
+              </div>
+              <div className="w-px h-8 bg-indigo-400" />
+              <div className="text-center">
+                <p className="text-2xl font-bold text-orange-300">{weeklyStats.unfilled}</p>
+                <p className="text-indigo-200 text-xs">Open</p>
+              </div>
+              <div className="w-px h-8 bg-indigo-400" />
+              <div className="text-center flex items-center gap-2">
+                <Moon className="w-4 h-4" />
+                <p className="text-2xl font-bold">{weeklyStats.sleepIns}</p>
+                <p className="text-indigo-200 text-xs">Sleep-Ins</p>
+              </div>
             </div>
-          );
-        })}
-      </div>
-
-      {/* Column Headers */}
-      <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-white sticky top-0 z-20">
-        <div className="p-3 font-medium text-gray-700 border-r flex items-center gap-2">
-          <Users className="w-4 h-4" />
-          Staff ({activeStaff.length})
-        </div>
-        {weekDays.map((day, idx) => {
-          const isTodayDate = isToday(day);
-          return (
-            <div key={idx} className={`p-3 text-center border-r ${isTodayDate ? 'bg-indigo-100 font-bold' : ''}`}>
-              <p className={`text-sm ${isTodayDate ? 'text-indigo-800' : 'text-gray-500'}`}>
-                {format(day, 'EEE')}
-              </p>
-              <p className={`text-xl font-bold ${isTodayDate ? 'text-indigo-900' : 'text-gray-900'}`}>
-                {format(day, 'd')}
-              </p>
-              {isTodayDate && <Badge className="bg-indigo-600 text-white text-xs mt-1">Today</Badge>}
-            </div>
-          );
-        })}
-      </div>
-
-      <DragDropContext onDragEnd={handleDragEnd}>
-        {/* Unassigned Row */}
-        <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-orange-50">
-          <div className="p-3 font-medium text-orange-800 border-r flex items-center gap-2">
-            <AlertTriangle className="w-4 h-4" />
-            Open Shifts
-            <Badge className="bg-orange-200 text-orange-800 ml-auto">
-              {weeklyMetrics.unfilledShifts}
-            </Badge>
           </div>
-          {weekDays.map((day, idx) => {
-            const dayStr = format(day, 'yyyy-MM-dd');
-            const unassigned = getUnassignedShifts(day);
-            
-            return (
-              <Droppable key={`unassigned_${dayStr}`} droppableId={`unassigned_${dayStr}`}>
-                {(provided, snapshot) => (
-                  <div
-                    ref={provided.innerRef}
-                    {...provided.droppableProps}
-                    className={`p-1 min-h-[50px] border-r ${snapshot.isDraggingOver ? 'bg-orange-100' : ''}`}
-                  >
-                    <div className="flex flex-wrap gap-1">
-                      {unassigned.map((shift, sIdx) => (
-                        <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
-                          {(provided, snapshot) => (
-                            <div
-                              ref={provided.innerRef}
-                              {...provided.draggableProps}
-                              {...provided.dragHandleProps}
-                              onClick={() => onShiftClick?.(shift)}
-                              className={`
-                                px-2 py-1 rounded text-xs font-medium cursor-pointer
-                                bg-orange-200 text-orange-800 border border-orange-300
-                                hover:bg-orange-300 transition-all
-                                ${snapshot.isDragging ? 'shadow-lg ring-2 ring-orange-400' : ''}
-                              `}
-                            >
-                              <div className="font-semibold">{shift.start_time}</div>
-                              <div className="text-orange-600 truncate max-w-[70px]">
-                                {getPropertyName(shift.property_id)}
-                              </div>
-                            </div>
-                          )}
-                        </Draggable>
-                      ))}
-                    </div>
-                    {provided.placeholder}
-                  </div>
-                )}
-              </Droppable>
-            );
-          })}
+        </div>
+      </div>
+
+      {/* Controls */}
+      <div className="p-3 border-b bg-gray-50 flex items-center justify-between gap-4">
+        <div className="flex items-center gap-2">
+          <Button 
+            variant="outline" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => viewMode === "day" 
+              ? setSelectedDate(addDays(selectedDate, -1))
+              : setCurrentWeekStart(subWeeks(currentWeekStart, 1))
+            }
+          >
+            <ChevronLeft className="w-4 h-4" />
+          </Button>
+          
+          <div className="flex bg-white rounded-lg border p-0.5">
+            <button
+              onClick={() => setViewMode("day")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                viewMode === "day" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode("week")}
+              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
+                viewMode === "week" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Week
+            </button>
+          </div>
+
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border">
+            <Calendar className="w-4 h-4 text-gray-400" />
+            <span className="font-medium text-sm">
+              {viewMode === "day" 
+                ? format(selectedDate, 'EEE, d MMM yyyy')
+                : `${format(currentWeekStart, 'd MMM')} - ${format(addDays(currentWeekStart, 6), 'd MMM yyyy')}`
+              }
+            </span>
+          </div>
+
+          <Button 
+            variant="outline" 
+            size="icon"
+            className="h-8 w-8"
+            onClick={() => viewMode === "day" 
+              ? setSelectedDate(addDays(selectedDate, 1))
+              : setCurrentWeekStart(addWeeks(currentWeekStart, 1))
+            }
+          >
+            <ChevronRight className="w-4 h-4" />
+          </Button>
+
+          <Button 
+            variant="outline" 
+            size="sm"
+            onClick={() => {
+              setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
+              setSelectedDate(new Date());
+            }}
+          >
+            Today
+          </Button>
         </div>
 
-        {/* Staff Rows */}
-        <div className="max-h-[550px] overflow-y-auto">
-          {activeStaff.map((staffMember) => {
-            const weekStats = getStaffWeeklyStats(staffMember.id);
-            
-            return (
-              <div key={staffMember.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50">
-                <div className="p-3 border-r flex items-start gap-3">
-                  <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white font-semibold text-sm flex-shrink-0">
-                    {staffMember.full_name?.charAt(0) || '?'}
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <h4 className="font-semibold text-gray-900 truncate text-sm">{staffMember.full_name}</h4>
-                    <div className="flex items-center gap-2 text-xs text-gray-500 mt-0.5">
-                      <span>{weekStats.shiftCount} shifts</span>
-                      <span>•</span>
-                      <span>{weekStats.totalHours}h</span>
-                    </div>
-                    {weekStats.sleepIns > 0 && (
-                      <Badge variant="outline" className="text-xs py-0 px-1 mt-1">
-                        <Moon className="w-3 h-3 mr-1" />
-                        {weekStats.sleepIns} sleep-ins
-                      </Badge>
-                    )}
-                  </div>
+        <div className="flex items-center gap-2">
+          <div className="relative">
+            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Input
+              placeholder="Search staff..."
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-8 h-8 w-48 text-sm"
+            />
+          </div>
+
+          <div className="flex bg-white rounded-lg border p-0.5">
+            <button
+              onClick={() => setActivePanel("staff")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "staff" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Users className="w-3 h-3" />
+              Staff
+            </button>
+            <button
+              onClick={() => setActivePanel("properties")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "properties" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Home className="w-3 h-3" />
+              Properties
+            </button>
+            <button
+              onClick={() => setActivePanel("both")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "both" ? "bg-indigo-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Maximize2 className="w-3 h-3" />
+              Split
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {viewMode === "day" ? (
+        /* DAY TIMELINE VIEW */
+        <div className="flex flex-col">
+          <div className="flex border-b bg-gray-50">
+            <div className="w-56 p-2 border-r flex-shrink-0" />
+            <div className="flex-1 flex">
+              {TIMELINE_HOURS.map(hour => (
+                <div key={hour} className="flex-1 text-center py-2 text-xs text-gray-500 border-r">
+                  {hour.toString().padStart(2, '0')}:00
                 </div>
+              ))}
+            </div>
+          </div>
 
-                {weekDays.map((day, idx) => {
-                  const dayStr = format(day, 'yyyy-MM-dd');
-                  const dayShifts = getStaffDayShifts(staffMember.id, day);
-                  const isTodayDate = isToday(day);
-
+          {(activePanel === "staff" || activePanel === "both") && activeStaff.length > 0 && (
+            <div className={activePanel === "both" ? "border-b" : ""}>
+              <div className="flex items-center gap-2 px-4 py-2 bg-indigo-50 border-b">
+                <Users className="w-4 h-4 text-indigo-600" />
+                <span className="font-semibold text-indigo-900">Staff</span>
+                <Badge className="bg-indigo-100 text-indigo-700 text-xs">{activeStaff.length}</Badge>
+              </div>
+              <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
+                {activeStaff.map(staffMember => {
+                  const dayShifts = getStaffDayShifts(staffMember.id, selectedDate);
+                  const weekHours = getStaffWeekHours(staffMember.id);
+                  
                   return (
-                    <Droppable key={`${staffMember.id}_${dayStr}`} droppableId={`${staffMember.id}_${dayStr}`}>
-                      {(provided, snapshot) => (
-                        <div
-                          ref={provided.innerRef}
-                          {...provided.droppableProps}
-                          className={`p-1 min-h-[70px] border-r transition-colors ${
-                            isTodayDate ? 'bg-indigo-50/50' : ''
-                          } ${snapshot.isDraggingOver ? 'bg-indigo-50 ring-2 ring-inset ring-indigo-300' : ''}`}
-                        >
-                          <div className="space-y-1">
-                            {dayShifts.map((shift, sIdx) => {
-                              const shiftColor = SHIFT_TYPE_COLORS[shift.shift_type] || 'bg-gray-200';
-                              
-                              return (
-                                <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
-                                  {(provided, snapshot) => (
-                                    <div
-                                      ref={provided.innerRef}
-                                      {...provided.draggableProps}
-                                      {...provided.dragHandleProps}
-                                      onClick={() => onShiftClick?.(shift)}
-                                      className={`
-                                        px-2 py-1 rounded text-xs cursor-pointer border
-                                        ${shiftColor}
-                                        hover:shadow-md transition-all
-                                        ${snapshot.isDragging ? 'shadow-xl ring-2 ring-indigo-400 z-50' : ''}
-                                      `}
-                                    >
-                                      <div className="flex items-center justify-between gap-1">
-                                        <span className="font-bold">{shift.start_time}-{shift.end_time}</span>
-                                      </div>
-                                      <div className="truncate font-medium">
-                                        {getPropertyName(shift.property_id)}
-                                      </div>
-                                      <Badge className="mt-1 text-[10px] py-0 px-1 bg-white/50">
-                                        {SHIFT_TYPE_LABELS[shift.shift_type] || shift.shift_type}
-                                      </Badge>
-                                    </div>
-                                  )}
-                                </Draggable>
-                              );
-                            })}
-                          </div>
-                          {provided.placeholder}
-                          
-                          {dayShifts.length === 0 && !snapshot.isDraggingOver && (
-                            <button
-                              onClick={() => onAddShift?.({ staff_id: staffMember.id, date: dayStr })}
-                              className="w-full h-full min-h-[40px] flex items-center justify-center opacity-0 hover:opacity-100 transition-opacity text-gray-400 hover:text-indigo-500"
-                            >
-                              <Plus className="w-4 h-4" />
-                            </button>
-                          )}
+                    <div key={staffMember.id} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                          {staffMember.full_name?.charAt(0)}
                         </div>
-                      )}
-                    </Droppable>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
+                          <div className="flex items-center gap-1">
+                            <Clock className="w-3 h-3 text-gray-400" />
+                            <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h this week</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                        <div className="absolute inset-0 flex">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                          ))}
+                        </div>
+                        {dayShifts.map(shift => (
+                          <TimelineShift key={shift.id} shift={shift} />
+                        ))}
+                      </div>
+                    </div>
                   );
                 })}
               </div>
-            );
-          })}
+            </div>
+          )}
+
+          {(activePanel === "properties" || activePanel === "both") && activeProperties.length > 0 && (
+            <div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 border-b">
+                <Home className="w-4 h-4 text-purple-600" />
+                <span className="font-semibold text-purple-900">Properties</span>
+                <Badge className="bg-purple-100 text-purple-700 text-xs">{activeProperties.length}</Badge>
+              </div>
+              <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
+                {activeProperties.map(property => {
+                  const dayShifts = getPropertyDayShifts(property.id, selectedDate);
+                  
+                  return (
+                    <div key={property.id} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                          <Home className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{property.property_name}</p>
+                          <p className="text-xs text-gray-500 truncate">{property.address?.city || 'Location'}</p>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                        <div className="absolute inset-0 flex">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                          ))}
+                        </div>
+                        {dayShifts.map(shift => (
+                          <TimelineShift key={shift.id} shift={shift} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
         </div>
-      </DragDropContext>
+      ) : (
+        /* WEEK GRID VIEW */
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <div className="flex flex-col">
+            <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
+              <div className="p-3 border-r flex items-center gap-2">
+                {activePanel === "properties" ? (
+                  <>
+                    <Home className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Properties</span>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Staff</span>
+                  </>
+                )}
+              </div>
+              {weekDays.map((day, idx) => {
+                const isTodayDate = isToday(day);
+                const unassignedCount = getUnassignedShifts(day).length;
+                return (
+                  <div 
+                    key={idx} 
+                    className={`p-2 border-r text-center transition-colors ${
+                      isTodayDate ? 'bg-indigo-50' : ''
+                    }`}
+                  >
+                    <p className={`text-xs font-medium ${isTodayDate ? 'text-indigo-600' : 'text-gray-500'}`}>
+                      {format(day, 'EEE')}
+                    </p>
+                    <p className={`text-lg font-bold ${isTodayDate ? 'text-indigo-700' : 'text-gray-900'}`}>
+                      {format(day, 'd')}
+                    </p>
+                    {unassignedCount > 0 && (
+                      <Badge className="bg-orange-100 text-orange-700 text-[10px] mt-1">
+                        {unassignedCount} open
+                      </Badge>
+                    )}
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Unassigned Row */}
+            <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-orange-50/50">
+              <div className="p-2 border-r flex items-center gap-2">
+                <AlertCircle className="w-4 h-4 text-orange-500" />
+                <span className="text-sm font-medium text-orange-700">Open Shifts</span>
+              </div>
+              {weekDays.map((day) => {
+                const dayStr = format(day, 'yyyy-MM-dd');
+                const unassigned = getUnassignedShifts(day);
+                return (
+                  <Droppable key={`unassigned_${dayStr}`} droppableId={`unassigned_${dayStr}`}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.droppableProps}
+                        className={`p-1.5 min-h-[50px] border-r transition-colors ${
+                          snapshot.isDraggingOver ? 'bg-orange-100' : ''
+                        }`}
+                      >
+                        <div className="flex flex-wrap gap-1">
+                          {unassigned.slice(0, 3).map((shift, sIdx) => (
+                            <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
+                              {(provided, snapshot) => (
+                                <div
+                                  ref={provided.innerRef}
+                                  {...provided.draggableProps}
+                                  {...provided.dragHandleProps}
+                                  className={snapshot.isDragging ? 'z-50' : ''}
+                                >
+                                  <ShiftPill shift={shift} />
+                                </div>
+                              )}
+                            </Draggable>
+                          ))}
+                          {unassigned.length > 3 && (
+                            <Badge className="text-[10px] bg-orange-200 text-orange-700">
+                              +{unassigned.length - 3}
+                            </Badge>
+                          )}
+                        </div>
+                        {provided.placeholder}
+                      </div>
+                    )}
+                  </Droppable>
+                );
+              })}
+            </div>
+
+            {/* Staff Rows */}
+            {(activePanel === "staff" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activeStaff.map((staffMember) => {
+                const weekHours = getStaffWeekHours(staffMember.id);
+                
+                return (
+                  <div key={staffMember.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-indigo-400 to-purple-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        {staffMember.full_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
+                        <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h</span>
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayShifts = getStaffDayShifts(staffMember.id, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <Droppable key={`${staffMember.id}_${dayStr}`} droppableId={`${staffMember.id}_${dayStr}`}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className={`p-1 min-h-[60px] border-r transition-colors relative group ${
+                                isTodayDate ? 'bg-indigo-50/30' : ''
+                              } ${snapshot.isDraggingOver ? 'bg-indigo-100/50 ring-2 ring-inset ring-indigo-300' : ''}`}
+                            >
+                              <div className="space-y-1">
+                                {dayShifts.map((shift, sIdx) => (
+                                  <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={snapshot.isDragging ? 'z-50' : ''}
+                                      >
+                                        <ShiftPill shift={shift} />
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                              </div>
+                              {provided.placeholder}
+                              
+                              <button
+                                onClick={() => onAddShift?.({ staff_id: staffMember.id, date: dayStr })}
+                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-50/50"
+                              >
+                                <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-sm">
+                                  <Plus className="w-4 h-4" />
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                        </Droppable>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+
+            {/* Properties Rows */}
+            {(activePanel === "properties" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activePanel === "both" && (
+                <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-purple-50">
+                  <div className="p-2 border-r flex items-center gap-2">
+                    <Home className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm font-medium text-purple-700">Properties</span>
+                  </div>
+                  {weekDays.map((day, idx) => (
+                    <div key={idx} className="border-r" />
+                  ))}
+                </div>
+              )}
+              {activeProperties.map((property) => {
+                return (
+                  <div key={property.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                        <Home className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{property.property_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{property.address?.city || 'Location'}</p>
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayShifts = getPropertyDayShifts(property.id, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <div
+                          key={dayStr}
+                          className={`p-1 min-h-[60px] border-r transition-colors ${
+                            isTodayDate ? 'bg-indigo-50/30' : ''
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            {dayShifts.map((shift) => (
+                              <ShiftPill key={shift.id} shift={shift} showStaff={true} showProperty={false} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+          </div>
+        </DragDropContext>
+      )}
 
       {/* Legend */}
-      <div className="p-3 border-t bg-gray-50 flex items-center gap-4 text-xs">
-        <span className="text-gray-500">Shift Types:</span>
-        {Object.entries(SHIFT_TYPE_COLORS).map(([type, color]) => (
-          <div key={type} className="flex items-center gap-1">
-            <div className={`w-3 h-3 rounded ${color.split(' ')[0]}`} />
-            <span>{SHIFT_TYPE_LABELS[type]}</span>
-          </div>
-        ))}
+      <div className="p-3 border-t bg-gray-50 flex items-center justify-between">
+        <div className="flex items-center gap-3 text-xs">
+          <span className="text-gray-500 font-medium">Shift Types:</span>
+          {Object.entries(SHIFT_COLORS).map(([type, colors]) => (
+            <div key={type} className="flex items-center gap-1">
+              <div className={`w-2.5 h-2.5 rounded-full ${colors.dot}`} />
+              <span className="text-gray-600">{SHIFT_LABELS[type]}</span>
+            </div>
+          ))}
+        </div>
+        <div className="flex items-center gap-1 text-xs text-gray-500">
+          <div className="w-4 h-3 border border-dashed border-orange-400 bg-orange-50 rounded" />
+          <span>Unassigned</span>
+        </div>
       </div>
     </div>
   );
