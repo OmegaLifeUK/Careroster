@@ -31,6 +31,56 @@ import { format, addDays, subDays, parseISO, isToday } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 import DailyLogDialog from "@/components/dailylog/DailyLogDialog";
 
+// Helper component for time display
+const TimeDisplay = ({ entry }) => {
+  const isOuting = entry.entry_type?.startsWith('outing_');
+  const hasArrival = !!entry.arrival_time;
+  const hasDeparture = !!entry.departure_time;
+  const isOngoing = (hasArrival && !hasDeparture) || (isOuting && hasDeparture && !hasArrival);
+  
+  if (isOuting) {
+    // For outings: departure = left, arrival = returned
+    return (
+      <div className={`flex items-center gap-2 px-2 py-1 rounded ${isOngoing ? 'bg-amber-100 text-amber-800' : 'bg-gray-100 text-gray-700'}`}>
+        <Clock className="w-4 h-4" />
+        {entry.departure_time && (
+          <span>
+            <span className="text-xs text-gray-500">Left:</span> {entry.departure_time}
+          </span>
+        )}
+        {entry.departure_time && entry.arrival_time && <span className="text-gray-400">→</span>}
+        {entry.arrival_time ? (
+          <span>
+            <span className="text-xs text-gray-500">Returned:</span> {entry.arrival_time}
+          </span>
+        ) : entry.departure_time ? (
+          <Badge className="bg-amber-200 text-amber-800 text-xs animate-pulse">Out</Badge>
+        ) : null}
+      </div>
+    );
+  }
+  
+  // For visitors: arrival = in, departure = out
+  return (
+    <div className={`flex items-center gap-2 px-2 py-1 rounded ${isOngoing ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-700'}`}>
+      <Clock className="w-4 h-4" />
+      {entry.arrival_time && (
+        <span>
+          <span className="text-xs text-gray-500">In:</span> {entry.arrival_time}
+        </span>
+      )}
+      {entry.arrival_time && entry.departure_time && <span className="text-gray-400">→</span>}
+      {entry.departure_time ? (
+        <span>
+          <span className="text-xs text-gray-500">Out:</span> {entry.departure_time}
+        </span>
+      ) : entry.arrival_time ? (
+        <Badge className="bg-green-200 text-green-800 text-xs animate-pulse">On Site</Badge>
+      ) : null}
+    </div>
+  );
+};
+
 const ENTRY_TYPE_CONFIG = {
   visitor: { label: "Visitor", icon: Users, color: "bg-blue-100 text-blue-700", category: "visitor" },
   doctor_appointment: { label: "Doctor", icon: Stethoscope, color: "bg-red-100 text-red-700", category: "visitor" },
@@ -365,21 +415,11 @@ export default function DailyLog() {
                                     {isOuting ? (clientName || 'Client Outing') : entry.visitor_name}
                                   </h4>
                                   <Badge className={`text-xs ${typeConfig.color}`}>{typeConfig.label}</Badge>
-                                  {entry.departure_time && (
-                                    <span className="text-xs text-gray-500">
-                                      until {entry.departure_time}
-                                    </span>
-                                  )}
+                                  <TimeDisplay entry={entry} />
                                 </div>
                                 
                                 {!isOuting && entry.visitor_organization && (
                                   <p className="text-sm text-gray-600">{entry.visitor_organization}</p>
-                                )}
-                                
-                                {!isOuting && clientName && (
-                                  <p className="text-sm text-gray-600 flex items-center gap-1">
-                                    <User className="w-3 h-3" /> {clientName}
-                                  </p>
                                 )}
                                 
                                 {entry.purpose && (
@@ -472,14 +512,9 @@ export default function DailyLog() {
 
                         <div className="flex flex-wrap gap-4 text-sm text-gray-600 mb-2">
                           {(entry.arrival_time || entry.departure_time) && (
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-4 h-4" />
-                              {entry.arrival_time && <span>{entry.arrival_time}</span>}
-                              {entry.arrival_time && entry.departure_time && <span>-</span>}
-                              {entry.departure_time && <span>{entry.departure_time}</span>}
-                            </div>
+                            <TimeDisplay entry={entry} />
                           )}
-                          {clientName && (
+                          {clientName && !entry.entry_type?.startsWith('outing_') && (
                             <div className="flex items-center gap-1">
                               <User className="w-4 h-4" />
                               <span>{clientName}</span>

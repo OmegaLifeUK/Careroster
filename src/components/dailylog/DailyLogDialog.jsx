@@ -307,19 +307,25 @@ export default function DailyLogDialog({ entry, defaultDate, clients = [], staff
 
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <Label>Arrival Time</Label>
+              <Label>{isOuting ? "Departure Time (Left)" : "Arrival Time (In)"}</Label>
               <Input
                 type="time"
-                value={formData.arrival_time}
-                onChange={(e) => setFormData({ ...formData, arrival_time: e.target.value })}
+                value={isOuting ? formData.departure_time : formData.arrival_time}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  [isOuting ? 'departure_time' : 'arrival_time']: e.target.value 
+                })}
               />
             </div>
             <div>
-              <Label>Departure Time</Label>
+              <Label>{isOuting ? "Return Time (Back)" : "Departure Time (Out)"}</Label>
               <Input
                 type="time"
-                value={formData.departure_time}
-                onChange={(e) => setFormData({ ...formData, departure_time: e.target.value })}
+                value={isOuting ? formData.arrival_time : formData.departure_time}
+                onChange={(e) => setFormData({ 
+                  ...formData, 
+                  [isOuting ? 'arrival_time' : 'departure_time']: e.target.value 
+                })}
               />
             </div>
           </div>
