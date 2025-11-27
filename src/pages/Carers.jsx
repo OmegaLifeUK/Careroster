@@ -141,25 +141,37 @@ export default function Carers() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("all")}
+          >
             <CardContent className="p-4">
               <p className="text-sm text-gray-600 mb-1">Total Carers</p>
               <p className="text-2xl font-bold">{stats.total}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("active")}
+          >
             <CardContent className="p-4">
               <p className="text-sm text-gray-600 mb-1">Active</p>
               <p className="text-2xl font-bold text-green-600">{stats.active}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("on_leave")}
+          >
             <CardContent className="p-4">
               <p className="text-sm text-gray-600 mb-1">On Leave</p>
               <p className="text-2xl font-bold text-orange-600">{stats.onLeave}</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("inactive")}
+          >
             <CardContent className="p-4">
               <p className="text-sm text-gray-600 mb-1">Inactive</p>
               <p className="text-2xl font-bold text-gray-600">{stats.inactive}</p>

@@ -161,25 +161,37 @@ export default function DailyLog() {
 
         {/* Stats */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setFilterType("all")}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-gray-900">{stats.total}</p>
               <p className="text-sm text-gray-600">Total Entries</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setFilterType("visitor")}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-blue-600">{stats.visitors}</p>
               <p className="text-sm text-gray-600">Visitors</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setFilterType("doctor_appointment")}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-red-600">{stats.medical}</p>
               <p className="text-sm text-gray-600">Medical Visits</p>
             </CardContent>
           </Card>
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => { setEditingEntry(null); setShowDialog(true); }}
+          >
             <CardContent className="p-4 text-center">
               <p className="text-2xl font-bold text-orange-600">{stats.followUp}</p>
               <p className="text-sm text-gray-600">Follow-ups Required</p>
