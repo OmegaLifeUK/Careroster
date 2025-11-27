@@ -137,12 +137,17 @@ Please provide the response in the following JSON structure:
         }
       });
 
+      // Check if the result contains an error or unsupported message
+      if (!result || !result.transcript || result.transcript.toLowerCase().includes('unsupported') || result.transcript.toLowerCase().includes('cannot process')) {
+        throw new Error("The AI could not process this audio file. The format may not be compatible.");
+      }
+
       setResult(result);
       setStep("complete");
     } catch (error) {
       console.error("Transcription error:", error);
       const errorMessage = error?.message || "Unknown error";
-      toast.error("Processing Failed", `Failed to transcribe audio: ${errorMessage}. The audio format may not be supported - try converting to standard MP3 format.`);
+      toast.error("Processing Failed", `Failed to transcribe audio: ${errorMessage}`);
       setStep("details");
     } finally {
       setProcessing(false);
