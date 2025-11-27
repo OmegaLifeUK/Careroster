@@ -27,6 +27,9 @@ import CarerSuggestions from "./CarerSuggestions";
 import DocumentAttachment from "@/components/documents/DocumentAttachment";
 
 export default function ShiftDialog({ shift, carers = [], clients = [], shifts = [], leaveRequests = [], onClose }) {
+  // Determine if this is an existing shift (has id) or a new one (just pre-filled data)
+  const isExistingShift = shift?.id;
+  
   const [formData, setFormData] = useState({
     care_type: shift?.care_type || "residential_care",
     assignment_type: shift?.assignment_type || "location",
@@ -39,7 +42,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     start_time: shift?.start_time || "09:00",
     end_time: shift?.end_time || "17:00",
     shift_type: shift?.shift_type || "morning",
-    status: shift?.status || "unfilled",
+    status: shift?.carer_id ? "scheduled" : "unfilled",
     tasks: shift?.tasks?.join(", ") || "",
     notes: shift?.notes || "",
     attached_documents: shift?.attached_documents || [],
@@ -144,7 +147,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
       return;
     }
     if (formData.assignment_type === "location" && !formData.location_name) {
-      alert("Please enter a location name");
+      alert("Please select a location");
       return;
     }
     
@@ -178,7 +181,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
       <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-2xl">
-            {shift ? "Edit Shift" : "Create New Shift"}
+            {isExistingShift ? "Edit Shift" : "Create New Shift"}
           </DialogTitle>
         </DialogHeader>
 
@@ -473,7 +476,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   Saving...
                 </>
               ) : (
-                shift ? "Update Shift" : "Create Shift"
+                isExistingShift ? "Update Shift" : "Create Shift"
               )}
             </Button>
           </DialogFooter>
