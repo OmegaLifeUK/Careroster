@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -14,13 +13,17 @@ import {
   MapPin,
   Plus,
   User,
-  CheckCircle
+  CheckCircle,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
+import DayCentreRosterView from "../components/schedule/DayCentreRosterView";
 
 export default function DayCentreSessions() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState(null);
+  const [viewMode, setViewMode] = useState("roster");
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -288,7 +291,50 @@ export default function DayCentreSessions() {
           </Button>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+        {/* View Toggle */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={viewMode === "roster" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("roster")}
+          >
+            <LayoutGrid className="w-4 h-4 mr-2" />
+            Roster
+          </Button>
+          <Button
+            variant={viewMode === "week" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("week")}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Week Grid
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="w-4 h-4 mr-2" />
+            Today's List
+          </Button>
+        </div>
+
+        {viewMode === "roster" ? (
+          <DayCentreRosterView
+            sessions={sessions}
+            activities={activities}
+            clients={clients}
+            staff={staff}
+            onSessionClick={(session) => setSelectedSession(session)}
+            onAddSession={({ activity_id, session_date }) => {
+              // Would open session creation dialog
+              console.log("Add session", activity_id, session_date);
+            }}
+            locationName="Day Centre"
+          />
+        ) : viewMode === "list" ? (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
           <Card>
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
@@ -420,73 +466,209 @@ export default function DayCentreSessions() {
           </CardContent>
         </Card>
 
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Today's Sessions</CardTitle>
-          </CardHeader>
-          <CardContent className="p-6">
-            {todaySessions.length === 0 ? (
-              <div className="text-center py-8 text-gray-500">
-                <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
-                <p>No sessions scheduled for today</p>
-              </div>
-            ) : (
-              <div className="space-y-3">
-                {todaySessions.map((session) => {
-                  const activity = activities.find(a => a.id === session.activity_id);
-                  const registeredClients = clients.filter(c => 
-                    session.registered_clients?.includes(c.id)
-                  );
-                  const facilitators = staff.filter(s => 
-                    session.facilitator_staff_ids?.includes(s.id)
-                  );
+            <Card>
+              <CardHeader className="border-b">
+                <CardTitle>Today's Sessions</CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                {todaySessions.length === 0 ? (
+                  <div className="text-center py-8 text-gray-500">
+                    <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+                    <p>No sessions scheduled for today</p>
+                  </div>
+                ) : (
+                  <div className="space-y-3">
+                    {todaySessions.map((session) => {
+                      const activity = activities.find(a => a.id === session.activity_id);
+                      const registeredClients = clients.filter(c => 
+                        session.registered_clients?.includes(c.id)
+                      );
+                      const facilitators = staff.filter(s => 
+                        session.facilitator_staff_ids?.includes(s.id)
+                      );
 
-                  return (
-                    <div
-                      key={session.id}
-                      onClick={() => setSelectedSession(session)}
-                      className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                      return (
+                        <div
+                          key={session.id}
+                          onClick={() => setSelectedSession(session)}
+                          className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
+                        >
+                          <div className="flex items-start justify-between mb-3">
+                            <div className="flex items-center gap-3">
+                              <div className="p-2 bg-amber-100 rounded-lg">
+                                <Clock className="w-5 h-5 text-amber-600" />
+                              </div>
+                              <div>
+                                <div className="font-semibold">{session.start_time} - {session.end_time}</div>
+                                <div className="text-sm text-gray-600">{activity?.activity_name}</div>
+                              </div>
+                            </div>
+                            <Badge className={statusColors[session.status]}>
+                              {session.status.replace('_', ' ')}
+                            </Badge>
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
+                            <div className="flex items-center gap-2">
+                              <MapPin className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">Location:</span>
+                              <span className="font-medium">{session.location}</span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <Users className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">Registered:</span>
+                              <span className="font-medium">
+                                {registeredClients.length}/{session.max_capacity}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-2">
+                              <User className="w-4 h-4 text-gray-400" />
+                              <span className="text-gray-600">Facilitators:</span>
+                              <span className="font-medium">{facilitators.length}</span>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm text-gray-600">Today's Sessions</p>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600">{todaySessions.length}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <CheckCircle className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-gray-600">Completed</p>
+                  </div>
+                  <p className="text-2xl font-bold text-green-600">
+                    {sessions.filter(s => s.status === 'completed').length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-purple-600" />
+                    <p className="text-sm text-gray-600">Upcoming</p>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600">
+                    {sessions.filter(s => s.status === 'scheduled').length}
+                  </p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="mb-6">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Week View</CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentDate(addDays(currentDate, -7))}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm font-medium min-w-[200px] text-center">
+                        {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentDate(addDays(currentDate, 7))}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentDate(new Date())}
                     >
-                      <div className="flex items-start justify-between mb-3">
-                        <div className="flex items-center gap-3">
-                          <div className="p-2 bg-amber-100 rounded-lg">
-                            <Clock className="w-5 h-5 text-amber-600" />
-                          </div>
-                          <div>
-                            <div className="font-semibold">{session.start_time} - {session.end_time}</div>
-                            <div className="text-sm text-gray-600">{activity?.activity_name}</div>
-                          </div>
-                        </div>
-                        <Badge className={statusColors[session.status]}>
-                          {session.status.replace('_', ' ')}
-                        </Badge>
+                      Today
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-7 border-b">
+                  {weekDays.map((day, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 text-center border-r last:border-r-0 ${
+                        isToday(day) ? 'bg-amber-50' : ''
+                      }`}
+                    >
+                      <div className="text-xs text-gray-600 uppercase">
+                        {format(day, 'EEE')}
                       </div>
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-sm">
-                        <div className="flex items-center gap-2">
-                          <MapPin className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Location:</span>
-                          <span className="font-medium">{session.location}</span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <Users className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Registered:</span>
-                          <span className="font-medium">
-                            {registeredClients.length}/{session.max_capacity}
-                          </span>
-                        </div>
-                        <div className="flex items-center gap-2">
-                          <User className="w-4 h-4 text-gray-400" />
-                          <span className="text-gray-600">Facilitators:</span>
-                          <span className="font-medium">{facilitators.length}</span>
-                        </div>
+                      <div className={`text-lg font-semibold ${
+                        isToday(day) ? 'text-amber-600' : 'text-gray-900'
+                      }`}>
+                        {format(day, 'd')}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {getSessionsForDay(day).length} sessions
                       </div>
                     </div>
-                  );
-                })}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7">
+                  {weekDays.map((day, idx) => {
+                    const daySessions = getSessionsForDay(day);
+                    return (
+                      <div
+                        key={idx}
+                        className="p-2 border-r last:border-r-0 min-h-[300px] bg-gray-50"
+                      >
+                        <div className="space-y-2">
+                          {daySessions.map((session) => {
+                            const activity = activities.find(a => a.id === session.activity_id);
+                            const registeredCount = session.registered_clients?.length || 0;
+                            
+                            return (
+                              <div
+                                key={session.id}
+                                onClick={() => setSelectedSession(session)}
+                                className="p-2 bg-white rounded border-l-4 border-amber-500 cursor-pointer hover:shadow-md transition-shadow text-xs"
+                              >
+                                <div className="font-medium mb-1">{session.start_time}</div>
+                                <div className="text-gray-900 font-medium truncate mb-1">
+                                  {activity?.activity_name}
+                                </div>
+                                <div className="flex items-center gap-1 text-[10px] text-gray-600">
+                                  <Users className="w-3 h-3" />
+                                  <span>{registeredCount}/{session.max_capacity}</span>
+                                </div>
+                                <Badge variant="outline" className={`text-[10px] mt-1 ${statusColors[session.status]}`}>
+                                  {session.status}
+                                </Badge>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
       </div>
     </div>
   );
