@@ -40,6 +40,7 @@ export default function EnhancedRosterView({
   carers = [],
   clients = [],
   properties = [],
+  carerAvailability = [],
   onShiftClick,
   onShiftUpdate,
   onAddShift,
@@ -112,6 +113,28 @@ export default function EnhancedRosterView({
         return shiftDate >= currentWeekStart && shiftDate < addDays(currentWeekStart, 7);
       })
       .reduce((sum, s) => sum + (s.duration_hours || 0), 0);
+  };
+
+  const getCarerContractedHours = (carerId) => {
+    const carer = carers.find(c => c?.id === carerId);
+    // Check availability records for max hours
+    const availability = carerAvailability.find(a => a?.carer_id === carerId && a?.max_hours_per_week);
+    if (availability?.max_hours_per_week) return availability.max_hours_per_week;
+    // Fallback to employment type defaults
+    if (carer?.employment_type === 'full_time') return 40;
+    if (carer?.employment_type === 'part_time') return 20;
+    return null;
+  };
+
+  const getCarerHoursStatus = (carerId) => {
+    const weekHours = getCarerWeekHours(carerId);
+    const contracted = getCarerContractedHours(carerId);
+    if (!contracted) return { status: 'unknown', weekHours, contracted: null };
+    const percentage = (weekHours / contracted) * 100;
+    if (percentage >= 100) return { status: 'full', weekHours, contracted, percentage };
+    if (percentage >= 80) return { status: 'near', weekHours, contracted, percentage };
+    if (percentage < 50) return { status: 'low', weekHours, contracted, percentage };
+    return { status: 'ok', weekHours, contracted, percentage };
   };
 
   const getTimePosition = (time) => {
@@ -380,7 +403,7 @@ export default function EnhancedRosterView({
               <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
                 {activeCarers.map(carer => {
                   const dayShifts = getCarerDayShifts(carer.id, selectedDate);
-                  const weekHours = getCarerWeekHours(carer.id);
+                  const hoursStatus = getCarerHoursStatus(carer.id);
                   
                   return (
                     <div key={carer.id} className="flex border-b hover:bg-gray-50 transition-colors">
@@ -392,7 +415,17 @@ export default function EnhancedRosterView({
                           <p className="font-medium text-sm truncate">{carer.full_name}</p>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h this week</span>
+                            <span className={`text-xs ${
+                              hoursStatus.status === 'full' ? 'text-red-600 font-medium' :
+                              hoursStatus.status === 'near' ? 'text-amber-600' :
+                              hoursStatus.status === 'low' ? 'text-blue-600' : 'text-gray-500'
+                            }`}>
+                              {hoursStatus.weekHours.toFixed(1)}h
+                              {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
+                            </span>
+                            {hoursStatus.status === 'full' && (
+                              <Badge className="bg-red-100 text-red-700 text-[9px] py-0 px-1">Full</Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -552,21 +585,48 @@ export default function EnhancedRosterView({
             {(activePanel === "staff" || activePanel === "both") && (
             <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
               {activeCarers.map((carer) => {
-                const weekHours = getCarerWeekHours(carer.id);
+                const hoursStatus = getCarerHoursStatus(carer.id);
                 
                 return (
-                  <div key={carer.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                  <div key={carer.id} className={`grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors ${
+                    hoursStatus.status === 'full' ? 'bg-red-50/30' : ''
+                  }`}>
                     <div className="p-2 border-r flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
+                        hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
+                        hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
+                        'bg-gradient-to-br from-blue-400 to-blue-600'
+                      }`}>
                         {carer.full_name?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{carer.full_name}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h</span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className={`text-xs ${
+                            hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
+                            hoursStatus.status === 'near' ? 'text-amber-600 font-medium' :
+                            hoursStatus.status === 'low' ? 'text-blue-600' : 'text-gray-500'
+                          }`}>
+                            {hoursStatus.weekHours.toFixed(1)}h
+                            {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
+                          </span>
+                          {hoursStatus.contracted && (
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full transition-all ${
+                                  hoursStatus.status === 'full' ? 'bg-red-500' :
+                                  hoursStatus.status === 'near' ? 'bg-amber-500' :
+                                  hoursStatus.status === 'low' ? 'bg-blue-400' : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${Math.min(hoursStatus.percentage || 0, 100)}%` }}
+                              />
+                            </div>
+                          )}
                           {carer.employment_type && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1">
-                              {carer.employment_type.replace('_', ' ')}
+                            <Badge variant="outline" className="text-[9px] py-0 px-1">
+                              {carer.employment_type === 'full_time' ? 'FT' : 
+                               carer.employment_type === 'part_time' ? 'PT' : 
+                               carer.employment_type === 'bank' ? 'Bank' : 'Contract'}
                             </Badge>
                           )}
                         </div>
