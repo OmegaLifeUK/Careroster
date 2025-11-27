@@ -653,18 +653,44 @@ export default function DomCareRosterView({
                       const isTodayDate = isToday(day);
 
                       return (
-                        <div
-                          key={dayStr}
-                          className={`p-1 min-h-[60px] border-r transition-colors ${
-                            isTodayDate ? 'bg-teal-50/30' : ''
-                          }`}
-                        >
-                          <div className="space-y-1">
-                            {dayVisits.map((visit) => (
-                              <VisitPill key={visit.id} visit={visit} showStaff={true} showClient={false} />
-                            ))}
-                          </div>
-                        </div>
+                        <Droppable key={`client_${client.id}_${dayStr}`} droppableId={`client_${client.id}_${dayStr}`}>
+                          {(provided, snapshot) => (
+                            <div
+                              ref={provided.innerRef}
+                              {...provided.droppableProps}
+                              className={`p-1 min-h-[60px] border-r transition-colors relative group ${
+                                isTodayDate ? 'bg-teal-50/30' : ''
+                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-300' : ''}`}
+                            >
+                              <div className="space-y-1">
+                                {dayVisits.map((visit, vIdx) => (
+                                  <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                        className={snapshot.isDragging ? 'z-50' : ''}
+                                      >
+                                        <VisitPill visit={visit} showStaff={true} showClient={false} />
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                ))}
+                              </div>
+                              {provided.placeholder}
+                              
+                              <button
+                                onClick={() => onAddVisit?.({ client_id: client.id, scheduled_date: dayStr })}
+                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50"
+                              >
+                                <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                                  <Plus className="w-4 h-4" />
+                                </div>
+                              </button>
+                            </div>
+                          )}
+                        </Droppable>
                       );
                     })}
                   </div>
