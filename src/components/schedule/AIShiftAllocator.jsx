@@ -50,8 +50,9 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     queryKey: ['shifts-for-allocation', dateRange],
     queryFn: async () => {
       const allShifts = await base44.entities.Shift.list();
-      return allShifts.filter(s => 
-        s.date >= dateRange.start && 
+      const shiftsArray = Array.isArray(allShifts) ? allShifts : [];
+      return shiftsArray.filter(s => 
+        s && s.date >= dateRange.start && 
         s.date <= dateRange.end &&
         (s.status === 'draft' || s.status === 'unfilled' || !s.carer_id)
       );
@@ -61,44 +62,60 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const { data: allShifts = [] } = useQuery({
     queryKey: ['all-shifts-period', dateRange],
     queryFn: async () => {
-      const shifts = await base44.entities.Shift.list();
-      return shifts.filter(s => s.date >= dateRange.start && s.date <= dateRange.end);
+      const data = await base44.entities.Shift.list();
+      const shiftsArray = Array.isArray(data) ? data : [];
+      return shiftsArray.filter(s => s && s.date >= dateRange.start && s.date <= dateRange.end);
     }
   });
 
   const { data: staff = [] } = useQuery({
     queryKey: ['staff-for-allocation'],
-    queryFn: () => base44.entities.Staff.list()
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
   const { data: carers = [] } = useQuery({
     queryKey: ['carers-for-allocation'],
-    queryFn: () => base44.entities.Carer.list()
+    queryFn: async () => {
+      const data = await base44.entities.Carer.list();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
   const { data: clients = [] } = useQuery({
     queryKey: ['clients-for-allocation'],
-    queryFn: () => base44.entities.Client.list()
+    queryFn: async () => {
+      const data = await base44.entities.Client.list();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
   const { data: qualifications = [] } = useQuery({
     queryKey: ['qualifications'],
-    queryFn: () => base44.entities.Qualification.list()
+    queryFn: async () => {
+      const data = await base44.entities.Qualification.list();
+      return Array.isArray(data) ? data : [];
+    }
   });
 
   const { data: leaveRequests = [] } = useQuery({
     queryKey: ['leave-requests-period', dateRange],
     queryFn: async () => {
       const requests = await base44.entities.LeaveRequest.list();
-      return requests.filter(r => 
-        r.status === 'approved' &&
+      const requestsArray = Array.isArray(requests) ? requests : [];
+      return requestsArray.filter(r => 
+        r && r.status === 'approved' &&
         r.start_date <= dateRange.end &&
         r.end_date >= dateRange.start
       );
     }
   });
 
-  const allCarers = [...staff.filter(s => s.is_active !== false), ...carers.filter(c => c.status === 'active')];
+  const staffArray = Array.isArray(staff) ? staff : [];
+  const carersArray = Array.isArray(carers) ? carers : [];
+  const allCarers = [...staffArray.filter(s => s && s.is_active !== false), ...carersArray.filter(c => c && c.status === 'active')];
 
   const updateShiftMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
