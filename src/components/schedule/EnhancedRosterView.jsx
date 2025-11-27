@@ -369,8 +369,8 @@ export default function EnhancedRosterView({
             </div>
           </div>
 
-          {/* Staff Section */}
-          {(activePanel === "staff" || activePanel === "both") && (
+          {/* Staff Section - Day View */}
+          {(activePanel === "staff" || activePanel === "both") && activeCarers.length > 0 && (
             <div className={activePanel === "both" ? "border-b" : ""}>
               <div className="flex items-center gap-2 px-4 py-2 bg-blue-50 border-b">
                 <Users className="w-4 h-4 text-blue-600" />
@@ -415,8 +415,8 @@ export default function EnhancedRosterView({
             </div>
           )}
 
-          {/* Clients Section */}
-          {(activePanel === "clients" || activePanel === "both") && (
+          {/* Clients Section - Day View */}
+          {(activePanel === "clients" || activePanel === "both") && activeClients.length > 0 && (
             <div>
               <div className="flex items-center gap-2 px-4 py-2 bg-emerald-50 border-b">
                 <User className="w-4 h-4 text-emerald-600" />
@@ -462,8 +462,17 @@ export default function EnhancedRosterView({
             {/* Week Header */}
             <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
               <div className="p-3 border-r flex items-center gap-2">
-                <Users className="w-4 h-4 text-gray-500" />
-                <span className="font-medium text-sm text-gray-700">Staff</span>
+                {activePanel === "clients" ? (
+                  <>
+                    <User className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Service Users</span>
+                  </>
+                ) : (
+                  <>
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Staff</span>
+                  </>
+                )}
               </div>
               {weekDays.map((day, idx) => {
                 const isTodayDate = isToday(day);
@@ -539,8 +548,9 @@ export default function EnhancedRosterView({
               })}
             </div>
 
-            {/* Staff Rows */}
-            <div className="max-h-[500px] overflow-y-auto">
+            {/* Staff Rows - Week View */}
+            {(activePanel === "staff" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
               {activeCarers.map((carer) => {
                 const weekHours = getCarerWeekHours(carer.id);
                 
@@ -614,6 +624,60 @@ export default function EnhancedRosterView({
                 );
               })}
             </div>
+            )}
+
+            {/* Clients Rows - Week View */}
+            {(activePanel === "clients" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activePanel === "both" && (
+                <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-emerald-50">
+                  <div className="p-2 border-r flex items-center gap-2">
+                    <User className="w-4 h-4 text-emerald-600" />
+                    <span className="text-sm font-medium text-emerald-700">Service Users</span>
+                  </div>
+                  {weekDays.map((day, idx) => (
+                    <div key={idx} className="border-r" />
+                  ))}
+                </div>
+              )}
+              {activeClients.map((client) => {
+                return (
+                  <div key={client.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        {client.full_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{client.full_name}</p>
+                        <p className="text-xs text-gray-500 truncate">{client.address?.city || 'Location'}</p>
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayShifts = getClientDayShifts(client.id, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <div
+                          key={dayStr}
+                          className={`p-1 min-h-[60px] border-r transition-colors ${
+                            isTodayDate ? 'bg-blue-50/30' : ''
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            {dayShifts.map((shift) => (
+                              <ShiftPill key={shift.id} shift={shift} showCarer={true} showClient={false} />
+                            ))}
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
           </div>
         </DragDropContext>
       )}
