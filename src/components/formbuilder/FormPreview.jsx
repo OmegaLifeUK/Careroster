@@ -10,23 +10,80 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
-export default function FormPreview({ template, clientId, onSubmitSuccess }) {
+export default function FormPreview({ template, clientId, onSubmitSuccess, onSubmitted, prefillData = {}, contextData = {} }) {
   const [formValues, setFormValues] = useState({});
   const [activeSection, setActiveSection] = useState(0);
   const [submitted, setSubmitted] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Pre-fill form values on mount
+  React.useEffect(() => {
+    if (template && !initialized) {
+      const initialValues = {};
+      
+      // Go through all fields and try to match with prefillData
+      template.sections?.forEach(section => {
+        section.fields?.forEach(field => {
+          const fieldId = field.field_id;
+          const fieldLabel = field.field_label?.toLowerCase() || '';
+          
+          // Try to match common field patterns
+          if (prefillData.full_name && (fieldLabel.includes('name') && !fieldLabel.includes('supervisor'))) {
+            initialValues[fieldId] = prefillData.full_name;
+          }
+          if (prefillData.staff_name && fieldLabel.includes('staff') && fieldLabel.includes('name')) {
+            initialValues[fieldId] = prefillData.staff_name;
+          }
+          if (prefillData.supervisor_name && fieldLabel.includes('supervisor')) {
+            initialValues[fieldId] = prefillData.supervisor_name;
+          }
+          if (prefillData.client_name && fieldLabel.includes('client')) {
+            initialValues[fieldId] = prefillData.client_name;
+          }
+          if (prefillData.date_of_birth && (fieldLabel.includes('dob') || fieldLabel.includes('date of birth'))) {
+            initialValues[fieldId] = prefillData.date_of_birth;
+          }
+          if (prefillData.date && fieldLabel.includes('date') && !fieldLabel.includes('birth')) {
+            initialValues[fieldId] = prefillData.date;
+          }
+          if (prefillData.email && fieldLabel.includes('email')) {
+            initialValues[fieldId] = prefillData.email;
+          }
+          if (prefillData.phone && fieldLabel.includes('phone')) {
+            initialValues[fieldId] = prefillData.phone;
+          }
+          if (prefillData.address && fieldLabel.includes('address')) {
+            initialValues[fieldId] = prefillData.address;
+          }
+          if (prefillData.nhs_number && fieldLabel.includes('nhs')) {
+            initialValues[fieldId] = prefillData.nhs_number;
+          }
+          
+          // Direct field_id match from prefillData
+          if (prefillData[fieldId]) {
+            initialValues[fieldId] = prefillData[fieldId];
+          }
+        });
+      });
+      
+      setFormValues(initialValues);
+      setInitialized(true);
+    }
+  }, [template, prefillData, initialized]);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
       return base44.entities.FormSubmission.create(data);
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['form-submissions'] });
       toast.success("Form Submitted", "Your response has been saved successfully");
       setSubmitted(true);
       if (onSubmitSuccess) onSubmitSuccess();
+      if (onSubmitted) onSubmitted(result);
     },
     onError: (error) => {
       console.error("Submission error:", error);
@@ -50,7 +107,9 @@ export default function FormPreview({ template, clientId, onSubmitSuccess }) {
       form_template_id: template.id,
       form_name: template.form_name,
       submitted_date: new Date().toISOString(),
-      client_id: clientId || null,
+      client_id: clientId || contextData?.subject_client_id || null,
+      staff_id: contextData?.subject_staff_id || null,
+      staff_task_id: contextData?.staff_task_id || null,
       form_data: formValues,
       status: template.requires_approval ? "submitted" : "approved"
     };
