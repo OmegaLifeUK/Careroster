@@ -25,7 +25,7 @@ import { format, parseISO, isPast, differenceInDays } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
-import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
+import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator.jsx";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
