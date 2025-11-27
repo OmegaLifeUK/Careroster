@@ -31,6 +31,7 @@ import { createPageUrl } from "@/utils";
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
 import AlertsWidget from "../components/alerts/AlertsWidget";
 import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const DEFAULT_PREFERENCES = {
   occupancy: true,
@@ -43,10 +44,13 @@ const DEFAULT_PREFERENCES = {
   dailyLog: true,
 };
 
+const DEFAULT_WIDGET_ORDER = ['alerts', 'occupancy', 'staff', 'training', 'incidents', 'finance', 'communication', 'dailyLog'];
+
 export default function ManagerDashboard() {
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [user, setUser] = useState(null);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
+  const [widgetOrder, setWidgetOrder] = useState(DEFAULT_WIDGET_ORDER);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -56,6 +60,9 @@ export default function ManagerDashboard() {
 
         if (userData.dashboard_preferences) {
           setModulePreferences({ ...DEFAULT_PREFERENCES, ...userData.dashboard_preferences });
+        }
+        if (userData.widget_order && Array.isArray(userData.widget_order)) {
+          setWidgetOrder(userData.widget_order);
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -261,6 +268,22 @@ export default function ManagerDashboard() {
       }
     } catch (error) {
       console.error("Error saving preferences:", error);
+    }
+  };
+
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(widgetOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setWidgetOrder(items);
+    
+    try {
+      await base44.auth.updateMe({ widget_order: items });
+    } catch (error) {
+      console.error("Error saving widget order:", error);
     }
   };
 
