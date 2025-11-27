@@ -21,10 +21,15 @@ import {
   Activity,
   AlertCircle,
   CheckCircle,
-  Star
+  Star,
+  MapPin,
+  UserCheck
 } from "lucide-react";
 import { format, parseISO, isWithinInterval, subMonths, differenceInMinutes } from "date-fns";
 import { BarChart, Bar, LineChart, Line, PieChart as RechartsPie, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts";
+import StaffHoursReport from "@/components/reports/StaffHoursReport";
+import ClientVisitsReport from "@/components/reports/ClientVisitsReport";
+import OutingsReport from "@/components/reports/OutingsReport";
 
 const COLORS = ['#3B82F6', '#10B981', '#F59E0B', '#EF4444', '#8B5CF6', '#EC4899'];
 
@@ -97,6 +102,42 @@ export default function Reports() {
     queryFn: async () => {
       try {
         const data = await base44.entities.ClientFeedback.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: visits = [] } = useQuery({
+    queryKey: ['visits-all'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Visit.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: dailyLogs = [] } = useQuery({
+    queryKey: ['daily-logs-all'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.DailyLog.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  const { data: availability = [] } = useQuery({
+    queryKey: ['availability-all'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.CarerAvailability.list();
         return Array.isArray(data) ? data : [];
       } catch {
         return [];
@@ -412,6 +453,30 @@ export default function Reports() {
             Overview
           </Button>
           <Button
+            variant={reportType === "staffHours" ? "default" : "ghost"}
+            onClick={() => setReportType("staffHours")}
+            className={reportType === "staffHours" ? "bg-blue-600" : ""}
+          >
+            <Clock className="w-4 h-4 mr-2" />
+            Staff Hours
+          </Button>
+          <Button
+            variant={reportType === "clientVisits" ? "default" : "ghost"}
+            onClick={() => setReportType("clientVisits")}
+            className={reportType === "clientVisits" ? "bg-green-600" : ""}
+          >
+            <UserCheck className="w-4 h-4 mr-2" />
+            Client Visits
+          </Button>
+          <Button
+            variant={reportType === "outings" ? "default" : "ghost"}
+            onClick={() => setReportType("outings")}
+            className={reportType === "outings" ? "bg-cyan-600" : ""}
+          >
+            <MapPin className="w-4 h-4 mr-2" />
+            Outings
+          </Button>
+          <Button
             variant={reportType === "staff" ? "default" : "ghost"}
             onClick={() => setReportType("staff")}
           >
@@ -433,6 +498,47 @@ export default function Reports() {
             Operational
           </Button>
         </div>
+
+        {/* Staff Hours Report */}
+        {reportType === "staffHours" && (
+          <StaffHoursReport
+            timesheets={timesheets}
+            shifts={shifts}
+            staff={staff}
+            carers={carers}
+            availability={availability}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            selectedStaff={selectedStaff}
+          />
+        )}
+
+        {/* Client Visits Report */}
+        {reportType === "clientVisits" && (
+          <ClientVisitsReport
+            visits={visits}
+            shifts={shifts}
+            clients={clients}
+            staff={staff}
+            carers={carers}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            selectedClient={selectedClient}
+          />
+        )}
+
+        {/* Outings Report */}
+        {reportType === "outings" && (
+          <OutingsReport
+            dailyLogs={dailyLogs}
+            clients={clients}
+            staff={[...staff, ...carers]}
+            dateFrom={dateFrom}
+            dateTo={dateTo}
+            selectedClient={selectedClient}
+            selectedStaff={selectedStaff}
+          />
+        )}
 
         {/* Overview Tab */}
         {reportType === "overview" && (
