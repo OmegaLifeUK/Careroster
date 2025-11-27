@@ -27,7 +27,8 @@ import {
   Info
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { format, addDays, parseISO, differenceInMinutes, isWithinInterval } from "date-fns";
+import { format, addDays, parseISO, differenceInMinutes, isWithinInterval, getDay } from "date-fns";
+import { checkCarerAvailability } from "@/components/availability/AvailabilityChecker";
 
 export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const [dateRange, setDateRange] = useState({
@@ -113,6 +114,14 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     }
   });
 
+  const { data: carerAvailability = [] } = useQuery({
+    queryKey: ['carer-availability'],
+    queryFn: async () => {
+      const data = await base44.entities.CarerAvailability.list();
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
   const staffArray = Array.isArray(staff) ? staff : [];
   const carersArray = Array.isArray(carers) ? carers : [];
   const allCarers = [...staffArray.filter(s => s && s.is_active !== false), ...carersArray.filter(c => c && c.status === 'active')];
@@ -123,6 +132,11 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
     }
   });
+
+  // Check full availability using the availability checker
+  const checkFullAvailability = (staffId, date, startTime, endTime) => {
+    return checkCarerAvailability(staffId, date, startTime, endTime, carerAvailability, leaveRequests);
+  };
 
   // Check if staff is on leave for a given date
   const isOnLeave = (staffId, date) => {
@@ -213,9 +227,24 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
           const reasons = [];
           const warnings = [];
 
-          // Check availability (not on leave)
-          if (isOnLeave(carer.id, shift.date)) {
-            continue; // Skip - on leave
+          // Check full availability using availability module
+          const availabilityCheck = checkFullAvailability(carer.id, shift.date, shift.start_time, shift.end_time);
+          if (!availabilityCheck.isAvailable) {
+            if (availabilityCheck.reason === 'On approved leave') {
+              continue; // Skip completely if on leave
+            }
+            if (availabilityCheck.reason === 'Not a working day') {
+              warnings.push("Not scheduled to work");
+              score -= 50;
+            } else if (availabilityCheck.reason?.includes('Outside working hours')) {
+              warnings.push("Outside working hours");
+              score -= 30;
+            } else {
+              continue; // Skip if marked unavailable
+            }
+          } else if (availabilityCheck.workingHours) {
+            reasons.push("Within working hours");
+            score += 15;
           }
 
           // Check for conflicting shifts
