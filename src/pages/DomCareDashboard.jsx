@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -197,17 +196,14 @@ export default function DomCareDashboard() {
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {modulePreferences.todayRuns && (
-            <div className="lg:col-span-2">
-              <Card className="shadow-lg">
+            <Link to={createPageUrl("DomCareRuns")} className="lg:col-span-2 block">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
                 <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl font-bold">Today's Runs</CardTitle>
-                    <Link 
-                      to={createPageUrl("DomCareSchedule")}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                    >
+                    <span className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                       View Full Schedule →
-                    </Link>
+                    </span>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -276,51 +272,53 @@ export default function DomCareDashboard() {
                   )}
                 </CardContent>
               </Card>
-            </div>
+          </Link>
           )}
 
           <div className={`space-y-6 ${!modulePreferences.todayRuns ? 'lg:col-span-3' : ''}`}>
             {modulePreferences.todayStats && (
-              <Card className="shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
-                  <CardTitle className="text-xl font-bold">Today's Stats</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6 space-y-4">
-                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <MapPin className="w-5 h-5 text-blue-600" />
-                      <span className="text-sm font-medium text-blue-900">Total Visits</span>
+              <Link to={createPageUrl("DomCareSchedule")} className="block">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                  <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
+                    <CardTitle className="text-xl font-bold">Today's Stats</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6 space-y-4">
+                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <MapPin className="w-5 h-5 text-blue-600" />
+                        <span className="text-sm font-medium text-blue-900">Total Visits</span>
+                      </div>
+                      <span className="text-2xl font-bold text-blue-900">{todayVisits.length}</span>
                     </div>
-                    <span className="text-2xl font-bold text-blue-900">{todayVisits.length}</span>
-                  </div>
 
-                  <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <CheckCircle className="w-5 h-5 text-green-600" />
-                      <span className="text-sm font-medium text-green-900">Completed</span>
+                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <CheckCircle className="w-5 h-5 text-green-600" />
+                        <span className="text-sm font-medium text-green-900">Completed</span>
+                      </div>
+                      <span className="text-2xl font-bold text-green-900">
+                        {todayVisits.filter(v => v.status === 'completed').length}
+                      </span>
                     </div>
-                    <span className="text-2xl font-bold text-green-900">
-                      {todayVisits.filter(v => v.status === 'completed').length}
-                    </span>
-                  </div>
 
-                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <Navigation className="w-5 h-5 text-purple-600" />
-                      <span className="text-sm font-medium text-purple-900">Active Runs</span>
+                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <Navigation className="w-5 h-5 text-purple-600" />
+                        <span className="text-sm font-medium text-purple-900">Active Runs</span>
+                      </div>
+                      <span className="text-2xl font-bold text-purple-900">{todayRuns.length}</span>
                     </div>
-                    <span className="text-2xl font-bold text-purple-900">{todayRuns.length}</span>
-                  </div>
 
-                  <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
-                    <div className="flex items-center gap-2">
-                      <TrendingUp className="w-5 h-5 text-orange-600" />
-                      <span className="text-sm font-medium text-orange-900">Total Miles</span>
+                    <div className="flex items-center justify-between p-3 bg-orange-50 rounded-lg">
+                      <div className="flex items-center gap-2">
+                        <TrendingUp className="w-5 h-5 text-orange-600" />
+                        <span className="text-sm font-medium text-orange-900">Total Miles</span>
+                      </div>
+                      <span className="text-2xl font-bold text-orange-900">{totalMileageToday.toFixed(1)}</span>
                     </div>
-                    <span className="text-2xl font-bold text-orange-900">{totalMileageToday.toFixed(1)}</span>
-                  </div>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
             )}
 
             {modulePreferences.quickActions && (

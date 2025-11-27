@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -183,17 +182,14 @@ export default function DayCentreDashboard() {
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {modulePreferences.todaySessions && (
-            <div className="lg:col-span-2">
-              <Card className="shadow-lg">
+            <Link to={createPageUrl("DayCentreSessions")} className="lg:col-span-2 block">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
                 <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl font-bold">Today's Sessions</CardTitle>
-                    <Link 
-                      to={createPageUrl("DayCentreSessions")}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                    >
+                    <span className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                       View All →
-                    </Link>
+                    </span>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -244,55 +240,57 @@ export default function DayCentreDashboard() {
                   )}
                 </CardContent>
               </Card>
-            </div>
+            </Link>
           )}
 
           {modulePreferences.attendanceOverview && (
-            <div>
-              <Card className="shadow-lg mb-6">
-                <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
-                  <CardTitle className="text-xl font-bold">Today's Attendance</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="space-y-4">
-                    <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
-                      <span className="text-sm font-medium text-green-900">Present</span>
-                      <span className="text-2xl font-bold text-green-900">
-                        {todayAttendance.filter(a => a.status === 'present').length}
-                      </span>
+            <div className="space-y-6">
+              <Link to={createPageUrl("DayCentreAttendance")} className="block">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                  <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
+                    <CardTitle className="text-xl font-bold">Today's Attendance</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="space-y-4">
+                      <div className="flex items-center justify-between p-3 bg-green-50 rounded-lg">
+                        <span className="text-sm font-medium text-green-900">Present</span>
+                        <span className="text-2xl font-bold text-green-900">
+                          {todayAttendance.filter(a => a.status === 'present').length}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
+                        <span className="text-sm font-medium text-yellow-900">Late</span>
+                        <span className="text-2xl font-bold text-yellow-900">
+                          {todayAttendance.filter(a => a.status === 'late').length}
+                        </span>
+                      </div>
+                      <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                        <span className="text-sm font-medium text-red-900">Absent</span>
+                        <span className="text-2xl font-bold text-red-900">
+                          {todayAttendance.filter(a => a.status === 'absent_notified' || a.status === 'absent_unnotified').length}
+                        </span>
+                      </div>
                     </div>
-                    <div className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg">
-                      <span className="text-sm font-medium text-yellow-900">Late</span>
-                      <span className="text-2xl font-bold text-yellow-900">
-                        {todayAttendance.filter(a => a.status === 'late').length}
-                      </span>
-                    </div>
-                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
-                      <span className="text-sm font-medium text-red-900">Absent</span>
-                      <span className="text-2xl font-bold text-red-900">
-                        {todayAttendance.filter(a => a.status === 'absent_notified' || a.status === 'absent_unnotified').length}
-                      </span>
-                    </div>
-                  </div>
-                  <Link to={createPageUrl("DayCentreAttendance")}>
                     <Button variant="outline" className="w-full mt-4">
                       Manage Attendance
                     </Button>
-                  </Link>
-                </CardContent>
-              </Card>
+                  </CardContent>
+                </Card>
+              </Link>
 
-              <Card className="shadow-lg">
-                <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
-                  <CardTitle className="text-lg font-bold">This Week</CardTitle>
-                </CardHeader>
-                <CardContent className="p-6">
-                  <div className="text-center">
-                    <p className="text-3xl font-bold text-orange-900">{thisWeekAttendance.length}</p>
-                    <p className="text-sm text-gray-600 mt-1">Total Attendances</p>
-                  </div>
-                </CardContent>
-              </Card>
+              <Link to={createPageUrl("DayCentreAttendance")} className="block">
+                <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
+                  <CardHeader className="border-b bg-gradient-to-r from-orange-50 to-amber-50">
+                    <CardTitle className="text-lg font-bold">This Week</CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-6">
+                    <div className="text-center">
+                      <p className="text-3xl font-bold text-orange-900">{thisWeekAttendance.length}</p>
+                      <p className="text-sm text-gray-600 mt-1">Total Attendances</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </Link>
             </div>
           )}
         </div>

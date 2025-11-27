@@ -150,53 +150,61 @@ export default function PayrollDashboard() {
 
         {/* Key Metrics */}
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-          <Card className="bg-gradient-to-br from-blue-50 to-blue-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <Clock className="w-8 h-8 text-blue-600" />
-                <TrendingUp className="w-5 h-5 text-blue-400" />
-              </div>
-              <p className="text-sm text-blue-800 mb-1">Total Hours (Approved)</p>
-              <p className="text-3xl font-bold text-blue-900">{totalHoursThisPeriod.toFixed(1)}</p>
-              <p className="text-xs text-blue-700 mt-1">{staff.length} staff members</p>
-            </CardContent>
-          </Card>
+          <Link to={createPageUrl("TimesheetReconciliation")} className="block">
+            <Card className="bg-gradient-to-br from-blue-50 to-blue-100 hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <Clock className="w-8 h-8 text-blue-600" />
+                  <TrendingUp className="w-5 h-5 text-blue-400" />
+                </div>
+                <p className="text-sm text-blue-800 mb-1">Total Hours (Approved)</p>
+                <p className="text-3xl font-bold text-blue-900">{totalHoursThisPeriod.toFixed(1)}</p>
+                <p className="text-xs text-blue-700 mt-1">{staff.length} staff members</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-gradient-to-br from-green-50 to-green-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <DollarSign className="w-8 h-8 text-green-600" />
-                <TrendingUp className="w-5 h-5 text-green-400" />
-              </div>
-              <p className="text-sm text-green-800 mb-1">Est. Payroll Cost</p>
-              <p className="text-3xl font-bold text-green-900">£{estimatedPayrollCost.toLocaleString()}</p>
-              <p className="text-xs text-green-700 mt-1">Current period</p>
-            </CardContent>
-          </Card>
+          <Link to={createPageUrl("PayrollProcessing")} className="block">
+            <Card className="bg-gradient-to-br from-green-50 to-green-100 hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <DollarSign className="w-8 h-8 text-green-600" />
+                  <TrendingUp className="w-5 h-5 text-green-400" />
+                </div>
+                <p className="text-sm text-green-800 mb-1">Est. Payroll Cost</p>
+                <p className="text-3xl font-bold text-green-900">£{estimatedPayrollCost.toLocaleString()}</p>
+                <p className="text-xs text-green-700 mt-1">Current period</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-gradient-to-br from-orange-50 to-orange-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <FileText className="w-8 h-8 text-orange-600" />
-                <AlertTriangle className="w-5 h-5 text-orange-400" />
-              </div>
-              <p className="text-sm text-orange-800 mb-1">Pending Timesheets</p>
-              <p className="text-3xl font-bold text-orange-900">{pendingTimesheets}</p>
-              <p className="text-xs text-orange-700 mt-1">Need approval</p>
-            </CardContent>
-          </Card>
+          <Link to={createPageUrl("TimesheetReconciliation")} className="block">
+            <Card className="bg-gradient-to-br from-orange-50 to-orange-100 hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <FileText className="w-8 h-8 text-orange-600" />
+                  <AlertTriangle className="w-5 h-5 text-orange-400" />
+                </div>
+                <p className="text-sm text-orange-800 mb-1">Pending Timesheets</p>
+                <p className="text-3xl font-bold text-orange-900">{pendingTimesheets}</p>
+                <p className="text-xs text-orange-700 mt-1">Need approval</p>
+              </CardContent>
+            </Card>
+          </Link>
 
-          <Card className="bg-gradient-to-br from-purple-50 to-purple-100">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between mb-2">
-                <FileText className="w-8 h-8 text-purple-600" />
-                <TrendingUp className="w-5 h-5 text-purple-400" />
-              </div>
-              <p className="text-sm text-purple-800 mb-1">Outstanding Invoices</p>
-              <p className="text-3xl font-bold text-purple-900">£{outstandingInvoiceValue.toLocaleString()}</p>
-              <p className="text-xs text-purple-700 mt-1">{outstandingInvoices} invoices</p>
-            </CardContent>
-          </Card>
+          <Link to={createPageUrl("InvoiceManagement")} className="block">
+            <Card className="bg-gradient-to-br from-purple-50 to-purple-100 hover:shadow-xl hover:scale-105 transition-all cursor-pointer">
+              <CardContent className="p-6">
+                <div className="flex items-center justify-between mb-2">
+                  <FileText className="w-8 h-8 text-purple-600" />
+                  <TrendingUp className="w-5 h-5 text-purple-400" />
+                </div>
+                <p className="text-sm text-purple-800 mb-1">Outstanding Invoices</p>
+                <p className="text-3xl font-bold text-purple-900">£{outstandingInvoiceValue.toLocaleString()}</p>
+                <p className="text-xs text-purple-700 mt-1">{outstandingInvoices} invoices</p>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Quick Links */}

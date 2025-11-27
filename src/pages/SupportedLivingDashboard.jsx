@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -162,17 +161,14 @@ export default function SupportedLivingDashboard() {
 
         <div className="grid lg:grid-cols-3 gap-6 mb-8">
           {modulePreferences.todayShifts && (
-            <div className="lg:col-span-2">
-              <Card className="shadow-lg">
+            <Link to={createPageUrl("SupportedLivingSchedule")} className="lg:col-span-2 block">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
                 <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
                   <div className="flex justify-between items-center">
                     <CardTitle className="text-xl font-bold">Today's Shifts</CardTitle>
-                    <Link 
-                      to={createPageUrl("SupportedLivingSchedule")}
-                      className="text-sm text-blue-600 hover:text-blue-800 font-medium"
-                    >
+                    <span className="text-sm text-blue-600 hover:text-blue-800 font-medium">
                       View Schedule →
-                    </Link>
+                    </span>
                   </div>
                 </CardHeader>
                 <CardContent className="p-6">
@@ -223,12 +219,12 @@ export default function SupportedLivingDashboard() {
                   )}
                 </CardContent>
               </Card>
-            </div>
+            </Link>
           )}
 
           {modulePreferences.properties && (
-            <div>
-              <Card className="shadow-lg">
+            <Link to={createPageUrl("SupportedLivingProperties")} className="block">
+              <Card className="shadow-lg hover:shadow-xl transition-shadow cursor-pointer">
                 <CardHeader className="border-b bg-gradient-to-r from-green-50 to-emerald-50">
                   <CardTitle className="text-xl font-bold">Properties Overview</CardTitle>
                 </CardHeader>
@@ -253,14 +249,12 @@ export default function SupportedLivingDashboard() {
                       </div>
                     ))}
                   </div>
-                  <Link to={createPageUrl("SupportedLivingProperties")}>
-                    <Button variant="outline" className="w-full mt-4">
-                      View All Properties
-                    </Button>
-                  </Link>
+                  <Button variant="outline" className="w-full mt-4">
+                    View All Properties
+                  </Button>
                 </CardContent>
               </Card>
-            </div>
+            </Link>
           )}
         </div>
 
