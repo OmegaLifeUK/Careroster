@@ -3,9 +3,10 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp } from "lucide-react";
-import { format, parseISO } from "date-fns";
+import { format, parseISO, getDay } from "date-fns";
+import { checkCarerAvailability } from "@/components/availability/AvailabilityChecker";
 
-export default function ConflictDetector({ shifts = [], carers = [], clients = [] }) {
+export default function ConflictDetector({ shifts = [], carers = [], clients = [], leaveRequests = [], carerAvailability = [] }) {
   const [isExpanded, setIsExpanded] = React.useState(true);
 
   const detectConflicts = () => {
@@ -107,6 +108,35 @@ export default function ConflictDetector({ shifts = [], carers = [], clients = [
         client: client?.full_name || "Unknown",
         message: `Unfilled shift for ${client?.full_name || 'Unknown'} on ${format(parseISO(shift.date), "MMM d")} at ${shift.start_time}`,
       });
+    });
+
+    // Check for availability conflicts
+    shifts.forEach(shift => {
+      if (!shift || !shift.carer_id || !shift.date) return;
+      
+      const availCheck = checkCarerAvailability(
+        shift.carer_id, 
+        shift.date, 
+        shift.start_time, 
+        shift.end_time, 
+        carerAvailability, 
+        leaveRequests
+      );
+      
+      if (!availCheck.isAvailable) {
+        const carer = carers.find(c => c && c.id === shift.carer_id);
+        const client = clients.find(c => c && c.id === shift.client_id);
+        
+        conflicts.push({
+          type: "availability",
+          severity: availCheck.reason === 'On approved leave' ? "high" : "medium",
+          carer: carer?.full_name || "Unknown",
+          client: client?.full_name || "Unknown",
+          date: shift.date,
+          shift,
+          message: `${carer?.full_name || 'Unknown'} is ${availCheck.reason} on ${format(parseISO(shift.date), "MMM d")} (${shift.start_time}-${shift.end_time})`,
+        });
+      }
     });
 
     // Check for consecutive long shifts

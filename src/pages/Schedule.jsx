@@ -94,6 +94,14 @@ export default function Schedule() {
     refetchInterval: 60000,
   });
 
+  const { data: carerAvailability = [] } = useQuery({
+    queryKey: ['carer-availability'],
+    queryFn: async () => {
+      const data = await base44.entities.CarerAvailability.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
   const deleteShiftMutation = useMutation({
     mutationFn: (id) => base44.entities.Shift.delete(id),
     onSuccess: () => {
@@ -420,7 +428,7 @@ export default function Schedule() {
           </Tooltip>
         </div>
 
-        <ConflictDetector shifts={filteredShifts} carers={carers} clients={clients} leaveRequests={leaveRequests} />
+        <ConflictDetector shifts={filteredShifts} carers={carers} clients={clients} leaveRequests={leaveRequests} carerAvailability={carerAvailability} />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
