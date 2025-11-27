@@ -18,16 +18,19 @@ import {
   Clock,
   User,
   ChevronRight,
-  FileText
+  FileText,
+  Sparkles
 } from "lucide-react";
 import { format, parseISO, isPast, differenceInDays } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
+import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
+  const [showAIGenerator, setShowAIGenerator] = useState(false);
   const [editingPlan, setEditingPlan] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -37,6 +40,46 @@ export default function CarePlanManager({ client }) {
     queryFn: async () => {
       const plans = await base44.entities.CarePlan.list('-assessment_date');
       return plans.filter(p => p.client_id === client.id);
+    },
+  });
+
+  // Fetch assessment documents from visits and shifts
+  const { data: assessmentDocs = [] } = useQuery({
+    queryKey: ['assessment-docs', client.id],
+    queryFn: async () => {
+      const docs = [];
+      
+      // Get from visits (domiciliary care)
+      try {
+        const visits = await base44.entities.Visit.filter({ client_id: client.id });
+        (visits || []).forEach(v => {
+          if (v.assessment_documents?.length) {
+            docs.push(...v.assessment_documents.map(d => ({
+              ...d,
+              source: 'visit',
+              source_id: v.id,
+              visit_type: v.visit_type
+            })));
+          }
+        });
+      } catch (e) { console.log("No visits found"); }
+      
+      // Get from shifts (residential, supported living, day centre)
+      try {
+        const shifts = await base44.entities.Shift.filter({ client_id: client.id });
+        (shifts || []).forEach(s => {
+          if (s.assessment_documents?.length) {
+            docs.push(...s.assessment_documents.map(d => ({
+              ...d,
+              source: 'shift',
+              source_id: s.id,
+              shift_type: s.shift_type
+            })));
+          }
+        });
+      } catch (e) { console.log("No shifts found"); }
+      
+      return docs;
     },
   });
 
@@ -101,15 +144,51 @@ export default function CarePlanManager({ client }) {
           <Heart className="w-5 h-5 text-blue-600" />
           Care Plans
         </h2>
-        <Button 
-          size="sm" 
-          className="bg-blue-600 hover:bg-blue-700"
-          onClick={() => { setEditingPlan(null); setShowEditor(true); }}
-        >
-          <Plus className="w-4 h-4 mr-2" />
-          Create Care Plan
-        </Button>
+        <div className="flex gap-2">
+          {assessmentDocs.length > 0 && (
+            <Button 
+              size="sm" 
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+              onClick={() => setShowAIGenerator(true)}
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Generate from Assessments
+            </Button>
+          )}
+          <Button 
+            size="sm" 
+            className="bg-blue-600 hover:bg-blue-700"
+            onClick={() => { setEditingPlan(null); setShowEditor(true); }}
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create Care Plan
+          </Button>
+        </div>
       </div>
+
+      {/* Assessment Documents Available */}
+      {assessmentDocs.length > 0 && (
+        <Card className="mb-4 border-purple-200 bg-purple-50">
+          <CardContent className="p-3 flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <FileText className="w-4 h-4 text-purple-600" />
+              <span className="text-sm text-purple-800">
+                <strong>{assessmentDocs.length}</strong> assessment document(s) available from visits
+              </span>
+            </div>
+            <Button 
+              size="sm" 
+              variant="ghost"
+              className="text-purple-700"
+              onClick={() => setShowAIGenerator(true)}
+            >
+              <Sparkles className="w-4 h-4 mr-1" />
+              Generate Care Plan
+            </Button>
+          </CardContent>
+        </Card>
+      )}
 
       {/* Active Plan Summary */}
       {activePlan && (
@@ -256,6 +335,15 @@ export default function CarePlanManager({ client }) {
           carePlan={editingPlan}
           client={client}
           onClose={() => { setShowEditor(false); setEditingPlan(null); }}
+        />
+      )}
+
+      {showAIGenerator && (
+        <AICarePlanGenerator
+          client={client}
+          assessmentDocuments={assessmentDocs}
+          onClose={() => setShowAIGenerator(false)}
+          onSuccess={() => setShowAIGenerator(false)}
         />
       )}
     </div>

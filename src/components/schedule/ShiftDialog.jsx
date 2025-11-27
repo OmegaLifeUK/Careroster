@@ -20,8 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Loader2, Home, User, MapPin, Building, Paperclip } from "lucide-react";
+import { Loader2, Home, User, MapPin, Building, Paperclip, FileText, Upload, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/toast";
 
 import CarerSuggestions from "./CarerSuggestions";
 import DocumentAttachment from "@/components/documents/DocumentAttachment";
@@ -46,7 +47,11 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     tasks: shift?.tasks?.join(", ") || "",
     notes: shift?.notes || "",
     attached_documents: shift?.attached_documents || [],
+    assessment_documents: shift?.assessment_documents || [],
   });
+
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurringSettings, setRecurringSettings] = useState({
@@ -161,6 +166,49 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
       setShowSuggestions(true);
     }
   };
+
+  const handleAssessmentUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const newDoc = {
+        document_name: file.name,
+        document_type: "other",
+        document_url: file_url,
+        uploaded_date: new Date().toISOString(),
+        uploaded_by: "Staff",
+        notes: ""
+      };
+      setFormData(prev => ({
+        ...prev,
+        assessment_documents: [...prev.assessment_documents, newDoc]
+      }));
+      toast.success("Uploaded", "Assessment document attached");
+    } catch (error) {
+      toast.error("Upload Failed", "Failed to upload document");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeAssessmentDoc = (index) => {
+    setFormData(prev => ({
+      ...prev,
+      assessment_documents: prev.assessment_documents.filter((_, i) => i !== index)
+    }));
+  };
+
+  const updateAssessmentDocType = (index, type) => {
+    const updated = [...formData.assessment_documents];
+    updated[index].document_type = type;
+    setFormData(prev => ({ ...prev, assessment_documents: updated }));
+  };
+
+  const isAssessmentShift = ['supervision', 'shadowing'].includes(formData.shift_type) || 
+    formData.notes?.toLowerCase().includes('assessment');
 
   const handleSelectCarer = (carerId) => {
     setFormData(prev => ({ 
@@ -541,6 +589,66 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                 entityType="shift"
                 showCompletionStatus={true}
               />
+
+              {/* Assessment Documents Section */}
+              {formData.assignment_type === "client" && formData.client_id && (
+                <div className="border-t pt-4 mt-4">
+                  <Label className="flex items-center gap-2 mb-2">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                    Assessment Documents
+                  </Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Attach pre-admission or care assessment documents to AI-generate a care plan.
+                  </p>
+                  
+                  <div className="space-y-2 mb-3">
+                    {formData.assessment_documents.map((doc, index) => (
+                      <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded text-sm">
+                        <FileText className="w-4 h-4 text-purple-600 flex-shrink-0" />
+                        <span className="flex-1 truncate">{doc.document_name}</span>
+                        <Select
+                          value={doc.document_type}
+                          onValueChange={(v) => updateAssessmentDocType(index, v)}
+                        >
+                          <SelectTrigger className="w-36 h-7 text-xs">
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="pre_admission_assessment">Pre-Admission</SelectItem>
+                            <SelectItem value="care_assessment">Care Assessment</SelectItem>
+                            <SelectItem value="risk_assessment">Risk Assessment</SelectItem>
+                            <SelectItem value="mental_capacity">Mental Capacity</SelectItem>
+                            <SelectItem value="consent_form">Consent Form</SelectItem>
+                            <SelectItem value="medical_history">Medical History</SelectItem>
+                            <SelectItem value="other">Other</SelectItem>
+                          </SelectContent>
+                        </Select>
+                        <button
+                          type="button"
+                          onClick={() => removeAssessmentDoc(index)}
+                          className="text-red-500 hover:text-red-700"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+
+                  <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors">
+                    <Upload className="w-4 h-4 text-purple-600" />
+                    <span className="text-sm text-purple-700">
+                      {isUploading ? "Uploading..." : "Upload Assessment Document"}
+                    </span>
+                    <input
+                      type="file"
+                      className="hidden"
+                      onChange={handleAssessmentUpload}
+                      disabled={isUploading}
+                      accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                    />
+                  </label>
+                </div>
+              )}
             </div>
 
             <div className="space-y-4">
