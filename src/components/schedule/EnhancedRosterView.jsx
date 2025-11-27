@@ -175,6 +175,29 @@ export default function EnhancedRosterView({
     return Math.max(endPos - startPos, 5);
   };
 
+  // Check for conflicts before updating
+  const checkForConflicts = (carerIdToCheck, dateToCheck, shiftToMove) => {
+    if (!carerIdToCheck || !dateToCheck || !shiftToMove) return null;
+    
+    const conflictingShifts = shifts.filter(s => {
+      if (!s || s.carer_id !== carerIdToCheck || s.date !== dateToCheck) return false;
+      if (s.id === shiftToMove.id) return false; // Skip the shift being moved
+      
+      const shiftStart = s.start_time || "00:00";
+      const shiftEnd = s.end_time || "23:59";
+      const moveStart = shiftToMove.start_time || "00:00";
+      const moveEnd = shiftToMove.end_time || "23:59";
+      
+      return (
+        (moveStart >= shiftStart && moveStart < shiftEnd) ||
+        (moveEnd > shiftStart && moveEnd <= shiftEnd) ||
+        (moveStart <= shiftStart && moveEnd >= shiftEnd)
+      );
+    });
+    
+    return conflictingShifts.length > 0 ? conflictingShifts : null;
+  };
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
@@ -184,6 +207,20 @@ export default function EnhancedRosterView({
     if (!shift || !onShiftUpdate) return;
 
     const newCarerId = targetCarerId === 'unassigned' ? null : targetCarerId;
+    
+    // Check for conflicts if assigning to a carer
+    if (newCarerId) {
+      const conflicts = checkForConflicts(newCarerId, targetDate, shift);
+      if (conflicts) {
+        const carerName = activeCarers.find(c => c.id === newCarerId)?.full_name || 'This carer';
+        const conflictTimes = conflicts.map(c => `${c.start_time}-${c.end_time}`).join(', ');
+        const proceed = window.confirm(
+          `⚠️ Scheduling Conflict!\n\n${carerName} already has shift(s) at ${conflictTimes} on this date.\n\nThis will create overlapping shifts. Continue?`
+        );
+        if (!proceed) return;
+      }
+    }
+    
     onShiftUpdate(draggableId, { 
       carer_id: newCarerId,
       date: targetDate,
