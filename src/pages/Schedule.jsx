@@ -30,7 +30,7 @@ import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
 import EnhancedRosterView from "../components/schedule/EnhancedRosterView";
 
 export default function Schedule() {
-  const [viewMode, setViewMode] = useState("week");
+  const [viewMode, setViewMode] = useState("roster");
   const [filters, setFilters] = useState({});
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
