@@ -1,8 +1,11 @@
 import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Award, Edit, Trash2 } from "lucide-react";
+import { Phone, Mail, MapPin, Award, Edit, Trash2, ClipboardList, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { differenceInDays } from "date-fns";
 
 const statusColors = {
   active: "bg-green-100 text-green-800",
@@ -16,6 +19,33 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
   const carerQualifications = Array.isArray(qualifications) ? qualifications.filter(q => 
     q && carer.qualifications?.includes(q.id)
   ) : [];
+
+  // Fetch latest supervision for this carer
+  const { data: supervisions = [] } = useQuery({
+    queryKey: ['carer-supervision-status', carer.id],
+    queryFn: async () => {
+      const data = await base44.entities.StaffSupervision.filter(
+        { staff_id: carer.id },
+        '-supervision_date',
+        1
+      );
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const latestSupervision = supervisions[0];
+  const getSupervisionStatus = () => {
+    if (!latestSupervision) return { status: "none", color: "bg-gray-100 text-gray-600", icon: ClipboardList, label: "No supervision" };
+    if (!latestSupervision.next_supervision_due) return { status: "completed", color: "bg-green-100 text-green-700", icon: CheckCircle, label: "Up to date" };
+    
+    const daysUntilDue = differenceInDays(new Date(latestSupervision.next_supervision_due), new Date());
+    
+    if (daysUntilDue < 0) return { status: "overdue", color: "bg-red-100 text-red-700", icon: AlertTriangle, label: "Overdue" };
+    if (daysUntilDue <= 7) return { status: "due_soon", color: "bg-orange-100 text-orange-700", icon: Clock, label: "Due soon" };
+    return { status: "on_track", color: "bg-green-100 text-green-700", icon: CheckCircle, label: "On track" };
+  };
+
+  const supervisionStatus = getSupervisionStatus();
 
   return (
     <Card className="hover:shadow-lg transition-all">
@@ -80,6 +110,14 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             <p className="text-lg font-semibold text-green-700">£{carer.hourly_rate?.toFixed(2)}</p>
           </div>
         )}
+
+        {/* Supervision Status */}
+        <div className="mb-4 flex items-center gap-2">
+          <Badge className={supervisionStatus.color}>
+            <supervisionStatus.icon className="w-3 h-3 mr-1" />
+            Supervision: {supervisionStatus.label}
+          </Badge>
+        </div>
 
         <div className="flex gap-2">
           <Button 
