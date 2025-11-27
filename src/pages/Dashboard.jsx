@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -30,6 +29,7 @@ import MainDashboardCustomizer from "../components/dashboard/MainDashboardCustom
 import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 import AlertBanner from "../components/alerts/AlertBanner";
 import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
+import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const DEFAULT_PREFERENCES = {
   statsCards: true,
@@ -39,10 +39,13 @@ const DEFAULT_PREFERENCES = {
   smartSuggestions: true,
 };
 
+const DEFAULT_WIDGET_ORDER = ['smartSuggestions', 'statsCards', 'todayShifts', 'quickActions', 'recentActivity'];
+
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
+  const [widgetOrder, setWidgetOrder] = useState(DEFAULT_WIDGET_ORDER);
 
   useEffect(() => {
     const loadUserData = async () => {
@@ -55,6 +58,9 @@ export default function Dashboard() {
             ...DEFAULT_PREFERENCES,
             ...userData.main_dashboard_preferences
           });
+        }
+        if (userData.main_widget_order && Array.isArray(userData.main_widget_order)) {
+          setWidgetOrder(userData.main_widget_order);
         }
       } catch (error) {
         console.error("Error loading user:", error);
@@ -137,6 +143,22 @@ export default function Dashboard() {
     }
   };
 
+  const handleDragEnd = async (result) => {
+    if (!result.destination) return;
+    
+    const items = Array.from(widgetOrder);
+    const [reorderedItem] = items.splice(result.source.index, 1);
+    items.splice(result.destination.index, 0, reorderedItem);
+    
+    setWidgetOrder(items);
+    
+    try {
+      await base44.auth.updateMe({ main_widget_order: items });
+    } catch (error) {
+      console.error("Error saving widget order:", error);
+    }
+  };
+
   return (
     <div className="p-4 md:p-8 bg-gradient-to-br from-gray-50 to-blue-50 min-h-screen">
       {/* System Alert Monitor */}
@@ -166,80 +188,99 @@ export default function Dashboard() {
         {/* Alert Banner */}
         <AlertBanner alerts={alerts} />
 
-        {modulePreferences.smartSuggestions && (
-          <div className="mb-8">
-            <SmartSuggestionsWidget
-              shifts={shifts}
-              carers={carers}
-              clients={clients}
-              leaveRequests={leaveRequests}
-            />
-          </div>
-        )}
+        <DragDropContext onDragEnd={handleDragEnd}>
+          <Droppable droppableId="main-dashboard-widgets">
+            {(provided) => (
+              <div {...provided.droppableProps} ref={provided.innerRef}>
+                {widgetOrder.filter(id => modulePreferences[id]).map((widgetId, index) => (
+                  <Draggable key={widgetId} draggableId={widgetId} index={index}>
+                    {(provided, snapshot) => (
+                      <div
+                        ref={provided.innerRef}
+                        {...provided.draggableProps}
+                        className={snapshot.isDragging ? 'z-50' : ''}
+                      >
+                        <div 
+                          {...provided.dragHandleProps}
+                          className={`cursor-grab active:cursor-grabbing mb-8 ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                        >
+                          {widgetId === 'smartSuggestions' && (
+                            <SmartSuggestionsWidget
+                              shifts={shifts}
+                              carers={carers}
+                              clients={clients}
+                              leaveRequests={leaveRequests}
+                            />
+                          )}
 
-        {modulePreferences.statsCards && (
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-            <StatsCard
-              title="Active Carers"
-              value={activeCarers}
-              icon={Users}
-              bgColor="from-blue-500 to-blue-600"
-              isLoading={isLoading}
-              linkTo={createPageUrl("Carers")}
-            />
-            <StatsCard
-              title="Active Clients"
-              value={activeClients}
-              icon={UserCircle}
-              bgColor="from-green-500 to-green-600"
-              isLoading={isLoading}
-              linkTo={createPageUrl("Clients")}
-            />
-            <StatsCard
-              title="Today's Shifts"
-              value={todayShifts.length}
-              icon={Calendar}
-              bgColor="from-purple-500 to-purple-600"
-              isLoading={isLoading}
-              linkTo={createPageUrl("Schedule")}
-            />
-            <StatsCard
-              title="Unfilled Shifts"
-              value={unfilledShifts}
-              icon={AlertCircle}
-              bgColor="from-orange-500 to-orange-600"
-              isLoading={isLoading}
-              alert={unfilledShifts > 0}
-              linkTo={createPageUrl("Schedule")}
-            />
-          </div>
-        )}
+                          {widgetId === 'statsCards' && (
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                              <StatsCard
+                                title="Active Carers"
+                                value={activeCarers}
+                                icon={Users}
+                                bgColor="from-blue-500 to-blue-600"
+                                isLoading={isLoading}
+                                linkTo={createPageUrl("Carers")}
+                              />
+                              <StatsCard
+                                title="Active Clients"
+                                value={activeClients}
+                                icon={UserCircle}
+                                bgColor="from-green-500 to-green-600"
+                                isLoading={isLoading}
+                                linkTo={createPageUrl("Clients")}
+                              />
+                              <StatsCard
+                                title="Today's Shifts"
+                                value={todayShifts.length}
+                                icon={Calendar}
+                                bgColor="from-purple-500 to-purple-600"
+                                isLoading={isLoading}
+                                linkTo={createPageUrl("Schedule")}
+                              />
+                              <StatsCard
+                                title="Unfilled Shifts"
+                                value={unfilledShifts}
+                                icon={AlertCircle}
+                                bgColor="from-orange-500 to-orange-600"
+                                isLoading={isLoading}
+                                alert={unfilledShifts > 0}
+                                linkTo={createPageUrl("Schedule")}
+                              />
+                            </div>
+                          )}
 
-        <div className="grid lg:grid-cols-3 gap-6 mb-8">
-          {modulePreferences.todayShifts && (
-            <div className="lg:col-span-2">
-              <TodayShifts shifts={todayShifts} carers={carers} clients={clients} isLoading={isLoading} />
-            </div>
-          )}
-          {modulePreferences.quickActions && (
-            <div className={modulePreferences.todayShifts ? "" : "lg:col-span-3"}>
-              <QuickActions 
-                pendingLeave={pendingLeave}
-                unfilledShifts={unfilledShifts}
-              />
-            </div>
-          )}
-        </div>
+                          {widgetId === 'todayShifts' && (
+                            <TodayShifts shifts={todayShifts} carers={carers} clients={clients} isLoading={isLoading} />
+                          )}
 
-        {modulePreferences.recentActivity && (
-          <RecentActivity 
-            shifts={shifts.slice(0, 10)} 
-            leaveRequests={leaveRequests.slice(0, 5)}
-            carers={carers}
-            clients={clients}
-            isLoading={isLoading}
-          />
-        )}
+                          {widgetId === 'quickActions' && (
+                            <QuickActions 
+                              pendingLeave={pendingLeave}
+                              unfilledShifts={unfilledShifts}
+                            />
+                          )}
+
+                          {widgetId === 'recentActivity' && (
+                            <RecentActivity 
+                              shifts={shifts.slice(0, 10)} 
+                              leaveRequests={leaveRequests.slice(0, 5)}
+                              carers={carers}
+                              clients={clients}
+                              isLoading={isLoading}
+                            />
+                          )}
+                        </div>
+                      </div>
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </div>
+            )}
+          </Droppable>
+        </DragDropContext>
 
         {showCustomizer && (
           <MainDashboardCustomizer
