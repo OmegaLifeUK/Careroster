@@ -129,21 +129,55 @@ export default function DomCareRosterView({
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
-    const [targetStaffId, targetDate] = destination.droppableId.split('_');
+    const droppableId = destination.droppableId;
     
     const visit = visits.find(v => v.id === draggableId);
     if (!visit || !onVisitUpdate) return;
 
-    const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
-    onVisitUpdate(draggableId, { 
-      staff_id: newStaffId,
-      scheduled_date: targetDate,
-    });
+    // Parse the droppable ID to determine target
+    // Format: "staffId_date" or "unassigned_date" or "client_clientId_date"
+    const parts = droppableId.split('_');
     
-    toast.success("Visit Updated", newStaffId 
-      ? `Assigned to ${activeStaff.find(s => s.id === newStaffId)?.full_name}`
-      : "Moved to unassigned"
-    );
+    let newStaffId = null;
+    let targetDate = null;
+    let targetClientId = visit.client_id; // Keep existing client by default
+    
+    if (parts[0] === 'unassigned') {
+      newStaffId = null;
+      targetDate = parts[1];
+    } else if (parts[0] === 'client') {
+      // Dropped on a client row - keep staff, update client and date
+      targetClientId = parts[1];
+      targetDate = parts[2];
+      newStaffId = visit.staff_id; // Keep existing staff
+    } else {
+      // Dropped on a staff row
+      newStaffId = parts[0];
+      targetDate = parts[1];
+    }
+    
+    const updates = { 
+      scheduled_date: targetDate,
+    };
+    
+    if (parts[0] !== 'client') {
+      updates.staff_id = newStaffId;
+    }
+    if (parts[0] === 'client') {
+      updates.client_id = targetClientId;
+    }
+    
+    onVisitUpdate(draggableId, updates);
+    
+    if (parts[0] === 'client') {
+      const clientName = activeClients.find(c => c.id === targetClientId)?.full_name;
+      toast.success("Visit Updated", `Moved to ${clientName}`);
+    } else {
+      toast.success("Visit Updated", newStaffId 
+        ? `Assigned to ${activeStaff.find(s => s.id === newStaffId)?.full_name}`
+        : "Moved to unassigned"
+      );
+    }
   };
 
   const getClientName = (clientId) => clients.find(c => c?.id === clientId)?.full_name || '';
