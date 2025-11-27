@@ -759,34 +759,48 @@ export default function EnhancedRosterView({
                                 isTodayDate ? 'bg-blue-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-blue-100/50 ring-2 ring-inset ring-blue-300' : ''}`}
                             >
-                              <div className="space-y-1">
-                                {dayShifts.map((shift, sIdx) => (
-                                  <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
-                                    {(provided, snapshot) => (
-                                      <div
-                                        ref={provided.innerRef}
-                                        {...provided.draggableProps}
-                                        {...provided.dragHandleProps}
-                                        className={snapshot.isDragging ? 'z-50' : ''}
-                                      >
-                                        <ShiftPill shift={shift} />
+                              <div className="space-y-1 relative z-10">
+                                    {dayShifts.map((shift, sIdx) => (
+                                      <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
+                                        {(provided, snapshot) => (
+                                          <div
+                                            ref={provided.innerRef}
+                                            {...provided.draggableProps}
+                                            {...provided.dragHandleProps}
+                                            className={snapshot.isDragging ? 'z-50' : ''}
+                                          >
+                                            <ShiftPill shift={shift} />
+                                          </div>
+                                        )}
+                                      </Draggable>
+                                    ))}
+                                  </div>
+                                  {provided.placeholder}
+
+                                  {/* Add button - only show when no shifts */}
+                                  {dayShifts.length === 0 && (
+                                    <button
+                                      onClick={() => onAddShift?.({ carer_id: carer.id, date: dayStr })}
+                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50/50"
+                                    >
+                                      <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-sm">
+                                        <Plus className="w-4 h-4" />
                                       </div>
-                                    )}
-                                  </Draggable>
-                                ))}
-                              </div>
-                              {provided.placeholder}
-                              
-                              {/* Add button on hover */}
-                              <button
-                                onClick={() => onAddShift?.({ carer_id: carer.id, date: dayStr })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-blue-50/50"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-sm">
-                                  <Plus className="w-4 h-4" />
+                                    </button>
+                                  )}
+                                  {/* Small add button in corner when shifts exist */}
+                                  {dayShifts.length > 0 && (
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        onAddShift?.({ carer_id: carer.id, date: dayStr });
+                                      }}
+                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-blue-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                    >
+                                      <Plus className="w-3 h-3" />
+                                    </button>
+                                  )}
                                 </div>
-                              </button>
-                            </div>
                           )}
                         </Droppable>
                       );
