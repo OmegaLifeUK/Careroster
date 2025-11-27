@@ -48,6 +48,13 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     attached_documents: shift?.attached_documents || [],
   });
 
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurringSettings, setRecurringSettings] = useState({
+    frequency: "weekly",
+    endDate: "",
+    daysOfWeek: [1], // Monday default
+  });
+
   const [showSuggestions, setShowSuggestions] = useState(false);
 
   const queryClient = useQueryClient();
@@ -76,18 +83,15 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     { name: "Reception", address: "" },
   ];
 
-  // Auto-set assignment type based on care type
+  // Auto-set assignment type based on care type (but allow override)
   useEffect(() => {
-    if (!shift) { // Only auto-set for new shifts
-      if (formData.care_type === "domiciliary_care") {
-        setFormData(prev => ({ ...prev, assignment_type: "client" }));
-      } else if (formData.care_type === "supported_living") {
+    if (!isExistingShift) { // Only auto-set for new shifts
+      if (formData.care_type === "supported_living") {
         setFormData(prev => ({ ...prev, assignment_type: "property" }));
-      } else {
-        setFormData(prev => ({ ...prev, assignment_type: "location" }));
       }
+      // Don't auto-set for other types - let user choose between client and location
     }
-  }, [formData.care_type, shift]);
+  }, [formData.care_type, isExistingShift]);
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -97,8 +101,41 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
         duration_hours: calculateDuration(data.start_time, data.end_time),
       };
 
-      if (shift) {
+      if (isExistingShift) {
         return base44.entities.Shift.update(shift.id, shiftData);
+      } else if (isRecurring && recurringSettings.endDate) {
+        // Create multiple shifts for recurring
+        const shifts = [];
+        const startDate = new Date(data.date);
+        const endDate = new Date(recurringSettings.endDate);
+        let currentDate = new Date(startDate);
+
+        while (currentDate <= endDate) {
+          const dayOfWeek = currentDate.getDay();
+          
+          let shouldCreate = false;
+          if (recurringSettings.frequency === "daily") {
+            shouldCreate = true;
+          } else if (recurringSettings.frequency === "weekly") {
+            shouldCreate = recurringSettings.daysOfWeek.includes(dayOfWeek);
+          } else if (recurringSettings.frequency === "fortnightly") {
+            const weeksDiff = Math.floor((currentDate - startDate) / (7 * 24 * 60 * 60 * 1000));
+            shouldCreate = weeksDiff % 2 === 0 && recurringSettings.daysOfWeek.includes(dayOfWeek);
+          } else if (recurringSettings.frequency === "monthly") {
+            shouldCreate = currentDate.getDate() === startDate.getDate();
+          }
+
+          if (shouldCreate) {
+            shifts.push({
+              ...shiftData,
+              date: format(currentDate, 'yyyy-MM-dd'),
+            });
+          }
+
+          currentDate.setDate(currentDate.getDate() + 1);
+        }
+
+        return base44.entities.Shift.bulkCreate(shifts);
       } else {
         return base44.entities.Shift.create(shiftData);
       }
@@ -215,17 +252,17 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   className="w-full"
                 >
                   <TabsList className="grid w-full grid-cols-3">
-                    <TabsTrigger value="client" disabled={formData.care_type !== "domiciliary_care"}>
+                    <TabsTrigger value="location">
+                      <MapPin className="w-4 h-4 mr-2" />
+                      Location
+                    </TabsTrigger>
+                    <TabsTrigger value="client">
                       <User className="w-4 h-4 mr-2" />
                       Client
                     </TabsTrigger>
                     <TabsTrigger value="property" disabled={formData.care_type !== "supported_living"}>
                       <Building className="w-4 h-4 mr-2" />
                       Property
-                    </TabsTrigger>
-                    <TabsTrigger value="location" disabled={formData.care_type === "domiciliary_care" || formData.care_type === "supported_living"}>
-                      <MapPin className="w-4 h-4 mr-2" />
-                      Location
                     </TabsTrigger>
                   </TabsList>
 
@@ -384,6 +421,83 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   className="h-24"
                 />
               </div>
+
+              {/* Recurring Shift Option */}
+              {!isExistingShift && (
+                <div className="p-4 border rounded-lg bg-gray-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <input
+                      type="checkbox"
+                      id="isRecurring"
+                      checked={isRecurring}
+                      onChange={(e) => setIsRecurring(e.target.checked)}
+                      className="w-4 h-4"
+                    />
+                    <Label htmlFor="isRecurring" className="cursor-pointer font-medium">
+                      Make this a recurring shift
+                    </Label>
+                  </div>
+                  
+                  {isRecurring && (
+                    <div className="space-y-3 mt-3 pl-6">
+                      <div>
+                        <Label>Frequency</Label>
+                        <Select
+                          value={recurringSettings.frequency}
+                          onValueChange={(value) => setRecurringSettings(prev => ({ ...prev, frequency: value }))}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="daily">Daily</SelectItem>
+                            <SelectItem value="weekly">Weekly</SelectItem>
+                            <SelectItem value="fortnightly">Fortnightly</SelectItem>
+                            <SelectItem value="monthly">Monthly</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      {recurringSettings.frequency === "weekly" && (
+                        <div>
+                          <Label className="mb-2 block">Days of Week</Label>
+                          <div className="flex flex-wrap gap-2">
+                            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day, idx) => (
+                              <button
+                                key={day}
+                                type="button"
+                                onClick={() => {
+                                  const days = recurringSettings.daysOfWeek.includes(idx)
+                                    ? recurringSettings.daysOfWeek.filter(d => d !== idx)
+                                    : [...recurringSettings.daysOfWeek, idx];
+                                  setRecurringSettings(prev => ({ ...prev, daysOfWeek: days }));
+                                }}
+                                className={`px-3 py-1 rounded text-sm ${
+                                  recurringSettings.daysOfWeek.includes(idx)
+                                    ? 'bg-blue-600 text-white'
+                                    : 'bg-gray-200 text-gray-700'
+                                }`}
+                              >
+                                {day}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      )}
+
+                      <div>
+                        <Label>End Date</Label>
+                        <Input
+                          type="date"
+                          value={recurringSettings.endDate}
+                          onChange={(e) => setRecurringSettings(prev => ({ ...prev, endDate: e.target.value }))}
+                          min={formData.date}
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
 
               <DocumentAttachment
                 documents={formData.attached_documents}
