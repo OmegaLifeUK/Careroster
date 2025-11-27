@@ -427,294 +427,300 @@ COMMUNICATION
                           )}
 
                           {widgetId === 'occupancy' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <Home className="w-5 h-5 text-blue-600" />
-                                  Occupancy & Capacity
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Current Occupancy</span>
-                                    <span className="text-2xl font-bold text-blue-600">
-                                      {occupancyStats.occupied}/{occupancyStats.totalBeds}
-                                    </span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-3">
-                                    <div 
-                                      className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
-                                      style={{ width: `${occupancyStats.occupancyRate}%` }}
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                                    <div>
-                                      <p className="text-sm text-gray-600">Occupancy Rate</p>
-                                      <p className="text-xl font-semibold">{occupancyStats.occupancyRate}%</p>
+                            <Link to={createPageUrl("Clients")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-indigo-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <Home className="w-5 h-5 text-blue-600" />
+                                    Occupancy & Capacity
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600">Current Occupancy</span>
+                                      <span className="text-2xl font-bold text-blue-600">
+                                        {occupancyStats.occupied}/{occupancyStats.totalBeds}
+                                      </span>
                                     </div>
-                                    <div>
-                                      <p className="text-sm text-gray-600">Planned Admissions</p>
-                                      <p className="text-xl font-semibold">{occupancyStats.plannedAdmissions}</p>
+                                    <div className="w-full bg-gray-200 rounded-full h-3">
+                                      <div 
+                                        className="bg-gradient-to-r from-blue-500 to-blue-600 h-3 rounded-full transition-all"
+                                        style={{ width: `${occupancyStats.occupancyRate}%` }}
+                                      />
+                                    </div>
+                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                                      <div>
+                                        <p className="text-sm text-gray-600">Occupancy Rate</p>
+                                        <p className="text-xl font-semibold">{occupancyStats.occupancyRate}%</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-600">Planned Admissions</p>
+                                        <p className="text-xl font-semibold">{occupancyStats.plannedAdmissions}</p>
+                                      </div>
                                     </div>
                                   </div>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'staff' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-green-50 to-teal-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <Users className="w-5 h-5 text-green-600" />
-                                  Staff & Shifts
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <p className="text-sm text-gray-600">Today's Shifts</p>
-                                      <p className="text-2xl font-bold">{todayShifts.length}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-gray-600">Fill Rate</p>
-                                      <p className="text-2xl font-bold text-green-600">{shiftFillRate}%</p>
-                                    </div>
-                                  </div>
-                                  {unfilledShifts > 0 && (
-                                    <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
-                                      <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-orange-600" />
-                                        <div>
-                                          <p className="font-semibold text-orange-900">
-                                            {unfilledShifts} Unfilled Shift{unfilledShifts > 1 ? 's' : ''}
-                                          </p>
-                                          <p className="text-sm text-orange-700">Requires immediate attention</p>
-                                        </div>
+                            <Link to={createPageUrl("Schedule")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-green-50 to-teal-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <Users className="w-5 h-5 text-green-600" />
+                                    Staff & Shifts
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="text-sm text-gray-600">Today's Shifts</p>
+                                        <p className="text-2xl font-bold">{todayShifts.length}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-600">Fill Rate</p>
+                                        <p className="text-2xl font-bold text-green-600">{shiftFillRate}%</p>
                                       </div>
                                     </div>
-                                  )}
-                                  <Link to={createPageUrl("Schedule")}>
+                                    {unfilledShifts > 0 && (
+                                      <div className="p-3 bg-orange-50 rounded-lg border border-orange-200">
+                                        <div className="flex items-center gap-2">
+                                          <AlertTriangle className="w-5 h-5 text-orange-600" />
+                                          <div>
+                                            <p className="font-semibold text-orange-900">
+                                              {unfilledShifts} Unfilled Shift{unfilledShifts > 1 ? 's' : ''}
+                                            </p>
+                                            <p className="text-sm text-orange-700">Requires immediate attention</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
                                     <Button className="w-full" variant="outline">
                                       <Calendar className="w-4 h-4 mr-2" />
                                       View Full Schedule
                                     </Button>
-                                  </Link>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'training' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <GraduationCap className="w-5 h-5 text-purple-600" />
-                                  Training Compliance
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Completion Rate</span>
-                                    <span className="text-2xl font-bold text-purple-600">{trainingCompletionRate}%</span>
-                                  </div>
-                                  <div className="w-full bg-gray-200 rounded-full h-3">
-                                    <div 
-                                      className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all"
-                                      style={{ width: `${trainingCompletionRate}%` }}
-                                    />
-                                  </div>
-                                  <div className="grid grid-cols-2 gap-4 pt-4 border-t">
-                                    <div>
-                                      <p className="text-sm text-gray-600">Expiring Soon</p>
-                                      <p className="text-xl font-semibold text-orange-600">{expiringCerts}</p>
+                            <Link to={createPageUrl("StaffTraining")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-pink-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <GraduationCap className="w-5 h-5 text-purple-600" />
+                                    Training Compliance
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600">Completion Rate</span>
+                                      <span className="text-2xl font-bold text-purple-600">{trainingCompletionRate}%</span>
                                     </div>
-                                    <div>
-                                      <p className="text-sm text-gray-600">Overdue</p>
-                                      <p className="text-xl font-semibold text-red-600">{overdueTraining}</p>
+                                    <div className="w-full bg-gray-200 rounded-full h-3">
+                                      <div 
+                                        className="bg-gradient-to-r from-purple-500 to-purple-600 h-3 rounded-full transition-all"
+                                        style={{ width: `${trainingCompletionRate}%` }}
+                                      />
                                     </div>
-                                  </div>
-                                  <Link to={createPageUrl("StaffTraining")}>
+                                    <div className="grid grid-cols-2 gap-4 pt-4 border-t">
+                                      <div>
+                                        <p className="text-sm text-gray-600">Expiring Soon</p>
+                                        <p className="text-xl font-semibold text-orange-600">{expiringCerts}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-600">Overdue</p>
+                                        <p className="text-xl font-semibold text-red-600">{overdueTraining}</p>
+                                      </div>
+                                    </div>
                                     <Button className="w-full" variant="outline">
                                       <GraduationCap className="w-4 h-4 mr-2" />
                                       View Training
                                     </Button>
-                                  </Link>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'incidents' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <Shield className="w-5 h-5 text-red-600" />
-                                  Incidents & Safety
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <p className="text-sm text-gray-600">This Month</p>
-                                      <p className="text-2xl font-bold">{recentIncidents.length}</p>
-                                    </div>
-                                    <div>
-                                      <p className="text-sm text-gray-600">Unresolved</p>
-                                      <p className="text-2xl font-bold text-orange-600">{unresolvedIncidents}</p>
-                                    </div>
-                                  </div>
-                                  {criticalIncidents > 0 && (
-                                    <div className="p-3 bg-red-50 rounded-lg border border-red-200">
-                                      <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-red-600" />
-                                        <div>
-                                          <p className="font-semibold text-red-900">
-                                            {criticalIncidents} Critical Incident{criticalIncidents > 1 ? 's' : ''}
-                                          </p>
-                                          <p className="text-sm text-red-700">Requires immediate review</p>
-                                        </div>
+                            <Link to={createPageUrl("IncidentManagement")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <Shield className="w-5 h-5 text-red-600" />
+                                    Incidents & Safety
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="text-sm text-gray-600">This Month</p>
+                                        <p className="text-2xl font-bold">{recentIncidents.length}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-600">Unresolved</p>
+                                        <p className="text-2xl font-bold text-orange-600">{unresolvedIncidents}</p>
                                       </div>
                                     </div>
-                                  )}
-                                  <Link to={createPageUrl("IncidentManagement")}>
+                                    {criticalIncidents > 0 && (
+                                      <div className="p-3 bg-red-50 rounded-lg border border-red-200">
+                                        <div className="flex items-center gap-2">
+                                          <AlertTriangle className="w-5 h-5 text-red-600" />
+                                          <div>
+                                            <p className="font-semibold text-red-900">
+                                              {criticalIncidents} Critical Incident{criticalIncidents > 1 ? 's' : ''}
+                                            </p>
+                                            <p className="text-sm text-red-700">Requires immediate review</p>
+                                          </div>
+                                        </div>
+                                      </div>
+                                    )}
                                     <Button className="w-full" variant="outline">
                                       <Shield className="w-4 h-4 mr-2" />
                                       View All Incidents
                                     </Button>
-                                  </Link>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'finance' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-green-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <DollarSign className="w-5 h-5 text-emerald-600" />
-                                  Financial Summary
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="flex justify-between items-center">
-                                    <span className="text-gray-600">Total Revenue</span>
-                                    <span className="text-2xl font-bold text-emerald-600">
-                                      £{financeStats.totalRevenue.toLocaleString()}
-                                    </span>
+                            <Link to={createPageUrl("PayrollDashboard")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-emerald-50 to-green-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <DollarSign className="w-5 h-5 text-emerald-600" />
+                                    Financial Summary
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="flex justify-between items-center">
+                                      <span className="text-gray-600">Total Revenue</span>
+                                      <span className="text-2xl font-bold text-emerald-600">
+                                        £{financeStats.totalRevenue.toLocaleString()}
+                                      </span>
+                                    </div>
+                                    <div className="grid grid-cols-3 gap-3 pt-4 border-t">
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-600 mb-1">Paid</p>
+                                        <p className="text-lg font-semibold text-green-600">{financeStats.paid}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-600 mb-1">Pending</p>
+                                        <p className="text-lg font-semibold text-yellow-600">{financeStats.pending}</p>
+                                      </div>
+                                      <div className="text-center">
+                                        <p className="text-xs text-gray-600 mb-1">Overdue</p>
+                                        <p className="text-lg font-semibold text-red-600">{financeStats.overdue}</p>
+                                      </div>
+                                    </div>
                                   </div>
-                                  <div className="grid grid-cols-3 gap-3 pt-4 border-t">
-                                    <div className="text-center">
-                                      <p className="text-xs text-gray-600 mb-1">Paid</p>
-                                      <p className="text-lg font-semibold text-green-600">{financeStats.paid}</p>
-                                    </div>
-                                    <div className="text-center">
-                                      <p className="text-xs text-gray-600 mb-1">Pending</p>
-                                      <p className="text-lg font-semibold text-yellow-600">{financeStats.pending}</p>
-                                    </div>
-                                    <div className="text-center">
-                                      <p className="text-xs text-gray-600 mb-1">Overdue</p>
-                                      <p className="text-lg font-semibold text-red-600">{financeStats.overdue}</p>
-                                    </div>
-                                  </div>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'communication' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-yellow-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <MessageSquare className="w-5 h-5 text-amber-600" />
-                                  Communication & Alerts
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-3">
-                                  <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                      <Bell className="w-5 h-5 text-blue-600" />
-                                      <span className="text-sm font-medium">Pending Leave Requests</span>
-                                    </div>
-                                    <Badge className="bg-blue-600">{pendingLeave}</Badge>
-                                  </div>
-                                  <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
-                                    <div className="flex items-center gap-2">
-                                      <MessageSquare className="w-5 h-5 text-purple-600" />
-                                      <span className="text-sm font-medium">New Feedback</span>
-                                    </div>
-                                    <Badge className="bg-purple-600">{newFeedback}</Badge>
-                                  </div>
-                                  {criticalAlerts > 0 && (
-                                    <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                            <Link to={createPageUrl("MessagingCenter")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-amber-50 to-yellow-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <MessageSquare className="w-5 h-5 text-amber-600" />
+                                    Communication & Alerts
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-3">
+                                    <div className="flex items-center justify-between p-3 bg-blue-50 rounded-lg">
                                       <div className="flex items-center gap-2">
-                                        <AlertTriangle className="w-5 h-5 text-red-600" />
-                                        <span className="text-sm font-medium">Critical Alerts</span>
+                                        <Bell className="w-5 h-5 text-blue-600" />
+                                        <span className="text-sm font-medium">Pending Leave Requests</span>
                                       </div>
-                                      <Badge className="bg-red-600">{criticalAlerts}</Badge>
+                                      <Badge className="bg-blue-600">{pendingLeave}</Badge>
                                     </div>
-                                  )}
-                                </div>
-                              </CardContent>
-                            </Card>
+                                    <div className="flex items-center justify-between p-3 bg-purple-50 rounded-lg">
+                                      <div className="flex items-center gap-2">
+                                        <MessageSquare className="w-5 h-5 text-purple-600" />
+                                        <span className="text-sm font-medium">New Feedback</span>
+                                      </div>
+                                      <Badge className="bg-purple-600">{newFeedback}</Badge>
+                                    </div>
+                                    {criticalAlerts > 0 && (
+                                      <div className="flex items-center justify-between p-3 bg-red-50 rounded-lg">
+                                        <div className="flex items-center gap-2">
+                                          <AlertTriangle className="w-5 h-5 text-red-600" />
+                                          <span className="text-sm font-medium">Critical Alerts</span>
+                                        </div>
+                                        <Badge className="bg-red-600">{criticalAlerts}</Badge>
+                                      </div>
+                                    )}
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
 
                           {widgetId === 'dailyLog' && (
-                            <Card className="shadow-lg">
-                              <CardHeader className="border-b bg-gradient-to-r from-cyan-50 to-blue-50">
-                                <CardTitle className="flex items-center gap-2">
-                                  <FileText className="w-5 h-5 text-cyan-600" />
-                                  Today's Daily Log
-                                </CardTitle>
-                              </CardHeader>
-                              <CardContent className="p-6">
-                                <div className="space-y-4">
-                                  <div className="grid grid-cols-2 gap-4">
-                                    <div>
-                                      <p className="text-sm text-gray-600">Total Entries</p>
-                                      <p className="text-2xl font-bold">{dailyLogs.length}</p>
+                            <Link to={createPageUrl("DailyLog")} className="block hover:opacity-90 transition-opacity">
+                              <Card className="shadow-lg cursor-pointer hover:shadow-xl transition-shadow">
+                                <CardHeader className="border-b bg-gradient-to-r from-cyan-50 to-blue-50">
+                                  <CardTitle className="flex items-center gap-2">
+                                    <FileText className="w-5 h-5 text-cyan-600" />
+                                    Today's Daily Log
+                                  </CardTitle>
+                                </CardHeader>
+                                <CardContent className="p-6">
+                                  <div className="space-y-4">
+                                    <div className="grid grid-cols-2 gap-4">
+                                      <div>
+                                        <p className="text-sm text-gray-600">Total Entries</p>
+                                        <p className="text-2xl font-bold">{dailyLogs.length}</p>
+                                      </div>
+                                      <div>
+                                        <p className="text-sm text-gray-600">Follow-ups</p>
+                                        <p className="text-2xl font-bold text-orange-600">
+                                          {dailyLogs.filter(l => l && l.follow_up_required).length}
+                                        </p>
+                                      </div>
                                     </div>
-                                    <div>
-                                      <p className="text-sm text-gray-600">Follow-ups</p>
-                                      <p className="text-2xl font-bold text-orange-600">
-                                        {dailyLogs.filter(l => l && l.follow_up_required).length}
-                                      </p>
-                                    </div>
-                                  </div>
-                                  {dailyLogs.length > 0 ? (
-                                    <div className="space-y-2 max-h-32 overflow-y-auto">
-                                      {dailyLogs.slice(0, 3).map(log => (
-                                        <div key={log.id} className="p-2 bg-gray-50 rounded-lg text-sm">
-                                          <div className="flex items-center justify-between">
-                                            <span className="font-medium">{log.visitor_name}</span>
-                                            <Badge variant="outline" className="text-xs">
-                                              {log.entry_type?.replace(/_/g, ' ')}
-                                            </Badge>
+                                    {dailyLogs.length > 0 ? (
+                                      <div className="space-y-2 max-h-32 overflow-y-auto">
+                                        {dailyLogs.slice(0, 3).map(log => (
+                                          <div key={log.id} className="p-2 bg-gray-50 rounded-lg text-sm">
+                                            <div className="flex items-center justify-between">
+                                              <span className="font-medium">{log.visitor_name}</span>
+                                              <Badge variant="outline" className="text-xs">
+                                                {log.entry_type?.replace(/_/g, ' ')}
+                                              </Badge>
+                                            </div>
+                                            {log.arrival_time && (
+                                              <span className="text-xs text-gray-500">{log.arrival_time}</span>
+                                            )}
                                           </div>
-                                          {log.arrival_time && (
-                                            <span className="text-xs text-gray-500">{log.arrival_time}</span>
-                                          )}
-                                        </div>
-                                      ))}
-                                    </div>
-                                  ) : (
-                                    <p className="text-sm text-gray-500 text-center py-2">No entries today</p>
-                                  )}
-                                  <Link to={createPageUrl("DailyLog")}>
+                                        ))}
+                                      </div>
+                                    ) : (
+                                      <p className="text-sm text-gray-500 text-center py-2">No entries today</p>
+                                    )}
                                     <Button className="w-full" variant="outline">
                                       <FileText className="w-4 h-4 mr-2" />
                                       View Daily Log
                                     </Button>
-                                  </Link>
-                                </div>
-                              </CardContent>
-                            </Card>
+                                  </div>
+                                </CardContent>
+                              </Card>
+                            </Link>
                           )}
                         </div>
                       </div>
