@@ -20,25 +20,38 @@ import {
   Clock,
   Pencil,
   Trash2,
-  User
+  User,
+  MapPin,
+  Car,
+  GraduationCap,
+  ShoppingBag,
+  Activity
 } from "lucide-react";
 import { format, addDays, subDays, parseISO, isToday } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 import DailyLogDialog from "@/components/dailylog/DailyLogDialog";
 
 const ENTRY_TYPE_CONFIG = {
-  visitor: { label: "Visitor", icon: Users, color: "bg-blue-100 text-blue-700" },
-  doctor_appointment: { label: "Doctor", icon: Stethoscope, color: "bg-red-100 text-red-700" },
-  social_worker_visit: { label: "Social Worker", icon: UserCheck, color: "bg-purple-100 text-purple-700" },
-  nurse_visit: { label: "Nurse", icon: Stethoscope, color: "bg-pink-100 text-pink-700" },
-  therapist_visit: { label: "Therapist", icon: UserCheck, color: "bg-teal-100 text-teal-700" },
-  family_visit: { label: "Family Visit", icon: Users, color: "bg-green-100 text-green-700" },
-  maintenance: { label: "Maintenance", icon: Wrench, color: "bg-orange-100 text-orange-700" },
-  delivery: { label: "Delivery", icon: Truck, color: "bg-amber-100 text-amber-700" },
-  emergency_services: { label: "Emergency", icon: AlertCircle, color: "bg-red-100 text-red-700" },
-  inspection: { label: "Inspection", icon: UserCheck, color: "bg-indigo-100 text-indigo-700" },
-  contractor: { label: "Contractor", icon: Wrench, color: "bg-gray-100 text-gray-700" },
-  other: { label: "Other", icon: Clock, color: "bg-gray-100 text-gray-700" }
+  visitor: { label: "Visitor", icon: Users, color: "bg-blue-100 text-blue-700", category: "visitor" },
+  doctor_appointment: { label: "Doctor", icon: Stethoscope, color: "bg-red-100 text-red-700", category: "visitor" },
+  social_worker_visit: { label: "Social Worker", icon: UserCheck, color: "bg-purple-100 text-purple-700", category: "visitor" },
+  nurse_visit: { label: "Nurse", icon: Stethoscope, color: "bg-pink-100 text-pink-700", category: "visitor" },
+  therapist_visit: { label: "Therapist", icon: UserCheck, color: "bg-teal-100 text-teal-700", category: "visitor" },
+  family_visit: { label: "Family Visit", icon: Users, color: "bg-green-100 text-green-700", category: "visitor" },
+  maintenance: { label: "Maintenance", icon: Wrench, color: "bg-orange-100 text-orange-700", category: "visitor" },
+  delivery: { label: "Delivery", icon: Truck, color: "bg-amber-100 text-amber-700", category: "visitor" },
+  emergency_services: { label: "Emergency", icon: AlertCircle, color: "bg-red-100 text-red-700", category: "visitor" },
+  inspection: { label: "Inspection", icon: UserCheck, color: "bg-indigo-100 text-indigo-700", category: "visitor" },
+  contractor: { label: "Contractor", icon: Wrench, color: "bg-gray-100 text-gray-700", category: "visitor" },
+  outing_activity: { label: "Activity Outing", icon: Activity, color: "bg-cyan-100 text-cyan-700", category: "outing" },
+  outing_gp_clinic: { label: "GP/Clinic", icon: Stethoscope, color: "bg-rose-100 text-rose-700", category: "outing" },
+  outing_hospital: { label: "Hospital", icon: Stethoscope, color: "bg-red-100 text-red-700", category: "outing" },
+  outing_school: { label: "School", icon: GraduationCap, color: "bg-yellow-100 text-yellow-700", category: "outing" },
+  outing_shopping: { label: "Shopping", icon: ShoppingBag, color: "bg-pink-100 text-pink-700", category: "outing" },
+  outing_day_trip: { label: "Day Trip", icon: MapPin, color: "bg-emerald-100 text-emerald-700", category: "outing" },
+  outing_community: { label: "Community", icon: Users, color: "bg-violet-100 text-violet-700", category: "outing" },
+  outing_other: { label: "Other Outing", icon: Car, color: "bg-slate-100 text-slate-700", category: "outing" },
+  other: { label: "Other", icon: Clock, color: "bg-gray-100 text-gray-700", category: "other" }
 };
 
 export default function DailyLog() {
@@ -68,6 +81,14 @@ export default function DailyLog() {
     }
   });
 
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.DailyLog.delete(id),
     onSuccess: () => {
@@ -81,8 +102,18 @@ export default function DailyLog() {
     const matchesSearch = !searchQuery || 
       log.visitor_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
       log.purpose?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      log.notes?.toLowerCase().includes(searchQuery.toLowerCase());
-    const matchesType = filterType === "all" || log.entry_type === filterType;
+      log.notes?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      log.outing_destination?.toLowerCase().includes(searchQuery.toLowerCase());
+    
+    let matchesType = filterType === "all";
+    if (filterType === "outings") {
+      matchesType = log.entry_type?.startsWith('outing_');
+    } else if (filterType === "visitors") {
+      matchesType = !log.entry_type?.startsWith('outing_');
+    } else if (filterType !== "all") {
+      matchesType = log.entry_type === filterType;
+    }
+    
     return matchesSearch && matchesType;
   }).sort((a, b) => (a.arrival_time || '').localeCompare(b.arrival_time || ''));
 
@@ -104,8 +135,8 @@ export default function DailyLog() {
 
   const stats = {
     total: logs.length,
-    visitors: logs.filter(l => l.entry_type === 'visitor' || l.entry_type === 'family_visit').length,
-    medical: logs.filter(l => ['doctor_appointment', 'nurse_visit', 'therapist_visit'].includes(l.entry_type)).length,
+    visitors: logs.filter(l => !l.entry_type?.startsWith('outing_')).length,
+    outings: logs.filter(l => l.entry_type?.startsWith('outing_')).length,
     followUp: logs.filter(l => l.follow_up_required).length
   };
 
@@ -181,11 +212,11 @@ export default function DailyLog() {
           </Card>
           <Card 
             className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
-            onClick={() => setFilterType("doctor_appointment")}
+            onClick={() => setFilterType("outings")}
           >
             <CardContent className="p-4 text-center">
-              <p className="text-2xl font-bold text-red-600">{stats.medical}</p>
-              <p className="text-sm text-gray-600">Medical Visits</p>
+              <p className="text-2xl font-bold text-cyan-600">{stats.outings}</p>
+              <p className="text-sm text-gray-600">Outings</p>
             </CardContent>
           </Card>
           <Card 
@@ -222,16 +253,35 @@ export default function DailyLog() {
                 >
                   All
                 </Button>
-                {Object.entries(ENTRY_TYPE_CONFIG).slice(0, 6).map(([key, config]) => (
-                  <Button
-                    key={key}
-                    variant={filterType === key ? "default" : "outline"}
-                    size="sm"
-                    onClick={() => setFilterType(key)}
-                  >
-                    {config.label}
-                  </Button>
-                ))}
+                <Button 
+                  variant={filterType === "visitors" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setFilterType("visitors")}
+                >
+                  Visitors
+                </Button>
+                <Button 
+                  variant={filterType === "outings" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setFilterType("outings")}
+                  className={filterType === "outings" ? "bg-cyan-600" : ""}
+                >
+                  Outings
+                </Button>
+                <Button 
+                  variant={filterType === "doctor_appointment" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setFilterType("doctor_appointment")}
+                >
+                  Medical
+                </Button>
+                <Button 
+                  variant={filterType === "family_visit" ? "default" : "outline"} 
+                  size="sm"
+                  onClick={() => setFilterType("family_visit")}
+                >
+                  Family
+                </Button>
               </div>
             </div>
           </CardContent>
@@ -270,8 +320,13 @@ export default function DailyLog() {
                       <div className="flex-1 min-w-0">
                         <div className="flex items-start justify-between gap-2 mb-2">
                           <div>
-                            <h3 className="font-semibold text-gray-900">{entry.visitor_name}</h3>
-                            {entry.visitor_organization && (
+                            <h3 className="font-semibold text-gray-900">
+                              {entry.entry_type?.startsWith('outing_') 
+                                ? (clientName || 'Client Outing')
+                                : entry.visitor_name
+                              }
+                            </h3>
+                            {entry.visitor_organization && !entry.entry_type?.startsWith('outing_') && (
                               <p className="text-sm text-gray-600">{entry.visitor_organization}</p>
                             )}
                           </div>
@@ -303,6 +358,33 @@ export default function DailyLog() {
 
                         {entry.notes && (
                           <p className="text-sm text-gray-600 mb-2">{entry.notes}</p>
+                        )}
+
+                        {/* Outing-specific details */}
+                        {entry.entry_type?.startsWith('outing_') && (
+                          <div className="flex flex-wrap gap-3 text-sm text-gray-600 mb-2 p-2 bg-cyan-50 rounded-lg">
+                            {entry.outing_destination && (
+                              <div className="flex items-center gap-1">
+                                <MapPin className="w-4 h-4 text-cyan-600" />
+                                <span>{entry.outing_destination}</span>
+                              </div>
+                            )}
+                            {entry.outing_transport && (
+                              <div className="flex items-center gap-1">
+                                <Car className="w-4 h-4 text-cyan-600" />
+                                <span className="capitalize">{entry.outing_transport.replace('_', ' ')}</span>
+                              </div>
+                            )}
+                            {entry.risk_assessment_completed && (
+                              <Badge className="bg-green-100 text-green-700 text-xs">Risk Assessed</Badge>
+                            )}
+                          </div>
+                        )}
+
+                        {entry.outing_outcome && (
+                          <p className="text-sm text-gray-700 mb-2 p-2 bg-gray-50 rounded">
+                            <strong>Outcome:</strong> {entry.outing_outcome}
+                          </p>
                         )}
 
                         {entry.follow_up_required && (
@@ -337,6 +419,7 @@ export default function DailyLog() {
             entry={editingEntry}
             defaultDate={dateStr}
             clients={clients}
+            staff={staff}
             onClose={() => { setShowDialog(false); setEditingEntry(null); }}
           />
         )}
