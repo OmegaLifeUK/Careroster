@@ -16,8 +16,12 @@ import {
   Home,
   MapPin,
   Maximize2,
-  Building
+  Building,
+  AlertTriangle,
+  X
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -198,6 +202,10 @@ export default function EnhancedRosterView({
     return conflictingShifts.length > 0 ? conflictingShifts : null;
   };
 
+  const [showOverrideDialog, setShowOverrideDialog] = useState(false);
+  const [pendingAssignment, setPendingAssignment] = useState(null);
+  const [overrideReason, setOverrideReason] = useState("");
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
@@ -208,7 +216,7 @@ export default function EnhancedRosterView({
 
     const newCarerId = targetCarerId === 'unassigned' ? null : targetCarerId;
     
-    // Check for conflicts if assigning to a carer
+    // Check for time conflicts if assigning to a carer
     if (newCarerId) {
       const conflicts = checkForConflicts(newCarerId, targetDate, shift);
       if (conflicts) {
@@ -219,18 +227,78 @@ export default function EnhancedRosterView({
         );
         if (!proceed) return;
       }
+      
+      // Check for hours capacity
+      const hoursStatus = getCarerHoursStatus(newCarerId);
+      const shiftDuration = shift.duration_hours || 0;
+      const projectedHours = hoursStatus.weekHours + shiftDuration;
+      const projectedPercentage = hoursStatus.contracted ? (projectedHours / hoursStatus.contracted) * 100 : 0;
+      
+      if (hoursStatus.status === 'full' || projectedPercentage >= 100) {
+        const carerName = activeCarers.find(c => c.id === newCarerId)?.full_name || 'This carer';
+        setPendingAssignment({
+          shiftId: draggableId,
+          newCarerId,
+          targetDate,
+          carerName,
+          currentHours: hoursStatus.weekHours,
+          contractedHours: hoursStatus.contracted,
+          projectedHours,
+          shiftDuration
+        });
+        setShowOverrideDialog(true);
+        return;
+      }
     }
     
-    onShiftUpdate(draggableId, { 
+    completeAssignment(draggableId, newCarerId, targetDate);
+  };
+
+  const completeAssignment = (shiftId, newCarerId, targetDate, overrideInfo = null) => {
+    const updateData = { 
       carer_id: newCarerId,
       date: targetDate,
       status: newCarerId ? 'scheduled' : 'unfilled'
-    });
+    };
+    
+    if (overrideInfo) {
+      updateData.hours_override_reason = overrideInfo.reason;
+      updateData.hours_override_by = overrideInfo.overriddenBy;
+      updateData.hours_override_date = new Date().toISOString();
+    }
+    
+    onShiftUpdate(shiftId, updateData);
     
     toast.success("Shift Updated", newCarerId 
       ? `Assigned to ${activeCarers.find(c => c.id === newCarerId)?.full_name}`
       : "Moved to unassigned"
     );
+  };
+
+  const handleOverrideConfirm = () => {
+    if (!overrideReason.trim()) {
+      toast.error("Override Reason Required", "Please enter a reason for exceeding contracted hours");
+      return;
+    }
+    
+    if (pendingAssignment) {
+      completeAssignment(
+        pendingAssignment.shiftId,
+        pendingAssignment.newCarerId,
+        pendingAssignment.targetDate,
+        { reason: overrideReason, overriddenBy: 'scheduler' }
+      );
+    }
+    
+    setShowOverrideDialog(false);
+    setPendingAssignment(null);
+    setOverrideReason("");
+  };
+
+  const handleOverrideCancel = () => {
+    setShowOverrideDialog(false);
+    setPendingAssignment(null);
+    setOverrideReason("");
   };
 
   const getClientName = (clientId) => clients.find(c => c?.id === clientId)?.full_name || '';
@@ -945,6 +1013,84 @@ export default function EnhancedRosterView({
           <span>Unassigned</span>
         </div>
       </div>
+
+      {/* Hours Override Dialog */}
+      {showOverrideDialog && pendingAssignment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-4 border-b bg-red-50 flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-red-900 text-lg">Hours Limit Exceeded</h3>
+                <p className="text-red-700 text-sm">Override required to continue</p>
+              </div>
+              <button onClick={handleOverrideCancel} className="ml-auto text-red-400 hover:text-red-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="font-semibold text-amber-900 mb-2">{pendingAssignment.carerName}</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-amber-700">Current hours:</span>
+                    <span className="font-bold text-amber-900 ml-1">{pendingAssignment.currentHours.toFixed(1)}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">Contracted:</span>
+                    <span className="font-bold text-amber-900 ml-1">{pendingAssignment.contractedHours}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">This shift:</span>
+                    <span className="font-bold text-amber-900 ml-1">+{pendingAssignment.shiftDuration.toFixed(1)}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">Projected:</span>
+                    <span className="font-bold text-red-600 ml-1">{pendingAssignment.projectedHours.toFixed(1)}h</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <Label htmlFor="override-reason" className="text-sm font-medium text-gray-700 mb-2 block">
+                  Override Reason <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="override-reason"
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="Enter reason for exceeding contracted hours (e.g., staff shortage, emergency cover, staff request for extra hours)..."
+                  rows={3}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This will be recorded for audit and compliance purposes.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleOverrideCancel}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleOverrideConfirm}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!overrideReason.trim()}
+                >
+                  Override & Assign
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
