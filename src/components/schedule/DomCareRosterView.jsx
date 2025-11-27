@@ -574,7 +574,7 @@ export default function DomCareRosterView({
       ) : (
         /* WEEK GRID VIEW */
         <DragDropContext onDragEnd={handleDragEnd}>
-          <div className="flex flex-col">
+          <div className="flex flex-col" style={{ overscrollBehavior: 'contain' }}>
             <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
               <div className="p-3 border-r flex items-center gap-2">
                 {activePanel === "clients" ? (
@@ -665,7 +665,7 @@ export default function DomCareRosterView({
 
             {/* Staff Rows */}
             {(activePanel === "staff" || activePanel === "both") && (
-            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activeStaff.map((staffMember) => {
                 const weekHours = getStaffWeekHours(staffMember.id);
                 
@@ -758,7 +758,7 @@ export default function DomCareRosterView({
 
             {/* Clients Rows */}
             {(activePanel === "clients" || activePanel === "both") && (
-            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activePanel === "both" && (
                 <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-emerald-50">
                   <div className="p-2 border-r flex items-center gap-2">
