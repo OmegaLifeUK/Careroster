@@ -77,7 +77,17 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
           supervision_type: 'formal_one_to_one',
           frequency_due: 'monthly',
           supervisor_comments: completionNotes,
-          linked_shift_id: task.linked_shift_id
+          linked_shift_id: task.linked_shift_id,
+          form_submission_id: submissionId,
+          attached_documents: submissionId ? [{
+            document_name: formTemplate?.form_name || 'Supervision Form',
+            document_type: 'supervision_form',
+            form_submission_id: submissionId,
+            uploaded_date: new Date().toISOString(),
+            uploaded_by: getStaffName(task.assigned_to_staff_id),
+            completed: true,
+            completed_date: new Date().toISOString()
+          }] : []
         });
       }
 
