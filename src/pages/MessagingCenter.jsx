@@ -106,7 +106,10 @@ export default function MessagingCenter() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("requests")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-yellow-600" />
@@ -116,7 +119,10 @@ export default function MessagingCenter() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("messages")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <MessageSquare className="w-4 h-4 text-blue-600" />
@@ -126,7 +132,10 @@ export default function MessagingCenter() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setShowBulkMessage(true)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Users className="w-4 h-4 text-green-600" />

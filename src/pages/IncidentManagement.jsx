@@ -273,7 +273,10 @@ export default function IncidentManagement() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4 mb-6">
-          <Card className="bg-blue-50 border-blue-200">
+          <Card 
+            className="bg-blue-50 border-blue-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => { setFilterStatus("all"); setFilterType("all"); }}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <FileText className="w-4 h-4 text-blue-600" />
@@ -283,7 +286,10 @@ export default function IncidentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-orange-50 border-orange-200">
+          <Card 
+            className="bg-orange-50 border-orange-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setFilterStatus("reported")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-orange-600" />
@@ -293,7 +299,10 @@ export default function IncidentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-red-50 border-red-200">
+          <Card 
+            className="bg-red-50 border-red-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setShowSafeguardingOnly(true)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Shield className="w-4 h-4 text-red-600" />
@@ -303,7 +312,10 @@ export default function IncidentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-purple-50 border-purple-200">
+          <Card 
+            className="bg-purple-50 border-purple-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setShowPredictive(true)}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <AlertTriangle className="w-4 h-4 text-purple-600" />
@@ -313,7 +325,10 @@ export default function IncidentManagement() {
             </CardContent>
           </Card>
 
-          <Card className="bg-green-50 border-green-200">
+          <Card 
+            className="bg-green-50 border-green-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setFilterStatus("resolved")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-600" />

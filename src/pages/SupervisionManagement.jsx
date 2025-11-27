@@ -240,7 +240,10 @@ export default function SupervisionManagement() {
 
       {/* Stats */}
       <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-        <Card>
+        <Card 
+          className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("all")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center">
@@ -253,7 +256,10 @@ export default function SupervisionManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("on_track")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center">
@@ -268,7 +274,10 @@ export default function SupervisionManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("due_soon")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-orange-100 rounded-lg flex items-center justify-center">
@@ -283,7 +292,10 @@ export default function SupervisionManagement() {
             </div>
           </CardContent>
         </Card>
-        <Card>
+        <Card 
+          className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("overdue")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-red-100 rounded-lg flex items-center justify-center">

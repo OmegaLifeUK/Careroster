@@ -73,7 +73,10 @@ export default function StaffTraining() {
 
         {/* Stats Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("modules")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-100 rounded-lg">
@@ -87,7 +90,10 @@ export default function StaffTraining() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("compliance")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-100 rounded-lg">
@@ -101,7 +107,10 @@ export default function StaffTraining() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("compliance")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-orange-100 rounded-lg">
@@ -115,7 +124,10 @@ export default function StaffTraining() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setActiveTab("ai_insights")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-purple-100 rounded-lg">
