@@ -1,0 +1,251 @@
+import React, { useState } from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Textarea } from "@/components/ui/textarea";
+import { 
+  ArrowLeft, 
+  CheckCircle, 
+  Loader2, 
+  User, 
+  Calendar, 
+  FileText,
+  Save,
+  AlertCircle
+} from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { format } from "date-fns";
+import FormPreview from "@/components/formbuilder/FormPreview";
+
+export default function StaffTaskFormExecutor({ task, onClose, onComplete, allStaff }) {
+  const [completionNotes, setCompletionNotes] = useState("");
+  const [formSubmitted, setFormSubmitted] = useState(false);
+  const [submissionId, setSubmissionId] = useState(null);
+
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
+
+  // Fetch the form template if one is linked
+  const { data: formTemplate, isLoading: loadingTemplate } = useQuery({
+    queryKey: ['form-template', task.form_template_id],
+    queryFn: async () => {
+      const templates = await base44.entities.FormTemplate.filter({ id: task.form_template_id });
+      return templates?.[0] || null;
+    },
+    enabled: !!task.form_template_id
+  });
+
+  // Update task status to in_progress when starting
+  const updateTaskMutation = useMutation({
+    mutationFn: (data) => base44.entities.StaffTask.update(task.id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+    }
+  });
+
+  // Mark as in progress on mount
+  React.useEffect(() => {
+    if (task.status === 'pending') {
+      updateTaskMutation.mutate({ status: 'in_progress' });
+    }
+  }, []);
+
+  const handleFormSubmitted = (submission) => {
+    setFormSubmitted(true);
+    setSubmissionId(submission?.id);
+    toast.success("Form Saved", "The form has been submitted successfully");
+  };
+
+  const handleCompleteTask = async () => {
+    try {
+      // Update the task as completed
+      await base44.entities.StaffTask.update(task.id, {
+        status: 'completed',
+        completed_date: new Date().toISOString(),
+        completion_notes: completionNotes,
+        form_submission_id: submissionId || task.form_submission_id
+      });
+
+      // If this is a supervision task, also create a supervision record
+      if (task.task_type === 'supervision' && task.subject_staff_id) {
+        await base44.entities.StaffSupervision.create({
+          staff_id: task.subject_staff_id,
+          supervisor_id: task.assigned_to_staff_id,
+          supervision_date: task.scheduled_date || format(new Date(), 'yyyy-MM-dd'),
+          supervision_type: 'formal_one_to_one',
+          frequency_due: 'monthly',
+          supervisor_comments: completionNotes,
+          linked_shift_id: task.linked_shift_id
+        });
+      }
+
+      toast.success("Task Completed", "The task has been marked as complete");
+      onComplete();
+    } catch (error) {
+      toast.error("Error", "Failed to complete task");
+      console.error(error);
+    }
+  };
+
+  const getStaffName = (id) => {
+    const person = allStaff?.find(s => s.id === id);
+    return person?.full_name || "Unknown";
+  };
+
+  return (
+    <div className="min-h-screen bg-gray-50">
+      {/* Header */}
+      <div className="bg-white border-b sticky top-0 z-10">
+        <div className="max-w-4xl mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-4">
+              <Button variant="ghost" size="icon" onClick={onClose}>
+                <ArrowLeft className="w-5 h-5" />
+              </Button>
+              <div>
+                <h1 className="text-xl font-bold">{task.title}</h1>
+                <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
+                  {task.subject_staff_id && (
+                    <span className="flex items-center gap-1">
+                      <User className="w-4 h-4" />
+                      {getStaffName(task.subject_staff_id)}
+                    </span>
+                  )}
+                  {task.scheduled_date && (
+                    <span className="flex items-center gap-1">
+                      <Calendar className="w-4 h-4" />
+                      {format(new Date(task.scheduled_date), 'dd MMM yyyy')}
+                      {task.scheduled_time && ` at ${task.scheduled_time}`}
+                    </span>
+                  )}
+                </div>
+              </div>
+            </div>
+            <div className="flex items-center gap-2">
+              <Badge className={task.status === 'in_progress' ? 'bg-blue-100 text-blue-700' : 'bg-yellow-100 text-yellow-700'}>
+                {task.status === 'in_progress' ? 'In Progress' : 'Pending'}
+              </Badge>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div className="max-w-4xl mx-auto px-4 py-6">
+        {/* Task Info */}
+        {task.description && (
+          <Card className="mb-6">
+            <CardContent className="p-4">
+              <p className="text-gray-700">{task.description}</p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Form Section */}
+        {task.form_template_id ? (
+          <div className="mb-6">
+            {loadingTemplate ? (
+              <Card>
+                <CardContent className="p-8 text-center">
+                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+                  <p className="text-gray-500">Loading form...</p>
+                </CardContent>
+              </Card>
+            ) : formTemplate ? (
+              <div>
+                {formSubmitted ? (
+                  <Card className="mb-6 border-green-200 bg-green-50">
+                    <CardContent className="p-6 text-center">
+                      <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-3" />
+                      <h3 className="font-semibold text-green-800 text-lg">Form Submitted Successfully</h3>
+                      <p className="text-green-700 mt-1">The form data has been saved</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <FormPreview 
+                    template={formTemplate} 
+                    onSubmitted={handleFormSubmitted}
+                    prefillData={{
+                      staff_name: task.subject_staff_id ? getStaffName(task.subject_staff_id) : "",
+                      supervisor_name: task.assigned_to_staff_id ? getStaffName(task.assigned_to_staff_id) : "",
+                      date: task.scheduled_date || format(new Date(), 'yyyy-MM-dd')
+                    }}
+                    contextData={{
+                      staff_task_id: task.id,
+                      subject_staff_id: task.subject_staff_id,
+                      assigned_to_staff_id: task.assigned_to_staff_id
+                    }}
+                  />
+                )}
+              </div>
+            ) : (
+              <Card className="border-orange-200 bg-orange-50">
+                <CardContent className="p-6 text-center">
+                  <AlertCircle className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+                  <h3 className="font-semibold text-orange-800">Form Template Not Found</h3>
+                  <p className="text-orange-700 mt-1">The linked form template could not be loaded</p>
+                </CardContent>
+              </Card>
+            )}
+          </div>
+        ) : (
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="text-base flex items-center gap-2">
+                <FileText className="w-5 h-5" />
+                No Form Attached
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-gray-600 text-sm">
+                This task doesn't have a form attached. You can add notes below and mark it as complete.
+              </p>
+            </CardContent>
+          </Card>
+        )}
+
+        {/* Completion Section */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Complete Task</CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div>
+              <label className="text-sm font-medium">Completion Notes</label>
+              <Textarea
+                value={completionNotes}
+                onChange={(e) => setCompletionNotes(e.target.value)}
+                placeholder="Add any notes about this task..."
+                rows={4}
+              />
+            </div>
+
+            {task.form_template_id && !formSubmitted && (
+              <div className="p-3 bg-yellow-50 border border-yellow-200 rounded-lg flex items-start gap-2">
+                <AlertCircle className="w-5 h-5 text-yellow-600 mt-0.5" />
+                <p className="text-sm text-yellow-800">
+                  Please complete and submit the form above before marking this task as complete.
+                </p>
+              </div>
+            )}
+
+            <div className="flex justify-end gap-3 pt-4">
+              <Button variant="outline" onClick={onClose}>
+                Save & Exit
+              </Button>
+              <Button 
+                onClick={handleCompleteTask}
+                disabled={task.form_template_id && !formSubmitted}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                <CheckCircle className="w-4 h-4 mr-2" />
+                Mark Complete
+              </Button>
+            </div>
+          </CardContent>
+        </Card>
+      </div>
+    </div>
+  );
+}
