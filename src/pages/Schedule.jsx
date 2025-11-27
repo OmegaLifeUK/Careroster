@@ -457,8 +457,8 @@ export default function Schedule() {
               carerAvailability={carerAvailability}
               onShiftClick={handleEdit}
               onShiftUpdate={handleShiftUpdate}
-              onAddShift={({ carer_id, date }) => {
-                setEditingShift({ carer_id, date });
+              onAddShift={(shiftData) => {
+                setEditingShift(shiftData);
                 setShowShiftDialog(true);
               }}
               locationName="Care Home"
