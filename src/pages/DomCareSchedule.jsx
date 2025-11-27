@@ -185,8 +185,8 @@ export default function DomCareSchedule() {
             runs={runs}
             onVisitClick={handleEditVisit}
             onVisitUpdate={handleVisitUpdate}
-            onAddVisit={({ staff_id, scheduled_date }) => {
-              setEditingVisit({ staff_id, scheduled_date });
+            onAddVisit={(visitData) => {
+              setEditingVisit(visitData);
               setShowVisitDialog(true);
             }}
             locationName="Domiciliary Care"
