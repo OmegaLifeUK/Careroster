@@ -37,6 +37,57 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
     enabled: !!task.form_template_id
   });
 
+  // Fetch client details if subject_client_id exists
+  const { data: subjectClient } = useQuery({
+    queryKey: ['subject-client', task.subject_client_id],
+    queryFn: async () => {
+      const clients = await base44.entities.Client.filter({ id: task.subject_client_id });
+      return clients?.[0] || null;
+    },
+    enabled: !!task.subject_client_id
+  });
+
+  // Fetch staff details if subject_staff_id exists
+  const { data: subjectStaff } = useQuery({
+    queryKey: ['subject-staff', task.subject_staff_id],
+    queryFn: async () => {
+      // Try both Staff and Carer entities
+      const staff = await base44.entities.Staff.filter({ id: task.subject_staff_id });
+      if (staff?.[0]) return staff[0];
+      const carers = await base44.entities.Carer.filter({ id: task.subject_staff_id });
+      return carers?.[0] || null;
+    },
+    enabled: !!task.subject_staff_id
+  });
+
+  // Build prefill data from client/staff details
+  const buildPrefillData = () => {
+    const data = {
+      date: task.scheduled_date || format(new Date(), 'yyyy-MM-dd'),
+      supervisor_name: task.assigned_to_staff_id ? getStaffName(task.assigned_to_staff_id) : ""
+    };
+    
+    if (subjectClient) {
+      data.full_name = subjectClient.full_name;
+      data.client_name = subjectClient.full_name;
+      data.date_of_birth = subjectClient.date_of_birth;
+      data.phone = subjectClient.phone;
+      data.email = subjectClient.email;
+      data.address = subjectClient.address ? 
+        `${subjectClient.address.street || ''}, ${subjectClient.address.city || ''}, ${subjectClient.address.postcode || ''}`.replace(/^, |, $/g, '') : '';
+      data.nhs_number = subjectClient.nhs_number;
+    }
+    
+    if (subjectStaff) {
+      data.staff_name = subjectStaff.full_name;
+      data.full_name = subjectStaff.full_name;
+      data.email = subjectStaff.email;
+      data.phone = subjectStaff.phone;
+    }
+    
+    return data;
+  };
+
   // Update task status to in_progress when starting
   const updateTaskMutation = useMutation({
     mutationFn: (data) => base44.entities.StaffTask.update(task.id, data),
@@ -68,7 +119,20 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
         form_submission_id: submissionId || task.form_submission_id
       });
 
-      // If this is a supervision task, also create a supervision record
+      // Create related records based on task type
+      const documentRecord = submissionId ? {
+        document_name: formTemplate?.form_name || task.title,
+        document_type: task.task_type === 'assessment' ? 'assessment' : 
+                       task.task_type === 'supervision' ? 'supervision_form' : 
+                       task.task_type === 'audit' ? 'audit' : 'other',
+        form_submission_id: submissionId,
+        uploaded_date: new Date().toISOString(),
+        uploaded_by: getStaffName(task.assigned_to_staff_id),
+        completed: true,
+        completed_date: new Date().toISOString()
+      } : null;
+
+      // If this is a supervision task, create a supervision record
       if (task.task_type === 'supervision' && task.subject_staff_id) {
         await base44.entities.StaffSupervision.create({
           staff_id: task.subject_staff_id,
@@ -79,16 +143,45 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
           supervisor_comments: completionNotes,
           linked_shift_id: task.linked_shift_id,
           form_submission_id: submissionId,
-          attached_documents: submissionId ? [{
-            document_name: formTemplate?.form_name || 'Supervision Form',
-            document_type: 'supervision_form',
+          attached_documents: documentRecord ? [documentRecord] : []
+        });
+      }
+
+      // If this is an assessment/audit task for a client, attach to client documents
+      if (task.subject_client_id && submissionId) {
+        try {
+          // Create a client document record
+          await base44.entities.ClientDocument.create({
+            client_id: task.subject_client_id,
+            document_name: formTemplate?.form_name || task.title,
+            document_type: task.task_type === 'assessment' ? 'assessment_form' : 
+                           task.task_type === 'audit' ? 'audit_report' : 'other',
+            category: formTemplate?.category || 'other',
             form_submission_id: submissionId,
             uploaded_date: new Date().toISOString(),
             uploaded_by: getStaffName(task.assigned_to_staff_id),
-            completed: true,
-            completed_date: new Date().toISOString()
-          }] : []
-        });
+            status: 'approved',
+            notes: completionNotes
+          });
+        } catch (e) {
+          console.log("Could not create client document:", e);
+        }
+      }
+
+      // If this is a task for a staff member (not supervision), attach to staff file
+      if (task.subject_staff_id && submissionId && task.task_type !== 'supervision') {
+        try {
+          // Try to update carer record with document
+          const carers = await base44.entities.Carer.filter({ id: task.subject_staff_id });
+          if (carers?.[0]) {
+            const existingDocs = carers[0].attached_documents || [];
+            await base44.entities.Carer.update(task.subject_staff_id, {
+              attached_documents: [...existingDocs, documentRecord]
+            });
+          }
+        } catch (e) {
+          console.log("Could not attach to staff file:", e);
+        }
       }
 
       toast.success("Task Completed", "The task has been marked as complete");
@@ -176,14 +269,11 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
                   <FormPreview 
                     template={formTemplate} 
                     onSubmitted={handleFormSubmitted}
-                    prefillData={{
-                      staff_name: task.subject_staff_id ? getStaffName(task.subject_staff_id) : "",
-                      supervisor_name: task.assigned_to_staff_id ? getStaffName(task.assigned_to_staff_id) : "",
-                      date: task.scheduled_date || format(new Date(), 'yyyy-MM-dd')
-                    }}
+                    prefillData={buildPrefillData()}
                     contextData={{
                       staff_task_id: task.id,
                       subject_staff_id: task.subject_staff_id,
+                      subject_client_id: task.subject_client_id,
                       assigned_to_staff_id: task.assigned_to_staff_id
                     }}
                   />
