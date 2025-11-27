@@ -142,6 +142,29 @@ export default function SupportedLivingRosterView({
     return Math.max(endPos - startPos, 5);
   };
 
+  // Check for conflicts before updating
+  const checkForConflicts = (staffIdToCheck, dateToCheck, shiftToMove) => {
+    if (!staffIdToCheck || !dateToCheck || !shiftToMove) return null;
+    
+    const conflictingShifts = shifts.filter(s => {
+      if (!s || s.staff_id !== staffIdToCheck || s.date !== dateToCheck) return false;
+      if (s.id === shiftToMove.id) return false;
+      
+      const shiftStart = s.start_time || "00:00";
+      const shiftEnd = s.end_time || "23:59";
+      const moveStart = shiftToMove.start_time || "00:00";
+      const moveEnd = shiftToMove.end_time || "23:59";
+      
+      return (
+        (moveStart >= shiftStart && moveStart < shiftEnd) ||
+        (moveEnd > shiftStart && moveEnd <= shiftEnd) ||
+        (moveStart <= shiftStart && moveEnd >= shiftEnd)
+      );
+    });
+    
+    return conflictingShifts.length > 0 ? conflictingShifts : null;
+  };
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
@@ -151,6 +174,20 @@ export default function SupportedLivingRosterView({
     if (!shift || !onShiftUpdate) return;
 
     const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
+    
+    // Check for conflicts if assigning to staff
+    if (newStaffId) {
+      const conflicts = checkForConflicts(newStaffId, targetDate, shift);
+      if (conflicts) {
+        const staffName = activeStaff.find(s => s.id === newStaffId)?.full_name || 'This staff member';
+        const conflictTimes = conflicts.map(c => `${c.start_time}-${c.end_time}`).join(', ');
+        const proceed = window.confirm(
+          `⚠️ Scheduling Conflict!\n\n${staffName} already has shift(s) at ${conflictTimes} on this date.\n\nThis will create overlapping shifts. Continue?`
+        );
+        if (!proceed) return;
+      }
+    }
+    
     onShiftUpdate({ id: draggableId, data: { 
       staff_id: newStaffId,
       date: targetDate,
@@ -589,7 +626,7 @@ export default function SupportedLivingRosterView({
                                 isTodayDate ? 'bg-indigo-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-indigo-100/50 ring-2 ring-inset ring-indigo-300' : ''}`}
                             >
-                              <div className="space-y-1">
+                              <div className="space-y-1 relative z-10">
                                 {dayShifts.map((shift, sIdx) => (
                                   <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
                                     {(provided, snapshot) => (
@@ -607,14 +644,29 @@ export default function SupportedLivingRosterView({
                               </div>
                               {provided.placeholder}
                               
-                              <button
-                                onClick={() => onAddShift?.({ staff_id: staffMember.id, date: dayStr })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-50/50"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-sm">
-                                  <Plus className="w-4 h-4" />
-                                </div>
-                              </button>
+                              {/* Add button - only show when no shifts */}
+                              {dayShifts.length === 0 && (
+                                <button
+                                  onClick={() => onAddShift?.({ staff_id: staffMember.id, date: dayStr })}
+                                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-indigo-50/50"
+                                >
+                                  <div className="w-6 h-6 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-sm">
+                                    <Plus className="w-4 h-4" />
+                                  </div>
+                                </button>
+                              )}
+                              {/* Small add button in corner when shifts exist */}
+                              {dayShifts.length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddShift?.({ staff_id: staffMember.id, date: dayStr });
+                                  }}
+                                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-indigo-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              )}
                             </div>
                           )}
                         </Droppable>

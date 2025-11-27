@@ -526,7 +526,7 @@ export default function DayCentreRosterView({
                                 isTodayDate ? 'bg-amber-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-amber-100/50 ring-2 ring-inset ring-amber-300' : ''}`}
                             >
-                              <div className="space-y-1">
+                              <div className="space-y-1 relative z-10">
                                 {daySessions.map((session, sIdx) => (
                                   <Draggable key={session.id} draggableId={session.id} index={sIdx}>
                                     {(provided, snapshot) => (
@@ -544,14 +544,29 @@ export default function DayCentreRosterView({
                               </div>
                               {provided.placeholder}
                               
-                              <button
-                                onClick={() => onAddSession?.({ activity_id: activity.id, session_date: dayStr })}
-                                className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-amber-50/50"
-                              >
-                                <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm">
-                                  <Plus className="w-4 h-4" />
-                                </div>
-                              </button>
+                              {/* Add button - only show when no sessions */}
+                              {daySessions.length === 0 && (
+                                <button
+                                  onClick={() => onAddSession?.({ activity_id: activity.id, session_date: dayStr })}
+                                  className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-amber-50/50"
+                                >
+                                  <div className="w-6 h-6 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm">
+                                    <Plus className="w-4 h-4" />
+                                  </div>
+                                </button>
+                              )}
+                              {/* Small add button in corner when sessions exist */}
+                              {daySessions.length > 0 && (
+                                <button
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    onAddSession?.({ activity_id: activity.id, session_date: dayStr });
+                                  }}
+                                  className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-amber-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                >
+                                  <Plus className="w-3 h-3" />
+                                </button>
+                              )}
                             </div>
                           )}
                         </Droppable>
