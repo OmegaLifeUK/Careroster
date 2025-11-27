@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
@@ -41,6 +40,7 @@ const DEFAULT_PREFERENCES = {
   finance: true,
   communication: true,
   alerts: true,
+  dailyLog: true,
 };
 
 export default function ManagerDashboard() {
@@ -133,6 +133,15 @@ export default function ManagerDashboard() {
     queryKey: ['leave-requests'],
     queryFn: async () => {
       const data = await base44.entities.LeaveRequest.list('-created_date');
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
+  const todayStr = format(new Date(), 'yyyy-MM-dd');
+  const { data: dailyLogs = [] } = useQuery({
+    queryKey: ['daily-logs-today', todayStr],
+    queryFn: async () => {
+      const data = await base44.entities.DailyLog.filter({ log_date: todayStr });
       return Array.isArray(data) ? data : [];
     },
   });
@@ -618,6 +627,59 @@ COMMUNICATION
                       <Badge className="bg-red-600">{criticalAlerts}</Badge>
                     </div>
                   )}
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Daily Log Widget */}
+          {modulePreferences.dailyLog && (
+            <Card className="shadow-lg">
+              <CardHeader className="border-b bg-gradient-to-r from-cyan-50 to-blue-50">
+                <CardTitle className="flex items-center gap-2">
+                  <FileText className="w-5 h-5 text-cyan-600" />
+                  Today's Daily Log
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="p-6">
+                <div className="space-y-4">
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-sm text-gray-600">Total Entries</p>
+                      <p className="text-2xl font-bold">{dailyLogs.length}</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-gray-600">Follow-ups</p>
+                      <p className="text-2xl font-bold text-orange-600">
+                        {dailyLogs.filter(l => l && l.follow_up_required).length}
+                      </p>
+                    </div>
+                  </div>
+                  {dailyLogs.length > 0 ? (
+                    <div className="space-y-2 max-h-32 overflow-y-auto">
+                      {dailyLogs.slice(0, 3).map(log => (
+                        <div key={log.id} className="p-2 bg-gray-50 rounded-lg text-sm">
+                          <div className="flex items-center justify-between">
+                            <span className="font-medium">{log.visitor_name}</span>
+                            <Badge variant="outline" className="text-xs">
+                              {log.entry_type?.replace(/_/g, ' ')}
+                            </Badge>
+                          </div>
+                          {log.arrival_time && (
+                            <span className="text-xs text-gray-500">{log.arrival_time}</span>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-sm text-gray-500 text-center py-2">No entries today</p>
+                  )}
+                  <Link to={createPageUrl("DailyLog")}>
+                    <Button className="w-full" variant="outline">
+                      <FileText className="w-4 h-4 mr-2" />
+                      View Daily Log
+                    </Button>
+                  </Link>
                 </div>
               </CardContent>
             </Card>

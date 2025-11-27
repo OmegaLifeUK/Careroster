@@ -3,7 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import { Label } from "@/components/ui/label";
-import { X, Save, Home, Users, GraduationCap, Shield, DollarSign, MessageSquare, Bell } from "lucide-react";
+import { X, Save, Home, Users, GraduationCap, Shield, DollarSign, MessageSquare, Bell, ClipboardList } from "lucide-react";
 
 const WIDGET_OPTIONS = [
   { id: 'occupancy', label: 'Occupancy & Capacity', icon: Home, description: 'Bed occupancy and admission stats' },
@@ -13,6 +13,7 @@ const WIDGET_OPTIONS = [
   { id: 'finance', label: 'Financial Summary', icon: DollarSign, description: 'Revenue and payment status' },
   { id: 'communication', label: 'Communication Hub', icon: MessageSquare, description: 'Messages, feedback, and leave requests' },
   { id: 'alerts', label: 'System Alerts', icon: Bell, description: 'Automated alerts for missed tasks, meds, and visits' },
+  { id: 'dailyLog', label: 'Daily Log', icon: ClipboardList, description: 'Today\'s visitors, appointments, and activities' },
 ];
 
 export default function DashboardCustomizer({ currentPreferences, onSave, onClose }) {
