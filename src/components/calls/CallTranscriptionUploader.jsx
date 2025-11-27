@@ -83,7 +83,7 @@ export default function CallTranscriptionUploader({ clients = [], onClose, onSuc
       const prompt = `You are a professional transcription and analysis assistant for a care facility. 
 Please analyze this audio recording of a phone call and provide:
 
-1. A complete transcript of the conversation
+1. A complete transcript of the conversation (transcribe exactly what is said)
 2. A concise summary (2-3 sentences)
 3. Key topics discussed
 4. Follow-up action points with priority levels
@@ -94,6 +94,8 @@ Context:
 - Relationship: ${formData.caller_relationship || 'Unknown'}
 ${clientName ? `- Related to client: ${clientName}` : ''}
 ${formData.notes ? `- Staff notes: ${formData.notes}` : ''}
+
+IMPORTANT: Listen carefully to the audio and transcribe the actual conversation. If the audio is unclear or in a different language, do your best to transcribe it.
 
 Please provide the response in the following JSON structure:
 {
@@ -139,7 +141,8 @@ Please provide the response in the following JSON structure:
       setStep("complete");
     } catch (error) {
       console.error("Transcription error:", error);
-      toast.error("Processing Failed", "Failed to transcribe audio. Please try again.");
+      const errorMessage = error?.message || "Unknown error";
+      toast.error("Processing Failed", `Failed to transcribe audio: ${errorMessage}. The audio format may not be supported - try converting to standard MP3 format.`);
       setStep("details");
     } finally {
       setProcessing(false);
