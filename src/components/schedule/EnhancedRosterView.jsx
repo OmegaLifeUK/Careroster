@@ -14,10 +14,9 @@ import {
   Plus,
   User,
   Home,
-  MoreHorizontal,
+  MapPin,
   Maximize2,
-  Filter,
-  Download
+  Building
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
@@ -50,8 +49,34 @@ export default function EnhancedRosterView({
   const [searchQuery, setSearchQuery] = useState("");
   const [viewMode, setViewMode] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
-  const [activePanel, setActivePanel] = useState("staff"); // "staff" | "clients" | "both"
+  const [activePanel, setActivePanel] = useState("staff"); // "staff" | "clients" | "locations" | "both"
   const { toast } = useToast();
+
+  // Location-based view data
+  const locationShifts = useMemo(() => {
+    const locations = new Map();
+    shifts.forEach(s => {
+      if (s?.location_name) {
+        if (!locations.has(s.location_name)) {
+          locations.set(s.location_name, { name: s.location_name, address: s.location_address });
+        }
+      }
+    });
+    // Add default locations
+    ['Main Building', 'East Wing', 'West Wing', 'Day Centre', 'Nursing Unit'].forEach(name => {
+      if (!locations.has(name)) {
+        locations.set(name, { name, address: '' });
+      }
+    });
+    return Array.from(locations.values());
+  }, [shifts]);
+
+  const getLocationDayShifts = (locationName, day) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return shifts
+      .filter(s => s?.date === dayStr && s.location_name === locationName)
+      .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+  };
 
   const weekDays = useMemo(() => 
     Array.from({ length: 7 }, (_, i) => addDays(currentWeekStart, i)),
@@ -356,6 +381,15 @@ export default function EnhancedRosterView({
               Staff
             </button>
             <button
+              onClick={() => setActivePanel("locations")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "locations" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <MapPin className="w-3 h-3" />
+              Locations
+            </button>
+            <button
               onClick={() => setActivePanel("clients")}
               className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
                 activePanel === "clients" ? "bg-blue-600 text-white" : "text-gray-600 hover:bg-gray-100"
@@ -439,6 +473,46 @@ export default function EnhancedRosterView({
                         {/* Shifts */}
                         {dayShifts.map(shift => (
                           <TimelineShift key={shift.id} shift={shift} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
+          {/* Locations Section - Day View */}
+          {(activePanel === "locations") && (
+            <div>
+              <div className="flex items-center gap-2 px-4 py-2 bg-purple-50 border-b">
+                <MapPin className="w-4 h-4 text-purple-600" />
+                <span className="font-semibold text-purple-900">Locations</span>
+                <Badge className="bg-purple-100 text-purple-700 text-xs">{locationShifts.length}</Badge>
+              </div>
+              <div className="overflow-y-auto max-h-[500px]">
+                {locationShifts.map(location => {
+                  const dayShifts = getLocationDayShifts(location.name, selectedDate);
+                  
+                  return (
+                    <div key={location.name} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                          <Building className="w-4 h-4" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{location.name}</p>
+                          <p className="text-xs text-gray-500">{dayShifts.length} shifts today</p>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                        <div className="absolute inset-0 flex">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                          ))}
+                        </div>
+                        {dayShifts.map(shift => (
+                          <TimelineShift key={shift.id} shift={shift} showLabel={true} />
                         ))}
                       </div>
                     </div>
@@ -686,6 +760,59 @@ export default function EnhancedRosterView({
             </div>
             )}
 
+            {/* Locations Rows - Week View */}
+            {(activePanel === "locations") && (
+            <div className="overflow-y-auto max-h-[500px]">
+              {locationShifts.map((location) => {
+                return (
+                  <div key={location.name} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-400 to-purple-600 flex items-center justify-center text-white flex-shrink-0">
+                        <Building className="w-4 h-4" />
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{location.name}</p>
+                        {location.address && (
+                          <p className="text-xs text-gray-500 truncate">{location.address}</p>
+                        )}
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const dayShifts = getLocationDayShifts(location.name, day);
+                      const isTodayDate = isToday(day);
+
+                      return (
+                        <div
+                          key={dayStr}
+                          className={`p-1 min-h-[60px] border-r transition-colors relative group ${
+                            isTodayDate ? 'bg-purple-50/30' : ''
+                          }`}
+                        >
+                          <div className="space-y-1">
+                            {dayShifts.map((shift) => (
+                              <ShiftPill key={shift.id} shift={shift} showCarer={true} showClient={false} />
+                            ))}
+                          </div>
+                          
+                          <button
+                            onClick={() => onAddShift?.({ location_name: location.name, date: dayStr, assignment_type: 'location' })}
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-purple-50/50"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-purple-500 text-white flex items-center justify-center shadow-sm">
+                              <Plus className="w-4 h-4" />
+                            </div>
+                          </button>
+                        </div>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+
             {/* Clients Rows - Week View */}
             {(activePanel === "clients" || activePanel === "both") && (
             <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
@@ -721,7 +848,7 @@ export default function EnhancedRosterView({
                       return (
                         <div
                           key={dayStr}
-                          className={`p-1 min-h-[60px] border-r transition-colors ${
+                          className={`p-1 min-h-[60px] border-r transition-colors relative group ${
                             isTodayDate ? 'bg-blue-50/30' : ''
                           }`}
                         >
@@ -730,6 +857,15 @@ export default function EnhancedRosterView({
                               <ShiftPill key={shift.id} shift={shift} showCarer={true} showClient={false} />
                             ))}
                           </div>
+                          
+                          <button
+                            onClick={() => onAddShift?.({ client_id: client.id, date: dayStr, assignment_type: 'client' })}
+                            className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50"
+                          >
+                            <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                              <Plus className="w-4 h-4" />
+                            </div>
+                          </button>
                         </div>
                       );
                     })}
