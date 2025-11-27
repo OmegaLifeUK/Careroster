@@ -357,6 +357,17 @@ export default function Schedule() {
         />
 
         <div className="flex items-center gap-2 my-6 flex-wrap">
+          <Tooltip content="Roster view - drag & drop scheduling">
+            <Button
+              variant={viewMode === "roster" ? "default" : "outline"}
+              size="sm"
+              onClick={() => setViewMode("roster")}
+              className={viewMode === "roster" ? "bg-blue-600" : ""}
+            >
+              <LayoutGrid className="w-4 h-4 mr-2" />
+              Roster
+            </Button>
+          </Tooltip>
           <Tooltip content="Day view">
             <Button
               variant={viewMode === "day" ? "default" : "outline"}
@@ -407,14 +418,14 @@ export default function Schedule() {
               List
             </Button>
           </Tooltip>
-          <Tooltip content="Drag and drop to assign">
+          <Tooltip content="Drag and drop by group">
             <Button
               variant={viewMode === "dragdrop" ? "default" : "outline"}
               size="sm"
               onClick={() => setViewMode("dragdrop")}
             >
               <Shuffle className="w-4 h-4 mr-2" />
-              Drag & Drop
+              By Group
             </Button>
           </Tooltip>
           <Tooltip content="Split screen view">
