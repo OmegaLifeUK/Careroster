@@ -1,4 +1,3 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -14,14 +13,17 @@ import {
   Home,
   Plus,
   Filter,
-  Edit
+  Edit,
+  LayoutGrid,
+  List
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import SupportedLivingShiftDialog from "../components/supportedliving/SupportedLivingShiftDialog";
+import SupportedLivingRosterView from "../components/schedule/SupportedLivingRosterView";
 
 export default function SupportedLivingSchedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
-  const [viewMode, setViewMode] = useState("week"); // week or day
+  const [viewMode, setViewMode] = useState("roster"); // roster, week or day
   const [selectedShift, setSelectedShift] = useState(null);
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
@@ -290,136 +292,51 @@ export default function SupportedLivingSchedule() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Calendar className="w-4 h-4 text-blue-600" />
-                <p className="text-sm text-gray-600">Today's Shifts</p>
-              </div>
-              <p className="text-2xl font-bold text-blue-600">{todayShifts.length}</p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <Clock className="w-4 h-4 text-green-600" />
-                <p className="text-sm text-gray-600">In Progress</p>
-              </div>
-              <p className="text-2xl font-bold text-green-600">
-                {shifts.filter(s => s.status === 'in_progress').length}
-              </p>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 mb-1">
-                <User className="w-4 h-4 text-purple-600" />
-                <p className="text-sm text-gray-600">Upcoming</p>
-              </div>
-              <p className="text-2xl font-bold text-purple-600">{upcomingShifts.length}</p>
-            </CardContent>
-          </Card>
+        {/* View Toggle */}
+        <div className="flex gap-2 mb-6">
+          <Button
+            variant={viewMode === "roster" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("roster")}
+          >
+            <LayoutGrid className="w-4 h-4 mr-2" />
+            Roster
+          </Button>
+          <Button
+            variant={viewMode === "week" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("week")}
+          >
+            <Calendar className="w-4 h-4 mr-2" />
+            Week Grid
+          </Button>
+          <Button
+            variant={viewMode === "list" ? "default" : "outline"}
+            size="sm"
+            onClick={() => setViewMode("list")}
+          >
+            <List className="w-4 h-4 mr-2" />
+            Today's List
+          </Button>
         </div>
 
-        <Card className="mb-6">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between">
-              <CardTitle>Week View</CardTitle>
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2">
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentDate(addDays(currentDate, -7))}
-                  >
-                    <ChevronLeft className="w-4 h-4" />
-                  </Button>
-                  <span className="text-sm font-medium min-w-[200px] text-center">
-                    {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
-                  </span>
-                  <Button
-                    variant="outline"
-                    size="icon"
-                    onClick={() => setCurrentDate(addDays(currentDate, 7))}
-                  >
-                    <ChevronRight className="w-4 h-4" />
-                  </Button>
-                </div>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => setCurrentDate(new Date())}
-                >
-                  Today
-                </Button>
-              </div>
-            </div>
-          </CardHeader>
-          <CardContent className="p-0">
-            <div className="grid grid-cols-7 border-b">
-              {weekDays.map((day, idx) => (
-                <div
-                  key={idx}
-                  className={`p-3 text-center border-r last:border-r-0 ${
-                    isToday(day) ? 'bg-indigo-50' : ''
-                  }`}
-                >
-                  <div className="text-xs text-gray-600 uppercase">
-                    {format(day, 'EEE')}
-                  </div>
-                  <div className={`text-lg font-semibold ${
-                    isToday(day) ? 'text-indigo-600' : 'text-gray-900'
-                  }`}>
-                    {format(day, 'd')}
-                  </div>
-                  <div className="text-xs text-gray-500">
-                    {getShiftsForDay(day).length} shifts
-                  </div>
-                </div>
-              ))}
-            </div>
-            <div className="grid grid-cols-7">
-              {weekDays.map((day, idx) => {
-                const dayShifts = getShiftsForDay(day);
-                return (
-                  <div
-                    key={idx}
-                    className="p-2 border-r last:border-r-0 min-h-[300px] bg-gray-50"
-                  >
-                    <div className="space-y-2">
-                      {dayShifts.map((shift) => {
-                        const property = properties.find(p => p.id === shift.property_id);
-                        const staffMember = staff.find(s => s.id === shift.staff_id);
-                        
-                        return (
-                          <div
-                            key={shift.id}
-                            onClick={() => setSelectedShift(shift)}
-                            className="p-2 bg-white rounded border-l-4 border-indigo-500 cursor-pointer hover:shadow-md transition-shadow text-xs"
-                          >
-                            <div className="font-medium mb-1">{shift.start_time}</div>
-                            <Badge variant="outline" className={`text-[10px] mb-1 ${shiftTypeColors[shift.shift_type]}`}>
-                              {shiftTypeLabels[shift.shift_type]}
-                            </Badge>
-                            <div className="text-gray-600 truncate">{property?.property_name}</div>
-                            {staffMember && (
-                              <div className="text-gray-500 text-[10px] mt-1 truncate">
-                                {staffMember.full_name}
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card>
+        {viewMode === "roster" ? (
+          <SupportedLivingRosterView
+            shifts={shifts}
+            staff={staff}
+            clients={clients}
+            properties={properties}
+            onShiftClick={(shift) => setSelectedShift(shift)}
+            onShiftUpdate={({ id, data }) => updateShiftMutation.mutate({ id, data })}
+            onAddShift={({ staff_id, date }) => {
+              setEditingShift({ staff_id, date });
+              setShowShiftDialog(true);
+            }}
+            locationName="Supported Living"
+          />
+        ) : viewMode === "list" ? (
+          <>
+                <Card>
           <CardHeader className="border-b">
             <CardTitle>Today's Shifts</CardTitle>
           </CardHeader>
@@ -484,6 +401,140 @@ export default function SupportedLivingSchedule() {
             )}
           </CardContent>
         </Card>
+
+          </>
+        ) : (
+          <>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Calendar className="w-4 h-4 text-blue-600" />
+                    <p className="text-sm text-gray-600">Today's Shifts</p>
+                  </div>
+                  <p className="text-2xl font-bold text-blue-600">{todayShifts.length}</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <Clock className="w-4 h-4 text-green-600" />
+                    <p className="text-sm text-gray-600">In Progress</p>
+                  </div>
+                  <p className="text-2xl font-bold text-green-600">
+                    {shifts.filter(s => s.status === 'in_progress').length}
+                  </p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-4">
+                  <div className="flex items-center gap-2 mb-1">
+                    <User className="w-4 h-4 text-purple-600" />
+                    <p className="text-sm text-gray-600">Upcoming</p>
+                  </div>
+                  <p className="text-2xl font-bold text-purple-600">{upcomingShifts.length}</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <Card className="mb-6">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <CardTitle>Week View</CardTitle>
+                  <div className="flex items-center gap-4">
+                    <div className="flex items-center gap-2">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentDate(addDays(currentDate, -7))}
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </Button>
+                      <span className="text-sm font-medium min-w-[200px] text-center">
+                        {format(weekStart, 'MMM d')} - {format(weekEnd, 'MMM d, yyyy')}
+                      </span>
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() => setCurrentDate(addDays(currentDate, 7))}
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </Button>
+                    </div>
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setCurrentDate(new Date())}
+                    >
+                      Today
+                    </Button>
+                  </div>
+                </div>
+              </CardHeader>
+              <CardContent className="p-0">
+                <div className="grid grid-cols-7 border-b">
+                  {weekDays.map((day, idx) => (
+                    <div
+                      key={idx}
+                      className={`p-3 text-center border-r last:border-r-0 ${
+                        isToday(day) ? 'bg-indigo-50' : ''
+                      }`}
+                    >
+                      <div className="text-xs text-gray-600 uppercase">
+                        {format(day, 'EEE')}
+                      </div>
+                      <div className={`text-lg font-semibold ${
+                        isToday(day) ? 'text-indigo-600' : 'text-gray-900'
+                      }`}>
+                        {format(day, 'd')}
+                      </div>
+                      <div className="text-xs text-gray-500">
+                        {getShiftsForDay(day).length} shifts
+                      </div>
+                    </div>
+                  ))}
+                </div>
+                <div className="grid grid-cols-7">
+                  {weekDays.map((day, idx) => {
+                    const dayShifts = getShiftsForDay(day);
+                    return (
+                      <div
+                        key={idx}
+                        className="p-2 border-r last:border-r-0 min-h-[300px] bg-gray-50"
+                      >
+                        <div className="space-y-2">
+                          {dayShifts.map((shift) => {
+                            const property = properties.find(p => p.id === shift.property_id);
+                            const staffMember = staff.find(s => s.id === shift.staff_id);
+                            
+                            return (
+                              <div
+                                key={shift.id}
+                                onClick={() => setSelectedShift(shift)}
+                                className="p-2 bg-white rounded border-l-4 border-indigo-500 cursor-pointer hover:shadow-md transition-shadow text-xs"
+                              >
+                                <div className="font-medium mb-1">{shift.start_time}</div>
+                                <Badge variant="outline" className={`text-[10px] mb-1 ${shiftTypeColors[shift.shift_type]}`}>
+                                  {shiftTypeLabels[shift.shift_type]}
+                                </Badge>
+                                <div className="text-gray-600 truncate">{property?.property_name}</div>
+                                {staffMember && (
+                                  <div className="text-gray-500 text-[10px] mt-1 truncate">
+                                    {staffMember.full_name}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          </>
+        )}
 
         {showShiftDialog && (
           <SupportedLivingShiftDialog
