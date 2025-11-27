@@ -125,7 +125,10 @@ export default function StaffTaskManager() {
 
       {/* Stats */}
       <div className="grid grid-cols-3 gap-4">
-        <Card className="bg-yellow-50 border-yellow-200">
+        <Card 
+          className="bg-yellow-50 border-yellow-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("pending")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <Clock className="w-8 h-8 text-yellow-600" />
@@ -136,7 +139,10 @@ export default function StaffTaskManager() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-blue-50 border-blue-200">
+        <Card 
+          className="bg-blue-50 border-blue-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("in_progress")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <Play className="w-8 h-8 text-blue-600" />
@@ -147,7 +153,10 @@ export default function StaffTaskManager() {
             </div>
           </CardContent>
         </Card>
-        <Card className="bg-red-50 border-red-200">
+        <Card 
+          className="bg-red-50 border-red-200 hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+          onClick={() => setFilterStatus("pending")}
+        >
           <CardContent className="p-4">
             <div className="flex items-center gap-3">
               <AlertCircle className="w-8 h-8 text-red-600" />
