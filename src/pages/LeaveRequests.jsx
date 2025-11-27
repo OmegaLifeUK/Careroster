@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
@@ -185,7 +184,10 @@ export default function LeaveRequests() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("all")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Calendar className="w-4 h-4 text-gray-600" />
@@ -195,7 +197,10 @@ export default function LeaveRequests() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("pending")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <Clock className="w-4 h-4 text-orange-600" />
@@ -205,7 +210,10 @@ export default function LeaveRequests() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("approved")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <CheckCircle className="w-4 h-4 text-green-600" />
@@ -215,7 +223,10 @@ export default function LeaveRequests() {
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="hover:shadow-xl hover:scale-105 transition-all cursor-pointer"
+            onClick={() => setStatusFilter("rejected")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-2 mb-1">
                 <XCircle className="w-4 h-4 text-red-600" />
