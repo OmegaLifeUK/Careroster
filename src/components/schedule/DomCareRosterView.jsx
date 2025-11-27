@@ -16,8 +16,12 @@ import {
   MapPin,
   Car,
   Maximize2,
-  Navigation
+  Navigation,
+  AlertTriangle,
+  X
 } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -36,6 +40,7 @@ export default function DomCareRosterView({
   staff = [],
   clients = [],
   runs = [],
+  staffAvailability = [],
   onVisitClick,
   onVisitUpdate,
   onAddVisit,
@@ -150,6 +155,28 @@ export default function DomCareRosterView({
       .reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
   };
 
+  const getStaffContractedHours = (staffId) => {
+    const staffMember = staff.find(s => s?.id === staffId);
+    // Check availability records for max hours
+    const availability = staffAvailability?.find(a => a?.carer_id === staffId && a?.max_hours_per_week);
+    if (availability?.max_hours_per_week) return availability.max_hours_per_week;
+    // Check staff record for contracted hours
+    if (staffMember?.max_hours_per_week) return staffMember.max_hours_per_week;
+    // Fallback to defaults based on employment type or is_active
+    return 40; // Default contracted hours
+  };
+
+  const getStaffHoursStatus = (staffId) => {
+    const weekHours = getStaffWeekHours(staffId);
+    const contracted = getStaffContractedHours(staffId);
+    if (!contracted) return { status: 'unknown', weekHours, contracted: null };
+    const percentage = (weekHours / contracted) * 100;
+    if (percentage >= 100) return { status: 'full', weekHours, contracted, percentage };
+    if (percentage >= 80) return { status: 'near', weekHours, contracted, percentage };
+    if (percentage < 50) return { status: 'low', weekHours, contracted, percentage };
+    return { status: 'ok', weekHours, contracted, percentage };
+  };
+
   const getTimePosition = (time) => {
     if (!time) return 0;
     const [hour, min] = time.split(':').map(Number);
@@ -197,6 +224,10 @@ export default function DomCareRosterView({
     return conflictingVisits.length > 0 ? conflictingVisits : null;
   };
 
+  const [showOverrideDialog, setShowOverrideDialog] = useState(false);
+  const [pendingAssignment, setPendingAssignment] = useState(null);
+  const [overrideReason, setOverrideReason] = useState("");
+
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const { draggableId, destination } = result;
@@ -227,7 +258,7 @@ export default function DomCareRosterView({
       targetDate = parts[1];
     }
     
-    // Check for conflicts if assigning to staff
+    // Check for time conflicts if assigning to staff
     if (newStaffId && parts[0] !== 'client') {
       const conflicts = checkForConflicts(newStaffId, targetDate, visit);
       if (conflicts) {
@@ -237,8 +268,35 @@ export default function DomCareRosterView({
         );
         if (!proceed) return;
       }
+      
+      // Check for hours capacity
+      const hoursStatus = getStaffHoursStatus(newStaffId);
+      const visitDuration = (visit.duration_minutes || 60) / 60;
+      const projectedHours = hoursStatus.weekHours + visitDuration;
+      const projectedPercentage = hoursStatus.contracted ? (projectedHours / hoursStatus.contracted) * 100 : 0;
+      
+      if (hoursStatus.status === 'full' || projectedPercentage >= 100) {
+        const staffName = activeStaff.find(s => s.id === newStaffId)?.full_name || 'This staff member';
+        setPendingAssignment({
+          visitId: draggableId,
+          newStaffId,
+          targetClientId,
+          parts,
+          staffName,
+          currentHours: hoursStatus.weekHours,
+          contractedHours: hoursStatus.contracted,
+          projectedHours,
+          visitDuration
+        });
+        setShowOverrideDialog(true);
+        return;
+      }
     }
 
+    completeAssignment(draggableId, newStaffId, targetClientId, parts);
+  };
+
+  const completeAssignment = (visitId, newStaffId, targetClientId, parts, overrideInfo = null) => {
     const updates = {
       status: newStaffId ? 'published' : 'draft'
     };
@@ -250,11 +308,15 @@ export default function DomCareRosterView({
     if (parts[0] === 'client') {
       updates.client_id = targetClientId;
     }
+    
+    // Add override information if provided
+    if (overrideInfo) {
+      updates.hours_override_reason = overrideInfo.reason;
+      updates.hours_override_by = overrideInfo.overriddenBy;
+      updates.hours_override_date = new Date().toISOString();
+    }
 
-    // Note: Travel time/mileage calculation is handled in the DomCareTimeline view
-    // For roster view, we just do the assignment - use Timeline view for travel-aware scheduling
-
-    onVisitUpdate(draggableId, updates);
+    onVisitUpdate(visitId, updates);
     
     if (parts[0] === 'client') {
       const clientName = activeClients.find(c => c.id === targetClientId)?.full_name;
@@ -265,6 +327,33 @@ export default function DomCareRosterView({
         : "Moved to unassigned"
       );
     }
+  };
+
+  const handleOverrideConfirm = () => {
+    if (!overrideReason.trim()) {
+      toast.error("Override Reason Required", "Please enter a reason for exceeding contracted hours");
+      return;
+    }
+    
+    if (pendingAssignment) {
+      completeAssignment(
+        pendingAssignment.visitId,
+        pendingAssignment.newStaffId,
+        pendingAssignment.targetClientId,
+        pendingAssignment.parts,
+        { reason: overrideReason, overriddenBy: 'scheduler' }
+      );
+    }
+    
+    setShowOverrideDialog(false);
+    setPendingAssignment(null);
+    setOverrideReason("");
+  };
+
+  const handleOverrideCancel = () => {
+    setShowOverrideDialog(false);
+    setPendingAssignment(null);
+    setOverrideReason("");
   };
 
   const getClientName = (clientId) => clients.find(c => c?.id === clientId)?.full_name || '';
@@ -501,19 +590,32 @@ export default function DomCareRosterView({
               <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
                 {activeStaff.map(staffMember => {
                   const dayVisits = getStaffDayVisits(staffMember.id, selectedDate);
-                  const weekHours = getStaffWeekHours(staffMember.id);
+                  const hoursStatus = getStaffHoursStatus(staffMember.id);
                   
                   return (
                     <div key={staffMember.id} className="flex border-b hover:bg-gray-50 transition-colors">
                       <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
+                          hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
+                          hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
+                          'bg-gradient-to-br from-teal-400 to-emerald-600'
+                        }`}>
                           {staffMember.full_name?.charAt(0)}
                         </div>
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
                           <div className="flex items-center gap-1">
                             <Clock className="w-3 h-3 text-gray-400" />
-                            <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h this week</span>
+                            <span className={`text-xs ${
+                              hoursStatus.status === 'full' ? 'text-red-600 font-medium' :
+                              hoursStatus.status === 'near' ? 'text-amber-600' : 'text-gray-500'
+                            }`}>
+                              {hoursStatus.weekHours.toFixed(1)}h
+                              {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
+                            </span>
+                            {hoursStatus.status === 'full' && (
+                              <Badge className="bg-red-100 text-red-700 text-[9px] py-0 px-1">Full</Badge>
+                            )}
                           </div>
                         </div>
                       </div>
@@ -685,23 +787,51 @@ export default function DomCareRosterView({
             {(activePanel === "staff" || activePanel === "both") && (
             <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activeStaff.map((staffMember) => {
-                const weekHours = getStaffWeekHours(staffMember.id);
+                const hoursStatus = getStaffHoursStatus(staffMember.id);
                 
                 return (
-                  <div key={staffMember.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                  <div key={staffMember.id} className={`grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors ${
+                    hoursStatus.status === 'full' ? 'bg-red-50/30' : ''
+                  }`}>
                     <div className="p-2 border-r flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-emerald-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
+                        hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
+                        hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
+                        'bg-gradient-to-br from-teal-400 to-emerald-600'
+                      }`}>
                         {staffMember.full_name?.charAt(0)}
                       </div>
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
-                        <div className="flex items-center gap-2">
-                          <span className="text-xs text-gray-500">{weekHours.toFixed(1)}h</span>
+                        <div className="flex items-center gap-1 flex-wrap">
+                          <span className={`text-xs ${
+                            hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
+                            hoursStatus.status === 'near' ? 'text-amber-600 font-medium' :
+                            hoursStatus.status === 'low' ? 'text-teal-600' : 'text-gray-500'
+                          }`}>
+                            {hoursStatus.weekHours.toFixed(1)}h
+                            {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
+                          </span>
+                          {hoursStatus.contracted && (
+                            <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
+                              <div 
+                                className={`h-full transition-all ${
+                                  hoursStatus.status === 'full' ? 'bg-red-500' :
+                                  hoursStatus.status === 'near' ? 'bg-amber-500' :
+                                  hoursStatus.status === 'low' ? 'bg-teal-400' : 'bg-emerald-500'
+                                }`}
+                                style={{ width: `${Math.min(hoursStatus.percentage || 0, 100)}%` }}
+                              />
+                            </div>
+                          )}
                           {staffMember.vehicle_type && (
-                            <Badge variant="outline" className="text-[10px] py-0 px-1">
+                            <Badge variant="outline" className="text-[9px] py-0 px-1">
                               <Car className="w-3 h-3 mr-0.5" />
                               {staffMember.vehicle_type}
                             </Badge>
+                          )}
+                          {hoursStatus.status === 'full' && (
+                            <Badge className="bg-red-100 text-red-700 text-[9px] py-0 px-1">Full</Badge>
                           )}
                         </div>
                       </div>
@@ -887,6 +1017,84 @@ export default function DomCareRosterView({
           <span>Unassigned</span>
         </div>
       </div>
+
+      {/* Hours Override Dialog */}
+      {showOverrideDialog && pendingAssignment && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="bg-white rounded-lg shadow-xl max-w-md w-full">
+            <div className="p-4 border-b bg-red-50 flex items-start gap-3">
+              <div className="p-2 bg-red-100 rounded-full">
+                <AlertTriangle className="w-6 h-6 text-red-600" />
+              </div>
+              <div>
+                <h3 className="font-bold text-red-900 text-lg">Hours Limit Exceeded</h3>
+                <p className="text-red-700 text-sm">Override required to continue</p>
+              </div>
+              <button onClick={handleOverrideCancel} className="ml-auto text-red-400 hover:text-red-600">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-6">
+              <div className="mb-4 p-4 bg-amber-50 border border-amber-200 rounded-lg">
+                <p className="font-semibold text-amber-900 mb-2">{pendingAssignment.staffName}</p>
+                <div className="grid grid-cols-2 gap-2 text-sm">
+                  <div>
+                    <span className="text-amber-700">Current hours:</span>
+                    <span className="font-bold text-amber-900 ml-1">{pendingAssignment.currentHours.toFixed(1)}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">Contracted:</span>
+                    <span className="font-bold text-amber-900 ml-1">{pendingAssignment.contractedHours}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">This visit:</span>
+                    <span className="font-bold text-amber-900 ml-1">+{pendingAssignment.visitDuration.toFixed(1)}h</span>
+                  </div>
+                  <div>
+                    <span className="text-amber-700">Projected:</span>
+                    <span className="font-bold text-red-600 ml-1">{pendingAssignment.projectedHours.toFixed(1)}h</span>
+                  </div>
+                </div>
+              </div>
+
+              <div className="mb-4">
+                <Label htmlFor="override-reason" className="text-sm font-medium text-gray-700 mb-2 block">
+                  Override Reason <span className="text-red-500">*</span>
+                </Label>
+                <Textarea
+                  id="override-reason"
+                  value={overrideReason}
+                  onChange={(e) => setOverrideReason(e.target.value)}
+                  placeholder="Enter reason for exceeding contracted hours (e.g., staff shortage, emergency cover, staff request for extra hours)..."
+                  rows={3}
+                  className="w-full"
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  This will be recorded for audit and compliance purposes.
+                </p>
+              </div>
+
+              <div className="flex gap-3">
+                <Button
+                  variant="outline"
+                  onClick={handleOverrideCancel}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+                <Button
+                  onClick={handleOverrideConfirm}
+                  className="flex-1 bg-red-600 hover:bg-red-700 text-white"
+                  disabled={!overrideReason.trim()}
+                >
+                  Override & Assign
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
