@@ -56,6 +56,7 @@ import CRMDashboard from './pages/CRMDashboard';
 import SupervisionManagement from './pages/SupervisionManagement';
 import ClientCommunicationHub from './pages/ClientCommunicationHub';
 import StaffTasks from './pages/StaffTasks';
+import CarerAvailability from './pages/CarerAvailability';
 import __Layout from './Layout.jsx';
 
 
@@ -118,6 +119,7 @@ export const PAGES = {
     "SupervisionManagement": SupervisionManagement,
     "ClientCommunicationHub": ClientCommunicationHub,
     "StaffTasks": StaffTasks,
+    "CarerAvailability": CarerAvailability,
 }
 
 export const pagesConfig = {
