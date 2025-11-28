@@ -47,6 +47,12 @@ export default function CallTranscriptionUploader({ clients = [], onClose, onSuc
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch staff for task assignment
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff-list'],
+    queryFn: () => base44.entities.Staff.filter({ is_active: true }),
+  });
+
   const handleFileSelect = (e) => {
     const selectedFile = e.target.files?.[0];
     if (selectedFile) {
@@ -85,14 +91,25 @@ export default function CallTranscriptionUploader({ clients = [], onClose, onSuc
         ? clients.find(c => c.id === formData.related_client_id)?.full_name 
         : null;
 
-      const prompt = `You are a professional transcription and analysis assistant for a care facility. 
-Please analyze this audio recording of a phone call and provide:
+      // Build staff list for AI to suggest assignments
+      const staffList = staff.map(s => `${s.id}:${s.full_name}`).join(', ');
 
-1. A complete transcript of the conversation (transcribe exactly what is said)
-2. A concise summary (2-3 sentences)
-3. Key topics discussed
-4. Follow-up action points with priority levels
-5. Overall sentiment of the call
+      const prompt = `You are a professional transcription and analysis assistant for a care facility. 
+Please analyze this audio recording of a phone call and provide a comprehensive analysis.
+
+SPEAKER DETECTION:
+- Identify different speakers in the conversation
+- Label them (e.g., "Staff Member", "Caller", "Family Member", etc.)
+- Provide the transcript with speaker attribution
+
+KEY DECISIONS:
+- Identify any decisions made during the call
+- Note who made the decision and the context
+
+FOLLOW-UP TASKS:
+- Identify actionable follow-up items
+- Suggest which staff member should handle each task based on the task type
+- Available staff: ${staffList || 'General staff'}
 
 Context:
 - Caller: ${formData.caller_name || 'Unknown'}
@@ -104,14 +121,28 @@ IMPORTANT: Listen carefully to the audio and transcribe the actual conversation.
 
 Please provide the response in the following JSON structure:
 {
-  "transcript": "Full transcript of the conversation...",
+  "speakers": [
+    {"speaker_id": "speaker_1", "speaker_label": "Staff Member", "role": "care_facility_staff"},
+    {"speaker_id": "speaker_2", "speaker_label": "Mrs. Smith", "role": "family_member"}
+  ],
+  "speaker_transcript": [
+    {"speaker_id": "speaker_1", "text": "Hello, how can I help you?", "timestamp": "00:00"},
+    {"speaker_id": "speaker_2", "text": "I'm calling about my mother...", "timestamp": "00:05"}
+  ],
+  "transcript": "Full transcript of the conversation with speaker labels...",
   "summary": "Brief summary of the call...",
+  "key_decisions": [
+    {"decision": "Agreed to arrange a care review meeting", "made_by": "Staff Member", "context": "Family requested update on care plan"}
+  ],
   "key_topics": ["topic1", "topic2"],
   "follow_up_points": [
     {
       "point": "Action to take",
       "priority": "low|medium|high|urgent",
-      "due_date": "YYYY-MM-DD or null"
+      "suggested_assignee_id": "staff_id or null",
+      "suggested_assignee_name": "Staff Name",
+      "due_date": "YYYY-MM-DD",
+      "reason": "Why this person should handle it"
     }
   ],
   "sentiment": "positive|neutral|concerned|urgent|complaint"
