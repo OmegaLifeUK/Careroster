@@ -226,8 +226,43 @@ Please provide the response in the following JSON structure:
     }
   };
 
+  // Track which follow-ups to create as tasks
+  const [createTasksFor, setCreateTasksFor] = useState([]);
+
+  const toggleCreateTask = (index) => {
+    setCreateTasksFor(prev => 
+      prev.includes(index) ? prev.filter(i => i !== index) : [...prev, index]
+    );
+  };
+
+  const updateFollowUpAssignment = (index, staffId) => {
+    const staffMember = staff.find(s => s.id === staffId);
+    setResult(prev => ({
+      ...prev,
+      follow_up_points: prev.follow_up_points.map((fp, i) => 
+        i === index ? { 
+          ...fp, 
+          suggested_assignee_id: staffId, 
+          suggested_assignee_name: staffMember?.full_name || '' 
+        } : fp
+      )
+    }));
+  };
+
   const saveMutation = useMutation({
     mutationFn: async () => {
+      // Prepare follow-up points with assignment info
+      const followUpPoints = (result.follow_up_points || []).map((fp, idx) => ({
+        point: fp.point,
+        priority: fp.priority,
+        assigned_to: fp.suggested_assignee_id || undefined,
+        assigned_to_name: fp.suggested_assignee_name || undefined,
+        due_date: fp.due_date || format(addDays(new Date(), fp.priority === 'urgent' ? 1 : fp.priority === 'high' ? 3 : 7), 'yyyy-MM-dd'),
+        completed: false,
+        task_created: createTasksFor.includes(idx),
+        task_id: undefined
+      }));
+
       const callData = {
         call_date: formData.call_date,
         caller_name: formData.caller_name,
@@ -236,12 +271,12 @@ Please provide the response in the following JSON structure:
         related_client_id: formData.related_client_id || undefined,
         audio_file_url: audioUrl,
         transcript: result.transcript,
+        speakers: result.speakers || [],
+        speaker_transcript: result.speaker_transcript || [],
         summary: result.summary,
+        key_decisions: result.key_decisions || [],
         key_topics: result.key_topics,
-        follow_up_points: (result.follow_up_points || []).map(fp => ({
-          ...fp,
-          completed: false
-        })),
+        follow_up_points: followUpPoints,
         sentiment: result.sentiment,
         handled_by: formData.handled_by,
         notes: formData.notes,
@@ -249,11 +284,45 @@ Please provide the response in the following JSON structure:
         status: "transcribed"
       };
 
-      return base44.entities.CallTranscript.create(callData);
+      const callRecord = await base44.entities.CallTranscript.create(callData);
+
+      // Create staff tasks for selected follow-ups
+      const tasksToCreate = followUpPoints
+        .map((fp, idx) => ({ ...fp, originalIndex: idx }))
+        .filter((_, idx) => createTasksFor.includes(idx))
+        .filter(fp => fp.assigned_to);
+
+      const createdTaskIds = [];
+      for (const fp of tasksToCreate) {
+        const task = await base44.entities.StaffTask.create({
+          title: `Call Follow-up: ${fp.point.substring(0, 50)}${fp.point.length > 50 ? '...' : ''}`,
+          description: `Follow-up from phone call on ${format(new Date(formData.call_date), 'PPP')}.\n\nAction Required: ${fp.point}\n\nCaller: ${formData.caller_name || 'Unknown'}\nRelationship: ${formData.caller_relationship || 'Unknown'}`,
+          task_type: "general",
+          assigned_to_staff_id: fp.assigned_to,
+          priority: fp.priority,
+          status: "pending",
+          due_date: fp.due_date,
+          subject_client_id: formData.related_client_id || undefined
+        });
+        createdTaskIds.push({ index: fp.originalIndex, taskId: task.id });
+      }
+
+      // Update call record with task IDs
+      if (createdTaskIds.length > 0) {
+        const updatedFollowUps = callRecord.follow_up_points.map((fp, idx) => {
+          const created = createdTaskIds.find(c => c.index === idx);
+          return created ? { ...fp, task_id: created.taskId } : fp;
+        });
+        await base44.entities.CallTranscript.update(callRecord.id, { follow_up_points: updatedFollowUps });
+      }
+
+      return callRecord;
     },
     onSuccess: (newRecord) => {
       queryClient.invalidateQueries({ queryKey: ['call-transcripts'] });
-      toast.success("Call Saved", "Transcript and follow-up points saved successfully");
+      queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+      const tasksCreated = createTasksFor.length;
+      toast.success("Call Saved", `Transcript saved${tasksCreated > 0 ? ` and ${tasksCreated} task${tasksCreated > 1 ? 's' : ''} created` : ''}`);
       onSuccess?.(newRecord);
       onClose();
     },
