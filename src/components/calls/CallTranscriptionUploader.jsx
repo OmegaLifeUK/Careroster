@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   Upload, 
   Loader2, 
@@ -17,10 +18,14 @@ import {
   Sparkles,
   CheckCircle,
   AlertCircle,
-  X
+  X,
+  Users,
+  Lightbulb,
+  UserPlus,
+  ClipboardList
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { format } from "date-fns";
+import { format, addDays } from "date-fns";
 
 export default function CallTranscriptionUploader({ clients = [], onClose, onSuccess }) {
   const [file, setFile] = useState(null);
