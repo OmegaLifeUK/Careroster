@@ -154,8 +154,41 @@ Please provide the response in the following JSON structure:
         response_json_schema: {
           type: "object",
           properties: {
+            speakers: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  speaker_id: { type: "string" },
+                  speaker_label: { type: "string" },
+                  role: { type: "string" }
+                }
+              } 
+            },
+            speaker_transcript: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  speaker_id: { type: "string" },
+                  text: { type: "string" },
+                  timestamp: { type: "string" }
+                }
+              } 
+            },
             transcript: { type: "string" },
             summary: { type: "string" },
+            key_decisions: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  decision: { type: "string" },
+                  made_by: { type: "string" },
+                  context: { type: "string" }
+                }
+              } 
+            },
             key_topics: { type: "array", items: { type: "string" } },
             follow_up_points: { 
               type: "array", 
@@ -164,7 +197,10 @@ Please provide the response in the following JSON structure:
                 properties: {
                   point: { type: "string" },
                   priority: { type: "string" },
-                  due_date: { type: "string" }
+                  suggested_assignee_id: { type: "string" },
+                  suggested_assignee_name: { type: "string" },
+                  due_date: { type: "string" },
+                  reason: { type: "string" }
                 }
               } 
             },
