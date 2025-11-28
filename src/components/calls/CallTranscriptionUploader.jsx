@@ -561,6 +561,49 @@ Please provide the response in the following JSON structure:
               </CardContent>
             </Card>
 
+            {/* Speakers Detected */}
+            {result.speakers?.length > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Users className="w-4 h-4 text-blue-600" />
+                    Speakers Detected ({result.speakers.length})
+                  </h4>
+                  <div className="flex flex-wrap gap-2">
+                    {result.speakers.map((speaker, idx) => (
+                      <Badge key={idx} variant="outline" className="py-1">
+                        <span className="font-medium">{speaker.speaker_label}</span>
+                        <span className="text-gray-500 ml-1">({speaker.role?.replace(/_/g, ' ')})</span>
+                      </Badge>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Key Decisions */}
+            {result.key_decisions?.length > 0 && (
+              <Card>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-2 flex items-center gap-2">
+                    <Lightbulb className="w-4 h-4 text-amber-600" />
+                    Key Decisions Made
+                  </h4>
+                  <div className="space-y-2">
+                    {result.key_decisions.map((decision, idx) => (
+                      <div key={idx} className="p-2 bg-amber-50 border border-amber-100 rounded">
+                        <p className="font-medium text-sm">{decision.decision}</p>
+                        <p className="text-xs text-gray-600 mt-1">
+                          <span className="font-medium">By:</span> {decision.made_by}
+                          {decision.context && <span className="ml-2">• {decision.context}</span>}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </CardContent>
+              </Card>
+            )}
+
             {result.key_topics?.length > 0 && (
               <div>
                 <h4 className="font-semibold mb-2">Key Topics</h4>
@@ -572,24 +615,112 @@ Please provide the response in the following JSON structure:
               </div>
             )}
 
+            {/* Enhanced Follow-up Actions with Task Creation */}
             {result.follow_up_points?.length > 0 && (
-              <div>
-                <h4 className="font-semibold mb-2">Follow-up Actions</h4>
-                <div className="space-y-2">
-                  {result.follow_up_points.map((fp, idx) => (
-                    <div key={idx} className="flex items-start gap-2 p-2 bg-gray-50 rounded">
-                      <AlertCircle className="w-4 h-4 mt-0.5 text-gray-500" />
-                      <div className="flex-1">
-                        <p className="text-sm">{fp.point}</p>
-                        {fp.due_date && (
-                          <p className="text-xs text-gray-500">Due: {fp.due_date}</p>
-                        )}
+              <Card>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <ClipboardList className="w-4 h-4 text-purple-600" />
+                    Follow-up Actions
+                  </h4>
+                  <div className="space-y-3">
+                    {result.follow_up_points.map((fp, idx) => (
+                      <div key={idx} className="p-3 bg-gray-50 rounded-lg border">
+                        <div className="flex items-start gap-3">
+                          <Checkbox
+                            checked={createTasksFor.includes(idx)}
+                            onCheckedChange={() => toggleCreateTask(idx)}
+                            className="mt-1"
+                          />
+                          <div className="flex-1 space-y-2">
+                            <div className="flex items-start justify-between gap-2">
+                              <p className="text-sm font-medium">{fp.point}</p>
+                              <Badge className={getPriorityBadge(fp.priority)}>{fp.priority}</Badge>
+                            </div>
+                            
+                            <div className="grid grid-cols-2 gap-2">
+                              <div>
+                                <Label className="text-xs text-gray-500">Assign To</Label>
+                                <Select 
+                                  value={fp.suggested_assignee_id || ""} 
+                                  onValueChange={(v) => updateFollowUpAssignment(idx, v)}
+                                >
+                                  <SelectTrigger className="h-8 text-sm">
+                                    <SelectValue placeholder="Select staff" />
+                                  </SelectTrigger>
+                                  <SelectContent>
+                                    {staff.map(s => (
+                                      <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                                    ))}
+                                  </SelectContent>
+                                </Select>
+                              </div>
+                              <div>
+                                <Label className="text-xs text-gray-500">Due Date</Label>
+                                <Input
+                                  type="date"
+                                  className="h-8 text-sm"
+                                  value={fp.due_date || format(addDays(new Date(), 7), 'yyyy-MM-dd')}
+                                  onChange={(e) => {
+                                    setResult(prev => ({
+                                      ...prev,
+                                      follow_up_points: prev.follow_up_points.map((f, i) => 
+                                        i === idx ? { ...f, due_date: e.target.value } : f
+                                      )
+                                    }));
+                                  }}
+                                />
+                              </div>
+                            </div>
+                            
+                            {fp.reason && (
+                              <p className="text-xs text-gray-500 italic">
+                                AI suggestion: {fp.reason}
+                              </p>
+                            )}
+                            
+                            {createTasksFor.includes(idx) && (
+                              <div className="flex items-center gap-1 text-xs text-purple-600">
+                                <UserPlus className="w-3 h-3" />
+                                Will create a staff task
+                              </div>
+                            )}
+                          </div>
+                        </div>
                       </div>
-                      <Badge className={getPriorityBadge(fp.priority)}>{fp.priority}</Badge>
+                    ))}
+                  </div>
+                  
+                  {createTasksFor.length > 0 && (
+                    <div className="mt-3 p-2 bg-purple-50 border border-purple-200 rounded text-sm text-purple-700">
+                      {createTasksFor.length} task{createTasksFor.length > 1 ? 's' : ''} will be created and assigned to staff
                     </div>
-                  ))}
+                  )}
+                </CardContent>
+              </Card>
+            )}
+
+            {/* Speaker Transcript */}
+            {result.speaker_transcript?.length > 0 && (
+              <details className="group">
+                <summary className="cursor-pointer font-semibold text-sm text-gray-600 hover:text-gray-900 flex items-center gap-2">
+                  <Users className="w-4 h-4" />
+                  View Speaker-Attributed Transcript
+                </summary>
+                <div className="mt-2 p-3 bg-gray-50 rounded text-sm max-h-48 overflow-y-auto space-y-2">
+                  {result.speaker_transcript.map((segment, idx) => {
+                    const speaker = result.speakers?.find(s => s.speaker_id === segment.speaker_id);
+                    return (
+                      <div key={idx} className="flex gap-2">
+                        <span className="font-medium text-blue-600 min-w-[100px]">
+                          {speaker?.speaker_label || segment.speaker_id}:
+                        </span>
+                        <span>{segment.text}</span>
+                      </div>
+                    );
+                  })}
                 </div>
-              </div>
+              </details>
             )}
 
             <details className="group">
@@ -618,7 +749,7 @@ Please provide the response in the following JSON structure:
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Save Call Record
+                    Save Call Record {createTasksFor.length > 0 && `& Create ${createTasksFor.length} Task${createTasksFor.length > 1 ? 's' : ''}`}
                   </>
                 )}
               </Button>
