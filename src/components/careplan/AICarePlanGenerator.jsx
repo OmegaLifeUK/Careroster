@@ -9,6 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
   Sparkles, 
   Loader2, 
@@ -16,21 +18,58 @@ import {
   AlertTriangle, 
   CheckCircle,
   Heart,
-  Upload
+  Upload,
+  Palette,
+  BookTemplate,
+  Target,
+  CheckCircle2,
+  Circle,
+  Clock
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addMonths } from "date-fns";
+
+// Tone/Style Options
+const TONE_OPTIONS = [
+  { value: "professional", label: "Professional & Clinical", description: "Formal medical terminology, suitable for clinical settings" },
+  { value: "person_centered", label: "Person-Centered", description: "Warm, personal language focusing on individual preferences" },
+  { value: "family_friendly", label: "Family-Friendly", description: "Clear, accessible language for family members to understand" },
+  { value: "detailed_technical", label: "Detailed Technical", description: "Comprehensive with specific medical details and protocols" }
+];
+
+// Condition Templates
+const CONDITION_TEMPLATES = [
+  { value: "dementia", label: "Dementia/Alzheimer's", icon: "🧠", tasks: ["Memory prompts", "Orientation support", "Safe wandering spaces"] },
+  { value: "mobility", label: "Mobility Impairment", icon: "🦽", tasks: ["Transfer assistance", "Fall prevention", "Mobility exercises"] },
+  { value: "diabetes", label: "Diabetes Management", icon: "💉", tasks: ["Blood sugar monitoring", "Dietary management", "Foot care"] },
+  { value: "stroke", label: "Post-Stroke Recovery", icon: "❤️‍🩹", tasks: ["Speech therapy support", "Physio exercises", "Medication timing"] },
+  { value: "palliative", label: "Palliative/End of Life", icon: "🕊️", tasks: ["Comfort measures", "Pain management", "Family support"] },
+  { value: "mental_health", label: "Mental Health Support", icon: "🧘", tasks: ["Mood monitoring", "Social engagement", "Crisis prevention"] },
+  { value: "learning_disability", label: "Learning Disability", icon: "📚", tasks: ["Routine consistency", "Communication aids", "Skill development"] },
+  { value: "elderly_frail", label: "Elderly/Frail Care", icon: "👴", tasks: ["Nutrition support", "Skin integrity", "Social interaction"] }
+];
 
 export default function AICarePlanGenerator({ client, assessmentDocuments = [], onClose, onSuccess }) {
   const [selectedDocs, setSelectedDocs] = useState(assessmentDocuments.map(d => d.document_url));
   const [additionalContext, setAdditionalContext] = useState("");
   const [careSetting, setCareSetting] = useState("domiciliary");
+  const [selectedTone, setSelectedTone] = useState("person_centered");
+  const [selectedTemplates, setSelectedTemplates] = useState([]);
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [step, setStep] = useState("select");
+  const [activeTab, setActiveTab] = useState("documents");
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  const toggleTemplate = (templateValue) => {
+    setSelectedTemplates(prev => 
+      prev.includes(templateValue) 
+        ? prev.filter(t => t !== templateValue)
+        : [...prev, templateValue]
+    );
+  };
 
   const toggleDoc = (url) => {
     setSelectedDocs(prev => 
