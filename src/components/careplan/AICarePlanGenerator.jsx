@@ -308,84 +308,152 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
           <div className="space-y-6">
             <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
               <p className="text-sm text-purple-800">
-                Select assessment documents to analyze. The AI will extract information from these documents 
-                to generate a comprehensive care plan for <strong>{client.full_name}</strong>.
+                Configure your care plan generation for <strong>{client.full_name}</strong>. 
+                Select documents, choose a tone, and apply condition templates.
               </p>
             </div>
 
-            <div>
-              <Label className="mb-3 block font-medium">Care Setting</Label>
-              <Select value={careSetting} onValueChange={setCareSetting}>
-                <SelectTrigger className="w-64">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
-                  <SelectItem value="residential">Residential Care</SelectItem>
-                  <SelectItem value="supported_living">Supported Living</SelectItem>
-                  <SelectItem value="day_centre">Day Centre</SelectItem>
-                </SelectContent>
-              </Select>
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <Label className="mb-2 block font-medium">Care Setting</Label>
+                <Select value={careSetting} onValueChange={setCareSetting}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
+                    <SelectItem value="residential">Residential Care</SelectItem>
+                    <SelectItem value="supported_living">Supported Living</SelectItem>
+                    <SelectItem value="day_centre">Day Centre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <Label className="mb-2 block font-medium flex items-center gap-2">
+                  <Palette className="w-4 h-4" /> Writing Tone
+                </Label>
+                <Select value={selectedTone} onValueChange={setSelectedTone}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {TONE_OPTIONS.map(tone => (
+                      <SelectItem key={tone.value} value={tone.value}>
+                        {tone.label}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
             </div>
 
-            <div>
-              <Label className="mb-3 block font-medium">
-                Assessment Documents ({selectedDocs.length} selected)
-              </Label>
-              
-              {assessmentDocuments.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <Upload className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No assessment documents attached to visits</p>
-                    <p className="text-sm mt-1">Attach documents to assessment visits first</p>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="space-y-2">
-                  {assessmentDocuments.map((doc, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 border rounded-lg flex items-center gap-3 cursor-pointer transition-colors ${
-                        selectedDocs.includes(doc.document_url) 
-                          ? 'border-purple-300 bg-purple-50' 
+            <Tabs value={activeTab} onValueChange={setActiveTab}>
+              <TabsList className="grid grid-cols-3 w-full">
+                <TabsTrigger value="documents" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Documents ({selectedDocs.length})
+                </TabsTrigger>
+                <TabsTrigger value="templates" className="flex items-center gap-2">
+                  <BookTemplate className="w-4 h-4" />
+                  Templates ({selectedTemplates.length})
+                </TabsTrigger>
+                <TabsTrigger value="context" className="flex items-center gap-2">
+                  <FileText className="w-4 h-4" />
+                  Context
+                </TabsTrigger>
+              </TabsList>
+
+              <TabsContent value="documents" className="mt-4">
+                {assessmentDocuments.length === 0 ? (
+                  <Card className="border-dashed">
+                    <CardContent className="p-8 text-center text-gray-500">
+                      <Upload className="w-12 h-12 mx-auto mb-2 text-gray-300" />
+                      <p>No assessment documents attached to visits</p>
+                      <p className="text-sm mt-1">Attach documents to assessment visits first</p>
+                    </CardContent>
+                  </Card>
+                ) : (
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {assessmentDocuments.map((doc, idx) => (
+                      <div 
+                        key={idx}
+                        className={`p-3 border rounded-lg flex items-center gap-3 cursor-pointer transition-colors ${
+                          selectedDocs.includes(doc.document_url) 
+                            ? 'border-purple-300 bg-purple-50' 
+                            : 'hover:bg-gray-50'
+                        }`}
+                        onClick={() => toggleDoc(doc.document_url)}
+                      >
+                        <Checkbox 
+                          checked={selectedDocs.includes(doc.document_url)}
+                          onCheckedChange={() => toggleDoc(doc.document_url)}
+                        />
+                        <FileText className="w-5 h-5 text-blue-600" />
+                        <div className="flex-1">
+                          <p className="font-medium">{doc.document_name}</p>
+                          <p className="text-sm text-gray-500">
+                            {getDocTypeLabel(doc.document_type)}
+                            {doc.uploaded_date && ` • ${format(new Date(doc.uploaded_date), 'MMM d, yyyy')}`}
+                          </p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </TabsContent>
+
+              <TabsContent value="templates" className="mt-4">
+                <p className="text-sm text-gray-600 mb-3">
+                  Select condition templates to include specialized care tasks and considerations:
+                </p>
+                <div className="grid grid-cols-2 gap-2 max-h-64 overflow-y-auto">
+                  {CONDITION_TEMPLATES.map((template) => (
+                    <div
+                      key={template.value}
+                      className={`p-3 border rounded-lg cursor-pointer transition-all ${
+                        selectedTemplates.includes(template.value)
+                          ? 'border-purple-400 bg-purple-50 ring-1 ring-purple-300'
                           : 'hover:bg-gray-50'
                       }`}
-                      onClick={() => toggleDoc(doc.document_url)}
+                      onClick={() => toggleTemplate(template.value)}
                     >
-                      <Checkbox 
-                        checked={selectedDocs.includes(doc.document_url)}
-                        onCheckedChange={() => toggleDoc(doc.document_url)}
-                      />
-                      <FileText className="w-5 h-5 text-blue-600" />
-                      <div className="flex-1">
-                        <p className="font-medium">{doc.document_name}</p>
-                        <p className="text-sm text-gray-500">
-                          {getDocTypeLabel(doc.document_type)}
-                          {doc.uploaded_date && ` • ${format(new Date(doc.uploaded_date), 'MMM d, yyyy')}`}
-                        </p>
+                      <div className="flex items-center gap-2">
+                        <Checkbox 
+                          checked={selectedTemplates.includes(template.value)}
+                          onCheckedChange={() => toggleTemplate(template.value)}
+                        />
+                        <span className="text-xl">{template.icon}</span>
+                        <span className="font-medium text-sm">{template.label}</span>
+                      </div>
+                      <div className="mt-2 flex flex-wrap gap-1">
+                        {template.tasks.slice(0, 2).map((task, i) => (
+                          <Badge key={i} variant="outline" className="text-xs">{task}</Badge>
+                        ))}
                       </div>
                     </div>
                   ))}
                 </div>
-              )}
-            </div>
+              </TabsContent>
 
-            <div>
-              <Label className="mb-2 block">Additional Context (Optional)</Label>
-              <Textarea
-                value={additionalContext}
-                onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder="Add any additional information not in the documents, such as recent observations, family preferences, or specific concerns..."
-                rows={4}
-              />
-            </div>
+              <TabsContent value="context" className="mt-4">
+                <Label className="mb-2 block">Additional Context (Optional)</Label>
+                <Textarea
+                  value={additionalContext}
+                  onChange={(e) => setAdditionalContext(e.target.value)}
+                  placeholder="Add any additional information not in the documents, such as recent observations, family preferences, or specific concerns..."
+                  rows={6}
+                />
+                <p className="text-xs text-gray-500 mt-2">
+                  Selected tone: <strong>{TONE_OPTIONS.find(t => t.value === selectedTone)?.description}</strong>
+                </p>
+              </TabsContent>
+            </Tabs>
 
             <DialogFooter>
               <Button variant="outline" onClick={onClose}>Cancel</Button>
               <Button 
                 onClick={generateCarePlan}
-                disabled={selectedDocs.length === 0}
+                disabled={selectedDocs.length === 0 && selectedTemplates.length === 0}
                 className="bg-purple-600 hover:bg-purple-700"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
