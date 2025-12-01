@@ -80,8 +80,8 @@ export default function AICarePlanGenerator({ client, assessmentDocuments = [], 
   };
 
   const generateCarePlan = async () => {
-    if (selectedDocs.length === 0) {
-      toast.error("No Documents", "Please select at least one assessment document");
+    if (selectedDocs.length === 0 && selectedTemplates.length === 0) {
+      toast.error("No Input", "Please select documents or condition templates");
       return;
     }
 
@@ -529,9 +529,74 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
                   </div>
                 </div>
 
+                {/* Objectives with Progress Tracking */}
+                {generatedPlan.care_objectives?.length > 0 && (
+                  <div className="mt-4">
+                    <p className="text-sm font-medium text-gray-700 mb-2 flex items-center gap-2">
+                      <Target className="w-4 h-4 text-blue-600" />
+                      Care Objectives (with progress tracking)
+                    </p>
+                    <div className="space-y-2">
+                      {generatedPlan.care_objectives.map((obj, idx) => {
+                        const statusConfig = {
+                          not_started: { icon: Circle, color: 'text-gray-400', bg: 'bg-gray-100', label: 'Not Started', progress: 0 },
+                          in_progress: { icon: Clock, color: 'text-blue-500', bg: 'bg-blue-100', label: 'In Progress', progress: 50 },
+                          achieved: { icon: CheckCircle2, color: 'text-green-500', bg: 'bg-green-100', label: 'Achieved', progress: 100 },
+                          revised: { icon: AlertTriangle, color: 'text-amber-500', bg: 'bg-amber-100', label: 'Revised', progress: 25 },
+                          discontinued: { icon: Circle, color: 'text-red-500', bg: 'bg-red-100', label: 'Discontinued', progress: 0 }
+                        };
+                        const config = statusConfig[obj.status || 'not_started'];
+                        const StatusIcon = config.icon;
+                        
+                        return (
+                          <div key={idx} className={`p-3 rounded-lg border ${config.bg}`}>
+                            <div className="flex items-start gap-2">
+                              <StatusIcon className={`w-4 h-4 mt-0.5 ${config.color}`} />
+                              <div className="flex-1">
+                                <p className="text-sm font-medium">{obj.objective}</p>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Progress value={config.progress} className="h-1.5 flex-1" />
+                                  <span className="text-xs text-gray-500">{config.label}</span>
+                                </div>
+                                {obj.target_date && (
+                                  <p className="text-xs text-gray-500 mt-1">
+                                    Target: {format(new Date(obj.target_date), 'MMM d, yyyy')}
+                                  </p>
+                                )}
+                              </div>
+                              <Select
+                                value={obj.status || 'not_started'}
+                                onValueChange={(value) => {
+                                  setGeneratedPlan(prev => ({
+                                    ...prev,
+                                    care_objectives: prev.care_objectives.map((o, i) => 
+                                      i === idx ? { ...o, status: value } : o
+                                    )
+                                  }));
+                                }}
+                              >
+                                <SelectTrigger className="w-28 h-7 text-xs">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="not_started">Not Started</SelectItem>
+                                  <SelectItem value="in_progress">In Progress</SelectItem>
+                                  <SelectItem value="achieved">Achieved</SelectItem>
+                                  <SelectItem value="revised">Revised</SelectItem>
+                                  <SelectItem value="discontinued">Discontinued</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            </div>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+
                 {generatedPlan.care_tasks?.length > 0 && (
                   <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Sample Tasks:</p>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Care Tasks:</p>
                     <div className="flex flex-wrap gap-2">
                       {generatedPlan.care_tasks.slice(0, 5).map((task, idx) => (
                         <Badge key={idx} variant="outline">{task.task_name}</Badge>
@@ -561,6 +626,23 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
                           {risk.risk}
                         </Badge>
                       ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Templates Applied */}
+                {selectedTemplates.length > 0 && (
+                  <div className="mt-4 p-2 bg-purple-50 rounded border border-purple-100">
+                    <p className="text-xs font-medium text-purple-700 mb-1">Templates Applied:</p>
+                    <div className="flex flex-wrap gap-1">
+                      {selectedTemplates.map(t => {
+                        const template = CONDITION_TEMPLATES.find(ct => ct.value === t);
+                        return template ? (
+                          <Badge key={t} variant="outline" className="text-xs">
+                            {template.icon} {template.label}
+                          </Badge>
+                        ) : null;
+                      })}
                     </div>
                   </div>
                 )}
