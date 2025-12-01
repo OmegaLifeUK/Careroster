@@ -89,7 +89,26 @@ export default function AICarePlanGenerator({ client, assessmentDocuments = [], 
     setStep("generating");
 
     try {
+      // Build tone instructions
+      const toneInstructions = {
+        professional: "Use formal medical terminology and clinical language. Be precise and professional.",
+        person_centered: "Use warm, personal language that focuses on the individual's preferences and dignity. Refer to the person by name.",
+        family_friendly: "Use clear, accessible language that family members can easily understand. Avoid jargon.",
+        detailed_technical: "Include comprehensive medical details, specific protocols, and technical terminology."
+      };
+
+      // Build template-specific instructions
+      const templateInstructions = selectedTemplates.map(t => {
+        const template = CONDITION_TEMPLATES.find(ct => ct.value === t);
+        return template ? `Include specific considerations for ${template.label}: ${template.tasks.join(', ')}` : '';
+      }).filter(Boolean).join('\n');
+
       const prompt = `You are a care plan specialist. Based on the following assessment documents for ${client.full_name}, generate a comprehensive care plan.
+
+WRITING STYLE & TONE:
+${toneInstructions[selectedTone] || toneInstructions.person_centered}
+
+${templateInstructions ? `CONDITION-SPECIFIC REQUIREMENTS:\n${templateInstructions}\n` : ''}
 
 Client Details:
 - Name: ${client.full_name}
