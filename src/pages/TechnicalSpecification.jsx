@@ -607,6 +607,7 @@ const KEY_COMPONENTS = [
   { name: "StaffTaskManager", description: "Task assignment and tracking" },
   { name: "IncidentForm", description: "Incident reporting form" },
   { name: "FollowUpManager", description: "Follow-up tracking with automated reminders and escalation for internal/external requests" },
+  { name: "ClientProgressReport", description: "Progress tracking for clients showing improvements/declines in behaviour, education, social, health, independence" },
   { name: "SupervisionForm", description: "Staff supervision recording" },
   { name: "MedicationManagement", description: "MAR sheet and medication tracking" },
   { name: "DocumentManager", description: "Document upload and management" },
