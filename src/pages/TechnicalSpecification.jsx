@@ -213,6 +213,25 @@ const ENTITY_DEFINITIONS = {
       { name: "notes", type: "string", required: false, description: "Additional notes" },
     ]
   },
+  ClientProgressRecord: {
+    category: "Care Management",
+    description: "Progress tracking for clients across multiple areas with trend analysis",
+    fields: [
+      { name: "client_id", type: "string", required: true, description: "Related client" },
+      { name: "record_date", type: "date", required: true, description: "Date of progress record" },
+      { name: "record_type", type: "enum", required: false, description: "weekly | monthly | quarterly | ad_hoc" },
+      { name: "behaviour", type: "object", required: false, description: "Behaviour ratings, trends, and notes" },
+      { name: "education_schooling", type: "object", required: false, description: "Education progress, attendance, academic performance" },
+      { name: "social_emotional", type: "object", required: false, description: "Social skills, emotional regulation, relationships" },
+      { name: "health_wellbeing", type: "object", required: false, description: "Physical and mental health tracking" },
+      { name: "independence_skills", type: "object", required: false, description: "Life skills and independence development" },
+      { name: "activities_engagement", type: "object", required: false, description: "Activities and community involvement" },
+      { name: "key_achievements", type: "array", required: false, description: "Notable achievements this period" },
+      { name: "concerns", type: "array", required: false, description: "Areas of concern" },
+      { name: "overall_progress", type: "enum", required: false, description: "significant_improvement | improvement | stable | slight_decline | significant_decline" },
+      { name: "overall_rating", type: "number", required: false, description: "Overall rating 1-10" },
+    ]
+  },
 
   // Staff Management Entities
   StaffSupervision: {
