@@ -434,6 +434,40 @@ const ENTITY_DEFINITIONS = {
     ]
   },
 
+  // Reporting
+  ScheduledReport: {
+    category: "Reporting",
+    description: "Scheduled report configurations with frequency, recipients, and parameters",
+    fields: [
+      { name: "report_name", type: "string", required: true, description: "Name of the scheduled report" },
+      { name: "report_type", type: "enum", required: true, description: "client_progress | staff_performance | compliance | payroll_summary | incident_trends | training_compliance | audit_summary | medication_compliance" },
+      { name: "parameters", type: "object", required: false, description: "Report parameters (date range, filters)" },
+      { name: "schedule_frequency", type: "enum", required: true, description: "daily | weekly | fortnightly | monthly | quarterly | annually" },
+      { name: "schedule_day", type: "number", required: false, description: "Day of week (0-6) or day of month (1-31)" },
+      { name: "schedule_time", type: "string", required: false, description: "Time to run (HH:MM)" },
+      { name: "next_run_date", type: "datetime", required: false, description: "Next scheduled run" },
+      { name: "recipients", type: "array", required: false, description: "Email addresses to send report to" },
+      { name: "output_format", type: "enum", required: false, description: "pdf | csv | excel | email_summary" },
+      { name: "is_active", type: "boolean", required: false, description: "Whether schedule is active" },
+    ]
+  },
+  GeneratedReport: {
+    category: "Reporting",
+    description: "Generated report records with data and file attachments",
+    fields: [
+      { name: "scheduled_report_id", type: "string", required: false, description: "ID of scheduled report if applicable" },
+      { name: "report_name", type: "string", required: true, description: "Name of the report" },
+      { name: "report_type", type: "enum", required: true, description: "Type of report generated" },
+      { name: "generated_date", type: "datetime", required: false, description: "When report was generated" },
+      { name: "generated_by", type: "string", required: false, description: "User who generated or 'system'" },
+      { name: "parameters_used", type: "object", required: false, description: "Parameters used to generate" },
+      { name: "report_data", type: "object", required: false, description: "The actual report data/summary" },
+      { name: "file_url", type: "string", required: false, description: "URL to downloadable file" },
+      { name: "status", type: "enum", required: false, description: "generating | completed | failed" },
+      { name: "sent_to", type: "array", required: false, description: "Recipients report was sent to" },
+    ]
+  },
+
   // Supported Living & Day Centre
   SupportedLivingProperty: {
     category: "Supported Living",
@@ -522,6 +556,7 @@ const PAGE_DEFINITIONS = {
     { name: "ComplianceHub", description: "Compliance overview and CQC tracking", path: "/ComplianceHub" },
     { name: "ComplianceTaskCenter", description: "Compliance task management", path: "/ComplianceTaskCenter" },
     { name: "ActionPlanProgress", description: "Action plan tracking", path: "/ActionPlanProgress" },
+    { name: "ReportingEngine", description: "Automated reporting engine with scheduling, customization, and multiple report types", path: "/ReportingEngine" },
     { name: "AuditTemplates", description: "Audit template management", path: "/AuditTemplates" },
     { name: "FormBuilder", description: "Dynamic form builder", path: "/FormBuilder" },
   ],
@@ -611,6 +646,9 @@ const AI_FEATURES = [
 
 // Key Components
 const KEY_COMPONENTS = [
+  { name: "ReportGenerator", description: "Report generation with customizable parameters, date ranges, filters, and email delivery" },
+  { name: "ScheduledReportDialog", description: "Schedule report configuration with frequency, recipients, and output format" },
+  { name: "ReportViewer", description: "Interactive report viewer with charts, summaries, and export options" },
   { name: "EnhancedRosterView", description: "Day/week roster view with drag-and-drop shift assignment" },
   { name: "DomCareRosterView", description: "Domiciliary care roster with visit management" },
   { name: "SupportedLivingRosterView", description: "Property-based roster for supported living" },
