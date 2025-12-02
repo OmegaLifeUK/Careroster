@@ -113,6 +113,7 @@ const systemNavigation = [
   { title: "Role Management", url: createPageUrl("RoleManagement"), icon: Shield, adminOnly: true },
   { title: "Module Settings", url: createPageUrl("ModuleSettings"), icon: Settings, adminOnly: true },
   { title: "User Management", url: createPageUrl("UserManagement"), icon: Users, adminOnly: true },
+  { title: "Technical Spec", url: createPageUrl("TechnicalSpecification"), icon: FileText, adminOnly: true },
 ];
 
 export default function Layout({ children, currentPageName }) {
