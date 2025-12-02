@@ -349,6 +349,30 @@ const ENTITY_DEFINITIONS = {
   },
 
   // Communication Entities
+  CRMFollowUp: {
+    category: "Communication",
+    description: "Follow-up tracking for internal tasks and external requests with automated reminders and escalation alerts",
+    fields: [
+      { name: "follow_up_type", type: "enum", required: true, description: "document_chase | report_request | information_request | internal_task | phone_call | email | meeting | assessment" },
+      { name: "recipient_type", type: "enum", required: false, description: "internal | external" },
+      { name: "title", type: "string", required: true, description: "Follow-up title" },
+      { name: "description", type: "string", required: false, description: "Details of follow-up needed" },
+      { name: "created_by_email", type: "string", required: false, description: "Email of staff who created this" },
+      { name: "assigned_to", type: "string", required: false, description: "Staff member ID (for internal)" },
+      { name: "assigned_to_email", type: "string", required: false, description: "Email of assigned staff" },
+      { name: "external_contact_name", type: "string", required: false, description: "External contact name" },
+      { name: "external_contact_email", type: "string", required: false, description: "External contact email" },
+      { name: "external_contact_role", type: "enum", required: false, description: "social_worker | gp | nurse | therapist | family_member | local_authority | nhs | other" },
+      { name: "due_date", type: "datetime", required: true, description: "When response is due" },
+      { name: "reminder_days_before", type: "number", required: false, description: "Days before due date to send reminder" },
+      { name: "escalation_after_days", type: "number", required: false, description: "Days after due date to escalate" },
+      { name: "reminder_sent", type: "boolean", required: false, description: "Whether reminder sent" },
+      { name: "overdue_alert_sent", type: "boolean", required: false, description: "Whether overdue alert sent" },
+      { name: "escalation_sent", type: "boolean", required: false, description: "Whether escalation sent" },
+      { name: "status", type: "enum", required: false, description: "pending | in_progress | awaiting_response | completed | cancelled | overdue" },
+      { name: "outcome", type: "string", required: false, description: "Result of follow-up" },
+    ]
+  },
   CallTranscript: {
     category: "Communication",
     description: "Call recordings with AI transcription and analysis",
@@ -582,6 +606,7 @@ const KEY_COMPONENTS = [
   { name: "FormTemplateEditor", description: "Dynamic form builder interface" },
   { name: "StaffTaskManager", description: "Task assignment and tracking" },
   { name: "IncidentForm", description: "Incident reporting form" },
+  { name: "FollowUpManager", description: "Follow-up tracking with automated reminders and escalation for internal/external requests" },
   { name: "SupervisionForm", description: "Staff supervision recording" },
   { name: "MedicationManagement", description: "MAR sheet and medication tracking" },
   { name: "DocumentManager", description: "Document upload and management" },
