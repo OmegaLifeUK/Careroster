@@ -28,6 +28,7 @@ import OnboardingTracker from "../components/onboarding/OnboardingTracker";
 import TaskManager from "../components/tasks/TaskManager";
 import AIDocumentImporter from "../components/clients/AIDocumentImporter";
 import AINewClientImporter from "../components/clients/AINewClientImporter";
+import ClientProgressReport from "../components/clients/ClientProgressReport";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -306,6 +307,13 @@ export default function Clients() {
             >
               Documents
             </Button>
+            <Button
+              variant={activeTab === "progress" ? "default" : "ghost"}
+              onClick={() => setActiveTab("progress")}
+              className="flex-shrink-0"
+            >
+              Progress Report
+            </Button>
           </div>
 
           {activeTab === "details" && (
@@ -436,6 +444,10 @@ export default function Clients() {
 
           {activeTab === "documents" && (
             <DocumentManager client={selectedClient} />
+          )}
+
+          {activeTab === "progress" && (
+            <ClientProgressReport clientId={selectedClient.id} client={selectedClient} />
           )}
 
           {showCarePlanGenerator && (
