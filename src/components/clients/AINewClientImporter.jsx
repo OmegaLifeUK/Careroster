@@ -27,8 +27,9 @@ const IMPORT_TYPES = [
 ];
 
 export default function AINewClientImporter({ onClose, onClientCreated }) {
-  const [file, setFile] = useState(null);
-  const [uploadedUrl, setUploadedUrl] = useState(null);
+  const [files, setFiles] = useState([]);
+  const [uploadedUrls, setUploadedUrls] = useState([]);
+  const [isUploading, setIsUploading] = useState(false);
   const [isProcessing, setIsProcessing] = useState(false);
   const [extractedData, setExtractedData] = useState(null);
   const [selectedTypes, setSelectedTypes] = useState(["care_plan", "medication", "risk_assessment"]);
@@ -40,8 +41,8 @@ export default function AINewClientImporter({ onClose, onClientCreated }) {
   const { toast } = useToast();
 
   const handleFileChange = async (e) => {
-    const selectedFile = e.target.files[0];
-    if (!selectedFile) return;
+    const selectedFiles = Array.from(e.target.files);
+    if (!selectedFiles.length) return;
 
     const allowedTypes = [
       'application/pdf',
@@ -51,34 +52,54 @@ export default function AINewClientImporter({ onClose, onClientCreated }) {
       'image/jpeg'
     ];
 
-    if (!allowedTypes.includes(selectedFile.type)) {
-      toast.error("Invalid File", "Please upload a PDF, Word document, or image");
+    const validFiles = selectedFiles.filter(f => allowedTypes.includes(f.type));
+    const invalidCount = selectedFiles.length - validFiles.length;
+    
+    if (invalidCount > 0) {
+      toast.warning("Some files skipped", `${invalidCount} file(s) were not PDF, Word, or image format`);
+    }
+
+    if (validFiles.length === 0) {
+      toast.error("Invalid Files", "Please upload PDF, Word documents, or images");
       return;
     }
 
-    setFile(selectedFile);
+    setFiles(prev => [...prev, ...validFiles]);
     setExtractedData(null);
     setImportResults(null);
     setCreatedClient(null);
+    setIsUploading(true);
 
     try {
-      const { file_url } = await base44.integrations.Core.UploadFile({ file: selectedFile });
-      setUploadedUrl(file_url);
+      const uploadPromises = validFiles.map(file => 
+        base44.integrations.Core.UploadFile({ file })
+      );
+      const results = await Promise.all(uploadPromises);
+      const urls = results.map(r => r.file_url);
+      setUploadedUrls(prev => [...prev, ...urls]);
+      toast.success("Files Uploaded", `${validFiles.length} file(s) uploaded successfully`);
     } catch (error) {
-      toast.error("Upload Failed", "Could not upload file");
-      setFile(null);
+      toast.error("Upload Failed", "Could not upload one or more files");
+    } finally {
+      setIsUploading(false);
     }
   };
 
+  const removeFile = (index) => {
+    setFiles(prev => prev.filter((_, i) => i !== index));
+    setUploadedUrls(prev => prev.filter((_, i) => i !== index));
+    setExtractedData(null);
+  };
+
   const extractData = async () => {
-    if (!uploadedUrl) return;
+    if (uploadedUrls.length === 0) return;
 
     setIsProcessing(true);
     setExtractedData(null);
 
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a healthcare documentation expert. Analyze this document and extract ALL client information to create a new client record plus their care documentation.
+        prompt: `You are a healthcare documentation expert. Analyze these ${uploadedUrls.length} document(s) and extract ALL client information to create a new client record plus their care documentation. Combine information from all documents into a single comprehensive profile.
 
 FIRST, extract the CLIENT DETAILS:
 - Full name
@@ -105,8 +126,8 @@ MENTAL_CAPACITY: Extract capacity assessment details, decision-specific assessme
 
 PEEP: Extract mobility level, evacuation requirements, equipment needed, assistance level, and specific evacuation instructions.
 
-Be thorough and extract ALL relevant information from the document.`,
-        file_urls: [uploadedUrl],
+Be thorough and extract ALL relevant information from all documents. If information conflicts between documents, use the most recent or most complete version.`,
+        file_urls: uploadedUrls,
         response_json_schema: {
           type: "object",
           properties: {
@@ -618,25 +639,61 @@ Be thorough and extract ALL relevant information from the document.`,
         <CardContent className="p-6 space-y-6">
           {/* File Upload */}
           <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            {file ? (
-              <div className="space-y-2">
-                <FileText className="w-12 h-12 mx-auto text-blue-600" />
-                <p className="font-medium">{file.name}</p>
-                <p className="text-sm text-gray-500">{(file.size / 1024).toFixed(1)} KB</p>
-                <Button variant="outline" size="sm" onClick={() => { setFile(null); setUploadedUrl(null); setExtractedData(null); }}>
-                  Remove
-                </Button>
+            {files.length > 0 ? (
+              <div className="space-y-3">
+                <FileText className="w-10 h-10 mx-auto text-blue-600" />
+                <p className="font-medium">{files.length} file(s) uploaded</p>
+                <div className="max-h-32 overflow-y-auto space-y-2">
+                  {files.map((file, index) => (
+                    <div key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded text-sm">
+                      <span className="truncate max-w-[200px]">{file.name}</span>
+                      <Button variant="ghost" size="sm" onClick={() => removeFile(index)} className="h-6 w-6 p-0">
+                        <X className="w-3 h-3" />
+                      </Button>
+                    </div>
+                  ))}
+                </div>
+                <div className="flex gap-2 justify-center">
+                  <label className="cursor-pointer">
+                    <Button variant="outline" size="sm" asChild>
+                      <span>
+                        <Upload className="w-3 h-3 mr-1" />
+                        Add More
+                      </span>
+                    </Button>
+                    <input
+                      type="file"
+                      accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
+                      onChange={handleFileChange}
+                      className="hidden"
+                      multiple
+                    />
+                  </label>
+                  <Button variant="outline" size="sm" onClick={() => { setFiles([]); setUploadedUrls([]); setExtractedData(null); }}>
+                    Clear All
+                  </Button>
+                </div>
               </div>
             ) : (
               <label className="cursor-pointer">
-                <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                <p className="font-medium mb-2">Upload client documentation</p>
-                <p className="text-sm text-gray-500">PDF, Word, or Image files</p>
+                {isUploading ? (
+                  <>
+                    <Loader2 className="w-12 h-12 mx-auto text-blue-600 mb-4 animate-spin" />
+                    <p className="font-medium mb-2">Uploading files...</p>
+                  </>
+                ) : (
+                  <>
+                    <Upload className="w-12 h-12 mx-auto text-gray-400 mb-4" />
+                    <p className="font-medium mb-2">Upload client documentation</p>
+                    <p className="text-sm text-gray-500">PDF, Word, or Image files (multiple allowed)</p>
+                  </>
+                )}
                 <input
                   type="file"
                   accept=".pdf,.doc,.docx,.png,.jpg,.jpeg"
                   onChange={handleFileChange}
                   className="hidden"
+                  multiple
                 />
               </label>
             )}
@@ -664,7 +721,7 @@ Be thorough and extract ALL relevant information from the document.`,
           </div>
 
           {/* Extract Button */}
-          {uploadedUrl && !extractedData && (
+          {uploadedUrls.length > 0 && !extractedData && (
             <Button
               onClick={extractData}
               disabled={isProcessing}
