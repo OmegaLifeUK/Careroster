@@ -670,6 +670,9 @@ const KEY_COMPONENTS = [
   { name: "DocumentManager", description: "Document upload and management" },
   { name: "AccessibilityPanel", description: "Accessibility settings (theme, text size, colors)" },
   { name: "GlobalSearch", description: "System-wide search functionality" },
+  { name: "OfflineDataManager", description: "Mobile offline data sync for schedules, care plans, and client info with localStorage caching" },
+  { name: "RealTimeVisitUpdates", description: "Real-time visit updates and communication from the field with quick update buttons" },
+  { name: "SecurePhotoUpload", description: "Secure photo/document upload for incidents, wounds, medications with confidentiality tagging" },
 ];
 
 export default function TechnicalSpecification() {
