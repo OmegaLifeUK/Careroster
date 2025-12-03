@@ -466,47 +466,137 @@ ${latest.recommendations?.map(r => `- ${r}`).join('\n') || 'None recorded'}
       )}
 
       {/* Charts */}
-      {trendData.length > 1 && (
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-          {/* Line Chart - Trends Over Time */}
+      {trendData.length > 0 && (
+        <div className="space-y-6">
+          {/* Overall Progress Line Chart */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Progress Over Time</CardTitle>
+              <CardTitle className="text-lg">Overall Progress Over Time</CardTitle>
             </CardHeader>
             <CardContent>
               <ResponsiveContainer width="100%" height={300}>
-                <LineChart data={trendData}>
+                <AreaChart data={trendData}>
                   <CartesianGrid strokeDasharray="3 3" />
                   <XAxis dataKey="date" />
                   <YAxis domain={[0, 10]} />
                   <Tooltip />
                   <Legend />
-                  <Line type="monotone" dataKey="behaviour" stroke="#8B5CF6" name="Behaviour" />
-                  <Line type="monotone" dataKey="education" stroke="#3B82F6" name="Education" />
-                  <Line type="monotone" dataKey="social" stroke="#EC4899" name="Social" />
-                  <Line type="monotone" dataKey="health" stroke="#10B981" name="Health" />
-                  <Line type="monotone" dataKey="overall" stroke="#000" strokeWidth={2} name="Overall" />
-                </LineChart>
+                  <Area type="monotone" dataKey="overall" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.3} name="Overall Rating" strokeWidth={2} />
+                </AreaChart>
               </ResponsiveContainer>
             </CardContent>
           </Card>
 
-          {/* Radar Chart - Current Snapshot */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Multi-Line Chart - All Areas */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">All Areas Trend</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={trendData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis domain={[0, 10]} />
+                    <Tooltip />
+                    <Legend />
+                    <Line type="monotone" dataKey="behaviour" stroke="#8B5CF6" name="Behaviour" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="education" stroke="#3B82F6" name="Education" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="social" stroke="#EC4899" name="Social" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="health" stroke="#10B981" name="Health" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="independence" stroke="#F59E0B" name="Independence" strokeWidth={2} dot={{ r: 4 }} />
+                    <Line type="monotone" dataKey="activities" stroke="#6366F1" name="Activities" strokeWidth={2} dot={{ r: 4 }} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Radar Chart - Current Snapshot */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Current Assessment Snapshot</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <RadarChart data={radarData}>
+                    <PolarGrid />
+                    <PolarAngleAxis dataKey="area" tick={{ fontSize: 10 }} />
+                    <PolarRadiusAxis domain={[0, 10]} />
+                    <Radar name="Rating" dataKey="value" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.5} />
+                  </RadarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Individual Area Charts */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-lg">Current Assessment</CardTitle>
+              <CardTitle className="text-lg">Individual Area Progress</CardTitle>
             </CardHeader>
             <CardContent>
-              <ResponsiveContainer width="100%" height={300}>
-                <RadarChart data={radarData}>
-                  <PolarGrid />
-                  <PolarAngleAxis dataKey="area" tick={{ fontSize: 11 }} />
-                  <PolarRadiusAxis domain={[0, 10]} />
-                  <Radar name="Rating" dataKey="value" stroke="#3B82F6" fill="#3B82F6" fillOpacity={0.5} />
-                </RadarChart>
-              </ResponsiveContainer>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {AREAS.map(area => (
+                  <div key={area.key} className="border rounded-lg p-3">
+                    <div className="flex items-center gap-2 mb-2">
+                      <area.icon className="w-4 h-4" style={{ color: area.color }} />
+                      <span className="font-medium text-sm">{area.label}</span>
+                    </div>
+                    <ResponsiveContainer width="100%" height={120}>
+                      <AreaChart data={trendData}>
+                        <XAxis dataKey="date" tick={{ fontSize: 9 }} />
+                        <YAxis domain={[0, 10]} tick={{ fontSize: 9 }} width={20} />
+                        <Tooltip />
+                        <Area 
+                          type="monotone" 
+                          dataKey={area.key === 'education_schooling' ? 'education' : 
+                                   area.key === 'social_emotional' ? 'social' : 
+                                   area.key === 'health_wellbeing' ? 'health' :
+                                   area.key === 'independence_skills' ? 'independence' :
+                                   area.key === 'activities_engagement' ? 'activities' : 'behaviour'} 
+                          stroke={area.color} 
+                          fill={area.color} 
+                          fillOpacity={0.3}
+                          strokeWidth={2}
+                        />
+                      </AreaChart>
+                    </ResponsiveContainer>
+                  </div>
+                ))}
+              </div>
             </CardContent>
           </Card>
+
+          {/* Bar Chart Comparison - Latest vs Previous */}
+          {progressRecords.length >= 2 && (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-lg">Latest vs Previous Assessment</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ResponsiveContainer width="100%" height={300}>
+                  <BarChart data={AREAS.map(area => ({
+                    name: area.label.split(' ')[0],
+                    fullName: area.label,
+                    latest: progressRecords[0]?.[area.key]?.overall_rating || 0,
+                    previous: progressRecords[1]?.[area.key]?.overall_rating || 0,
+                  }))}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="name" />
+                    <YAxis domain={[0, 10]} />
+                    <Tooltip 
+                      formatter={(value, name) => [value, name === 'latest' ? 'Latest' : 'Previous']}
+                      labelFormatter={(label, payload) => payload?.[0]?.payload?.fullName || label}
+                    />
+                    <Legend />
+                    <Bar dataKey="previous" fill="#94A3B8" name="Previous" radius={[4, 4, 0, 0]} />
+                    <Bar dataKey="latest" fill="#3B82F6" name="Latest" radius={[4, 4, 0, 0]} />
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
