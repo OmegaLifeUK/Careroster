@@ -23,6 +23,8 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
     status: carer?.status || "active",
     employment_type: carer?.employment_type || "full_time",
     hourly_rate: carer?.hourly_rate || 15,
+    available_for_overtime: carer?.available_for_overtime || false,
+    overtime_max_hours: carer?.overtime_max_hours || "",
     qualifications: carer?.qualifications || [],
     address: carer?.address || { street: "", city: "", postcode: "" },
     emergency_contact: carer?.emergency_contact || { name: "", phone: "", relationship: "" },
@@ -155,6 +157,34 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
                   onChange={(e) => handleInputChange("hourly_rate", parseFloat(e.target.value))}
                 />
               </div>
+            </div>
+
+            <div className="p-4 border rounded-lg bg-blue-50">
+              <div className="flex items-center gap-3 mb-3">
+                <Checkbox
+                  id="available_for_overtime"
+                  checked={formData.available_for_overtime}
+                  onCheckedChange={(checked) => handleInputChange("available_for_overtime", checked)}
+                />
+                <Label htmlFor="available_for_overtime" className="cursor-pointer font-medium">
+                  Available for Overtime
+                </Label>
+              </div>
+              {formData.available_for_overtime && (
+                <div className="ml-6">
+                  <Label htmlFor="overtime_max_hours" className="text-sm">Max extra hours per week</Label>
+                  <Input
+                    id="overtime_max_hours"
+                    type="number"
+                    min="1"
+                    max="40"
+                    placeholder="e.g. 10"
+                    value={formData.overtime_max_hours}
+                    onChange={(e) => handleInputChange("overtime_max_hours", e.target.value ? parseInt(e.target.value) : "")}
+                    className="w-32 mt-1"
+                  />
+                </div>
+              )}
             </div>
 
             <div>
