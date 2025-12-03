@@ -33,7 +33,7 @@ import { checkCarerAvailability } from "@/components/availability/AvailabilityCh
 export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const [dateRange, setDateRange] = useState({
     start: format(new Date(), 'yyyy-MM-dd'),
-    end: format(addDays(new Date(), 7), 'yyyy-MM-dd')
+    end: format(addDays(new Date(), 30), 'yyyy-MM-dd')
   });
   const [careType, setCareType] = useState("all");
   const [isAnalyzing, setIsAnalyzing] = useState(false);
