@@ -195,6 +195,24 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     return staffShifts.reduce((total, s) => total + (s.duration_hours || 0), 0);
   };
 
+  // Get max hours constraints for a carer
+  const getCarerHoursConstraints = (carerId) => {
+    const constraints = carerAvailability.find(a => 
+      a.carer_id === carerId && 
+      (a.max_hours_per_week || a.max_hours_per_day)
+    );
+    return {
+      maxPerWeek: constraints?.max_hours_per_week || 48, // Default to 48 hours working time directive
+      maxPerDay: constraints?.max_hours_per_day || 12
+    };
+  };
+
+  // Calculate hours worked on a specific day
+  const getDayWorkload = (staffId, date) => {
+    const dayShifts = allShifts.filter(s => s.carer_id === staffId && s.date === date);
+    return dayShifts.reduce((total, s) => total + (s.duration_hours || 0), 0);
+  };
+
   // Main AI allocation function
   const runAIAllocation = async () => {
     setIsAnalyzing(true);
@@ -279,7 +297,20 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
 
           // Workload balance (-points if overworked)
           const workload = getStaffWorkload(carer.id);
-          if (workload > 40) {
+          const dayWorkload = getDayWorkload(carer.id, shift.date);
+          const constraints = getCarerHoursConstraints(carer.id);
+          const shiftDuration = shift.duration_hours || ((parseInt(shift.end_time?.split(':')[0] || 0) - parseInt(shift.start_time?.split(':')[0] || 0)));
+
+          // Check max weekly hours
+          if (workload + shiftDuration > constraints.maxPerWeek) {
+            if (carer.available_for_overtime && workload + shiftDuration <= constraints.maxPerWeek + (carer.overtime_max_hours || 10)) {
+              score -= 15;
+              warnings.push("Would require overtime");
+            } else {
+              score -= 100; // Heavy penalty - exceeds max hours
+              warnings.push(`Exceeds max ${constraints.maxPerWeek}h/week`);
+            }
+          } else if (workload > 40) {
             score -= 20;
             warnings.push("High workload this week");
           } else if (workload < 20) {
@@ -287,9 +318,21 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
             reasons.push("Low workload");
           }
 
+          // Check max daily hours
+          if (dayWorkload + shiftDuration > constraints.maxPerDay) {
+            score -= 50;
+            warnings.push(`Exceeds max ${constraints.maxPerDay}h/day`);
+          }
+
           // Employment type preference
           if (carer.employment_type === 'full_time') {
             score += 5;
+          }
+
+          // Overtime availability bonus
+          if (carer.available_for_overtime && workload >= 35) {
+            score += 5;
+            reasons.push("Available for overtime");
           }
 
           if (score > -50) {
