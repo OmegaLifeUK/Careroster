@@ -19,7 +19,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, subMonths, parseISO, startOfMonth, endOfMonth, differenceInDays } from "date-fns";
-import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar } from "recharts";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, BarChart, Bar, AreaChart, Area } from "recharts";
 
 const AREAS = [
   { key: "behaviour", label: "Behaviour", icon: Brain, color: "#8B5CF6" },
