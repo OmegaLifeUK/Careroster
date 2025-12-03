@@ -25,7 +25,7 @@ import AINotesAssistant from "./AINotesAssistant";
 // Geo-fencing distance threshold in meters
 const GEO_FENCE_RADIUS = 100; // 100 meters
 
-export default function ClockInOut({ shift, carer, client, timeAttendance, entityType = 'shift' }) {
+export default function ClockInOut({ shift = null, carer = null, client = null, timeAttendance = null, entityType = 'shift' }) {
   const [loading, setLoading] = useState(false);
   const [locationError, setLocationError] = useState(null);
   const [location, setLocation] = useState(null);
@@ -292,6 +292,16 @@ export default function ClockInOut({ shift, carer, client, timeAttendance, entit
     );
   };
 
+  if (!shift) {
+    return (
+      <div className="text-center py-8 text-gray-500">
+        <Clock className="w-12 h-12 mx-auto mb-3 text-gray-300" />
+        <p className="font-medium">No active shift selected</p>
+        <p className="text-sm mt-1">Select a shift from "My Shifts" to clock in/out</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4 mb-4">
@@ -300,13 +310,15 @@ export default function ClockInOut({ shift, carer, client, timeAttendance, entit
             <User className="w-5 h-5 text-gray-600" />
             <span className="font-semibold text-lg">{client?.full_name || "Unknown Client"}</span>
           </div>
-          <div className="flex items-center gap-2 text-gray-600">
-            <Clock className="w-4 h-4" />
-            <span className="text-sm">
-              {shift.start_time} - {shift.end_time}
-            </span>
-            <Badge variant="outline">{shift.shift_type || 'visit'}</Badge>
-          </div>
+          {shift && (
+            <div className="flex items-center gap-2 text-gray-600">
+              <Clock className="w-4 h-4" />
+              <span className="text-sm">
+                {shift.start_time} - {shift.end_time}
+              </span>
+              <Badge variant="outline">{shift.shift_type || 'visit'}</Badge>
+            </div>
+          )}
           {client?.address && (
             <div className="flex items-center gap-2 text-gray-600 mt-2">
               <MapPin className="w-4 h-4" />
