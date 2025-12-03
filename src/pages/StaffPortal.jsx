@@ -10,13 +10,20 @@ import {
   MessageSquare,
   Bell,
   User,
-  LogOut
+  LogOut,
+  Wifi,
+  WifiOff,
+  Send,
+  Camera
 } from "lucide-react";
 
 import MyShifts from "../components/staff/MyShifts";
 import ClockInOut from "../components/staff/ClockInOut";
 import SOSButton from "../components/staff/SOSButton";
 import MyShiftRequests from "../components/messaging/MyShiftRequests";
+import OfflineDataManager from "../components/staff/OfflineDataManager";
+import RealTimeVisitUpdates from "../components/staff/RealTimeVisitUpdates";
+import SecurePhotoUpload from "../components/staff/SecurePhotoUpload";
 
 export default function StaffPortal() {
   const [activeTab, setActiveTab] = useState("shifts");
