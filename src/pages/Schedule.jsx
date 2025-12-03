@@ -260,13 +260,13 @@ export default function Schedule() {
 
   // Generate smart suggestions
   const suggestions = [];
-  const unfilledShifts = Array.isArray(shifts) ? shifts.filter(s => s && !s.carer_id).length : 0;
+  const unfilledShifts = Array.isArray(shifts) ? shifts.filter(s => s && (!s.carer_id || s.status === 'unfilled' || s.status === 'draft')).length : 0;
   if (unfilledShifts > 0) {
     suggestions.push({
       type: 'warning',
       title: 'Unfilled Shifts Detected',
       description: `You have ${unfilledShifts} shifts without assigned carers. Would you like AI to help assign them?`,
-      action: () => setShowAIGenerator(true),
+      action: () => setShowAIAllocator(true),
       actionLabel: 'Auto-Assign'
     });
   }
