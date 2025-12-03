@@ -1,4 +1,6 @@
 import React from "react";
+import { base44 } from "@/api/base44Client";
+import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -13,7 +15,66 @@ const statusColors = {
   unfilled: "bg-orange-100 text-orange-800",
 };
 
-export default function MyShifts({ shifts, clients, timeAttendance, isLoading }) {
+export default function MyShifts() {
+  const [user, setUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await base44.auth.me();
+        setUser(userData);
+      } catch (error) {
+        console.error("Error loading user:", error);
+      }
+    };
+    loadUser();
+  }, []);
+
+  const { data: shifts = [], isLoading: shiftsLoading } = useQuery({
+    queryKey: ['my-shifts', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        const allShifts = await base44.entities.Shift.list();
+        return Array.isArray(allShifts) 
+          ? allShifts.filter(s => s.carer_id === user.email || s.carer_id === user.id)
+          : [];
+      } catch (error) {
+        console.log("Shifts not available");
+        return [];
+      }
+    },
+    enabled: !!user?.email,
+  });
+
+  const { data: clients = [] } = useQuery({
+    queryKey: ['clients-for-shifts'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Client.list();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        return [];
+      }
+    },
+  });
+
+  const { data: timeAttendance = [] } = useQuery({
+    queryKey: ['my-time-attendance', user?.email],
+    queryFn: async () => {
+      if (!user?.email) return [];
+      try {
+        const data = await base44.entities.TimeAttendance.list();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        return [];
+      }
+    },
+    enabled: !!user?.email,
+  });
+
+  const isLoading = shiftsLoading;
+
   if (isLoading) {
     return (
       <Card>
