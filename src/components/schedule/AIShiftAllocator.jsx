@@ -293,6 +293,33 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
             );
             score += (proximityScore / 100) * 25;
             if (proximityScore >= 75) reasons.push("Near client");
+
+            // Check preferred areas from availability settings
+            const carerPrefs = carerAvailability.find(a => 
+              a.carer_id === carer.id && 
+              a.preferred_areas && 
+              a.preferred_areas.length > 0
+            );
+            if (carerPrefs?.preferred_areas) {
+              const clientPostcodePrefix = client.address.postcode?.split(' ')[0]?.toUpperCase();
+              const isInPreferredArea = carerPrefs.preferred_areas.some(area => 
+                clientPostcodePrefix?.startsWith(area.toUpperCase()) ||
+                area.toUpperCase() === clientPostcodePrefix
+              );
+              if (isInPreferredArea) {
+                score += 15;
+                reasons.push("In preferred area");
+              } else {
+                score -= 10;
+                warnings.push("Outside preferred area");
+              }
+            }
+          }
+
+          // Check vehicle availability for domiciliary
+          if (shift.care_type === 'domiciliary_care' && carer.vehicle_type === 'car') {
+            score += 5;
+            reasons.push("Has vehicle");
           }
 
           // Workload balance (-points if overworked)
