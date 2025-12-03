@@ -52,10 +52,11 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     queryFn: async () => {
       const allShifts = await base44.entities.Shift.list();
       const shiftsArray = Array.isArray(allShifts) ? allShifts : [];
+      // Get unfilled shifts: no carer assigned OR status is draft/unfilled
       return shiftsArray.filter(s => 
         s && s.date >= dateRange.start && 
         s.date <= dateRange.end &&
-        (s.status === 'draft' || s.status === 'unfilled' || !s.carer_id)
+        (!s.carer_id || s.status === 'draft' || s.status === 'unfilled')
       );
     }
   });
