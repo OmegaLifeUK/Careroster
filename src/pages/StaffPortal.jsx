@@ -42,35 +42,45 @@ export default function StaffPortal() {
   }, []);
 
   const { data: notifications = [] } = useQuery({
-    queryKey: ['my-notifications'],
+    queryKey: ['my-notifications', user?.email],
     queryFn: async () => {
-      if (!user) return [];
-      const data = await base44.entities.Notification.filter({ 
-        recipient_id: user.email,
-        is_read: false 
-      });
-      return Array.isArray(data) ? data : [];
+      if (!user?.email) return [];
+      try {
+        const data = await base44.entities.Notification.filter({ 
+          user_email: user.email,
+          is_read: false 
+        });
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.log("Notifications not available");
+        return [];
+      }
     },
-    enabled: !!user,
+    enabled: !!user?.email,
     refetchInterval: 30000,
   });
 
   const { data: shiftRequests = [] } = useQuery({
-    queryKey: ['pending-shift-requests'],
+    queryKey: ['pending-shift-requests', user?.email],
     queryFn: async () => {
-      if (!user) return [];
-      const allRequests = await base44.entities.ShiftRequest.list();
-      return Array.isArray(allRequests) 
-        ? allRequests.filter(r => 
-            r && 
-            Array.isArray(r.carer_ids) && 
-            r.carer_ids.includes(user.email) && 
-            r.status === 'pending' &&
-            !r.responses?.some(resp => resp && resp.carer_id === user.email)
-          )
-        : [];
+      if (!user?.email) return [];
+      try {
+        const allRequests = await base44.entities.ShiftRequest.list();
+        return Array.isArray(allRequests) 
+          ? allRequests.filter(r => 
+              r && 
+              Array.isArray(r.carer_ids) && 
+              r.carer_ids.includes(user.email) && 
+              r.status === 'pending' &&
+              !r.responses?.some(resp => resp && resp.carer_id === user.email)
+            )
+          : [];
+      } catch (error) {
+        console.log("Shift requests not available");
+        return [];
+      }
     },
-    enabled: !!user,
+    enabled: !!user?.email,
     refetchInterval: 30000,
   });
 
