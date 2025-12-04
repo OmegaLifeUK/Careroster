@@ -22,10 +22,13 @@ export default function ConflictDetector({
   onEditShift,
   onUnassignShift,
   onSendRequest,
-  onDeleteShift
+  onDeleteShift,
+  onBulkAction
 }) {
   const [isExpanded, setIsExpanded] = React.useState(true);
   const [filterType, setFilterType] = React.useState("all");
+  const [selectedConflicts, setSelectedConflicts] = React.useState([]);
+  const [bulkActionMode, setBulkActionMode] = React.useState(false);
 
   const detectConflicts = () => {
     const conflicts = [];
