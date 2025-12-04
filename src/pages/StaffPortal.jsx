@@ -14,7 +14,10 @@ import {
   Wifi,
   WifiOff,
   Send,
-  Camera
+  Camera,
+  PoundSterling,
+  Shield,
+  Lock
 } from "lucide-react";
 
 import MyShifts from "../components/staff/MyShifts";
