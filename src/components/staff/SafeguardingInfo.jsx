@@ -56,12 +56,16 @@ export default function SafeguardingInfo({ user }) {
     setIsSubmitting(true);
     try {
       await base44.entities.SafeguardingReferral.create({
-        ...reportData,
+        client_id: reportData.person_at_risk || 'unknown',
         reported_by: user.email,
-        reporter_name: user.full_name,
-        status: 'pending_review',
-        date_reported: new Date().toISOString(),
-        priority: reportData.immediate_danger ? 'urgent' : 'high'
+        safeguarding_type: [reportData.concern_type],
+        details_of_concern: reportData.description,
+        date_of_concern: new Date().toISOString(),
+        immediate_action_taken: reportData.immediate_danger ? 'Urgent - immediate danger reported' : '',
+        witnesses: reportData.witness_details ? [{ name: reportData.witness_details, role: '', statement: '' }] : [],
+        risk_level: reportData.immediate_danger ? 'critical' : 'high',
+        ongoing_risk: reportData.immediate_danger,
+        status: 'reported'
       });
 
       // Notify safeguarding lead
