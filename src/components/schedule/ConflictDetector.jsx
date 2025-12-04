@@ -2,12 +2,30 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp } from "lucide-react";
+import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp, Edit, Send, Trash2, UserMinus, RefreshCw } from "lucide-react";
 import { format, parseISO, getDay } from "date-fns";
 import { checkCarerAvailability } from "@/components/availability/AvailabilityChecker";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+  DropdownMenuSeparator,
+} from "@/components/ui/dropdown-menu";
 
-export default function ConflictDetector({ shifts = [], carers = [], clients = [], leaveRequests = [], carerAvailability = [] }) {
+export default function ConflictDetector({ 
+  shifts = [], 
+  carers = [], 
+  clients = [], 
+  leaveRequests = [], 
+  carerAvailability = [],
+  onEditShift,
+  onUnassignShift,
+  onSendRequest,
+  onDeleteShift
+}) {
   const [isExpanded, setIsExpanded] = React.useState(true);
+  const [filterType, setFilterType] = React.useState("all");
 
   const detectConflicts = () => {
     const conflicts = [];
