@@ -471,9 +471,41 @@ export default function ConflictDetector({
                       <p className="text-sm font-medium mb-2">{conflict.message}</p>
                       
                       {conflict.type === "overlap" && conflict.shift1 && conflict.shift2 && (
-                        <div className="text-xs space-y-1 text-gray-700 mb-2">
-                          <p>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</p>
-                          <p>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</p>
+                        <div className="text-xs space-y-2 text-gray-700 mb-2">
+                          <div className="flex items-center justify-between">
+                            <span>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</span>
+                            {!bulkActionMode && onUnassignShift && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-6 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAction('unassign', conflict, 'first');
+                                }}
+                              >
+                                <UserMinus className="w-3 h-3 mr-1" />
+                                Unassign
+                              </Button>
+                            )}
+                          </div>
+                          <div className="flex items-center justify-between">
+                            <span>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</span>
+                            {!bulkActionMode && onUnassignShift && (
+                              <Button 
+                                size="sm" 
+                                variant="outline" 
+                                className="h-6 text-xs"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  handleAction('unassign', conflict, 'second');
+                                }}
+                              >
+                                <UserMinus className="w-3 h-3 mr-1" />
+                                Unassign
+                              </Button>
+                            )}
+                          </div>
                         </div>
                       )}
 
