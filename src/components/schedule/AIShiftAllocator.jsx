@@ -382,10 +382,29 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
         candidateScores.sort((a, b) => b.score - a.score);
 
         if (candidateScores.length === 0) {
+          // For gaps, find carers who could potentially cover (overtime candidates)
+          const overtimeCandidates = allCarers.filter(carer => {
+            // Skip if on leave
+            if (isOnLeave(carer.id, shift.date)) return false;
+            // Skip if has conflicting shift
+            if (hasConflictingShift(carer.id, shift.date, shift.start_time, shift.end_time)) return false;
+            // Check qualification
+            if (!hasRequiredQualification(carer.qualifications, shift.required_qualification)) return false;
+            return true;
+          }).map(carer => {
+            const availability = checkFullAvailability(carer.id, shift.date, shift.start_time, shift.end_time);
+            return {
+              carer,
+              reason: availability.reason || "Not scheduled to work",
+              isOvertimeCandidate: carer.available_for_overtime
+            };
+          });
+
           detectedGaps.push({
             shift,
             client,
-            reason: "No available staff with required qualifications"
+            reason: "No available staff with required qualifications",
+            overtimeCandidates
           });
         } else {
           suggestions.push({
