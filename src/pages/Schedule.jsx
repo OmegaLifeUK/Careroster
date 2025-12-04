@@ -440,7 +440,21 @@ export default function Schedule() {
           </Tooltip>
         </div>
 
-        <ConflictDetector shifts={filteredShifts} carers={carers} clients={clients} leaveRequests={leaveRequests} carerAvailability={carerAvailability} />
+        <ConflictDetector 
+          shifts={filteredShifts} 
+          carers={carers} 
+          clients={clients} 
+          leaveRequests={leaveRequests} 
+          carerAvailability={carerAvailability}
+          onEditShift={handleEdit}
+          onUnassignShift={(shiftId) => {
+            if (confirm("Remove carer assignment from this shift?")) {
+              updateShiftMutation.mutate({ id: shiftId, data: { carer_id: null, status: 'unfilled' } });
+            }
+          }}
+          onSendRequest={handleSendRequest}
+          onDeleteShift={handleDelete}
+        />
 
         {isLoading ? (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
