@@ -24,7 +24,8 @@ import {
   RefreshCw,
   Save,
   X,
-  Info
+  Info,
+  Send
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addDays, parseISO, differenceInMinutes, isWithinInterval, getDay } from "date-fns";
