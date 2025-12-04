@@ -214,32 +214,32 @@ export default function ConflictDetector({
   
   const conflictTypes = [...new Set(allConflicts.map(c => c.type))];
 
-  const handleAction = (action, conflict) => {
+  const handleAction = (action, conflict, whichShift = 'first') => {
+    // For overlap conflicts, determine which shift to act on
+    const targetShift = conflict.shift || 
+      (whichShift === 'second' && conflict.shift2 ? conflict.shift2 : conflict.shift1);
+    
+    if (!targetShift) return;
+    
     switch (action) {
       case 'edit':
-        if (onEditShift && conflict.shift) {
-          onEditShift(conflict.shift);
-        } else if (onEditShift && conflict.shift1) {
-          onEditShift(conflict.shift1);
+        if (onEditShift) {
+          onEditShift(targetShift);
         }
         break;
       case 'unassign':
-        if (onUnassignShift && conflict.shift) {
-          onUnassignShift(conflict.shift.id);
-        } else if (onUnassignShift && conflict.shift1) {
-          onUnassignShift(conflict.shift1.id);
+        if (onUnassignShift) {
+          onUnassignShift(targetShift.id);
         }
         break;
       case 'request':
-        if (onSendRequest && conflict.shift) {
-          onSendRequest(conflict.shift);
-        } else if (onSendRequest && conflict.shift1) {
-          onSendRequest(conflict.shift1);
+        if (onSendRequest) {
+          onSendRequest(targetShift);
         }
         break;
       case 'delete':
-        if (onDeleteShift && conflict.shift) {
-          onDeleteShift(conflict.shift.id);
+        if (onDeleteShift) {
+          onDeleteShift(targetShift.id);
         }
         break;
     }
