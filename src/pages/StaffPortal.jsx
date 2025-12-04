@@ -27,6 +27,9 @@ import MyShiftRequests from "../components/messaging/MyShiftRequests";
 import OfflineDataManager from "../components/staff/OfflineDataManager";
 import RealTimeVisitUpdates from "../components/staff/RealTimeVisitUpdates";
 import SecurePhotoUpload from "../components/staff/SecurePhotoUpload";
+import MyPayslips from "../components/staff/MyPayslips";
+import SafeguardingInfo from "../components/staff/SafeguardingInfo";
+import ConfidentialIssue from "../components/staff/ConfidentialIssue";
 
 export default function StaffPortal() {
   const [activeTab, setActiveTab] = useState("shifts");
