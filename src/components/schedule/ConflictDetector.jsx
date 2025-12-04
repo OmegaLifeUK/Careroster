@@ -342,28 +342,87 @@ export default function ConflictDetector({
 
       {isExpanded && (
         <div className="p-4">
-          {/* Filter tabs */}
-          <div className="flex flex-wrap gap-2 mb-4">
+          {/* Filter tabs and bulk mode toggle */}
+          <div className="flex flex-wrap items-center justify-between gap-2 mb-4">
+            <div className="flex flex-wrap gap-2">
+              <Button
+                size="sm"
+                variant={filterType === "all" ? "default" : "outline"}
+                onClick={() => setFilterType("all")}
+                className={filterType === "all" ? "bg-orange-600" : ""}
+              >
+                All ({allConflicts.length})
+              </Button>
+              {conflictTypes.map(type => (
+                <Button
+                  key={type}
+                  size="sm"
+                  variant={filterType === type ? "default" : "outline"}
+                  onClick={() => setFilterType(type)}
+                  className={filterType === type ? "bg-orange-600" : ""}
+                >
+                  {type.charAt(0).toUpperCase() + type.slice(1)} ({allConflicts.filter(c => c.type === type).length})
+                </Button>
+              ))}
+            </div>
             <Button
               size="sm"
-              variant={filterType === "all" ? "default" : "outline"}
-              onClick={() => setFilterType("all")}
-              className={filterType === "all" ? "bg-orange-600" : ""}
+              variant={bulkActionMode ? "default" : "outline"}
+              onClick={() => {
+                setBulkActionMode(!bulkActionMode);
+                setSelectedConflicts([]);
+              }}
+              className={bulkActionMode ? "bg-blue-600" : ""}
             >
-              All ({allConflicts.length})
+              {bulkActionMode ? "Cancel Bulk" : "Bulk Actions"}
             </Button>
-            {conflictTypes.map(type => (
-              <Button
-                key={type}
-                size="sm"
-                variant={filterType === type ? "default" : "outline"}
-                onClick={() => setFilterType(type)}
-                className={filterType === type ? "bg-orange-600" : ""}
-              >
-                {type.charAt(0).toUpperCase() + type.slice(1)} ({allConflicts.filter(c => c.type === type).length})
-              </Button>
-            ))}
           </div>
+
+          {/* Bulk action bar */}
+          {bulkActionMode && (
+            <div className="flex items-center justify-between p-3 bg-blue-50 border border-blue-200 rounded-lg mb-4">
+              <div className="flex items-center gap-3">
+                <Button size="sm" variant="outline" onClick={selectAllConflicts}>
+                  {selectedConflicts.length === conflicts.length ? "Deselect All" : "Select All"}
+                </Button>
+                <span className="text-sm text-blue-700">
+                  {selectedConflicts.length} issue{selectedConflicts.length !== 1 ? 's' : ''} selected 
+                  ({getSelectedShiftIds().length} unique shift{getSelectedShiftIds().length !== 1 ? 's' : ''})
+                </span>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectedConflicts.length === 0}
+                  onClick={() => handleBulkAction('unassign')}
+                >
+                  <UserMinus className="w-4 h-4 mr-1" />
+                  Unassign All
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectedConflicts.length === 0}
+                  onClick={() => handleBulkAction('request')}
+                  className="text-blue-700 border-blue-300"
+                >
+                  <Send className="w-4 h-4 mr-1" />
+                  Send Coverage Requests
+                </Button>
+                <Button
+                  size="sm"
+                  variant="outline"
+                  disabled={selectedConflicts.length === 0}
+                  onClick={() => handleBulkAction('cancel')}
+                  className="text-red-700 border-red-300"
+                >
+                  <Trash2 className="w-4 h-4 mr-1" />
+                  Cancel Shifts
+                </Button>
+              </div>
+            </div>
+          )}
 
           <div className="space-y-3 max-h-96 overflow-y-auto">
             {conflicts.map((conflict, idx) => {
