@@ -107,19 +107,17 @@ export default function ConfidentialIssue({ user }) {
 
     try {
       await base44.entities.Complaint.create({
-        type: 'staff_confidential',
-        category: issueData.category,
-        subject: issueData.subject,
-        description: issueData.description,
-        raised_by_email: issueData.is_anonymous ? null : user.email,
-        raised_by_name: issueData.is_anonymous ? 'Anonymous' : user.full_name,
-        is_confidential: true,
-        is_anonymous: issueData.is_anonymous,
-        preferred_contact: issueData.preferred_contact,
-        urgency: issueData.urgency,
-        status: 'new',
-        assigned_to: recipient.name,
-        date_raised: new Date().toISOString()
+        received_date: new Date().toISOString(),
+        complainant: {
+          name: issueData.is_anonymous ? 'Anonymous' : user.full_name,
+          contact_details: issueData.is_anonymous ? '' : user.email,
+          preferred_contact_method: issueData.preferred_contact
+        },
+        complaint_category: 'staff_conduct',
+        complaint_details: `[${issueData.category.replace(/_/g, ' ').toUpperCase()}] ${issueData.subject}\n\n${issueData.description}`,
+        severity: issueData.urgency === 'urgent' ? 'high' : 'medium',
+        status: 'received',
+        investigating_officer: recipient.name
       });
 
       // Notify the appropriate person
