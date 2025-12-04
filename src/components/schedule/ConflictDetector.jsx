@@ -485,7 +485,7 @@ export default function ConflictDetector({
                     </div>
                     
                     {/* Action buttons */}
-                    {hasActions && (
+                    {hasActions && !bulkActionMode && (
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
                           <Button size="sm" variant="outline" className="flex-shrink-0">
