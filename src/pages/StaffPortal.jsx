@@ -133,22 +133,14 @@ export default function StaffPortal() {
 
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-6 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 h-auto p-1">
               <TabsTrigger value="shifts" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">My</span> Shifts
               </TabsTrigger>
-              <TabsTrigger value="updates" className="flex items-center gap-1 text-xs md:text-sm py-2">
-                <Send className="w-4 h-4" />
-                Updates
-              </TabsTrigger>
-              <TabsTrigger value="offline" className="flex items-center gap-1 text-xs md:text-sm py-2">
-                <Wifi className="w-4 h-4" />
-                Offline
-              </TabsTrigger>
-              <TabsTrigger value="photos" className="flex items-center gap-1 text-xs md:text-sm py-2">
-                <Camera className="w-4 h-4" />
-                Photos
+              <TabsTrigger value="clock" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Clock className="w-4 h-4" />
+                Clock
               </TabsTrigger>
               <TabsTrigger value="requests" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <MessageSquare className="w-4 h-4" />
@@ -157,9 +149,29 @@ export default function StaffPortal() {
                   <Badge className="bg-red-500 text-white ml-1 text-xs">{shiftRequests.length}</Badge>
                 )}
               </TabsTrigger>
-              <TabsTrigger value="clock" className="flex items-center gap-1 text-xs md:text-sm py-2">
-                <Clock className="w-4 h-4" />
-                Clock
+              <TabsTrigger value="payslips" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <PoundSterling className="w-4 h-4" />
+                Payslips
+              </TabsTrigger>
+              <TabsTrigger value="safeguarding" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Shield className="w-4 h-4" />
+                Safeguarding
+              </TabsTrigger>
+              <TabsTrigger value="confidential" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Lock className="w-4 h-4" />
+                Confidential
+              </TabsTrigger>
+              <TabsTrigger value="updates" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Send className="w-4 h-4" />
+                Updates
+              </TabsTrigger>
+              <TabsTrigger value="photos" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Camera className="w-4 h-4" />
+                Photos
+              </TabsTrigger>
+              <TabsTrigger value="offline" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Wifi className="w-4 h-4" />
+                Offline
               </TabsTrigger>
             </TabsList>
 
