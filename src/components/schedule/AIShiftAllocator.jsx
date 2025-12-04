@@ -43,6 +43,10 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const [gaps, setGaps] = useState([]);
   const [expandedShift, setExpandedShift] = useState(null);
   const [selectedAllocations, setSelectedAllocations] = useState({});
+  const [overtimeRequests, setOvertimeRequests] = useState([]);
+  const [showOvertimePanel, setShowOvertimePanel] = useState(false);
+  const [selectedOvertimeCarers, setSelectedOvertimeCarers] = useState({});
+  const [overtimeMessage, setOvertimeMessage] = useState("Hi, we have an unfilled shift that needs coverage. Would you be available to work this shift? Please let us know as soon as possible.");
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
