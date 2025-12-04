@@ -446,7 +446,15 @@ export default function ConflictDetector({
                   style={bulkActionMode ? { cursor: 'pointer' } : undefined}
                 >
                   <div className="flex items-start gap-3">
-                    <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5 flex-shrink-0`} />
+                    {bulkActionMode ? (
+                      <div className={`w-5 h-5 rounded border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                        isSelected ? 'bg-blue-600 border-blue-600' : 'border-gray-400'
+                      }`}>
+                        {isSelected && <span className="text-white text-xs">✓</span>}
+                      </div>
+                    ) : (
+                      <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5 flex-shrink-0`} />
+                    )}
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <Badge className={conflict.severity === "high" ? "bg-red-600" : "bg-yellow-600"}>
