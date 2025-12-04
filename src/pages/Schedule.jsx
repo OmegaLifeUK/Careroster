@@ -644,6 +644,18 @@ export default function Schedule() {
             }}
           />
         )}
+
+        {showBulkRequestDialog && selectedShiftsForRequest.length > 0 && (
+          <BulkShiftRequestDialog
+            shifts={selectedShiftsForRequest}
+            carers={carers}
+            clients={clients}
+            onClose={() => {
+              setShowBulkRequestDialog(false);
+              setSelectedShiftsForRequest([]);
+            }}
+          />
+        )}
       </div>
     </div>
   );
