@@ -28,6 +28,7 @@ import ShiftRequestDialog from "../components/messaging/ShiftRequestDialog";
 import AlertBanner from "../components/alerts/AlertBanner";
 import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
 import EnhancedRosterView from "../components/schedule/EnhancedRosterView";
+import BulkShiftRequestDialog from "../components/schedule/BulkShiftRequestDialog";
 
 export default function Schedule() {
   const [viewMode, setViewMode] = useState("roster");
