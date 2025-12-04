@@ -434,11 +434,16 @@ export default function ConflictDetector({
               const canRequest = onSendRequest && hasShift;
               const canDelete = onDeleteShift && conflict.shift;
               const hasActions = canEdit || canUnassign || canRequest || canDelete;
+              const isSelected = selectedConflicts.includes(idx);
               
               return (
                 <div
                   key={idx}
-                  className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)} hover:shadow-md transition-shadow`}
+                  className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)} hover:shadow-md transition-shadow ${
+                    isSelected ? 'ring-2 ring-blue-500' : ''
+                  }`}
+                  onClick={bulkActionMode ? () => toggleConflictSelection(idx) : undefined}
+                  style={bulkActionMode ? { cursor: 'pointer' } : undefined}
                 >
                   <div className="flex items-start gap-3">
                     <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5 flex-shrink-0`} />
