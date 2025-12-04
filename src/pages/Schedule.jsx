@@ -40,6 +40,8 @@ export default function Schedule() {
   const [requestingShift, setRequestingShift] = useState(null);
   const [showAIAllocator, setShowAIAllocator] = useState(false);
   const [savedViews, setSavedViews] = useState([]);
+  const [selectedShiftsForRequest, setSelectedShiftsForRequest] = useState([]);
+  const [showBulkRequestDialog, setShowBulkRequestDialog] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
