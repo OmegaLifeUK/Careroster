@@ -626,25 +626,137 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
             </Card>
           )}
 
-          {/* Gaps Warning */}
+          {/* Gaps Warning with Overtime Request Option */}
           {gaps.length > 0 && (
             <Card className="border-red-300 bg-red-50 mb-4">
               <CardContent className="p-4">
-                <h4 className="font-semibold text-red-800 flex items-center gap-2 mb-2">
-                  <Users className="w-4 h-4" />
-                  Staffing Gaps - No Available Staff
-                </h4>
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold text-red-800 flex items-center gap-2">
+                    <Users className="w-4 h-4" />
+                    Staffing Gaps - No Available Staff ({gaps.length})
+                  </h4>
+                  <Button
+                    size="sm"
+                    variant="outline"
+                    className="border-red-300 text-red-700 hover:bg-red-100"
+                    onClick={() => setShowOvertimePanel(!showOvertimePanel)}
+                  >
+                    <Send className="w-4 h-4 mr-1" />
+                    {showOvertimePanel ? 'Hide' : 'Request Overtime Coverage'}
+                  </Button>
+                </div>
                 <ul className="text-sm text-red-700 space-y-1">
                   {gaps.slice(0, 3).map((g, idx) => (
                     <li key={idx}>
                       {format(parseISO(g.shift.date), 'dd MMM')} {g.shift.start_time}-{g.shift.end_time}: 
                       {g.client?.full_name || 'Unknown client'} - {g.reason}
+                      {g.overtimeCandidates?.filter(c => c.isOvertimeCandidate).length > 0 && (
+                        <span className="ml-2 text-orange-600">
+                          ({g.overtimeCandidates.filter(c => c.isOvertimeCandidate).length} overtime candidates)
+                        </span>
+                      )}
                     </li>
                   ))}
                   {gaps.length > 3 && (
                     <li className="text-red-600">...and {gaps.length - 3} more gaps</li>
                   )}
                 </ul>
+              </CardContent>
+            </Card>
+          )}
+
+          {/* Overtime Request Panel */}
+          {showOvertimePanel && gaps.length > 0 && (
+            <Card className="border-orange-300 bg-orange-50 mb-4">
+              <CardContent className="p-4">
+                <h4 className="font-semibold text-orange-800 flex items-center gap-2 mb-3">
+                  <Send className="w-4 h-4" />
+                  Create Shift Requests for Overtime Coverage
+                </h4>
+                <p className="text-sm text-orange-700 mb-4">
+                  Select carers to send shift requests to. They will receive a notification asking if they can cover these shifts.
+                </p>
+                
+                <div className="mb-4">
+                  <label className="text-sm font-medium text-orange-800 block mb-1">Message to carers:</label>
+                  <Textarea
+                    value={overtimeMessage}
+                    onChange={(e) => setOvertimeMessage(e.target.value)}
+                    className="bg-white border-orange-200"
+                    rows={3}
+                  />
+                </div>
+
+                <div className="space-y-3 max-h-60 overflow-y-auto">
+                  {gaps.map((gap, gapIdx) => {
+                    const candidates = gap.overtimeCandidates || [];
+                    if (candidates.length === 0) return null;
+                    
+                    return (
+                      <div key={gap.shift.id} className="p-3 bg-white rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <div>
+                            <p className="font-medium text-sm">
+                              {format(parseISO(gap.shift.date), 'EEE dd MMM')} • {gap.shift.start_time} - {gap.shift.end_time}
+                            </p>
+                            <p className="text-xs text-gray-600">{gap.client?.full_name || gap.shift.location_name}</p>
+                          </div>
+                          <Badge className="bg-orange-100 text-orange-800">
+                            {candidates.length} potential carers
+                          </Badge>
+                        </div>
+                        <div className="flex flex-wrap gap-2">
+                          {candidates.map((c) => (
+                            <label
+                              key={c.carer.id}
+                              className={`flex items-center gap-2 px-2 py-1 rounded border cursor-pointer text-sm ${
+                                selectedOvertimeCarers[gap.shift.id]?.includes(c.carer.id)
+                                  ? 'bg-orange-100 border-orange-400'
+                                  : 'bg-gray-50 border-gray-200 hover:bg-gray-100'
+                              }`}
+                            >
+                              <Checkbox
+                                checked={selectedOvertimeCarers[gap.shift.id]?.includes(c.carer.id) || false}
+                                onCheckedChange={(checked) => {
+                                  setSelectedOvertimeCarers(prev => {
+                                    const current = prev[gap.shift.id] || [];
+                                    if (checked) {
+                                      return { ...prev, [gap.shift.id]: [...current, c.carer.id] };
+                                    } else {
+                                      return { ...prev, [gap.shift.id]: current.filter(id => id !== c.carer.id) };
+                                    }
+                                  });
+                                }}
+                              />
+                              <span>{c.carer.full_name}</span>
+                              {c.isOvertimeCandidate && (
+                                <Badge className="bg-green-100 text-green-700 text-xs">OT</Badge>
+                              )}
+                            </label>
+                          ))}
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex justify-end mt-4 gap-2">
+                  <Button variant="outline" onClick={() => setShowOvertimePanel(false)}>
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={createOvertimeRequests}
+                    disabled={Object.values(selectedOvertimeCarers).flat().length === 0 || isAnalyzing}
+                    className="bg-orange-600 hover:bg-orange-700"
+                  >
+                    {isAnalyzing ? (
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    ) : (
+                      <Send className="w-4 h-4 mr-2" />
+                    )}
+                    Create {Object.entries(selectedOvertimeCarers).filter(([_, carers]) => carers?.length > 0).length} Shift Requests
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           )}
