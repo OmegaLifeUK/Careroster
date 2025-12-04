@@ -302,37 +302,125 @@ export default function ConflictDetector({
       </div>
 
       {isExpanded && (
-        <div className="p-4 space-y-3 max-h-96 overflow-y-auto">
-          {conflicts.map((conflict, idx) => {
-            if (!conflict) return null;
-            
-            return (
-              <div
-                key={idx}
-                className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)}`}
+        <div className="p-4">
+          {/* Filter tabs */}
+          <div className="flex flex-wrap gap-2 mb-4">
+            <Button
+              size="sm"
+              variant={filterType === "all" ? "default" : "outline"}
+              onClick={() => setFilterType("all")}
+              className={filterType === "all" ? "bg-orange-600" : ""}
+            >
+              All ({allConflicts.length})
+            </Button>
+            {conflictTypes.map(type => (
+              <Button
+                key={type}
+                size="sm"
+                variant={filterType === type ? "default" : "outline"}
+                onClick={() => setFilterType(type)}
+                className={filterType === type ? "bg-orange-600" : ""}
               >
-                <div className="flex items-start gap-3">
-                  <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5`} />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Badge className={conflict.severity === "high" ? "bg-red-600" : "bg-yellow-600"}>
-                        {conflict.severity?.toUpperCase()}
-                      </Badge>
-                      <Badge variant="outline">{conflict.type}</Badge>
-                    </div>
-                    <p className="text-sm font-medium mb-2">{conflict.message}</p>
-                    
-                    {conflict.type === "overlap" && conflict.shift1 && conflict.shift2 && (
-                      <div className="text-xs space-y-1 text-gray-700">
-                        <p>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</p>
-                        <p>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</p>
+                {type.charAt(0).toUpperCase() + type.slice(1)} ({allConflicts.filter(c => c.type === type).length})
+              </Button>
+            ))}
+          </div>
+
+          <div className="space-y-3 max-h-96 overflow-y-auto">
+            {conflicts.map((conflict, idx) => {
+              if (!conflict) return null;
+              
+              const hasShift = conflict.shift || conflict.shift1;
+              const canEdit = onEditShift && hasShift;
+              const canUnassign = onUnassignShift && hasShift;
+              const canRequest = onSendRequest && hasShift;
+              const canDelete = onDeleteShift && conflict.shift;
+              const hasActions = canEdit || canUnassign || canRequest || canDelete;
+              
+              return (
+                <div
+                  key={idx}
+                  className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)} hover:shadow-md transition-shadow`}
+                >
+                  <div className="flex items-start gap-3">
+                    <AlertTriangle className={`w-5 h-5 ${getSeverityIcon(conflict.severity)} mt-0.5 flex-shrink-0`} />
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
+                        <Badge className={conflict.severity === "high" ? "bg-red-600" : "bg-yellow-600"}>
+                          {conflict.severity?.toUpperCase()}
+                        </Badge>
+                        <Badge variant="outline">{conflict.type}</Badge>
+                        {conflict.date && (
+                          <Badge variant="outline" className="bg-white">
+                            <Calendar className="w-3 h-3 mr-1" />
+                            {format(parseISO(conflict.date), "dd MMM")}
+                          </Badge>
+                        )}
                       </div>
+                      <p className="text-sm font-medium mb-2">{conflict.message}</p>
+                      
+                      {conflict.type === "overlap" && conflict.shift1 && conflict.shift2 && (
+                        <div className="text-xs space-y-1 text-gray-700 mb-2">
+                          <p>• Shift 1: {conflict.shift1.start_time} - {conflict.shift1.end_time}</p>
+                          <p>• Shift 2: {conflict.shift2.start_time} - {conflict.shift2.end_time}</p>
+                        </div>
+                      )}
+
+                      {conflict.type === "overallocation" && (
+                        <div className="text-xs text-gray-700 mb-2">
+                          <p>Total scheduled: {conflict.totalHours?.toFixed(1)} hours</p>
+                        </div>
+                      )}
+                    </div>
+                    
+                    {/* Action buttons */}
+                    {hasActions && (
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button size="sm" variant="outline" className="flex-shrink-0">
+                            Actions
+                            <ChevronDown className="w-3 h-3 ml-1" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          {canEdit && (
+                            <DropdownMenuItem onClick={() => handleAction('edit', conflict)}>
+                              <Edit className="w-4 h-4 mr-2" />
+                              Edit Shift
+                            </DropdownMenuItem>
+                          )}
+                          {canUnassign && (
+                            <DropdownMenuItem onClick={() => handleAction('unassign', conflict)}>
+                              <UserMinus className="w-4 h-4 mr-2" />
+                              Unassign Carer
+                            </DropdownMenuItem>
+                          )}
+                          {canRequest && (
+                            <DropdownMenuItem onClick={() => handleAction('request', conflict)}>
+                              <Send className="w-4 h-4 mr-2" />
+                              Send Coverage Request
+                            </DropdownMenuItem>
+                          )}
+                          {(canDelete && conflict.type === "unfilled") && (
+                            <>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={() => handleAction('delete', conflict)}
+                                className="text-red-600"
+                              >
+                                <Trash2 className="w-4 h-4 mr-2" />
+                                Delete Shift
+                              </DropdownMenuItem>
+                            </>
+                          )}
+                        </DropdownMenuContent>
+                      </DropdownMenu>
                     )}
                   </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            })}
+          </div>
         </div>
       )}
     </Card>
