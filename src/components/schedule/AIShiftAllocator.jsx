@@ -29,6 +29,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { format, addDays, parseISO, differenceInMinutes, isWithinInterval, getDay } from "date-fns";
 import { checkCarerAvailability } from "@/components/availability/AvailabilityChecker";
+import { Textarea } from "@/components/ui/textarea";
 
 export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const [dateRange, setDateRange] = useState({
