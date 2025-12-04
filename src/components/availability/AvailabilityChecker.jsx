@@ -28,11 +28,8 @@ export function checkCarerAvailability(carerId, date, startTime, endTime, availa
   const onLeave = carerLeave.some(leave => {
     try {
       if (!leave.start_date || !leave.end_date) return false;
-      const start = parseISO(leave.start_date);
-      const end = parseISO(leave.end_date);
-      // Set end date to end of day for proper comparison
-      end.setHours(23, 59, 59, 999);
-      return isWithinInterval(dateObj, { start, end });
+      // Compare date strings directly (YYYY-MM-DD format)
+      return dateStr >= leave.start_date && dateStr <= leave.end_date;
     } catch {
       return false;
     }
