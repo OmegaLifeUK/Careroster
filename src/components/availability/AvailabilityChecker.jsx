@@ -24,11 +24,14 @@ export function checkCarerAvailability(carerId, date, startTime, endTime, availa
     ? leaveRequests.filter(l => l && l.carer_id === carerId && l.status === 'approved') 
     : [];
 
-  // Check if on approved leave
+  // Check if on approved leave for the specific shift date
   const onLeave = carerLeave.some(leave => {
     try {
+      if (!leave.start_date || !leave.end_date) return false;
       const start = parseISO(leave.start_date);
       const end = parseISO(leave.end_date);
+      // Set end date to end of day for proper comparison
+      end.setHours(23, 59, 59, 999);
       return isWithinInterval(dateObj, { start, end });
     } catch {
       return false;
