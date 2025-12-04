@@ -179,24 +179,36 @@ export default function StaffPortal() {
               <MyShifts />
             </TabsContent>
 
-            <TabsContent value="updates" className="p-4 md:p-6">
-              <RealTimeVisitUpdates user={user} />
-            </TabsContent>
-
-            <TabsContent value="offline" className="p-4 md:p-6">
-              <OfflineDataManager user={user} />
-            </TabsContent>
-
-            <TabsContent value="photos" className="p-4 md:p-6">
-              <SecurePhotoUpload user={user} />
+            <TabsContent value="clock" className="p-4 md:p-6">
+              <ClockInOut />
             </TabsContent>
 
             <TabsContent value="requests" className="p-4 md:p-6">
               <MyShiftRequests />
             </TabsContent>
 
-            <TabsContent value="clock" className="p-4 md:p-6">
-              <ClockInOut />
+            <TabsContent value="payslips" className="p-4 md:p-6">
+              <MyPayslips user={user} />
+            </TabsContent>
+
+            <TabsContent value="safeguarding" className="p-4 md:p-6">
+              <SafeguardingInfo user={user} />
+            </TabsContent>
+
+            <TabsContent value="confidential" className="p-4 md:p-6">
+              <ConfidentialIssue user={user} />
+            </TabsContent>
+
+            <TabsContent value="updates" className="p-4 md:p-6">
+              <RealTimeVisitUpdates user={user} />
+            </TabsContent>
+
+            <TabsContent value="photos" className="p-4 md:p-6">
+              <SecurePhotoUpload user={user} />
+            </TabsContent>
+
+            <TabsContent value="offline" className="p-4 md:p-6">
+              <OfflineDataManager user={user} />
             </TabsContent>
           </Tabs>
         </Card>
