@@ -83,9 +83,8 @@ export default function Schedule() {
     queryFn: async () => {
       const data = await base44.entities.LeaveRequest.list();
       if (!Array.isArray(data)) return [];
-      // Only include leave requests that are currently active (end_date >= today)
-      const today = new Date().toISOString().split('T')[0];
-      return data.filter(l => l && l.status === 'approved' && l.end_date >= today);
+      // Return all approved leave requests - filtering by date happens in availability checks
+      return data.filter(l => l && l.status === 'approved');
     },
   });
 
