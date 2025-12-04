@@ -454,6 +454,27 @@ export default function Schedule() {
           }}
           onSendRequest={handleSendRequest}
           onDeleteShift={handleDelete}
+          onBulkAction={async (action, shiftIds) => {
+            if (action === 'unassign') {
+              if (!confirm(`Unassign carers from ${shiftIds.length} shift(s)?`)) return;
+              for (const id of shiftIds) {
+                await base44.entities.Shift.update(id, { carer_id: null, status: 'unfilled' });
+              }
+              queryClient.invalidateQueries({ queryKey: ['shifts'] });
+              toast.success(`Unassigned ${shiftIds.length} shift(s)`);
+            } else if (action === 'cancel') {
+              if (!confirm(`Cancel ${shiftIds.length} shift(s)? This cannot be undone.`)) return;
+              for (const id of shiftIds) {
+                await base44.entities.Shift.update(id, { status: 'cancelled' });
+              }
+              queryClient.invalidateQueries({ queryKey: ['shifts'] });
+              toast.success(`Cancelled ${shiftIds.length} shift(s)`);
+            } else if (action === 'request') {
+              const shiftsToRequest = shifts.filter(s => shiftIds.includes(s.id));
+              setSelectedShiftsForRequest(shiftsToRequest);
+              setShowBulkRequestDialog(true);
+            }
+          }}
         />
 
         {isLoading ? (
