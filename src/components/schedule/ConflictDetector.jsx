@@ -202,9 +202,45 @@ export default function ConflictDetector({
     return conflicts;
   };
 
-  const conflicts = detectConflicts();
-  const highSeverity = conflicts.filter(c => c && c.severity === "high").length;
-  const mediumSeverity = conflicts.filter(c => c && c.severity === "medium").length;
+  const allConflicts = detectConflicts();
+  const conflicts = filterType === "all" 
+    ? allConflicts 
+    : allConflicts.filter(c => c.type === filterType);
+  const highSeverity = allConflicts.filter(c => c && c.severity === "high").length;
+  const mediumSeverity = allConflicts.filter(c => c && c.severity === "medium").length;
+  
+  const conflictTypes = [...new Set(allConflicts.map(c => c.type))];
+
+  const handleAction = (action, conflict) => {
+    switch (action) {
+      case 'edit':
+        if (onEditShift && conflict.shift) {
+          onEditShift(conflict.shift);
+        } else if (onEditShift && conflict.shift1) {
+          onEditShift(conflict.shift1);
+        }
+        break;
+      case 'unassign':
+        if (onUnassignShift && conflict.shift) {
+          onUnassignShift(conflict.shift.id);
+        } else if (onUnassignShift && conflict.shift1) {
+          onUnassignShift(conflict.shift1.id);
+        }
+        break;
+      case 'request':
+        if (onSendRequest && conflict.shift) {
+          onSendRequest(conflict.shift);
+        } else if (onSendRequest && conflict.shift1) {
+          onSendRequest(conflict.shift1);
+        }
+        break;
+      case 'delete':
+        if (onDeleteShift && conflict.shift) {
+          onDeleteShift(conflict.shift.id);
+        }
+        break;
+    }
+  };
 
   if (conflicts.length === 0) {
     return (
