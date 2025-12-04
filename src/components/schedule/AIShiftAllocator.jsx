@@ -462,6 +462,71 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     }
   };
 
+  // Create overtime/coverage shift requests
+  const createOvertimeRequests = async () => {
+    const shiftsWithCarers = Object.entries(selectedOvertimeCarers)
+      .filter(([_, carerIds]) => carerIds && carerIds.length > 0);
+    
+    if (shiftsWithCarers.length === 0) {
+      toast.error("No Selection", "Please select at least one carer for a shift");
+      return;
+    }
+
+    setIsAnalyzing(true);
+    let successCount = 0;
+    const user = await base44.auth.me();
+
+    for (const [shiftId, carerIds] of shiftsWithCarers) {
+      const gap = gaps.find(g => g.shift.id === shiftId);
+      if (!gap) continue;
+
+      try {
+        await base44.entities.ShiftRequest.create({
+          shift_id: shiftId,
+          requested_by_staff_id: user.id || user.email,
+          carer_ids: carerIds,
+          client_id: gap.shift.client_id || '',
+          shift_date: gap.shift.date,
+          start_time: gap.shift.start_time,
+          end_time: gap.shift.end_time,
+          duration_hours: gap.shift.duration_hours || 0,
+          message: overtimeMessage,
+          priority: 'high',
+          status: 'pending',
+          expires_at: new Date(new Date(gap.shift.date).getTime() - 24 * 60 * 60 * 1000).toISOString() // Expires 1 day before shift
+        });
+
+        // Create notifications for each carer
+        for (const carerId of carerIds) {
+          const carer = allCarers.find(c => c.id === carerId);
+          if (carer?.email) {
+            await base44.entities.Notification.create({
+              recipient_email: carer.email,
+              title: "Shift Coverage Request",
+              message: `You have been asked to cover a shift on ${format(parseISO(gap.shift.date), 'EEE dd MMM')} from ${gap.shift.start_time} to ${gap.shift.end_time}. ${overtimeMessage}`,
+              type: "shift_request",
+              priority: "high",
+              is_read: false,
+              related_entity_type: "ShiftRequest",
+              related_entity_id: shiftId
+            });
+          }
+        }
+
+        successCount++;
+      } catch (error) {
+        console.error("Failed to create shift request:", shiftId, error);
+      }
+    }
+
+    setIsAnalyzing(false);
+    setShowOvertimePanel(false);
+    setSelectedOvertimeCarers({});
+    
+    toast.success("Shift Requests Created", `Sent ${successCount} shift request(s) to carers for overtime coverage`);
+    queryClient.invalidateQueries({ queryKey: ['shift-requests'] });
+  };
+
   // Apply selected allocations
   const applyAllocations = async () => {
     const toApply = Object.entries(selectedAllocations).filter(([shiftId, carerId]) => carerId);
