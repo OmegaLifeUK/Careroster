@@ -245,6 +245,42 @@ export default function ConflictDetector({
     }
   };
 
+  const toggleConflictSelection = (idx) => {
+    setSelectedConflicts(prev => 
+      prev.includes(idx) ? prev.filter(i => i !== idx) : [...prev, idx]
+    );
+  };
+
+  const selectAllConflicts = () => {
+    if (selectedConflicts.length === conflicts.length) {
+      setSelectedConflicts([]);
+    } else {
+      setSelectedConflicts(conflicts.map((_, idx) => idx));
+    }
+  };
+
+  const getSelectedShiftIds = () => {
+    const shiftIds = [];
+    selectedConflicts.forEach(idx => {
+      const conflict = conflicts[idx];
+      if (conflict?.shift?.id) shiftIds.push(conflict.shift.id);
+      if (conflict?.shift1?.id) shiftIds.push(conflict.shift1.id);
+      if (conflict?.shift2?.id) shiftIds.push(conflict.shift2.id);
+    });
+    return [...new Set(shiftIds)];
+  };
+
+  const handleBulkAction = (action) => {
+    const shiftIds = getSelectedShiftIds();
+    if (shiftIds.length === 0) return;
+    
+    if (onBulkAction) {
+      onBulkAction(action, shiftIds);
+    }
+    setSelectedConflicts([]);
+    setBulkActionMode(false);
+  };
+
   if (conflicts.length === 0) {
     return (
       <Card className="bg-green-50 border-green-200">
