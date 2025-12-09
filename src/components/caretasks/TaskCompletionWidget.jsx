@@ -47,6 +47,14 @@ export default function TaskCompletionWidget({
     enabled: !!carePlanId,
   });
 
+  const { data: staff = [] } = useQuery({
+    queryKey: ['staff'],
+    queryFn: async () => {
+      const data = await base44.entities.Staff.list();
+      return Array.isArray(data) ? data : [];
+    },
+  });
+
   const { data: existingCompletions = [] } = useQuery({
     queryKey: ['task-completions', shiftId, visitId],
     queryFn: async () => {
