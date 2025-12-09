@@ -15,13 +15,36 @@ export default function AttendanceDialog({ attendance, selectedDate, onClose }) 
   const queryClient = useQueryClient();
   const isEditing = !!attendance;
 
+  const [currentUser, setCurrentUser] = React.useState(null);
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const user = await base44.auth.me();
+        setCurrentUser(user);
+      } catch (error) {
+        console.error("Error loading user:", error);
+      }
+    };
+    loadUser();
+  }, []);
+
+  const getDefaultRecordedBy = () => {
+    if (attendance?.recorded_by_staff_id) return attendance.recorded_by_staff_id;
+    if (currentUser?.email) {
+      const matchingStaff = staff.find(s => s.email === currentUser.email);
+      return matchingStaff?.id || "";
+    }
+    return "";
+  };
+
   const [formData, setFormData] = useState({
     client_id: attendance?.client_id || "",
     session_id: attendance?.session_id || "",
-    attendance_date: attendance?.attendance_date || selectedDate?.toISOString().split('T')[0] || new Date().toISOString().split('T')[0],
+    attendance_date: attendance?.attendance_date || (selectedDate instanceof Date ? selectedDate.toISOString().split('T')[0] : new Date().toISOString().split('T')[0]),
     status: attendance?.status || "present",
-    arrival_time: attendance?.arrival_time || "",
-    departure_time: attendance?.departure_time || "",
+    arrival_time: attendance?.arrival_time?.split('T')[1]?.substring(0, 5) || "",
+    departure_time: attendance?.departure_time?.split('T')[1]?.substring(0, 5) || "",
     transport_used: attendance?.transport_used || "",
     mood_on_arrival: attendance?.mood_on_arrival || "happy",
     mood_on_departure: attendance?.mood_on_departure || "",
@@ -32,6 +55,12 @@ export default function AttendanceDialog({ attendance, selectedDate, onClose }) 
     incidents_or_concerns: attendance?.incidents_or_concerns || "",
     recorded_by_staff_id: attendance?.recorded_by_staff_id || "",
   });
+
+  React.useEffect(() => {
+    if (staff.length > 0 && !formData.recorded_by_staff_id) {
+      setFormData(prev => ({ ...prev, recorded_by_staff_id: getDefaultRecordedBy() }));
+    }
+  }, [staff, currentUser]);
 
   const { data: clients = [] } = useQuery({
     queryKey: ['daycentre-clients'],
@@ -101,10 +130,21 @@ export default function AttendanceDialog({ attendance, selectedDate, onClose }) 
       return;
     }
 
+    if (!formData.recorded_by_staff_id) {
+      toast.error("Missing Fields", "Please select who is recording this attendance");
+      return;
+    }
+
+    const submitData = {
+      ...formData,
+      arrival_time: formData.arrival_time ? `${formData.attendance_date}T${formData.arrival_time}:00` : null,
+      departure_time: formData.departure_time ? `${formData.attendance_date}T${formData.departure_time}:00` : null,
+    };
+
     if (isEditing) {
-      updateMutation.mutate({ id: attendance.id, data: formData });
+      updateMutation.mutate({ id: attendance.id, data: submitData });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(submitData);
     }
   };
 
@@ -363,7 +403,7 @@ export default function AttendanceDialog({ attendance, selectedDate, onClose }) 
             </div>
 
             <div>
-              <Label htmlFor="recorded_by">Recorded By</Label>
+              <Label htmlFor="recorded_by">Recorded By <span className="text-red-500">*</span></Label>
               <Select
                 value={formData.recorded_by_staff_id}
                 onValueChange={(value) => setFormData({ ...formData, recorded_by_staff_id: value })}
