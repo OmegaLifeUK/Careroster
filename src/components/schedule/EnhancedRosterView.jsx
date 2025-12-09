@@ -205,6 +205,8 @@ export default function EnhancedRosterView({
   const [showOverrideDialog, setShowOverrideDialog] = useState(false);
   const [pendingAssignment, setPendingAssignment] = useState(null);
   const [overrideReason, setOverrideReason] = useState("");
+  const [bulkMode, setBulkMode] = useState(false);
+  const [selectedShifts, setSelectedShifts] = useState([]);
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
@@ -304,22 +306,74 @@ export default function EnhancedRosterView({
   const getClientName = (clientId) => clients.find(c => c?.id === clientId)?.full_name || '';
   const getCarerName = (carerId) => carers.find(c => c?.id === carerId)?.full_name || 'Unassigned';
 
+  const toggleShiftSelection = (shiftId) => {
+    setSelectedShifts(prev => 
+      prev.includes(shiftId) 
+        ? prev.filter(id => id !== shiftId)
+        : [...prev, shiftId]
+    );
+  };
+
+  const handleBulkUnassign = () => {
+    if (selectedShifts.length === 0) return;
+    if (!confirm(`Unassign ${selectedShifts.length} selected shift(s)?`)) return;
+    
+    selectedShifts.forEach(shiftId => {
+      onShiftUpdate?.(shiftId, { carer_id: null, status: 'unfilled' });
+    });
+    
+    setSelectedShifts([]);
+    setBulkMode(false);
+    toast.success("Bulk Update", `Unassigned ${selectedShifts.length} shifts`);
+  };
+
+  const handleBulkCancel = () => {
+    if (selectedShifts.length === 0) return;
+    if (!confirm(`Cancel ${selectedShifts.length} selected shift(s)? This cannot be undone.`)) return;
+    
+    selectedShifts.forEach(shiftId => {
+      onShiftUpdate?.(shiftId, { status: 'cancelled' });
+    });
+    
+    setSelectedShifts([]);
+    setBulkMode(false);
+    toast.success("Bulk Update", `Cancelled ${selectedShifts.length} shifts`);
+  };
+
   const ShiftPill = ({ shift, showCarer = false, showClient = true }) => {
     const colors = SHIFT_COLORS[shift.shift_type] || SHIFT_COLORS.morning;
     const label = showClient 
       ? (shift.location_name || getClientName(shift.client_id) || 'Shift')
       : (showCarer ? getCarerName(shift.carer_id) : shift.shift_type);
+    const isSelected = selectedShifts.includes(shift.id);
 
     return (
       <div
-        onClick={() => onShiftClick?.(shift)}
+        onClick={(e) => {
+          if (bulkMode) {
+            e.stopPropagation();
+            toggleShiftSelection(shift.id);
+          } else {
+            onShiftClick?.(shift);
+          }
+        }}
         className={`
-          px-2 py-1 rounded-md text-xs cursor-pointer transition-all
+          px-2 py-1 rounded-md text-xs cursor-pointer transition-all relative
           ${colors.bg} ${colors.border} ${colors.text} border
           hover:shadow-md hover:scale-[1.02]
           ${!shift.carer_id ? 'border-dashed border-orange-400 bg-orange-50' : ''}
+          ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
         `}
       >
+        {bulkMode && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center z-10">
+            {isSelected && (
+              <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
+                <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+              </svg>
+            )}
+          </div>
+        )}
         <div className="flex items-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
           <span className="font-medium truncate">{label}</span>
@@ -465,6 +519,50 @@ export default function EnhancedRosterView({
         </div>
 
         <div className="flex items-center gap-2">
+          {bulkMode && (
+            <div className="flex items-center gap-2 px-3 py-1 bg-blue-50 border border-blue-200 rounded-lg">
+              <span className="text-sm font-medium text-blue-900">
+                {selectedShifts.length} selected
+              </span>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleBulkUnassign}
+                disabled={selectedShifts.length === 0}
+              >
+                Unassign
+              </Button>
+              <Button 
+                size="sm" 
+                variant="outline"
+                onClick={handleBulkCancel}
+                disabled={selectedShifts.length === 0}
+                className="text-red-600 hover:text-red-700"
+              >
+                Cancel Shifts
+              </Button>
+              <Button 
+                size="sm" 
+                variant="ghost"
+                onClick={() => {
+                  setBulkMode(false);
+                  setSelectedShifts([]);
+                }}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </div>
+          )}
+          {!bulkMode && (
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setBulkMode(true)}
+              className="h-8"
+            >
+              Bulk Actions
+            </Button>
+          )}
           <div className="relative">
             <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
             <Input
