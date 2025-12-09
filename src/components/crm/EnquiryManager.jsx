@@ -27,6 +27,7 @@ export default function EnquiryManager() {
     relationship_to_client: "self",
     potential_client_name: "",
     care_type_needed: "residential_care",
+    care_setting_assigned: "residential_care",
     urgency: "medium",
     enquiry_details: "",
     assigned_to: "",
@@ -127,6 +128,7 @@ Care Team`,
       relationship_to_client: "self",
       potential_client_name: "",
       care_type_needed: "residential_care",
+      care_setting_assigned: "residential_care",
       urgency: "medium",
       enquiry_details: "",
       assigned_to: "",
@@ -145,6 +147,7 @@ Care Team`,
       relationship_to_client: enquiry.relationship_to_client,
       potential_client_name: enquiry.potential_client_name || "",
       care_type_needed: enquiry.care_type_needed,
+      care_setting_assigned: enquiry.care_setting_assigned || enquiry.care_type_needed,
       urgency: enquiry.urgency,
       enquiry_details: enquiry.enquiry_details,
       assigned_to: enquiry.assigned_to || "",
@@ -353,7 +356,17 @@ Care Team`,
               <div className="grid grid-cols-2 gap-4">
                 <div>
                   <Label>Care Type Needed</Label>
-                  <Select value={formData.care_type_needed} onValueChange={(v) => setFormData({...formData, care_type_needed: v})}>
+                  <Select 
+                    value={formData.care_type_needed} 
+                    onValueChange={(v) => {
+                      // Auto-assign care setting based on care type
+                      let careSetting = v;
+                      if (v === "respite_care" || v === "other") {
+                        careSetting = "residential_care"; // Default for non-standard types
+                      }
+                      setFormData({...formData, care_type_needed: v, care_setting_assigned: careSetting});
+                    }}
+                  >
                     <SelectTrigger>
                       <SelectValue />
                     </SelectTrigger>
@@ -362,6 +375,8 @@ Care Team`,
                       <SelectItem value="domiciliary_care">Domiciliary Care</SelectItem>
                       <SelectItem value="supported_living">Supported Living</SelectItem>
                       <SelectItem value="day_centre">Day Centre</SelectItem>
+                      <SelectItem value="respite_care">Respite Care</SelectItem>
+                      <SelectItem value="other">Other</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>
@@ -379,6 +394,24 @@ Care Team`,
                     </SelectContent>
                   </Select>
                 </div>
+              </div>
+
+              <div>
+                <Label>Assigned to Care Setting</Label>
+                <Select 
+                  value={formData.care_setting_assigned} 
+                  onValueChange={(v) => setFormData({...formData, care_setting_assigned: v})}
+                >
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residential_care">Residential Care</SelectItem>
+                    <SelectItem value="domiciliary_care">Domiciliary Care</SelectItem>
+                    <SelectItem value="supported_living">Supported Living</SelectItem>
+                    <SelectItem value="day_centre">Day Centre</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
 
               <div>
