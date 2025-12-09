@@ -19,11 +19,14 @@ import {
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import DayCentreRosterView from "../components/schedule/DayCentreRosterView";
+import SessionDialog from "../components/daycentre/SessionDialog";
 
 export default function DayCentreSessions() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedSession, setSelectedSession] = useState(null);
   const [viewMode, setViewMode] = useState("roster");
+  const [showSessionDialog, setShowSessionDialog] = useState(false);
+  const [editingSession, setEditingSession] = useState(null);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -285,7 +288,13 @@ export default function DayCentreSessions() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Day Centre Sessions</h1>
             <p className="text-gray-500">Manage activity sessions and bookings</p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700">
+          <Button
+            onClick={() => {
+              setEditingSession(null);
+              setShowSessionDialog(true);
+            }}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Schedule Session
           </Button>
@@ -327,8 +336,12 @@ export default function DayCentreSessions() {
             staff={staff}
             onSessionClick={(session) => setSelectedSession(session)}
             onAddSession={({ activity_id, session_date }) => {
-              // Would open session creation dialog
-              console.log("Add session", activity_id, session_date);
+              setEditingSession({ activity_id, session_date });
+              setShowSessionDialog(true);
+            }}
+            onEditSession={(session) => {
+              setEditingSession(session);
+              setShowSessionDialog(true);
             }}
             locationName="Day Centre"
           />
@@ -668,6 +681,19 @@ export default function DayCentreSessions() {
               </CardContent>
             </Card>
           </>
+        )}
+
+        {showSessionDialog && (
+          <SessionDialog
+            session={editingSession}
+            activities={activities}
+            staff={staff}
+            clients={clients}
+            onClose={() => {
+              setShowSessionDialog(false);
+              setEditingSession(null);
+            }}
+          />
         )}
       </div>
     </div>
