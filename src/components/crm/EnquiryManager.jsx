@@ -118,6 +118,81 @@ Care Team`,
     },
   });
 
+  const convertToClientMutation = useMutation({
+    mutationFn: async (enquiryId) => {
+      const enquiry = enquiries.find(e => e.id === enquiryId);
+      const careSetting = enquiry.care_setting_assigned || enquiry.care_type_needed;
+      
+      let clientId;
+      
+      if (careSetting === "day_centre") {
+        const client = await base44.entities.DayCentreClient.create({
+          full_name: enquiry.potential_client_name || enquiry.contact_name,
+          phone: enquiry.contact_phone,
+          emergency_contact: {
+            name: enquiry.contact_name,
+            phone: enquiry.contact_phone,
+            relationship: enquiry.relationship_to_client
+          },
+          status: "active"
+        });
+        clientId = client.id;
+      } else if (careSetting === "residential_care") {
+        const client = await base44.entities.Client.create({
+          full_name: enquiry.potential_client_name || enquiry.contact_name,
+          phone: enquiry.contact_phone,
+          emergency_contact: {
+            name: enquiry.contact_name,
+            phone: enquiry.contact_phone,
+            relationship: enquiry.relationship_to_client
+          },
+          status: "active"
+        });
+        clientId = client.id;
+      } else if (careSetting === "domiciliary_care") {
+        const client = await base44.entities.DomCareClient.create({
+          full_name: enquiry.potential_client_name || enquiry.contact_name,
+          phone: enquiry.contact_phone,
+          emergency_contact: {
+            name: enquiry.contact_name,
+            phone: enquiry.contact_phone,
+            relationship: enquiry.relationship_to_client
+          },
+          status: "active"
+        });
+        clientId = client.id;
+      } else if (careSetting === "supported_living") {
+        const client = await base44.entities.SupportedLivingClient.create({
+          full_name: enquiry.potential_client_name || enquiry.contact_name,
+          phone: enquiry.contact_phone,
+          emergency_contact: {
+            name: enquiry.contact_name,
+            phone: enquiry.contact_phone,
+            relationship: enquiry.relationship_to_client
+          },
+          status: "active"
+        });
+        clientId = client.id;
+      }
+      
+      // Update enquiry with conversion info
+      await base44.entities.ClientEnquiry.update(enquiryId, {
+        status: "converted",
+        converted_to_client_id: clientId
+      });
+      
+      return clientId;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['crm-enquiries'] });
+      queryClient.invalidateQueries({ queryKey: ['daycentre-clients'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      queryClient.invalidateQueries({ queryKey: ['domcare-clients'] });
+      queryClient.invalidateQueries({ queryKey: ['supported-living-clients'] });
+      toast.success("Client Created", "Enquiry converted to client successfully");
+    },
+  });
+
   const resetForm = () => {
     setFormData({
       enquiry_type: "new_client",
@@ -262,6 +337,17 @@ Care Team`,
                   >
                     <Send className="w-4 h-4 mr-1" />
                     Send Forms
+                  </Button>
+                )}
+                {(enquiry.status === "new" || enquiry.status === "contacted" || enquiry.status === "forms_sent") && (
+                  <Button 
+                    size="sm"
+                    className="bg-green-600 hover:bg-green-700"
+                    onClick={() => convertToClientMutation.mutate(enquiry.id)}
+                    disabled={convertToClientMutation.isPending}
+                  >
+                    <User className="w-4 h-4 mr-1" />
+                    Convert
                   </Button>
                 )}
               </div>
