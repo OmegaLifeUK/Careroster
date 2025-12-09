@@ -350,6 +350,13 @@ export default function DayCentreSessions() {
             clients={clients}
             staff={staff}
             onSessionClick={(session) => setSelectedSession(session)}
+            onSessionUpdate={async (sessionId, updatedData) => {
+              try {
+                await base44.entities.DayCentreSession.update(sessionId, updatedData);
+              } catch (error) {
+                console.error('Error updating session:', error);
+              }
+            }}
             onAddSession={({ activity_id, session_date }) => {
               setEditingSession({ activity_id, session_date });
               setShowSessionDialog(true);
