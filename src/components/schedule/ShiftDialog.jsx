@@ -720,6 +720,18 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
             </div>
           </div>
 
+          {/* Care Tasks Section - Show for existing shifts with client assignment */}
+          {isExistingShift && formData.client_id && shift?.status === 'in_progress' && (
+            <div className="mt-6 border-t pt-6">
+              <TaskCompletionWidget
+                clientId={formData.client_id}
+                carePlanId={shift?.linked_care_plan_id}
+                shiftId={shift?.id}
+                onComplete={() => queryClient.invalidateQueries({ queryKey: ['shifts'] })}
+              />
+            </div>
+          )}
+
           <DialogFooter className="mt-6">
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
