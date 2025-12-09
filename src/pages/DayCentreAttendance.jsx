@@ -45,24 +45,56 @@ export default function DayCentreAttendance() {
   const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
   const [editingAttendance, setEditingAttendance] = useState(null);
 
-  const { data: attendance = [], isLoading } = useQuery({
+  const { data: attendance = [], isLoading, error: attendanceError } = useQuery({
     queryKey: ['daycentre-attendance'],
-    queryFn: () => base44.entities.DayCentreAttendance.list('-attendance_date'),
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.DayCentreAttendance.list('-attendance_date');
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching attendance:", error);
+        return [];
+      }
+    },
   });
 
   const { data: clients = [] } = useQuery({
     queryKey: ['daycentre-clients'],
-    queryFn: () => base44.entities.DayCentreClient.list(),
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.DayCentreClient.list();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching clients:", error);
+        return [];
+      }
+    },
   });
 
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
-    queryFn: () => base44.entities.Staff.list(),
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Staff.list();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching staff:", error);
+        return [];
+      }
+    },
   });
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['daycentre-sessions'],
-    queryFn: () => base44.entities.DayCentreSession.list(),
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.DayCentreSession.list();
+        return Array.isArray(data) ? data : [];
+      } catch (error) {
+        console.error("Error fetching sessions:", error);
+        return [];
+      }
+    },
   });
 
   const dateAttendance = attendance.filter(att => {
@@ -286,6 +318,38 @@ export default function DayCentreAttendance() {
               </Card>
             </div>
           </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isLoading) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-amber-600" />
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (attendanceError) {
+    return (
+      <div className="p-4 md:p-8">
+        <div className="max-w-7xl mx-auto">
+          <Card className="border-red-200 bg-red-50">
+            <CardContent className="p-6">
+              <div className="flex items-center gap-3 text-red-800">
+                <AlertCircle className="w-6 h-6" />
+                <div>
+                  <p className="font-semibold">Error Loading Attendance</p>
+                  <p className="text-sm">{attendanceError.message || "Failed to load data"}</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     );
