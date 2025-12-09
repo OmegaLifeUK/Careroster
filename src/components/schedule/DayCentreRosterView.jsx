@@ -136,7 +136,27 @@ export default function DayCentreRosterView({
 
   const handleDragEnd = (result) => {
     if (!result.destination) return;
-    toast.info("Session Updated", "Session has been moved");
+    
+    const { draggableId: sessionId, source, destination } = result;
+    
+    // Parse destination droppable ID (format: "activityId_date")
+    const [destActivityId, destDate] = destination.droppableId.split('_');
+    
+    const session = sessions.find(s => s.id === sessionId);
+    if (!session) return;
+    
+    // If nothing changed, don't update
+    if (session.activity_id === destActivityId && session.session_date === destDate) return;
+    
+    // Update session with new activity and/or date
+    const updatedSession = {
+      ...session,
+      activity_id: destActivityId,
+      session_date: destDate
+    };
+    
+    onSessionUpdate?.(session.id, updatedSession);
+    toast.success("Session Moved", "Session has been rescheduled");
   };
 
   const SessionPill = ({ session, showActivity = true, showEdit = false }) => {
@@ -185,25 +205,214 @@ export default function DayCentreRosterView({
     const width = getTimeWidth(session.start_time, session.end_time);
     const registered = session.registered_clients?.length || 0;
     const capacity = session.max_capacity || 0;
+    const [isDragging, setIsDragging] = React.useState(false);
+    const [isResizing, setIsResizing] = React.useState(false);
+    const [dragStart, setDragStart] = React.useState({ x: 0, left: 0, width: 0 });
+
+    const handleMouseDown = (e, type) => {
+      if (e.button !== 0) return; // Only left click
+      e.stopPropagation();
+      
+      if (type === 'move') {
+        setIsDragging(true);
+      } else if (type === 'resize-start' || type === 'resize-end') {
+        setIsResizing(type);
+      }
+      
+      setDragStart({
+        x: e.clientX,
+        left: left,
+        width: width
+      });
+    };
+
+    React.useEffect(() => {
+      if (!isDragging && !isResizing) return;
+
+      const handleMouseMove = (e) => {
+        const container = e.target.closest('.timeline-container');
+        if (!container) return;
+        
+        const containerRect = container.getBoundingClientRect();
+        const containerWidth = containerRect.width;
+        const deltaX = e.clientX - dragStart.x;
+        const deltaPercent = (deltaX / containerWidth) * 100;
+        const pixelsPerHour = containerWidth / 10; // 10 hours (8-18)
+        const deltaHours = deltaX / pixelsPerHour;
+
+        if (isDragging) {
+          // Move session
+          const newLeft = Math.max(0, Math.min(100 - width, dragStart.left + deltaPercent));
+          const hoursFromStart = (newLeft / 100) * 10;
+          const newStartHour = 8 + Math.floor(hoursFromStart);
+          const newStartMin = Math.round((hoursFromStart % 1) * 60);
+          
+          const [oldHour, oldMin] = session.start_time.split(':').map(Number);
+          const [endHour, endMin] = session.end_time.split(':').map(Number);
+          const durationHours = endHour - oldHour;
+          const durationMins = endMin - oldMin + (durationHours * 60);
+          
+          const newEndTotalMins = newStartHour * 60 + newStartMin + durationMins;
+          const newEndHour = Math.floor(newEndTotalMins / 60);
+          const newEndMin = newEndTotalMins % 60;
+
+          const newStartTime = `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`;
+          const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+          
+          e.target.style.left = `${newLeft}%`;
+        } else if (isResizing === 'resize-start') {
+          // Resize from start
+          const newLeft = Math.max(0, Math.min(dragStart.left + dragStart.width - 8, dragStart.left + deltaPercent));
+          const newWidth = dragStart.width + (dragStart.left - newLeft);
+          
+          if (newWidth >= 8) {
+            const hoursFromStart = (newLeft / 100) * 10;
+            const newStartHour = 8 + Math.floor(hoursFromStart);
+            const newStartMin = Math.round((hoursFromStart % 1) * 60);
+            const newStartTime = `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`;
+            
+            e.target.closest('.timeline-session').style.left = `${newLeft}%`;
+            e.target.closest('.timeline-session').style.width = `${newWidth}%`;
+          }
+        } else if (isResizing === 'resize-end') {
+          // Resize from end
+          const newWidth = Math.max(8, Math.min(100 - dragStart.left, dragStart.width + deltaPercent));
+          
+          const hoursWidth = (newWidth / 100) * 10;
+          const [startHour, startMin] = session.start_time.split(':').map(Number);
+          const endTotalMins = startHour * 60 + startMin + (hoursWidth * 60);
+          const newEndHour = Math.floor(endTotalMins / 60);
+          const newEndMin = Math.round(endTotalMins % 60);
+          const newEndTime = `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`;
+          
+          e.target.closest('.timeline-session').style.width = `${newWidth}%`;
+        }
+      };
+
+      const handleMouseUp = (e) => {
+        if (isDragging || isResizing) {
+          const container = e.target.closest('.timeline-container');
+          if (!container) return;
+          
+          const containerRect = container.getBoundingClientRect();
+          const containerWidth = containerRect.width;
+          const deltaX = e.clientX - dragStart.x;
+          const pixelsPerHour = containerWidth / 10;
+          
+          let updates = {};
+
+          if (isDragging) {
+            const deltaPercent = (deltaX / containerWidth) * 100;
+            const newLeft = Math.max(0, Math.min(100 - width, dragStart.left + deltaPercent));
+            const hoursFromStart = (newLeft / 100) * 10;
+            const newStartHour = 8 + Math.floor(hoursFromStart);
+            const newStartMin = Math.round((hoursFromStart % 1) * 60);
+            
+            const [oldHour, oldMin] = session.start_time.split(':').map(Number);
+            const [endHour, endMin] = session.end_time.split(':').map(Number);
+            const durationHours = endHour - oldHour;
+            const durationMins = endMin - oldMin + (durationHours * 60);
+            
+            const newEndTotalMins = newStartHour * 60 + newStartMin + durationMins;
+            const newEndHour = Math.floor(newEndTotalMins / 60);
+            const newEndMin = newEndTotalMins % 60;
+
+            updates = {
+              start_time: `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`,
+              end_time: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`
+            };
+            
+            toast.success("Time Updated", `Session moved to ${updates.start_time}`);
+          } else if (isResizing === 'resize-start') {
+            const deltaPercent = (deltaX / containerWidth) * 100;
+            const newLeft = Math.max(0, Math.min(dragStart.left + dragStart.width - 8, dragStart.left + deltaPercent));
+            
+            const hoursFromStart = (newLeft / 100) * 10;
+            const newStartHour = 8 + Math.floor(hoursFromStart);
+            const newStartMin = Math.round((hoursFromStart % 1) * 60);
+            
+            updates = {
+              start_time: `${newStartHour.toString().padStart(2, '0')}:${newStartMin.toString().padStart(2, '0')}`
+            };
+            
+            toast.success("Start Time Updated", `Session now starts at ${updates.start_time}`);
+          } else if (isResizing === 'resize-end') {
+            const deltaPercent = (deltaX / containerWidth) * 100;
+            const newWidth = Math.max(8, Math.min(100 - dragStart.left, dragStart.width + deltaPercent));
+            
+            const hoursWidth = (newWidth / 100) * 10;
+            const [startHour, startMin] = session.start_time.split(':').map(Number);
+            const endTotalMins = startHour * 60 + startMin + (hoursWidth * 60);
+            const newEndHour = Math.floor(endTotalMins / 60);
+            const newEndMin = Math.round(endTotalMins % 60);
+            
+            updates = {
+              end_time: `${newEndHour.toString().padStart(2, '0')}:${newEndMin.toString().padStart(2, '0')}`
+            };
+            
+            toast.success("End Time Updated", `Session now ends at ${updates.end_time}`);
+          }
+
+          if (Object.keys(updates).length > 0) {
+            onSessionUpdate?.(session.id, { ...session, ...updates });
+          }
+        }
+        
+        setIsDragging(false);
+        setIsResizing(false);
+      };
+
+      document.addEventListener('mousemove', handleMouseMove);
+      document.addEventListener('mouseup', handleMouseUp);
+
+      return () => {
+        document.removeEventListener('mousemove', handleMouseMove);
+        document.removeEventListener('mouseup', handleMouseUp);
+      };
+    }, [isDragging, isResizing, dragStart]);
 
     return (
       <div
-        onClick={() => onSessionClick?.(session)}
         className={`
-          absolute top-1 bottom-1 rounded cursor-pointer transition-all
+          timeline-session
+          absolute top-1 bottom-1 rounded transition-all group
           ${colors.bg} ${colors.border} border
-          hover:shadow-lg hover:z-10
+          hover:shadow-lg hover:z-20
+          ${isDragging || isResizing ? 'z-30 shadow-xl cursor-grabbing' : 'cursor-grab'}
         `}
         style={{ left: `${left}%`, width: `${width}%`, minWidth: '50px' }}
+        onMouseDown={(e) => handleMouseDown(e, 'move')}
+        onClick={(e) => {
+          if (!isDragging && !isResizing) {
+            onSessionClick?.(session);
+          }
+        }}
       >
-        <div className="px-1.5 py-0.5 text-[10px] truncate h-full flex flex-col justify-between">
+        {/* Resize handle - start */}
+        <div
+          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-opacity z-10"
+          onMouseDown={(e) => handleMouseDown(e, 'resize-start')}
+          onClick={(e) => e.stopPropagation()}
+        />
+        
+        <div className="px-1.5 py-0.5 text-[10px] truncate h-full flex flex-col justify-between pointer-events-none">
           <span className={`font-semibold ${colors.text}`}>
             {getActivityName(session.activity_id)}
+          </span>
+          <span className={`${colors.text} opacity-75`}>
+            {session.start_time} - {session.end_time}
           </span>
           <span className={`${colors.text} opacity-75`}>
             {registered}/{capacity}
           </span>
         </div>
+        
+        {/* Resize handle - end */}
+        <div
+          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-opacity z-10"
+          onMouseDown={(e) => handleMouseDown(e, 'resize-end')}
+          onClick={(e) => e.stopPropagation()}
+        />
       </div>
     );
   };
@@ -401,8 +610,8 @@ export default function DayCentreRosterView({
                           )}
                         </div>
                       </div>
-                      <div className="flex-1 relative h-16 bg-gray-50/50">
-                        <div className="absolute inset-0 flex">
+                      <div className="flex-1 relative h-16 bg-gray-50/50 timeline-container">
+                        <div className="absolute inset-0 flex pointer-events-none">
                           {TIMELINE_HOURS.map(hour => (
                             <div key={hour} className="flex-1 border-r border-gray-100" />
                           ))}
@@ -440,8 +649,8 @@ export default function DayCentreRosterView({
                           <p className="text-xs text-gray-500">{daySessions.length} sessions</p>
                         </div>
                       </div>
-                      <div className="flex-1 relative h-14 bg-gray-50/50">
-                        <div className="absolute inset-0 flex">
+                      <div className="flex-1 relative h-14 bg-gray-50/50 timeline-container">
+                        <div className="absolute inset-0 flex pointer-events-none">
                           {TIMELINE_HOURS.map(hour => (
                             <div key={hour} className="flex-1 border-r border-gray-100" />
                           ))}
@@ -655,7 +864,7 @@ export default function DayCentreRosterView({
           </div>
         </div>
         <div className="text-xs text-gray-500">
-          Drag sessions to reschedule
+          Drag sessions between days/activities • Drag edges to adjust time • Click to view details
         </div>
       </div>
     </div>
