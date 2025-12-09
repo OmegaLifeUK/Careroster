@@ -26,6 +26,7 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addMonths } from "date-fns";
+import { syncClientFromCarePlan } from "@/components/workflow/AutomatedWorkflowEngine";
 
 const TASK_CATEGORIES = [
   { value: "personal_care", label: "Personal Care" },
@@ -122,14 +123,117 @@ export default function CarePlanEditor({ carePlan, client, onClose }) {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
+      let savedPlan;
       if (isEditing) {
-        return base44.entities.CarePlan.update(carePlan.id, data);
+        savedPlan = await base44.entities.CarePlan.update(carePlan.id, data);
+      } else {
+        savedPlan = await base44.entities.CarePlan.create(data);
+        
+        // AUTO-CREATE related records from care plan
+        const tasksCreated = [];
+        const medsCreated = [];
+        const risksCreated = [];
+        
+        // 1. Auto-create CareTask records from care_tasks
+        if (data.care_tasks?.length > 0) {
+          for (const task of data.care_tasks) {
+            try {
+              await base44.entities.CareTask.create({
+                client_id: data.client_id,
+                care_plan_id: savedPlan.id,
+                task_name: task.task_name,
+                description: task.description,
+                category: task.category,
+                frequency: task.frequency,
+                preferred_time: task.preferred_time,
+                duration_minutes: task.duration_minutes,
+                special_instructions: task.special_instructions,
+                requires_two_carers: task.requires_two_carers,
+                is_active: task.is_active !== false,
+                status: "pending"
+              });
+              tasksCreated.push(task.task_name);
+            } catch (err) {
+              console.error("Failed to create care task:", err);
+            }
+          }
+        }
+        
+        // 2. Auto-create MARSheet records from medications
+        if (data.medication_management?.medications?.length > 0) {
+          for (const med of data.medication_management.medications) {
+            try {
+              await base44.entities.MARSheet.create({
+                client_id: data.client_id,
+                drug_name: med.name,
+                dosage: med.dose,
+                frequency: med.frequency,
+                route: med.route || "oral",
+                time_slots: med.time_of_day || [],
+                prescriber: "As per care plan",
+                start_date: data.assessment_date,
+                is_prn: med.is_prn || false,
+                prn_reason: med.prn_instructions || "",
+                special_instructions: med.special_instructions || "",
+                status: "active"
+              });
+              medsCreated.push(med.name);
+            } catch (err) {
+              console.error("Failed to create medication record:", err);
+            }
+          }
+        }
+        
+        // 3. Auto-create RiskAssessment records
+        if (data.risk_factors?.length > 0) {
+          for (const risk of data.risk_factors) {
+            try {
+              await base44.entities.RiskAssessment.create({
+                client_id: data.client_id,
+                risk_area: risk.risk,
+                risk_level: risk.likelihood === 'high' || risk.impact === 'high' ? 'high' : 
+                           risk.likelihood === 'medium' || risk.impact === 'medium' ? 'medium' : 'low',
+                description: `Likelihood: ${risk.likelihood}, Impact: ${risk.impact}`,
+                triggers: [],
+                control_measures: [risk.control_measures],
+                review_date: data.review_date,
+                status: "active",
+                assessed_date: data.assessment_date
+              });
+              risksCreated.push(risk.risk);
+            } catch (err) {
+              console.error("Failed to create risk assessment:", err);
+            }
+          }
+        }
+        
+        // Build summary message
+        const created = [];
+        if (tasksCreated.length) created.push(`${tasksCreated.length} care tasks`);
+        if (medsCreated.length) created.push(`${medsCreated.length} medications`);
+        if (risksCreated.length) created.push(`${risksCreated.length} risk assessments`);
+        
+        if (created.length > 0) {
+          toast.success("Care Plan Created", `Auto-created: ${created.join(', ')}`);
+        }
+        
+        // Auto-sync client record with care plan data
+        syncClientFromCarePlan(savedPlan.id, data.client_id).then(() => {
+          queryClient.invalidateQueries({ queryKey: ['clients'] });
+        });
       }
-      return base44.entities.CarePlan.create(data);
+      
+      return savedPlan;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Saved", isEditing ? "Care plan updated" : "Care plan created");
+      queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
+      queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
+      queryClient.invalidateQueries({ queryKey: ['clients'] });
+      if (isEditing) {
+        toast.success("Updated", "Care plan updated successfully");
+      }
       onClose();
     },
     onError: () => {

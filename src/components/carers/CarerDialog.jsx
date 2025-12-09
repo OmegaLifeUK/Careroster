@@ -14,8 +14,11 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Loader2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { useToast } from "@/components/ui/toast";
+import { geocodeAndUpdateAddress, assignMandatoryTraining } from "@/components/workflow/AutomatedWorkflowEngine";
 
 export default function CarerDialog({ carer, qualifications, onClose }) {
+  const { toast } = useToast();
   const [formData, setFormData] = useState({
     full_name: carer?.full_name || "",
     email: carer?.email || "",
@@ -39,11 +42,67 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
       if (carer) {
         return base44.entities.Carer.update(carer.id, data);
       } else {
-        return base44.entities.Carer.create(data);
+        // Create new carer and auto-setup availability
+        const newCarer = await base44.entities.Carer.create(data);
+        
+        // Auto-create default working hours based on employment type
+        const defaultHours = data.employment_type === 'full_time' 
+          ? { start: "08:00", end: "18:00", maxWeek: 40 }
+          : data.employment_type === 'part_time'
+          ? { start: "09:00", end: "15:00", maxWeek: 20 }
+          : { start: "09:00", end: "17:00", maxWeek: 30 };
+        
+        // Create working hours for Mon-Fri
+        const workingDays = [1, 2, 3, 4, 5]; // Mon-Fri
+        await Promise.all(workingDays.map(day => 
+          base44.entities.CarerAvailability.create({
+            carer_id: newCarer.id,
+            availability_type: "working_hours",
+            day_of_week: day,
+            start_time: defaultHours.start,
+            end_time: defaultHours.end,
+            is_recurring: true,
+            max_hours_per_week: defaultHours.maxWeek,
+            notes: "Auto-generated default availability"
+          })
+        ));
+        
+        // Set weekends as day off
+        await Promise.all([0, 6].map(day =>
+          base44.entities.CarerAvailability.create({
+            carer_id: newCarer.id,
+            availability_type: "day_off",
+            day_of_week: day,
+            is_recurring: true,
+            reason: "Weekend"
+          })
+        ));
+        
+        // Auto-geocode address if postcode provided
+        if (data.address?.postcode) {
+          geocodeAndUpdateAddress('Carer', newCarer.id, data.address).then(result => {
+            if (result.success) {
+              queryClient.invalidateQueries({ queryKey: ['carers'] });
+            }
+          });
+        }
+        
+        // Auto-assign mandatory training
+        assignMandatoryTraining(newCarer.id).then(result => {
+          if (result.assigned > 0) {
+            queryClient.invalidateQueries({ queryKey: ['training-assignments'] });
+          }
+        });
+        
+        return newCarer;
       }
     },
-    onSuccess: () => {
+    onSuccess: (result) => {
       queryClient.invalidateQueries({ queryKey: ['carers'] });
+      queryClient.invalidateQueries({ queryKey: ['carer-availability'] });
+      if (!carer) {
+        toast.success("Carer Onboarded", "Carer created with availability, location, and training assigned. Ready for scheduling!");
+      }
       onClose();
     },
   });
