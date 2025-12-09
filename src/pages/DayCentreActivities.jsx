@@ -1,7 +1,7 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import ActivityDialog from "../components/daycentre/ActivityDialog";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -64,6 +64,8 @@ export default function DayCentreActivities() {
   const [searchQuery, setSearchQuery] = useState("");
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [selectedActivity, setSelectedActivity] = useState(null);
+  const [showActivityDialog, setShowActivityDialog] = useState(false);
+  const [editingActivity, setEditingActivity] = useState(null);
 
   const { data: activities = [], isLoading } = useQuery({
     queryKey: ['daycentre-activities'],
@@ -280,7 +282,13 @@ export default function DayCentreActivities() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Day Centre Activities</h1>
             <p className="text-gray-500">Manage activity library and sessions</p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700">
+          <Button
+            onClick={() => {
+              setEditingActivity(null);
+              setShowActivityDialog(true);
+            }}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Activity
           </Button>
@@ -446,7 +454,15 @@ export default function DayCentreActivities() {
                     >
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setEditingActivity(activity);
+                        setShowActivityDialog(true);
+                      }}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
@@ -460,6 +476,16 @@ export default function DayCentreActivities() {
           <div className="text-center py-12 text-gray-500">
             <p>No activities found</p>
           </div>
+        )}
+
+        {showActivityDialog && (
+          <ActivityDialog
+            activity={editingActivity}
+            onClose={() => {
+              setShowActivityDialog(false);
+              setEditingActivity(null);
+            }}
+          />
         )}
       </div>
     </div>

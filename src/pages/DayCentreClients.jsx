@@ -34,6 +34,7 @@ import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
 import TaskManager from "../components/tasks/TaskManager";
+import DayCentreClientDialog from "../components/daycentre/DayCentreClientDialog";
 
 export default function DayCentreClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -41,6 +42,8 @@ export default function DayCentreClients() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['daycentre-clients'],
@@ -141,7 +144,10 @@ export default function DayCentreClients() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => console.log("Edit client:", selectedClient)}
+                onClick={() => {
+                  setEditingClient(selectedClient);
+                  setShowClientDialog(true);
+                }}
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Client
@@ -464,7 +470,13 @@ export default function DayCentreClients() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Day Centre Clients</h1>
             <p className="text-gray-500">Manage day centre participants</p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700">
+          <Button
+            onClick={() => {
+              setEditingClient(null);
+              setShowClientDialog(true);
+            }}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Client
           </Button>
@@ -631,7 +643,8 @@ export default function DayCentreClients() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("Edit clicked for:", client);
+                        setEditingClient(client);
+                        setShowClientDialog(true);
                       }}
                     >
                       <Edit className="w-4 h-4" />
@@ -649,6 +662,17 @@ export default function DayCentreClients() {
               <p className="text-gray-500 text-lg">No clients found</p>
             </CardContent>
           </Card>
+        )}
+
+        {showClientDialog && (
+          <DayCentreClientDialog
+            client={editingClient}
+            staff={staff}
+            onClose={() => {
+              setShowClientDialog(false);
+              setEditingClient(null);
+            }}
+          />
         )}
       </div>
     </div>
