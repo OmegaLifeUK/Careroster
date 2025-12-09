@@ -208,6 +208,7 @@ export default function DayCentreRosterView({
     const [isDragging, setIsDragging] = React.useState(false);
     const [isResizing, setIsResizing] = React.useState(false);
     const [dragStart, setDragStart] = React.useState({ x: 0, left: 0, width: 0 });
+    const sessionRef = React.useRef(null);
 
     const handleMouseDown = (e, type) => {
       if (e.button !== 0) return; // Only left click
@@ -373,14 +374,15 @@ export default function DayCentreRosterView({
 
     return (
       <div
+        ref={sessionRef}
         className={`
           timeline-session
-          absolute top-1 bottom-1 rounded transition-all group
-          ${colors.bg} ${colors.border} border
-          hover:shadow-lg hover:z-20
-          ${isDragging || isResizing ? 'z-30 shadow-xl cursor-grabbing' : 'cursor-grab'}
+          absolute top-1 bottom-1 rounded-md transition-all group
+          ${colors.bg} ${colors.border} border-2
+          hover:shadow-lg hover:z-20 hover:scale-[1.02]
+          ${isDragging || isResizing ? 'z-30 shadow-2xl cursor-grabbing scale-105' : 'cursor-move'}
         `}
-        style={{ left: `${left}%`, width: `${width}%`, minWidth: '50px' }}
+        style={{ left: `${left}%`, width: `${width}%`, minWidth: '60px' }}
         onMouseDown={(e) => handleMouseDown(e, 'move')}
         onClick={(e) => {
           if (!isDragging && !isResizing) {
@@ -390,29 +392,34 @@ export default function DayCentreRosterView({
       >
         {/* Resize handle - start */}
         <div
-          className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-opacity z-10"
+          className="absolute left-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-opacity z-10 flex items-center justify-center"
           onMouseDown={(e) => handleMouseDown(e, 'resize-start')}
           onClick={(e) => e.stopPropagation()}
-        />
+        >
+          <div className="w-0.5 h-6 bg-gray-400 rounded" />
+        </div>
         
-        <div className="px-1.5 py-0.5 text-[10px] truncate h-full flex flex-col justify-between pointer-events-none">
-          <span className={`font-semibold ${colors.text}`}>
+        <div className="px-2 py-1 text-[11px] truncate h-full flex flex-col justify-center pointer-events-none">
+          <span className={`font-bold ${colors.text} truncate mb-0.5`}>
             {getActivityName(session.activity_id)}
           </span>
-          <span className={`${colors.text} opacity-75`}>
+          <span className={`${colors.text} opacity-90 text-[10px] font-medium`}>
             {session.start_time} - {session.end_time}
           </span>
-          <span className={`${colors.text} opacity-75`}>
+          <span className={`${colors.text} opacity-75 text-[10px] flex items-center gap-1 mt-0.5`}>
+            <Users className="w-3 h-3" />
             {registered}/{capacity}
           </span>
         </div>
         
         {/* Resize handle - end */}
         <div
-          className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-white/50 transition-opacity z-10"
+          className="absolute right-0 top-0 bottom-0 w-3 cursor-ew-resize opacity-0 group-hover:opacity-100 hover:bg-black/10 transition-opacity z-10 flex items-center justify-center"
           onMouseDown={(e) => handleMouseDown(e, 'resize-end')}
           onClick={(e) => e.stopPropagation()}
-        />
+        >
+          <div className="w-0.5 h-6 bg-gray-400 rounded" />
+        </div>
       </div>
     );
   };
@@ -571,12 +578,16 @@ export default function DayCentreRosterView({
       {viewMode === "day" ? (
         /* DAY TIMELINE VIEW */
         <div className="flex flex-col">
-          <div className="flex border-b bg-gray-50">
-            <div className="w-56 p-2 border-r flex-shrink-0" />
+          <div className="flex border-b bg-gray-50 sticky top-0 z-20">
+            <div className="w-56 p-3 border-r flex-shrink-0 bg-gray-100 flex items-center">
+              <Clock className="w-4 h-4 text-gray-400 mr-2" />
+              <span className="text-xs font-semibold text-gray-600">Time Slots</span>
+            </div>
             <div className="flex-1 flex">
               {TIMELINE_HOURS.map(hour => (
-                <div key={hour} className="flex-1 text-center py-2 text-xs text-gray-500 border-r">
-                  {hour.toString().padStart(2, '0')}:00
+                <div key={hour} className="flex-1 text-center py-3 text-sm font-semibold text-gray-600 border-r bg-white">
+                  <div>{hour.toString().padStart(2, '0')}:00</div>
+                  <div className="text-[10px] text-gray-400 font-normal mt-0.5">{hour < 12 ? 'AM' : 'PM'}</div>
                 </div>
               ))}
             </div>
@@ -610,10 +621,15 @@ export default function DayCentreRosterView({
                           )}
                         </div>
                       </div>
-                      <div className="flex-1 relative h-16 bg-gray-50/50 timeline-container">
+                      <div className="flex-1 relative h-16 bg-white timeline-container">
                         <div className="absolute inset-0 flex pointer-events-none">
                           {TIMELINE_HOURS.map(hour => (
-                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                            <div key={hour} className="flex-1 border-r border-gray-200">
+                              <div className="h-full flex flex-col">
+                                <div className="flex-1 border-b border-gray-100" />
+                                <div className="flex-1" />
+                              </div>
+                            </div>
                           ))}
                         </div>
                         {daySessions.map(session => (
@@ -649,10 +665,15 @@ export default function DayCentreRosterView({
                           <p className="text-xs text-gray-500">{daySessions.length} sessions</p>
                         </div>
                       </div>
-                      <div className="flex-1 relative h-14 bg-gray-50/50 timeline-container">
+                      <div className="flex-1 relative h-14 bg-white timeline-container">
                         <div className="absolute inset-0 flex pointer-events-none">
                           {TIMELINE_HOURS.map(hour => (
-                            <div key={hour} className="flex-1 border-r border-gray-100" />
+                            <div key={hour} className="flex-1 border-r border-gray-200">
+                              <div className="h-full flex flex-col">
+                                <div className="flex-1 border-b border-gray-100" />
+                                <div className="flex-1" />
+                              </div>
+                            </div>
                           ))}
                         </div>
                         {daySessions.map(session => (
