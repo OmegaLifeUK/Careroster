@@ -8,10 +8,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Search, Edit, Phone, Mail, Car, MapPin, Trash2 } from "lucide-react";
 import { ExportButton } from "@/components/ui/export-button";
 import { useToast } from "@/components/ui/toast";
+import StaffDialog from "../components/domcare/StaffDialog";
 
 export default function DomCareStaff() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
+  const [showStaffDialog, setShowStaffDialog] = useState(false);
+  const [editingStaff, setEditingStaff] = useState(null);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -77,7 +80,13 @@ export default function DomCareStaff() {
               filename="domcare-staff" 
               columns={exportColumns}
             />
-            <Button className="bg-blue-600 hover:bg-blue-700">
+            <Button
+              onClick={() => {
+                setEditingStaff(null);
+                setShowStaffDialog(true);
+              }}
+              className="bg-blue-600 hover:bg-blue-700"
+            >
               <Plus className="w-4 h-4 mr-2" />
               Add Staff
             </Button>
@@ -197,12 +206,17 @@ export default function DomCareStaff() {
                 )}
 
                 <div className="flex gap-2">
-                  <Button variant="outline" size="sm" className="flex-1">
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="flex-1"
+                    onClick={() => {
+                      setEditingStaff(member);
+                      setShowStaffDialog(true);
+                    }}
+                  >
                     <Edit className="w-4 h-4 mr-2" />
                     Edit
-                  </Button>
-                  <Button variant="outline" size="sm" className="text-red-600 hover:text-red-700">
-                    <Trash2 className="w-4 h-4" />
                   </Button>
                 </div>
               </CardContent>
@@ -214,6 +228,16 @@ export default function DomCareStaff() {
           <div className="text-center py-12 text-gray-500">
             <p>No staff members found</p>
           </div>
+        )}
+
+        {showStaffDialog && (
+          <StaffDialog
+            staff={editingStaff}
+            onClose={() => {
+              setShowStaffDialog(false);
+              setEditingStaff(null);
+            }}
+          />
         )}
       </div>
     </div>

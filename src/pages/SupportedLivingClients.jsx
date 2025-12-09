@@ -21,6 +21,7 @@ import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
 import TaskManager from "../components/tasks/TaskManager";
+import SupportedLivingClientDialog from "../components/supportedliving/SupportedLivingClientDialog";
 
 export default function SupportedLivingClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -28,6 +29,8 @@ export default function SupportedLivingClients() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['supported-living-clients'],
@@ -124,7 +127,10 @@ export default function SupportedLivingClients() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => console.log("Edit client:", selectedClient)}
+                onClick={() => {
+                  setEditingClient(selectedClient);
+                  setShowClientDialog(true);
+                }}
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Client
@@ -442,7 +448,13 @@ export default function SupportedLivingClients() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Supported Living Clients</h1>
             <p className="text-gray-500">Manage supported living tenants</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button
+            onClick={() => {
+              setEditingClient(null);
+              setShowClientDialog(true);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Client
           </Button>
@@ -607,7 +619,8 @@ export default function SupportedLivingClients() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("Edit clicked for:", client);
+                        setEditingClient(client);
+                        setShowClientDialog(true);
                       }}
                     >
                       <Edit className="w-4 h-4" />
@@ -625,6 +638,18 @@ export default function SupportedLivingClients() {
               <p className="text-gray-500 text-lg">No clients found</p>
             </CardContent>
           </Card>
+        )}
+
+        {showClientDialog && (
+          <SupportedLivingClientDialog
+            client={editingClient}
+            properties={properties}
+            staff={staff}
+            onClose={() => {
+              setShowClientDialog(false);
+              setEditingClient(null);
+            }}
+          />
         )}
       </div>
     </div>

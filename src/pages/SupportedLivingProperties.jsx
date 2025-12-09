@@ -18,11 +18,14 @@ import {
   CheckCircle,
   AlertCircle
 } from "lucide-react";
+import PropertyDialog from "../components/supportedliving/PropertyDialog";
 
 export default function SupportedLivingProperties() {
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [selectedProperty, setSelectedProperty] = useState(null);
+  const [showPropertyDialog, setShowPropertyDialog] = useState(false);
+  const [editingProperty, setEditingProperty] = useState(null);
 
   const { data: properties = [], isLoading } = useQuery({
     queryKey: ['supported-living-properties'],
@@ -319,7 +322,13 @@ export default function SupportedLivingProperties() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Supported Living Properties</h1>
             <p className="text-gray-500">Manage properties and occupancy</p>
           </div>
-          <Button className="bg-indigo-600 hover:bg-indigo-700">
+          <Button
+            onClick={() => {
+              setEditingProperty(null);
+              setShowPropertyDialog(true);
+            }}
+            className="bg-indigo-600 hover:bg-indigo-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Property
           </Button>
@@ -467,7 +476,14 @@ export default function SupportedLivingProperties() {
                     >
                       View Details
                     </Button>
-                    <Button variant="outline" size="sm">
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      onClick={() => {
+                        setEditingProperty(property);
+                        setShowPropertyDialog(true);
+                      }}
+                    >
                       <Edit className="w-4 h-4" />
                     </Button>
                   </div>
@@ -481,6 +497,17 @@ export default function SupportedLivingProperties() {
           <div className="text-center py-12 text-gray-500">
             <p>No properties found</p>
           </div>
+        )}
+
+        {showPropertyDialog && (
+          <PropertyDialog
+            property={editingProperty}
+            staff={staff}
+            onClose={() => {
+              setShowPropertyDialog(false);
+              setEditingProperty(null);
+            }}
+          />
         )}
       </div>
     </div>

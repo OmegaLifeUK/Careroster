@@ -22,6 +22,7 @@ import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
 import TaskManager from "../components/tasks/TaskManager";
+import DomCareClientDialog from "../components/domcare/DomCareClientDialog";
 
 export default function DomCareClients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -29,6 +30,8 @@ export default function DomCareClients() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
+  const [showClientDialog, setShowClientDialog] = useState(false);
+  const [editingClient, setEditingClient] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
     queryKey: ['domcare-clients'],
@@ -101,7 +104,10 @@ export default function DomCareClients() {
             <div className="flex gap-2">
               <Button
                 variant="outline"
-                onClick={() => console.log("Edit client:", selectedClient)}
+                onClick={() => {
+                  setEditingClient(selectedClient);
+                  setShowClientDialog(true);
+                }}
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Client
@@ -364,7 +370,13 @@ export default function DomCareClients() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Dom Care Clients</h1>
             <p className="text-gray-500">Manage home care clients</p>
           </div>
-          <Button className="bg-blue-600 hover:bg-blue-700">
+          <Button
+            onClick={() => {
+              setEditingClient(null);
+              setShowClientDialog(true);
+            }}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Add Client
           </Button>
@@ -523,21 +535,11 @@ export default function DomCareClients() {
                       size="sm"
                       onClick={(e) => {
                         e.stopPropagation();
-                        console.log("Edit clicked for:", client);
+                        setEditingClient(client);
+                        setShowClientDialog(true);
                       }}
                     >
                       <Edit className="w-4 h-4" />
-                    </Button>
-                    <Button 
-                      variant="outline" 
-                      size="sm" 
-                      className="text-red-600 hover:text-red-700"
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("Delete clicked for:", client);
-                      }}
-                    >
-                      <Trash2 className="w-4 h-4" />
                     </Button>
                   </div>
                 </CardContent>
@@ -552,6 +554,17 @@ export default function DomCareClients() {
               <p className="text-gray-500 text-lg">No clients found</p>
             </CardContent>
           </Card>
+        )}
+
+        {showClientDialog && (
+          <DomCareClientDialog
+            client={editingClient}
+            staff={staff}
+            onClose={() => {
+              setShowClientDialog(false);
+              setEditingClient(null);
+            }}
+          />
         )}
       </div>
     </div>
