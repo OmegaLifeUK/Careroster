@@ -46,6 +46,7 @@ export default function DayCentreRosterView({
   onSessionClick,
   onSessionUpdate,
   onAddSession,
+  onEditSession,
   locationName = "Day Centre"
 }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -138,7 +139,7 @@ export default function DayCentreRosterView({
     toast.info("Session Updated", "Session has been moved");
   };
 
-  const SessionPill = ({ session, showActivity = true }) => {
+  const SessionPill = ({ session, showActivity = true, showEdit = false }) => {
     const colors = getActivityColor(session.activity_id);
     const registered = session.registered_clients?.length || 0;
     const capacity = session.max_capacity || 0;
@@ -146,9 +147,12 @@ export default function DayCentreRosterView({
 
     return (
       <div
-        onClick={() => onSessionClick?.(session)}
+        onClick={(e) => {
+          if (e.target.closest('.edit-btn')) return;
+          onSessionClick?.(session);
+        }}
         className={`
-          px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all
+          px-2 py-1.5 rounded-md text-xs cursor-pointer transition-all relative group
           ${colors.bg} ${colors.border} ${colors.text} border
           hover:shadow-md hover:scale-[1.02]
         `}
@@ -536,7 +540,7 @@ export default function DayCentreRosterView({
                                         {...provided.dragHandleProps}
                                         className={snapshot.isDragging ? 'z-50' : ''}
                                       >
-                                        <SessionPill session={session} showActivity={false} />
+                                        <SessionPill session={session} showActivity={false} showEdit={true} />
                                       </div>
                                     )}
                                   </Draggable>
@@ -618,7 +622,7 @@ export default function DayCentreRosterView({
                         >
                           <div className="space-y-1">
                             {daySessions.map((session) => (
-                              <SessionPill key={session.id} session={session} />
+                              <SessionPill key={session.id} session={session} showEdit={true} />
                             ))}
                           </div>
                         </div>
