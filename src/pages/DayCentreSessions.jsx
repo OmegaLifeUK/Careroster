@@ -15,7 +15,8 @@ import {
   User,
   CheckCircle,
   LayoutGrid,
-  List
+  List,
+  FileText
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import DayCentreRosterView from "../components/schedule/DayCentreRosterView";
@@ -90,13 +91,24 @@ export default function DayCentreSessions() {
     return (
       <div className="p-4 md:p-8">
         <div className="max-w-5xl mx-auto">
-          <Button
-            variant="outline"
-            onClick={() => setSelectedSession(null)}
-            className="mb-6"
-          >
-            ← Back to Sessions
-          </Button>
+          <div className="flex items-center justify-between mb-6">
+            <Button
+              variant="outline"
+              onClick={() => setSelectedSession(null)}
+            >
+              ← Back to Sessions
+            </Button>
+            <Button
+              onClick={() => {
+                setReportingSession(selectedSession);
+                setShowReportDialog(true);
+              }}
+              className="bg-purple-600 hover:bg-purple-700"
+            >
+              <FileText className="w-4 h-4 mr-2" />
+              Generate Report
+            </Button>
+          </div>
 
           <div className="mb-6">
             <h1 className="text-3xl font-bold text-gray-900 mb-2">
