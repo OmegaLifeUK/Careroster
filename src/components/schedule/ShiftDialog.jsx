@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
+import TaskCompletionWidget from "../caretasks/TaskCompletionWidget";
 import {
   Dialog,
   DialogContent,
