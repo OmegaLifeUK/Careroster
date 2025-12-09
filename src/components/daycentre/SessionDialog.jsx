@@ -363,24 +363,23 @@ export default function SessionDialog({ session, activities = [], staff = [], cl
               />
             </div>
           </div>
+          <div className="p-6 border-t bg-gray-50 flex justify-end gap-3 sticky bottom-0 bg-white">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button
+              type="submit"
+              className="bg-amber-600 hover:bg-amber-700"
+              disabled={createMutation.isPending || updateMutation.isPending}
+            >
+              {createMutation.isPending || updateMutation.isPending
+                ? "Saving..."
+                : isEditing
+                ? "Update Session"
+                : "Schedule Session"}
+            </Button>
+          </div>
         </form>
-
-        <div className="p-6 border-t bg-gray-50 flex justify-end gap-3">
-          <Button type="button" variant="outline" onClick={onClose}>
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            className="bg-amber-600 hover:bg-amber-700"
-            disabled={createMutation.isPending || updateMutation.isPending}
-          >
-            {createMutation.isPending || updateMutation.isPending
-              ? "Saving..."
-              : isEditing
-              ? "Update Session"
-              : "Schedule Session"}
-          </Button>
-        </div>
       </div>
     </div>
   );
