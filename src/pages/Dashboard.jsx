@@ -29,6 +29,7 @@ import MainDashboardCustomizer from "../components/dashboard/MainDashboardCustom
 import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 import AlertBanner from "../components/alerts/AlertBanner";
 import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
+import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const DEFAULT_PREFERENCES = {
@@ -187,6 +188,11 @@ export default function Dashboard() {
 
         {/* Alert Banner */}
         <AlertBanner alerts={alerts} />
+        
+        {/* Automation Helper */}
+        <div className="mb-6">
+          <AutoScheduleHelper />
+        </div>
 
         <DragDropContext onDragEnd={handleDragEnd}>
           <Droppable droppableId="main-dashboard-widgets">
