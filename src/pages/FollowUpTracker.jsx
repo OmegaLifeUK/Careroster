@@ -4,6 +4,7 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Textarea } from "@/components/ui/textarea";
 import { 
@@ -103,7 +104,7 @@ export default function FollowUpTracker() {
 
   if (selectedFollowUp) {
     const assignedStaff = staff.find(s => s.id === selectedFollowUp.assigned_to);
-    const isOverdue = selectedFollowUp.due_date && new Date(selectedFollowUp.due_date) < new Date();
+    const isOverdue = selectedFollowUp.due_date && new Date(selectedFollowUp.due_date) < new Date() && selectedFollowUp.status !== 'completed';
 
     return (
       <div className="p-4 md:p-8">
@@ -254,7 +255,9 @@ export default function FollowUpTracker() {
                       <Mail className="w-4 h-4 text-blue-400 mt-0.5" />
                       <div>
                         <p className="font-medium">Sent</p>
-                        <p className="text-gray-500 text-xs">{format(new Date(selectedFollowUp.sent_date), 'PPP')}</p>
+                        <p className="text-gray-500 text-xs">
+                          {format(new Date(selectedFollowUp.sent_date), 'PPP')}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -263,7 +266,9 @@ export default function FollowUpTracker() {
                       <CheckCircle className="w-4 h-4 text-green-400 mt-0.5" />
                       <div>
                         <p className="font-medium">Response Received</p>
-                        <p className="text-gray-500 text-xs">{format(new Date(selectedFollowUp.response_received_date), 'PPP')}</p>
+                        <p className="text-gray-500 text-xs">
+                          {format(new Date(selectedFollowUp.response_received_date), 'PPP')}
+                        </p>
                       </div>
                     </div>
                   )}
@@ -272,7 +277,9 @@ export default function FollowUpTracker() {
                       <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
                       <div>
                         <p className="font-medium">Completed</p>
-                        <p className="text-gray-500 text-xs">{format(new Date(selectedFollowUp.completed_date), 'PPP')}</p>
+                        <p className="text-gray-500 text-xs">
+                          {format(new Date(selectedFollowUp.completed_date), 'PPP')}
+                        </p>
                       </div>
                     </div>
                   )}
