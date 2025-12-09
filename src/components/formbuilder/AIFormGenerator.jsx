@@ -92,16 +92,26 @@ REPEATING SECTIONS & NESTED STRUCTURES:
 
     try {
       const result = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a form structure extraction expert. Analyze this document carefully and extract its structure.
+        prompt: `You are a form structure extraction expert. Analyze this document carefully and extract EVERY SINGLE question, field, checkbox, and input area.
+
 ${contextInfo}
 
-**MOST IMPORTANT RULE - READ THIS FIRST:**
+**CRITICAL EXTRACTION RULES:**
+1. Extract EVERY question/field - don't just create section headers
+2. Look for ALL questions, prompts, checkboxes, text areas, rating scales, and input fields
+3. If a section has a header AND questions underneath, extract BOTH the header and the questions
+4. Extract embedded questions like "Please provide details:", "Comments:", "Notes:", etc.
+5. Look for numbered lists, bullet points, and sub-questions
+6. Extract signature lines, date fields, and name fields
+
+**TABLE DETECTION - MOST IMPORTANT:**
 If this document contains ANY of the following, you MUST use field_type="table":
 - A weekly planner or schedule (days of the week with time slots)
 - A grid or matrix layout with rows and columns
 - A timetable, roster, or calendar view
 - Any repeating row structure (like medication logs, activity logs)
 - Cells arranged in a tabular format
+- Questions arranged in rows with multiple columns for answers
 
 **NEVER create separate textarea/text fields for each cell of a table!**
 **ALWAYS create ONE table field with columns matching the table headers!**
@@ -144,12 +154,27 @@ ${conditionalLogicInstructions}
 ${repeatingSectionInstructions}
 
 EXTRACTION RULES:
-1. **Tables/grids = ONE table field with table_columns** (NEVER flatten!)
-2. Group related non-table fields into sections
-3. Mark required fields based on asterisks or bold text
-4. Extract dropdown options from listed choices
+1. **Extract EVERY field, question, and input area** - Don't skip embedded questions!
+2. **Tables/grids = ONE table field with table_columns** (NEVER flatten!)
+3. Group related non-table fields into sections
+4. Mark required fields based on asterisks or bold text
+5. Extract dropdown options from listed choices
+6. Look inside each section for nested questions, sub-fields, and text areas
+7. Extract rating scales, yes/no questions, and checkbox groups
+8. Pay attention to indentation - indented text often indicates sub-questions
 
-Analyze the document and return the JSON structure.`,
+**COMMON AUDIT FORM PATTERNS:**
+- "Evidence:" → textarea field
+- "Yes/No/N/A" → radio field with options ["Yes", "No", "N/A"]
+- "Rating 1-5" → rating field
+- "Comments/Notes/Details" → textarea field
+- Lists of checkboxes → checkbox or multiselect field
+- Signature + Date → signature field + date field
+
+**DO NOT just create section headers without extracting the questions inside!**
+Every section should have multiple fields representing the actual questions/inputs in that section.
+
+Analyze the document and return the JSON structure with ALL fields extracted.`,
         file_urls: [uploadedUrl],
         response_json_schema: {
           type: "object",
