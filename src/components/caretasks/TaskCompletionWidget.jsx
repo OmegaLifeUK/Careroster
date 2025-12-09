@@ -59,7 +59,13 @@ export default function TaskCompletionWidget({
 
   const completeTaskMutation = useMutation({
     mutationFn: async (taskData) => {
-      const completion = await base44.entities.CareTaskCompletion.create(taskData);
+      const user = await base44.auth.me();
+      const staffMember = staff.find(s => s.email === user.email);
+      
+      const completion = await base44.entities.CareTaskCompletion.create({
+        ...taskData,
+        completed_by_staff_id: staffMember?.id || user.email,
+      });
       
       // Create alert if critical task incomplete
       if (taskData.is_critical && taskData.completion_status !== 'completed') {

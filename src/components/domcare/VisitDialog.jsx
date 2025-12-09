@@ -1,13 +1,16 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
+import TaskCompletionWidget from "../caretasks/TaskCompletionWidget";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { X, Clock, MapPin, User, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { X, Clock, MapPin, User, AlertCircle, FileText, Upload, Trash2 } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/toast";
 
 export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
   // Check if this is an existing visit (has id) or new with pre-filled data
@@ -41,11 +44,15 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
     scheduled_start: getDefaultStart(),
     scheduled_end: getDefaultEnd(),
     status: visit?.status || "draft",
+    visit_type: visit?.visit_type || "regular",
     visit_notes: visit?.visit_notes || "",
     tasks: visit?.tasks || [],
+    assessment_documents: visit?.assessment_documents || [],
   });
 
   const [taskInput, setTaskInput] = useState("");
+  const [isUploading, setIsUploading] = useState(false);
+  const { toast } = useToast();
 
   const queryClient = useQueryClient();
 
@@ -73,8 +80,10 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
       scheduled_start: new Date(formData.scheduled_start).toISOString(),
       scheduled_end: new Date(formData.scheduled_end).toISOString(),
       status: formData.assigned_staff_id ? "published" : "draft",
+      visit_type: formData.visit_type,
       visit_notes: formData.visit_notes,
       tasks: formData.tasks,
+      assessment_documents: formData.assessment_documents,
     };
 
     // Only include these fields if they have values
@@ -90,6 +99,46 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
     } else {
       createVisitMutation.mutate(visitData);
     }
+  };
+
+  const handleFileUpload = async (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploading(true);
+    try {
+      const { file_url } = await base44.integrations.Core.UploadFile({ file });
+      const newDoc = {
+        document_name: file.name,
+        document_type: "other",
+        document_url: file_url,
+        uploaded_date: new Date().toISOString(),
+        uploaded_by: "Staff",
+        notes: ""
+      };
+      setFormData({
+        ...formData,
+        assessment_documents: [...formData.assessment_documents, newDoc]
+      });
+      toast.success("Uploaded", "Document attached successfully");
+    } catch (error) {
+      toast.error("Upload Failed", "Failed to upload document");
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  const removeDocument = (index) => {
+    setFormData({
+      ...formData,
+      assessment_documents: formData.assessment_documents.filter((_, i) => i !== index)
+    });
+  };
+
+  const updateDocType = (index, type) => {
+    const updated = [...formData.assessment_documents];
+    updated[index].document_type = type;
+    setFormData({ ...formData, assessment_documents: updated });
   };
 
   const addTask = () => {
@@ -148,6 +197,26 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                     {client.full_name} - {client.address?.postcode}
                   </SelectItem>
                 ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          <div>
+            <Label className="mb-2 block">Visit Type</Label>
+            <Select
+              value={formData.visit_type}
+              onValueChange={(value) => setFormData({ ...formData, visit_type: value })}
+            >
+              <SelectTrigger>
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="regular">Regular Visit</SelectItem>
+                <SelectItem value="initial">Initial Visit</SelectItem>
+                <SelectItem value="assessment">Assessment Visit</SelectItem>
+                <SelectItem value="pre_admission">Pre-Admission Assessment</SelectItem>
+                <SelectItem value="care_assessment">Care Assessment</SelectItem>
+                <SelectItem value="review">Review Visit</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -216,6 +285,66 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
             </div>
           </div>
 
+          {/* Assessment Documents - show for assessment visits */}
+          {['assessment', 'pre_admission', 'care_assessment', 'initial'].includes(formData.visit_type) && (
+            <div className="border-t pt-4">
+              <Label className="flex items-center gap-2 mb-3">
+                <FileText className="w-4 h-4 text-purple-600" />
+                Assessment Documents
+              </Label>
+              <p className="text-xs text-gray-500 mb-3">
+                Attach assessment documents here. These can be used to AI-generate a care plan.
+              </p>
+              
+              <div className="space-y-2 mb-3">
+                {formData.assessment_documents.map((doc, index) => (
+                  <div key={index} className="flex items-center gap-2 p-2 bg-purple-50 border border-purple-200 rounded">
+                    <FileText className="w-4 h-4 text-purple-600" />
+                    <span className="flex-1 text-sm truncate">{doc.document_name}</span>
+                    <Select
+                      value={doc.document_type}
+                      onValueChange={(v) => updateDocType(index, v)}
+                    >
+                      <SelectTrigger className="w-40 h-8 text-xs">
+                        <SelectValue />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="pre_admission_assessment">Pre-Admission</SelectItem>
+                        <SelectItem value="care_assessment">Care Assessment</SelectItem>
+                        <SelectItem value="risk_assessment">Risk Assessment</SelectItem>
+                        <SelectItem value="mental_capacity">Mental Capacity</SelectItem>
+                        <SelectItem value="consent_form">Consent Form</SelectItem>
+                        <SelectItem value="medical_history">Medical History</SelectItem>
+                        <SelectItem value="other">Other</SelectItem>
+                      </SelectContent>
+                    </Select>
+                    <button
+                      type="button"
+                      onClick={() => removeDocument(index)}
+                      className="text-red-500 hover:text-red-700"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                    </button>
+                  </div>
+                ))}
+              </div>
+
+              <label className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-purple-300 rounded-lg cursor-pointer hover:bg-purple-50 transition-colors">
+                <Upload className="w-4 h-4 text-purple-600" />
+                <span className="text-sm text-purple-700">
+                  {isUploading ? "Uploading..." : "Upload Assessment Document"}
+                </span>
+                <input
+                  type="file"
+                  className="hidden"
+                  onChange={handleFileUpload}
+                  disabled={isUploading}
+                  accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+                />
+              </label>
+            </div>
+          )}
+
           <div className="border-t pt-4">
             <h3 className="font-medium text-sm text-gray-700 mb-3">Optional: Assign Now</h3>
             
@@ -264,6 +393,18 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
               </div>
             </div>
           </div>
+
+          {/* Care Tasks Section - Show for in progress visits */}
+          {isExistingVisit && formData.client_id && visit?.status === 'in_progress' && (
+            <div className="border-t pt-6">
+              <TaskCompletionWidget
+                clientId={formData.client_id}
+                carePlanId={visit?.linked_care_plan_id}
+                visitId={visit?.id}
+                onComplete={() => queryClient.invalidateQueries({ queryKey: ['visits'] })}
+              />
+            </div>
+          )}
 
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button type="button" variant="outline" onClick={onClose}>
