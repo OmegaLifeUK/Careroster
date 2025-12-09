@@ -112,17 +112,19 @@ FIELD TYPES:
 - signature, rating, email, phone, file
 - table (MUST include table_columns array)
 
-**TABLE FIELD STRUCTURE:**
-When you see a grid/schedule/planner, create:
+**TABLE FIELD STRUCTURE (CRITICAL):**
+When you see ANY grid/schedule/planner/matrix/repeating structure, ALWAYS create:
 {
   "field_type": "table",
   "field_label": "Name of the table",
   "table_columns": [
-    {"name": "Column Header 1", "type": "text"},
-    {"name": "Column Header 2", "type": "textarea"},
-    ...
+    {"name": "Column Header 1", "type": "text", "options": []},
+    {"name": "Column Header 2", "type": "textarea", "options": []},
+    {"name": "Column Header 3", "type": "select", "options": ["Option1", "Option2"]}
   ]
 }
+
+**IMPORTANT:** Preserve ALL table structure - columns must match the original document exactly!
 
 **SPECIFIC EXAMPLE - Weekly Activity Planner:**
 If document has days (Mon-Sun) as rows/columns with Morning/Afternoon/Evening slots:
@@ -215,15 +217,24 @@ Analyze the document and return the JSON structure.`,
         }
       });
 
-      console.log("AI Raw Result:", JSON.stringify(result, null, 2));
+      console.log("✓ AI Generation Complete - Raw Result:", JSON.stringify(result, null, 2));
       
-      // If AI detected tables but didn't create table fields, warn user
+      // Validate table structure
       if (result.contains_table_or_grid) {
-        const hasTableFields = (result.sections || []).some(s => 
-          (s.fields || []).some(f => f.field_type === 'table')
-        );
-        if (!hasTableFields) {
-          console.warn("AI detected grid/table but didn't create table fields - this may need manual adjustment");
+        const tableFields = (result.sections || []).flatMap(s => s.fields || []).filter(f => f.field_type === 'table');
+        if (tableFields.length === 0) {
+          console.error("❌ AI DETECTED TABLE BUT DIDN'T CREATE TABLE FIELDS - Auto-converting...");
+        } else {
+          console.log("✓ Found", tableFields.length, "table field(s)");
+          // Validate each table has columns
+          tableFields.forEach(tf => {
+            if (!tf.table_columns || tf.table_columns.length === 0) {
+              console.error("❌ Table field", tf.field_label, "missing table_columns!");
+            } else {
+              console.log("✓ Table", tf.field_label, "has", tf.table_columns.length, "columns:", 
+                tf.table_columns.map(c => c.name).join(', '));
+            }
+          });
         }
       }
 
@@ -346,9 +357,10 @@ Analyze the document and return the JSON structure.`,
           ]
         };
         
-        console.log("Created processedResult with table:", JSON.stringify(processedResult.sections[0].fields.find(f => f.field_type === 'table'), null, 2));
+        const createdTable = processedResult.sections[0].fields.find(f => f.field_type === 'table');
+        console.log("✓ Auto-generated table structure:", JSON.stringify(createdTable, null, 2));
         
-        toast.info("Table Created", "Converted schedule/planner fields to table format");
+        toast.info("Table Auto-Created", `Converted ${allFields.length} fields into table format with ${createdTable.table_columns?.length || 0} columns`);
       }
 
       // Build field ID map for conditional logic references
@@ -378,11 +390,13 @@ Analyze the document and return the JSON structure.`,
             let tableColumns = [];
             if (field?.field_type === 'table') {
               if (Array.isArray(field?.table_columns) && field.table_columns.length > 0) {
+                // CRITICAL: Preserve exact structure from AI including all options
                 tableColumns = field.table_columns.map(col => ({
                   name: String(col?.name || 'Column'),
                   type: String(col?.type || 'text'),
-                  options: Array.isArray(col?.options) ? col.options : []
+                  options: Array.isArray(col?.options) ? col.options.filter(Boolean) : []
                 }));
+                console.log("✓ Preserved", tableColumns.length, "table columns for", field.field_label);
               } else {
                 // Default columns if none provided
                 tableColumns = [
@@ -390,8 +404,8 @@ Analyze the document and return the JSON structure.`,
                   { name: "Column 2", type: "text", options: [] },
                   { name: "Column 3", type: "text", options: [] }
                 ];
+                console.warn("⚠ Using default columns - AI didn't provide table_columns");
               }
-              console.log("Final table_columns for", field.field_label, ":", JSON.stringify(tableColumns));
             }
 
             // Process conditional logic
@@ -430,7 +444,15 @@ Analyze the document and return the JSON structure.`,
         detected_relationships: processedResult.detected_relationships || []
       };
 
-      console.log("Generated Template:", JSON.stringify(formTemplate, null, 2));
+      // Final validation log
+      const finalTableFields = formTemplate.sections.flatMap(s => s.fields).filter(f => f.field_type === 'table');
+      console.log("✓ FINAL FORM TEMPLATE:");
+      console.log("  - Sections:", formTemplate.sections.length);
+      console.log("  - Total Fields:", formTemplate.sections.flatMap(s => s.fields).length);
+      console.log("  - Table Fields:", finalTableFields.length);
+      finalTableFields.forEach((tf, idx) => {
+        console.log(`  - Table ${idx + 1}: "${tf.field_label}" with ${tf.table_columns?.length || 0} columns`);
+      });
 
       // Show summary of what was detected
       const tableCount = formTemplate.sections.flatMap(s => s.fields).filter(f => f.field_type === 'table').length;
