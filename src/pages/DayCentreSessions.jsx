@@ -20,6 +20,7 @@ import {
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import DayCentreRosterView from "../components/schedule/DayCentreRosterView";
 import SessionDialog from "../components/daycentre/SessionDialog";
+import SessionReportDialog from "../components/daycentre/SessionReportDialog";
 
 export default function DayCentreSessions() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,6 +28,8 @@ export default function DayCentreSessions() {
   const [viewMode, setViewMode] = useState("roster");
   const [showSessionDialog, setShowSessionDialog] = useState(false);
   const [editingSession, setEditingSession] = useState(null);
+  const [showReportDialog, setShowReportDialog] = useState(false);
+  const [reportingSession, setReportingSession] = useState(null);
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -692,6 +695,16 @@ export default function DayCentreSessions() {
             onClose={() => {
               setShowSessionDialog(false);
               setEditingSession(null);
+            }}
+          />
+        )}
+
+        {showReportDialog && reportingSession && (
+          <SessionReportDialog
+            session={reportingSession}
+            onClose={() => {
+              setShowReportDialog(false);
+              setReportingSession(null);
             }}
           />
         )}

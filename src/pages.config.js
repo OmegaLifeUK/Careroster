@@ -61,6 +61,7 @@ import DailyLog from './pages/DailyLog';
 import CallTranscripts from './pages/CallTranscripts';
 import TechnicalSpecification from './pages/TechnicalSpecification';
 import ReportingEngine from './pages/ReportingEngine';
+import FollowUpTracker from './pages/FollowUpTracker';
 import __Layout from './Layout.jsx';
 
 
@@ -128,6 +129,7 @@ export const PAGES = {
     "CallTranscripts": CallTranscripts,
     "TechnicalSpecification": TechnicalSpecification,
     "ReportingEngine": ReportingEngine,
+    "FollowUpTracker": FollowUpTracker,
 }
 
 export const pagesConfig = {
