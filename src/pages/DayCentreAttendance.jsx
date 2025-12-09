@@ -21,6 +21,7 @@ import {
   Plus
 } from "lucide-react";
 import { format, parseISO, isToday, isSameDay, addDays, subDays } from "date-fns";
+import AttendanceDialog from "../components/daycentre/AttendanceDialog";
 
 const moodIcons = {
   happy: { icon: Smile, color: "text-green-600", bg: "bg-green-50" },
@@ -41,6 +42,8 @@ const statusColors = {
 export default function DayCentreAttendance() {
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [selectedAttendance, setSelectedAttendance] = useState(null);
+  const [showAttendanceDialog, setShowAttendanceDialog] = useState(false);
+  const [editingAttendance, setEditingAttendance] = useState(null);
 
   const { data: attendance = [], isLoading } = useQuery({
     queryKey: ['daycentre-attendance'],
@@ -296,7 +299,13 @@ export default function DayCentreAttendance() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Daily Attendance Register</h1>
             <p className="text-gray-500">Track client attendance and daily notes</p>
           </div>
-          <Button className="bg-amber-600 hover:bg-amber-700">
+          <Button
+            onClick={() => {
+              setEditingAttendance(null);
+              setShowAttendanceDialog(true);
+            }}
+            className="bg-amber-600 hover:bg-amber-700"
+          >
             <Plus className="w-4 h-4 mr-2" />
             Record Attendance
           </Button>
@@ -395,7 +404,10 @@ export default function DayCentreAttendance() {
                   return (
                     <div
                       key={att.id}
-                      onClick={() => setSelectedAttendance(att)}
+                      onClick={() => {
+                        setEditingAttendance(att);
+                        setShowAttendanceDialog(true);
+                      }}
                       className="p-4 border rounded-lg hover:shadow-md transition-shadow cursor-pointer"
                     >
                       <div className="flex items-start justify-between mb-3">
@@ -487,6 +499,17 @@ export default function DayCentreAttendance() {
             )}
           </CardContent>
         </Card>
+
+        {showAttendanceDialog && (
+          <AttendanceDialog
+            attendance={editingAttendance}
+            selectedDate={selectedDate}
+            onClose={() => {
+              setShowAttendanceDialog(false);
+              setEditingAttendance(null);
+            }}
+          />
+        )}
       </div>
     </div>
   );
