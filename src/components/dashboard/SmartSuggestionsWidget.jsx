@@ -81,7 +81,7 @@ export default function SmartSuggestionsWidget({
         type: 'warning',
         title: 'Carer Workload Alert',
         description: `${carer?.full_name || 'A carer'} has worked ${overworkedCarers[0][1].days.size} consecutive days. Consider scheduling time off.`,
-        action: () => navigate(createPageUrl("Carers")),
+        action: () => navigate(createPageUrl("Schedule")),
         actionLabel: "View Schedule",
         icon: Users
       });
