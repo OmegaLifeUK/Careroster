@@ -99,16 +99,24 @@ export default function DayCentreAttendance() {
 
   const dateAttendance = attendance.filter(att => {
     try {
-      return isSameDay(parseISO(att.attendance_date), selectedDate);
-    } catch {
+      if (!att?.attendance_date) return false;
+      const attDate = typeof att.attendance_date === 'string' ? att.attendance_date : att.attendance_date.split('T')[0];
+      const selDate = format(selectedDate, 'yyyy-MM-dd');
+      return attDate === selDate;
+    } catch (error) {
+      console.error("Error filtering date attendance:", error, att);
       return false;
     }
   });
 
   const todayAttendance = attendance.filter(att => {
     try {
-      return isToday(parseISO(att.attendance_date));
-    } catch {
+      if (!att?.attendance_date) return false;
+      const attDate = typeof att.attendance_date === 'string' ? att.attendance_date : att.attendance_date.split('T')[0];
+      const todayDate = format(new Date(), 'yyyy-MM-dd');
+      return attDate === todayDate;
+    } catch (error) {
+      console.error("Error filtering today attendance:", error, att);
       return false;
     }
   });
@@ -159,7 +167,7 @@ export default function DayCentreAttendance() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-blue-600" />
                   <p className="font-bold text-blue-900">
-                    {selectedAttendance.arrival_time ? format(parseISO(selectedAttendance.arrival_time), 'HH:mm') : 'N/A'}
+                    {selectedAttendance.arrival_time ? (selectedAttendance.arrival_time.includes('T') ? format(parseISO(selectedAttendance.arrival_time), 'HH:mm') : selectedAttendance.arrival_time) : 'N/A'}
                   </p>
                 </div>
               </CardContent>
@@ -171,7 +179,7 @@ export default function DayCentreAttendance() {
                 <div className="flex items-center gap-2">
                   <Clock className="w-4 h-4 text-green-600" />
                   <p className="font-bold text-green-900">
-                    {selectedAttendance.departure_time ? format(parseISO(selectedAttendance.departure_time), 'HH:mm') : 'N/A'}
+                    {selectedAttendance.departure_time ? (selectedAttendance.departure_time.includes('T') ? format(parseISO(selectedAttendance.departure_time), 'HH:mm') : selectedAttendance.departure_time) : 'N/A'}
                   </p>
                 </div>
               </CardContent>
@@ -482,7 +490,7 @@ export default function DayCentreAttendance() {
                           <div>
                             <div className="font-semibold text-lg">{client?.full_name}</div>
                             <div className="text-sm text-gray-600">
-                              {att.arrival_time && format(parseISO(att.arrival_time), 'HH:mm')} - {att.departure_time && format(parseISO(att.departure_time), 'HH:mm')}
+                              {att.arrival_time && (att.arrival_time.includes('T') ? format(parseISO(att.arrival_time), 'HH:mm') : att.arrival_time)} - {att.departure_time && (att.departure_time.includes('T') ? format(parseISO(att.departure_time), 'HH:mm') : att.departure_time)}
                             </div>
                           </div>
                         </div>
