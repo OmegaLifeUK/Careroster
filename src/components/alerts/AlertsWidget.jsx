@@ -176,8 +176,8 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
           </Badge>
         </CardTitle>
       </CardHeader>
-      <CardContent className="p-6">
-        <div className="space-y-3">
+      <CardContent className="p-3">
+        <div className="space-y-1.5">
           {displayAlerts.map((alert) => {
             if (!alert) return null;
             
@@ -189,50 +189,50 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
             return (
               <div
                 key={alert.id}
-                className={`border rounded-lg p-4 ${styles.bg} ${styles.border}`}
+                className={`border rounded-lg p-2 ${styles.bg} ${styles.border}`}
               >
-                <div className="flex items-start gap-3">
-                  <Icon className={`w-5 h-5 ${styles.icon} mt-0.5 flex-shrink-0`} />
+                <div className="flex items-start gap-2">
+                  <Icon className={`w-4 h-4 ${styles.icon} mt-0.5 flex-shrink-0`} />
                   
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-start justify-between gap-2 mb-2">
-                      <h4 className={`font-semibold ${styles.text}`}>
+                    <div className="flex items-start justify-between gap-2 mb-0.5">
+                      <h4 className={`font-semibold text-sm ${styles.text}`}>
                         {alert.title}
                       </h4>
-                      <Badge className={styles.badge}>
+                      <Badge className={`${styles.badge} text-xs px-1.5 py-0 h-5`}>
                         {alert.severity}
                       </Badge>
                     </div>
                     
-                    <p className={`text-sm ${styles.text} mb-2`}>
+                    <p className={`text-xs ${styles.text} mb-1.5 leading-tight`}>
                       {alert.description}
                     </p>
 
                     {alert.action_required && (
-                      <div className="mt-2 p-2 bg-white/50 rounded text-xs font-medium">
-                        ⚡ Action: {alert.action_required}
+                      <div className="mt-1 px-2 py-1 bg-white/50 rounded text-xs font-medium">
+                        ⚡ {alert.action_required}
                       </div>
                     )}
 
-                    <div className="flex items-center gap-2 mt-3 text-xs text-gray-600">
+                    <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-600">
                       <Clock className="w-3 h-3" />
-                      {format(parseISO(alert.created_date), "MMM d, yyyy 'at' HH:mm")}
+                      {format(parseISO(alert.created_date), "MMM d, HH:mm")}
                     </div>
 
                     {requiresAck && hasAcknowledged && (
-                      <div className="mt-2 flex items-center gap-1 text-xs text-green-700">
+                      <div className="mt-1 flex items-center gap-1 text-xs text-green-700">
                         <CheckCircle className="w-3 h-3" />
-                        Acknowledged by {alert.acknowledgments[0].staff_name}
+                        Acknowledged
                       </div>
                     )}
 
-                    <div className="flex gap-2 mt-3">
+                    <div className="flex gap-1.5 mt-1.5">
                       {requiresAck && !hasAcknowledged && (
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleAcknowledge(alert.id)}
-                          className="text-xs"
+                          className="text-xs h-6 px-2"
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
                           Acknowledge
@@ -242,7 +242,7 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
                         size="sm"
                         variant="outline"
                         onClick={() => handleResolve(alert.id)}
-                        className="text-xs"
+                        className="text-xs h-6 px-2"
                       >
                         <X className="w-3 h-3 mr-1" />
                         Resolve
@@ -255,8 +255,8 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
           })}
 
           {!showAll && activeAlerts.length > displayAlerts.length && (
-            <div className="text-center pt-2">
-              <p className="text-sm text-gray-600">
+            <div className="text-center pt-1">
+              <p className="text-xs text-gray-600">
                 + {activeAlerts.length - displayAlerts.length} more alerts
               </p>
             </div>

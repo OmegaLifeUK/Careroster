@@ -488,54 +488,54 @@ export default function ClientAlertManager({ client }) {
                   alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
                   'border-blue-500 bg-blue-50'
                 }`}>
-                  <CardContent className="p-4">
-                    <div className="flex items-start justify-between mb-3">
+                  <CardContent className="p-3">
+                    <div className="flex items-start justify-between mb-2">
                       <div className="flex-1">
-                        <div className="flex items-center gap-2 mb-2 flex-wrap">
-                          <AlertIcon className={`w-5 h-5 ${
+                        <div className="flex items-center gap-2 mb-1 flex-wrap">
+                          <AlertIcon className={`w-4 h-4 ${
                             alert.severity === 'critical' ? 'text-red-600' :
                             alert.severity === 'high' ? 'text-orange-600' :
                             alert.severity === 'medium' ? 'text-yellow-600' :
                             'text-blue-600'
                           }`} />
-                          <h4 className="font-semibold text-lg">{alert.title}</h4>
-                          <Badge className={SEVERITY_COLORS[alert.severity]}>
+                          <h4 className="font-semibold text-sm">{alert.title}</h4>
+                          <Badge className={`${SEVERITY_COLORS[alert.severity]} text-xs px-1.5 py-0`}>
                             {alert.severity.toUpperCase()}
                           </Badge>
-                          <Badge className={STATUS_COLORS[alert.status]}>
+                          <Badge className={`${STATUS_COLORS[alert.status]} text-xs px-1.5 py-0`}>
                             {alert.status}
                           </Badge>
-                          <Badge variant="outline" className="text-xs capitalize">
+                          <Badge variant="outline" className="text-xs capitalize px-1.5 py-0">
                             {alert.alert_type.replace('_', ' ')}
                           </Badge>
                         </div>
-                        <p className="text-sm text-gray-700 mb-3">{alert.description}</p>
+                        <p className="text-xs text-gray-700 mb-2 leading-tight">{alert.description}</p>
                       </div>
                     </div>
 
                     {alert.action_required && (
-                      <div className="p-3 bg-blue-50 border border-blue-200 rounded mb-3">
-                        <p className="text-xs font-medium text-blue-900 mb-1">Required Action:</p>
-                        <p className="text-sm text-blue-800">{alert.action_required}</p>
+                      <div className="px-2 py-1.5 bg-blue-50 border border-blue-200 rounded mb-2">
+                        <p className="text-xs font-medium text-blue-900 mb-0.5">Required Action:</p>
+                        <p className="text-xs text-blue-800">{alert.action_required}</p>
                       </div>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-2 text-xs mb-3">
-                      <div className="flex items-center gap-2">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-1 text-xs mb-2">
+                      <div className="flex items-center gap-1.5">
                         <span className="text-gray-600">Created:</span>
-                        <span className="font-medium">{format(parseISO(alert.created_date), "MMM d, yyyy")}</span>
+                        <span className="font-medium">{format(parseISO(alert.created_date), "MMM d")}</span>
                         <span className="text-gray-600">by {getStaffName(alert.created_by_staff_id)}</span>
                       </div>
                       
                       {alert.expiry_date && (
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-1.5">
                           <span className="text-gray-600">Expires:</span>
-                          <span className="font-medium">{format(parseISO(alert.expiry_date), "MMM d, yyyy")}</span>
+                          <span className="font-medium">{format(parseISO(alert.expiry_date), "MMM d")}</span>
                         </div>
                       )}
 
                       {alert.display_on_sections && alert.display_on_sections.length > 0 && (
-                        <div className="flex items-center gap-2 md:col-span-2">
+                        <div className="flex items-center gap-1.5 md:col-span-2">
                           <Eye className="w-3 h-3 text-gray-500" />
                           <span className="text-gray-600">Shown on:</span>
                           <span className="font-medium capitalize">
@@ -546,15 +546,15 @@ export default function ClientAlertManager({ client }) {
                     </div>
 
                     {alert.requires_acknowledgment && (
-                      <div className="p-2 bg-yellow-50 border border-yellow-200 rounded mb-3">
+                      <div className="px-2 py-1 bg-yellow-50 border border-yellow-200 rounded mb-2">
                         <div className="flex items-center justify-between">
-                          <div className="flex items-center gap-2">
-                            <Bell className="w-4 h-4 text-yellow-700" />
+                          <div className="flex items-center gap-1.5">
+                            <Bell className="w-3 h-3 text-yellow-700" />
                             <span className="text-xs font-medium text-yellow-900">
                               Requires Acknowledgment
                               {alert.acknowledgments && alert.acknowledgments.length > 0 && (
-                                <span className="ml-2 text-yellow-700">
-                                  ({alert.acknowledgments.length} staff acknowledged)
+                                <span className="ml-1 text-yellow-700">
+                                  ({alert.acknowledgments.length})
                                 </span>
                               )}
                             </span>
@@ -564,15 +564,15 @@ export default function ClientAlertManager({ client }) {
                               size="sm"
                               variant="outline"
                               onClick={() => handleAcknowledgeAlert(alert)}
-                              className="text-xs h-7"
+                              className="text-xs h-6 px-2"
                             >
                               <CheckCircle className="w-3 h-3 mr-1" />
                               Acknowledge
                             </Button>
                           )}
                           {hasAcknowledged && (
-                            <Badge className="bg-green-100 text-green-800 text-xs">
-                              <CheckCircle className="w-3 h-3 mr-1" />
+                            <Badge className="bg-green-100 text-green-800 text-xs px-1.5 py-0">
+                              <CheckCircle className="w-3 h-3 mr-0.5" />
                               Acknowledged
                             </Badge>
                           )}
@@ -581,31 +581,31 @@ export default function ClientAlertManager({ client }) {
                     )}
 
                     {alert.status === 'resolved' && alert.resolved_date && (
-                      <div className="p-2 bg-green-50 border border-green-200 rounded mb-3">
+                      <div className="px-2 py-1.5 bg-green-50 border border-green-200 rounded mb-2">
                         <p className="text-xs text-green-900">
-                          <strong>Resolved:</strong> {format(parseISO(alert.resolved_date), "MMM d, yyyy 'at' HH:mm")} by {getStaffName(alert.resolved_by_staff_id)}
+                          <strong>Resolved:</strong> {format(parseISO(alert.resolved_date), "MMM d, HH:mm")} by {getStaffName(alert.resolved_by_staff_id)}
                         </p>
                         {alert.resolution_notes && (
-                          <p className="text-xs text-green-800 mt-1">{alert.resolution_notes}</p>
+                          <p className="text-xs text-green-800 mt-0.5">{alert.resolution_notes}</p>
                         )}
                       </div>
                     )}
 
                     {alert.status === 'active' && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-1.5">
                         <Button
                           size="sm"
                           onClick={() => handleResolveAlert(alert)}
-                          className="bg-green-600 hover:bg-green-700 text-xs"
+                          className="bg-green-600 hover:bg-green-700 text-xs h-6 px-2"
                         >
                           <CheckCircle className="w-3 h-3 mr-1" />
-                          Mark Resolved
+                          Resolve
                         </Button>
                         <Button
                           size="sm"
                           variant="outline"
                           onClick={() => handleArchiveAlert(alert)}
-                          className="text-xs"
+                          className="text-xs h-6 px-2"
                         >
                           <Archive className="w-3 h-3 mr-1" />
                           Archive
