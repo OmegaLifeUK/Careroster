@@ -171,17 +171,18 @@ export default function Dashboard() {
       />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
           <div>
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
-            <p className="text-gray-500">Overview of your care management system</p>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
+            <p className="text-sm text-gray-500">Overview of your care management system</p>
           </div>
           <Button
             variant="outline"
             size="sm"
             onClick={() => setShowCustomizer(true)}
+            className="h-8 text-xs"
           >
-            <Settings className="w-4 h-4 mr-2" />
+            <Settings className="w-3 h-3 mr-1.5" />
             Customize
           </Button>
         </div>
@@ -190,7 +191,7 @@ export default function Dashboard() {
         <AlertBanner alerts={alerts} />
         
         {/* Automation Helper */}
-        <div className="mb-6">
+        <div className="mb-4">
           <AutoScheduleHelper />
         </div>
 
@@ -208,7 +209,7 @@ export default function Dashboard() {
                       >
                         <div 
                           {...provided.dragHandleProps}
-                          className={`cursor-grab active:cursor-grabbing mb-8 ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                          className={`cursor-grab active:cursor-grabbing mb-4 ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
                         >
                           {widgetId === 'smartSuggestions' && (
                             <SmartSuggestionsWidget
@@ -220,7 +221,7 @@ export default function Dashboard() {
                           )}
 
                           {widgetId === 'statsCards' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
                               <StatsCard
                                 title="Active Carers"
                                 value={activeCarers}
