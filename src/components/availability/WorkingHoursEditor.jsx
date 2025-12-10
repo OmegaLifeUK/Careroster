@@ -89,15 +89,6 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     mutationFn: async () => {
       const promises = [];
 
-      // Before saving, ensure current edits are saved to the right week state
-      if (scheduleType === 'alternate_weeks') {
-        if (selectedWeek === 'week1') {
-          setHoursWeek1(hours);
-        } else {
-          setHoursWeek2(hours);
-        }
-      }
-
       // Delete all existing working hours for this carer first
       for (const existing of workingHours) {
         promises.push(base44.entities.CarerAvailability.delete(existing.id));
@@ -330,13 +321,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                 onValueChange={(val) => {
                   setScheduleType(val);
                   if (val === 'alternate_weeks') {
-                    // Initialize both weeks with current hours if switching from weekly
-                    if (scheduleType === 'weekly') {
-                      setHoursWeek1(hours);
-                      setHoursWeek2(hours);
-                    }
+                    // Initialize both weeks with current hours
+                    const currentHours = { ...hours };
+                    setHoursWeek1(currentHours);
+                    setHoursWeek2(currentHours);
                     setSelectedWeek('week1');
-                    setHours(hoursWeek1);
                   }
                   setHasChanges(true);
                 }}
