@@ -69,8 +69,8 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
       const week2Hours = getDefaultHours('alternate_week_2');
       setHoursWeek1(week1Hours);
       setHoursWeek2(week2Hours);
-      setSelectedWeek('week1');
-      setHours(week1Hours);
+      // Don't reset selectedWeek - keep whatever week user was viewing
+      setHours(selectedWeek === 'week2' ? week2Hours : week1Hours);
     } else if (hasSpecific) {
       setScheduleType('specific_dates');
       const dates = workingHours
@@ -111,9 +111,18 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           promises.push(base44.entities.CarerAvailability.create(data));
         }
       } else if (scheduleType === 'alternate_weeks') {
-        // Get the latest week data
-        const finalWeek1 = selectedWeek === 'week1' ? hours : hoursWeek1;
-        const finalWeek2 = selectedWeek === 'week2' ? hours : hoursWeek2;
+        // Get the latest data for both weeks
+        // Current `hours` state contains the active week's latest edits
+        // hoursWeek1/hoursWeek2 contain the stored data for the other week
+        let week1Data, week2Data;
+        
+        if (selectedWeek === 'week1') {
+          week1Data = hours; // Current edits are for week 1
+          week2Data = hoursWeek2; // Week 2 from stored state
+        } else {
+          week1Data = hoursWeek1; // Week 1 from stored state
+          week2Data = hours; // Current edits are for week 2
+        }
         
         // Save both week patterns
         const saveWeekPattern = (weekHours, pattern) => {
@@ -134,9 +143,8 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           }
         };
 
-        // Save both weeks with latest data
-        saveWeekPattern(finalWeek1, 'alternate_week_1');
-        saveWeekPattern(finalWeek2, 'alternate_week_2');
+        saveWeekPattern(week1Data, 'alternate_week_1');
+        saveWeekPattern(week2Data, 'alternate_week_2');
       } else {
         // Standard weekly pattern
         for (const day of DAYS_OF_WEEK) {
@@ -326,6 +334,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                     setHoursWeek1(currentHours);
                     setHoursWeek2(currentHours);
                     setSelectedWeek('week1');
+                    setHours(currentHours);
                   }
                   setHasChanges(true);
                 }}
