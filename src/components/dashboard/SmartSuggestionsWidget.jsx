@@ -228,7 +228,7 @@ export default function SmartSuggestionsWidget({
 
   return (
     <SuggestionsPanel 
-      suggestions={suggestions.slice(0, 3)} // Show top 3 suggestions
+      suggestions={suggestions.slice(0, 4)} // Show top 4 suggestions
       title={`${suggestions.length} Smart Suggestion${suggestions.length > 1 ? 's' : ''}`}
     />
   );
