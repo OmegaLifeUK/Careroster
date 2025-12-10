@@ -22,7 +22,7 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
   };
 
   return (
-    <div className="mb-6 space-y-2">
+    <div className="mb-4 space-y-1.5">
       {criticalAlerts.slice(0, 3).map((alert) => {
         if (!alert) return null;
         
@@ -35,31 +35,31 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
               alert.severity === 'critical' 
                 ? 'bg-red-50 border-red-300' 
                 : 'bg-orange-50 border-orange-300'
-            } animate-pulse-glow`}
+            } py-2 px-3`}
           >
-            <div className="flex items-start gap-3">
-              <Icon className={`w-5 h-5 mt-0.5 ${
+            <div className="flex items-start gap-2">
+              <Icon className={`w-4 h-4 mt-0.5 flex-shrink-0 ${
                 alert.severity === 'critical' ? 'text-red-600' : 'text-orange-600'
               }`} />
               
               <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-1">
-                  <AlertDescription className="font-semibold text-gray-900">
+                <div className="flex items-start justify-between gap-2 mb-0.5">
+                  <AlertDescription className="font-semibold text-sm text-gray-900">
                     {alert.title}
                   </AlertDescription>
-                  <Badge className={
+                  <Badge className={`text-xs px-1.5 py-0 h-5 ${
                     alert.severity === 'critical' 
                       ? 'bg-red-600' 
                       : 'bg-orange-600'
-                  }>
+                  }`}>
                     {alert.severity}
                   </Badge>
                 </div>
-                <AlertDescription className="text-sm text-gray-700">
+                <AlertDescription className="text-xs text-gray-700 leading-tight">
                   {alert.description}
                 </AlertDescription>
                 {alert.action_required && (
-                  <div className="mt-2 text-xs font-medium text-gray-900 bg-white/60 p-2 rounded">
+                  <div className="mt-1.5 text-xs font-medium text-gray-900 bg-white/60 px-2 py-1 rounded">
                     ⚡ {alert.action_required}
                   </div>
                 )}
@@ -70,9 +70,9 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
                   variant="ghost"
                   size="icon"
                   onClick={() => onDismiss(alert.id)}
-                  className="flex-shrink-0"
+                  className="flex-shrink-0 h-7 w-7"
                 >
-                  <X className="w-4 h-4" />
+                  <X className="w-3.5 h-3.5" />
                 </Button>
               )}
             </div>
@@ -81,9 +81,9 @@ export default function AlertBanner({ alerts = [], onDismiss }) {
       })}
       
       {criticalAlerts.length > 3 && (
-        <div className="text-center">
+        <div className="text-center pt-1">
           <Link to={createPageUrl("ManagerDashboard")}>
-            <Button variant="outline" size="sm">
+            <Button variant="outline" size="sm" className="h-7 text-xs">
               View All {criticalAlerts.length} Alerts
             </Button>
           </Link>
