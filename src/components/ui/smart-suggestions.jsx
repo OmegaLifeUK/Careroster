@@ -119,18 +119,15 @@ export function SmartSuggestion({
               )}
             </div>
 
-            <p className="text-xs text-gray-700 mb-2 leading-tight">{description}</p>
+            <p className="text-xs text-gray-700 leading-tight">{description}</p>
 
             {metric && (
-              <div className="mb-2 px-2 py-1 bg-white/50 rounded inline-flex items-center gap-1.5">
-                <span className="text-lg font-bold text-gray-900">{metric}</span>
-                {metricLabel && (
-                  <span className="text-xs text-gray-600">{metricLabel}</span>
-                )}
+              <div className="mt-1 mb-2 text-xs text-gray-600">
+                <span className="font-semibold text-gray-900">{metric}</span> {metricLabel}
               </div>
             )}
 
-            <div className="flex flex-wrap gap-1.5">
+            <div className="flex flex-wrap gap-1.5 mt-2">
               {action && (
                 <Button 
                   size="sm" 
