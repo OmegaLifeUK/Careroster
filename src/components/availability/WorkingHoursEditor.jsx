@@ -69,8 +69,9 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
       const week2Hours = getDefaultHours('alternate_week_2');
       setHoursWeek1(week1Hours);
       setHoursWeek2(week2Hours);
-      // Don't reset selectedWeek - keep whatever week user was viewing
-      setHours(selectedWeek === 'week2' ? week2Hours : week1Hours);
+      // Keep the current selected week view
+      const currentWeek = selectedWeek || 'week1';
+      setHours(currentWeek === 'week2' ? week2Hours : week1Hours);
     } else if (hasSpecific) {
       setScheduleType('specific_dates');
       const dates = workingHours
