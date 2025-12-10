@@ -28,7 +28,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const workingHours = availability.filter(a => a.availability_type === 'working_hours');
   
   const [scheduleType, setScheduleType] = useState('weekly');
-  const [selectedWeek, setSelectedWeek] = useState('all');
+  const [selectedWeek, setSelectedWeek] = useState('week1');
   const [hoursWeek1, setHoursWeek1] = useState({});
   const [hoursWeek2, setHoursWeek2] = useState({});
   const [specificDates, setSpecificDates] = useState([]);
@@ -59,16 +59,18 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    // Detect schedule type from existing data
     const hasWeek1 = workingHours.some(w => w.schedule_pattern === 'alternate_week_1');
     const hasWeek2 = workingHours.some(w => w.schedule_pattern === 'alternate_week_2');
     const hasSpecific = workingHours.some(w => w.schedule_pattern === 'specific_date');
     
     if (hasWeek1 || hasWeek2) {
       setScheduleType('alternate_weeks');
-      setHoursWeek1(getDefaultHours('alternate_week_1'));
-      setHoursWeek2(getDefaultHours('alternate_week_2'));
-      setHours(hasWeek1 ? getDefaultHours('alternate_week_1') : getDefaultHours('alternate_week_2'));
+      const week1Hours = getDefaultHours('alternate_week_1');
+      const week2Hours = getDefaultHours('alternate_week_2');
+      setHoursWeek1(week1Hours);
+      setHoursWeek2(week2Hours);
+      setSelectedWeek('week1');
+      setHours(week1Hours);
     } else if (hasSpecific) {
       setScheduleType('specific_dates');
       const dates = workingHours
@@ -128,24 +130,9 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           }
         };
 
-        if (selectedWeek === 'all') {
-          saveWeekPattern(hoursWeek1, 'alternate_week_1');
-          saveWeekPattern(hoursWeek2, 'alternate_week_2');
-        } else if (selectedWeek === 'week1') {
-          saveWeekPattern(hours, 'alternate_week_1');
-          // Keep week2 as is
-          const existingWeek2 = workingHours.filter(w => w.schedule_pattern === 'alternate_week_2');
-          for (const w of existingWeek2) {
-            promises.push(base44.entities.CarerAvailability.create(w));
-          }
-        } else if (selectedWeek === 'week2') {
-          // Keep week1 as is
-          const existingWeek1 = workingHours.filter(w => w.schedule_pattern === 'alternate_week_1');
-          for (const w of existingWeek1) {
-            promises.push(base44.entities.CarerAvailability.create(w));
-          }
-          saveWeekPattern(hours, 'alternate_week_2');
-        }
+        // Always save both weeks
+        saveWeekPattern(hoursWeek1, 'alternate_week_1');
+        saveWeekPattern(hoursWeek2, 'alternate_week_2');
       } else {
         // Standard weekly pattern
         for (const day of DAYS_OF_WEEK) {
@@ -305,7 +292,22 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
             <CalendarDays className="w-5 h-5 text-blue-600" />
             <div className="flex-1">
               <label className="text-sm font-medium text-gray-700 mb-2 block">Schedule Pattern</label>
-              <Select value={scheduleType} onValueChange={setScheduleType}>
+              <Select 
+                value={scheduleType} 
+                onValueChange={(val) => {
+                  setScheduleType(val);
+                  if (val === 'alternate_weeks') {
+                    // Initialize both weeks with current hours if switching from weekly
+                    if (scheduleType === 'weekly') {
+                      setHoursWeek1(hours);
+                      setHoursWeek2(hours);
+                    }
+                    setSelectedWeek('week1');
+                    setHours(hoursWeek1);
+                  }
+                  setHasChanges(true);
+                }}
+              >
                 <SelectTrigger className="w-64">
                   <SelectValue />
                 </SelectTrigger>
