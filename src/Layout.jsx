@@ -40,15 +40,8 @@ const residentialCareNav = [
   { title: "Manager Dashboard", url: createPageUrl("ManagerDashboard"), icon: LayoutDashboard },
   { title: "Schedule", url: createPageUrl("Schedule"), icon: Calendar },
   { title: "Carer Availability", url: createPageUrl("CarerAvailability"), icon: Calendar },
-  { title: "Messaging Center", url: createPageUrl("MessagingCenter"), icon: MessageSquare },
-  { title: "Staff Tasks", url: createPageUrl("StaffTasks"), icon: ClipboardList },
   { title: "Carers", url: createPageUrl("Carers"), icon: Users },
   { title: "Clients", url: createPageUrl("Clients"), icon: UserCircle },
-  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
-  { title: "Staff Supervisions", url: createPageUrl("SupervisionManagement"), icon: ClipboardList },
-  { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
-  { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
-  { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
   { title: "Daily Log", url: createPageUrl("DailyLog"), icon: ClipboardList },
 ];
 
@@ -57,11 +50,9 @@ const domCareNav = [
   { title: "Visit Schedule", url: createPageUrl("DomCareSchedule"), icon: MapPin },
   { title: "Staff", url: createPageUrl("DomCareStaff"), icon: Users },
   { title: "Clients", url: createPageUrl("DomCareClients"), icon: UserCircle },
-  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
   { title: "Runs", url: createPageUrl("DomCareRuns"), icon: Navigation },
   { title: "Communications", url: createPageUrl("CommunicationHub"), icon: MessageSquare },
   { title: "Client Feedback", url: createPageUrl("ClientFeedback"), icon: MessageSquare },
-  { title: "Training", url: createPageUrl("StaffTraining"), icon: GraduationCap },
 ];
 
 const supportedLivingNav = [
@@ -69,7 +60,6 @@ const supportedLivingNav = [
   { title: "Clients", url: createPageUrl("SupportedLivingClients"), icon: UserCircle },
   { title: "Properties", url: createPageUrl("SupportedLivingProperties"), icon: Home },
   { title: "Schedule", url: createPageUrl("SupportedLivingSchedule"), icon: Calendar },
-  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
 ];
 
 const dayCentreNav = [
@@ -80,11 +70,6 @@ const dayCentreNav = [
   { title: "Attendance", url: createPageUrl("DayCentreAttendance"), icon: ClipboardList },
   { title: "Follow-up Tracker", url: createPageUrl("FollowUpTracker"), icon: ClipboardList },
   { title: "Call Transcripts", url: createPageUrl("CallTranscripts"), icon: Phone },
-  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
-];
-
-const staffNavigation = [
-  { title: "Staff Portal", url: createPageUrl("StaffPortal"), icon: Smartphone },
 ];
 
 const clientPortalNav = [
@@ -94,23 +79,26 @@ const clientPortalNav = [
   { title: "Booking Requests", url: createPageUrl("ClientPortalBookings"), icon: ClipboardList },
 ];
 
-const complianceNav = [
+const generalNav = [
+  { title: "Staff Portal", url: createPageUrl("StaffPortal"), icon: Smartphone },
+  { title: "Messaging Center", url: createPageUrl("MessagingCenter"), icon: MessageSquare },
+  { title: "Staff Tasks", url: createPageUrl("StaffTasks"), icon: ClipboardList },
+  { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
+  { title: "Staff Supervisions", url: createPageUrl("SupervisionManagement"), icon: ClipboardList },
+  { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
+  { title: "Training", url: createPageUrl("StaffTraining"), icon: GraduationCap },
+  { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell, showBadge: true },
+  { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
+  { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
+  { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
   { title: "Reporting Engine", url: createPageUrl("ReportingEngine"), icon: FileText },
   { title: "Audit Templates", url: createPageUrl("AuditTemplates"), icon: FileText },
   { title: "Form Builder", url: createPageUrl("FormBuilder"), icon: FileText },
-];
-
-const crmNav = [
   { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
   { title: "Client Comms Hub", url: createPageUrl("ClientCommunicationHub"), icon: MessageSquare },
-];
-
-const generalNav = [
-  { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
-  { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
 ];
 
 const systemNavigation = [
@@ -424,75 +412,6 @@ export default function Layout({ children, currentPageName }) {
 
                   <div className="mb-6">
                     <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                      Staff Access
-                    </p>
-                    <nav className="space-y-1">
-                      {staffNavigation.map((item) => (
-                        <Link
-                          key={item.title}
-                          to={item.url}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                            location.pathname === item.url 
-                              ? 'bg-purple-50 text-purple-700 font-medium shadow-sm' 
-                              : 'text-gray-700 hover:bg-purple-50 hover:text-purple-700'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="text-sm">{item.title}</span>
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-
-                  <div className="mb-6">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                      Compliance & Quality
-                    </p>
-                    <nav className="space-y-1">
-                      {complianceNav.map((item) => (
-                        <Link
-                          key={item.title}
-                          to={item.url}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                            location.pathname === item.url 
-                              ? 'bg-indigo-50 text-indigo-700 font-medium shadow-sm' 
-                              : 'text-gray-700 hover:bg-indigo-50 hover:text-indigo-700'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="text-sm">{item.title}</span>
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-
-                  <div className="mb-6">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
-                      CRM & Intake
-                    </p>
-                    <nav className="space-y-1">
-                      {crmNav.map((item) => (
-                        <Link
-                          key={item.title}
-                          to={item.url}
-                          onClick={() => setSidebarOpen(false)}
-                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
-                            location.pathname === item.url 
-                              ? 'bg-cyan-50 text-cyan-700 font-medium shadow-sm' 
-                              : 'text-gray-700 hover:bg-cyan-50 hover:text-cyan-700'
-                          }`}
-                        >
-                          <item.icon className="w-5 h-5" />
-                          <span className="text-sm">{item.title}</span>
-                        </Link>
-                      ))}
-                    </nav>
-                  </div>
-
-                  <div className="mb-6">
-                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
                       General
                     </p>
                     <nav className="space-y-1">
@@ -509,6 +428,9 @@ export default function Layout({ children, currentPageName }) {
                         >
                           <item.icon className="w-5 h-5" />
                           <span className="text-sm">{item.title}</span>
+                          {item.showBadge && item.title === "Notifications" && unreadCount > 0 && (
+                            <Badge className="ml-auto bg-red-500 text-white">{unreadCount}</Badge>
+                          )}
                         </Link>
                       ))}
                     </nav>
