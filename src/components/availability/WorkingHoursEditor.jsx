@@ -27,15 +27,19 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
 
   const workingHours = availability.filter(a => a.availability_type === 'working_hours');
   
-  const [scheduleType, setScheduleType] = useState('weekly'); // 'weekly', 'alternate_weeks', 'specific_dates'
-  const [selectedWeek, setSelectedWeek] = useState('all'); // 'all', 'week1', 'week2'
-  const [showMonthView, setShowMonthView] = useState(false);
-  const [specificDates, setSpecificDates] = useState([]); // For month ahead selection
+  const [scheduleType, setScheduleType] = useState('weekly');
+  const [selectedWeek, setSelectedWeek] = useState('all');
+  const [hoursWeek1, setHoursWeek1] = useState({});
+  const [hoursWeek2, setHoursWeek2] = useState({});
+  const [specificDates, setSpecificDates] = useState([]);
 
-  const getDefaultHours = () => {
+  const getDefaultHours = (pattern = null) => {
     const defaults = {};
     DAYS_OF_WEEK.forEach(day => {
-      const existing = workingHours.find(w => w.day_of_week === day.value);
+      const existing = workingHours.find(w => 
+        w.day_of_week === day.value && 
+        (!pattern || w.schedule_pattern === pattern)
+      );
       defaults[day.value] = existing ? {
         enabled: true,
         start_time: existing.start_time || '09:00',
@@ -51,11 +55,31 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     return defaults;
   };
 
-  const [hours, setHours] = useState(getDefaultHours);
+  const [hours, setHours] = useState(() => getDefaultHours());
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    setHours(getDefaultHours());
+    // Detect schedule type from existing data
+    const hasWeek1 = workingHours.some(w => w.schedule_pattern === 'alternate_week_1');
+    const hasWeek2 = workingHours.some(w => w.schedule_pattern === 'alternate_week_2');
+    const hasSpecific = workingHours.some(w => w.schedule_pattern === 'specific_date');
+    
+    if (hasWeek1 || hasWeek2) {
+      setScheduleType('alternate_weeks');
+      setHoursWeek1(getDefaultHours('alternate_week_1'));
+      setHoursWeek2(getDefaultHours('alternate_week_2'));
+      setHours(hasWeek1 ? getDefaultHours('alternate_week_1') : getDefaultHours('alternate_week_2'));
+    } else if (hasSpecific) {
+      setScheduleType('specific_dates');
+      const dates = workingHours
+        .filter(w => w.schedule_pattern === 'specific_date' && w.specific_date)
+        .map(w => w.specific_date);
+      setSpecificDates(dates);
+    } else {
+      setScheduleType('weekly');
+      setHours(getDefaultHours('weekly'));
+    }
+    
     setHasChanges(false);
   }, [carerId, availability]);
 
@@ -63,27 +87,81 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     mutationFn: async () => {
       const promises = [];
 
-      for (const day of DAYS_OF_WEEK) {
-        const dayHours = hours[day.value];
-        const existing = workingHours.find(w => w.day_of_week === day.value);
+      // Delete all existing working hours for this carer first
+      for (const existing of workingHours) {
+        promises.push(base44.entities.CarerAvailability.delete(existing.id));
+      }
+      await Promise.all(promises);
+      promises.length = 0;
 
-        if (dayHours.enabled) {
+      if (scheduleType === 'specific_dates') {
+        // Save specific dates
+        for (const dateStr of specificDates) {
           const data = {
             carer_id: carerId,
             availability_type: 'working_hours',
-            day_of_week: day.value,
-            start_time: dayHours.start_time,
-            end_time: dayHours.end_time,
-            is_recurring: true
+            schedule_pattern: 'specific_date',
+            specific_date: dateStr,
+            is_recurring: false,
+            start_time: '09:00',
+            end_time: '17:00'
           };
+          promises.push(base44.entities.CarerAvailability.create(data));
+        }
+      } else if (scheduleType === 'alternate_weeks') {
+        // Save both week patterns
+        const saveWeekPattern = (weekHours, pattern) => {
+          for (const day of DAYS_OF_WEEK) {
+            const dayHours = weekHours[day.value];
+            if (dayHours && dayHours.enabled) {
+              const data = {
+                carer_id: carerId,
+                availability_type: 'working_hours',
+                schedule_pattern: pattern,
+                day_of_week: day.value,
+                start_time: dayHours.start_time,
+                end_time: dayHours.end_time,
+                is_recurring: true
+              };
+              promises.push(base44.entities.CarerAvailability.create(data));
+            }
+          }
+        };
 
-          if (existing) {
-            promises.push(base44.entities.CarerAvailability.update(existing.id, data));
-          } else {
+        if (selectedWeek === 'all') {
+          saveWeekPattern(hoursWeek1, 'alternate_week_1');
+          saveWeekPattern(hoursWeek2, 'alternate_week_2');
+        } else if (selectedWeek === 'week1') {
+          saveWeekPattern(hours, 'alternate_week_1');
+          // Keep week2 as is
+          const existingWeek2 = workingHours.filter(w => w.schedule_pattern === 'alternate_week_2');
+          for (const w of existingWeek2) {
+            promises.push(base44.entities.CarerAvailability.create(w));
+          }
+        } else if (selectedWeek === 'week2') {
+          // Keep week1 as is
+          const existingWeek1 = workingHours.filter(w => w.schedule_pattern === 'alternate_week_1');
+          for (const w of existingWeek1) {
+            promises.push(base44.entities.CarerAvailability.create(w));
+          }
+          saveWeekPattern(hours, 'alternate_week_2');
+        }
+      } else {
+        // Standard weekly pattern
+        for (const day of DAYS_OF_WEEK) {
+          const dayHours = hours[day.value];
+          if (dayHours && dayHours.enabled) {
+            const data = {
+              carer_id: carerId,
+              availability_type: 'working_hours',
+              schedule_pattern: 'weekly',
+              day_of_week: day.value,
+              start_time: dayHours.start_time,
+              end_time: dayHours.end_time,
+              is_recurring: true
+            };
             promises.push(base44.entities.CarerAvailability.create(data));
           }
-        } else if (existing) {
-          promises.push(base44.entities.CarerAvailability.delete(existing.id));
         }
       }
 
@@ -100,18 +178,40 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   });
 
   const handleDayToggle = (dayValue, enabled) => {
-    setHours(prev => ({
-      ...prev,
-      [dayValue]: { ...prev[dayValue], enabled }
-    }));
+    const newHours = {
+      ...hours,
+      [dayValue]: { ...hours[dayValue], enabled }
+    };
+    setHours(newHours);
+    
+    // Update the appropriate week state
+    if (scheduleType === 'alternate_weeks') {
+      if (selectedWeek === 'week1') {
+        setHoursWeek1(newHours);
+      } else if (selectedWeek === 'week2') {
+        setHoursWeek2(newHours);
+      }
+    }
+    
     setHasChanges(true);
   };
 
   const handleTimeChange = (dayValue, field, value) => {
-    setHours(prev => ({
-      ...prev,
-      [dayValue]: { ...prev[dayValue], [field]: value }
-    }));
+    const newHours = {
+      ...hours,
+      [dayValue]: { ...hours[dayValue], [field]: value }
+    };
+    setHours(newHours);
+    
+    // Update the appropriate week state
+    if (scheduleType === 'alternate_weeks') {
+      if (selectedWeek === 'week1') {
+        setHoursWeek1(newHours);
+      } else if (selectedWeek === 'week2') {
+        setHoursWeek2(newHours);
+      }
+    }
+    
     setHasChanges(true);
   };
 
@@ -220,12 +320,21 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
             {scheduleType === 'alternate_weeks' && (
               <div className="flex-1">
                 <label className="text-sm font-medium text-gray-700 mb-2 block">Editing Week</label>
-                <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                <Select 
+                  value={selectedWeek} 
+                  onValueChange={(val) => {
+                    setSelectedWeek(val);
+                    if (val === 'week1') {
+                      setHours(hoursWeek1);
+                    } else if (val === 'week2') {
+                      setHours(hoursWeek2);
+                    }
+                  }}
+                >
                   <SelectTrigger className="w-48">
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">Both Weeks</SelectItem>
                     <SelectItem value="week1">Week 1</SelectItem>
                     <SelectItem value="week2">Week 2</SelectItem>
                   </SelectContent>
@@ -272,11 +381,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           </div>
         ) : (
           <div className="space-y-3">
-            {scheduleType === 'alternate_weeks' && selectedWeek !== 'all' && (
+            {scheduleType === 'alternate_weeks' && (
               <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
                 <p className="text-sm text-amber-800">
                   You are editing <strong>{selectedWeek === 'week1' ? 'Week 1' : 'Week 2'}</strong> of the alternating schedule.
-                  These hours will repeat every other week.
+                  These hours will repeat every other week. Switch between Week 1 and Week 2 above to set different schedules.
                 </p>
               </div>
             )}
