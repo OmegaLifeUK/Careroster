@@ -6,8 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
-import { Clock, Save, RotateCcw, Copy } from "lucide-react";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Clock, Save, RotateCcw, Copy, CalendarDays } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { addWeeks, startOfWeek, addDays, format } from "date-fns";
 
 const DAYS_OF_WEEK = [
   { value: 1, label: 'Monday', short: 'Mon' },
@@ -24,6 +26,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const queryClient = useQueryClient();
 
   const workingHours = availability.filter(a => a.availability_type === 'working_hours');
+  
+  const [scheduleType, setScheduleType] = useState('weekly'); // 'weekly', 'alternate_weeks', 'specific_dates'
+  const [selectedWeek, setSelectedWeek] = useState('all'); // 'all', 'week1', 'week2'
+  const [showMonthView, setShowMonthView] = useState(false);
+  const [specificDates, setSpecificDates] = useState([]); // For month ahead selection
 
   const getDefaultHours = () => {
     const defaults = {};
@@ -147,32 +154,133 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     return total.toFixed(1);
   };
 
+  const getNextMonthDates = () => {
+    const dates = [];
+    const today = new Date();
+    for (let i = 0; i < 30; i++) {
+      const date = addDays(today, i);
+      dates.push({
+        date: format(date, 'yyyy-MM-dd'),
+        dayOfWeek: date.getDay(),
+        label: format(date, 'EEE, MMM d')
+      });
+    }
+    return dates;
+  };
+
+  const toggleSpecificDate = (dateStr) => {
+    setSpecificDates(prev => 
+      prev.includes(dateStr) 
+        ? prev.filter(d => d !== dateStr)
+        : [...prev, dateStr]
+    );
+    setHasChanges(true);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <div className="flex items-center justify-between">
-          <CardTitle className="flex items-center gap-2">
-            <Clock className="w-5 h-5" />
-            Weekly Working Hours
-          </CardTitle>
-          <div className="flex items-center gap-2">
-            <Badge variant="outline" className="text-blue-600">
-              {calculateTotalHours()} hrs/week
-            </Badge>
-            <Button variant="outline" size="sm" onClick={applyToWeekdays}>
-              <Copy className="w-4 h-4 mr-1" />
-              Apply Mon to Weekdays
-            </Button>
-            <Button variant="outline" size="sm" onClick={resetToDefault}>
-              <RotateCcw className="w-4 h-4 mr-1" />
-              Reset
-            </Button>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2">
+              <Clock className="w-5 h-5" />
+              Working Hours
+            </CardTitle>
+            <div className="flex items-center gap-2">
+              <Badge variant="outline" className="text-blue-600">
+                {calculateTotalHours()} hrs/week
+              </Badge>
+              <Button variant="outline" size="sm" onClick={applyToWeekdays}>
+                <Copy className="w-4 h-4 mr-1" />
+                Apply Mon to Weekdays
+              </Button>
+              <Button variant="outline" size="sm" onClick={resetToDefault}>
+                <RotateCcw className="w-4 h-4 mr-1" />
+                Reset
+              </Button>
+            </div>
+          </div>
+          
+          <div className="flex items-center gap-4 p-4 bg-blue-50 rounded-lg border border-blue-200">
+            <CalendarDays className="w-5 h-5 text-blue-600" />
+            <div className="flex-1">
+              <label className="text-sm font-medium text-gray-700 mb-2 block">Schedule Pattern</label>
+              <Select value={scheduleType} onValueChange={setScheduleType}>
+                <SelectTrigger className="w-64">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="weekly">Standard Weekly Pattern</SelectItem>
+                  <SelectItem value="alternate_weeks">Alternate Weeks</SelectItem>
+                  <SelectItem value="specific_dates">Choose Specific Dates (30 days)</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            
+            {scheduleType === 'alternate_weeks' && (
+              <div className="flex-1">
+                <label className="text-sm font-medium text-gray-700 mb-2 block">Editing Week</label>
+                <Select value={selectedWeek} onValueChange={setSelectedWeek}>
+                  <SelectTrigger className="w-48">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="all">Both Weeks</SelectItem>
+                    <SelectItem value="week1">Week 1</SelectItem>
+                    <SelectItem value="week2">Week 2</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
         </div>
       </CardHeader>
       <CardContent>
-        <div className="space-y-3">
-          {DAYS_OF_WEEK.map(day => {
+        {scheduleType === 'specific_dates' ? (
+          <div>
+            <div className="mb-4">
+              <p className="text-sm text-gray-600 mb-3">
+                Select the specific dates over the next 30 days when this carer is available to work:
+              </p>
+              <Badge variant="outline" className="text-blue-600">
+                {specificDates.length} dates selected
+              </Badge>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2">
+              {getNextMonthDates().map(({ date, dayOfWeek, label }) => {
+                const isSelected = specificDates.includes(date);
+                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+                
+                return (
+                  <button
+                    key={date}
+                    onClick={() => toggleSpecificDate(date)}
+                    className={`p-3 rounded-lg border-2 text-left transition-all ${
+                      isSelected
+                        ? 'bg-green-100 border-green-500 text-green-900'
+                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
+                    }`}
+                  >
+                    <div className="font-medium text-sm">{label}</div>
+                    {isWeekend && (
+                      <Badge className="mt-1 text-xs bg-purple-100 text-purple-700">Weekend</Badge>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {scheduleType === 'alternate_weeks' && selectedWeek !== 'all' && (
+              <div className="p-3 bg-amber-50 border border-amber-200 rounded-lg mb-4">
+                <p className="text-sm text-amber-800">
+                  You are editing <strong>{selectedWeek === 'week1' ? 'Week 1' : 'Week 2'}</strong> of the alternating schedule.
+                  These hours will repeat every other week.
+                </p>
+              </div>
+            )}
+            {DAYS_OF_WEEK.map(day => {
             const dayHours = hours[day.value];
             const isWeekend = day.value === 0 || day.value === 6;
             
@@ -226,7 +334,8 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
               </div>
             );
           })}
-        </div>
+          </div>
+        )}
 
         {hasChanges && (
           <div className="mt-6 flex justify-end">
