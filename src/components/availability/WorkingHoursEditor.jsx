@@ -89,6 +89,15 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     mutationFn: async () => {
       const promises = [];
 
+      // Before saving, ensure current edits are saved to the right week state
+      if (scheduleType === 'alternate_weeks') {
+        if (selectedWeek === 'week1') {
+          setHoursWeek1(hours);
+        } else {
+          setHoursWeek2(hours);
+        }
+      }
+
       // Delete all existing working hours for this carer first
       for (const existing of workingHours) {
         promises.push(base44.entities.CarerAvailability.delete(existing.id));
@@ -111,6 +120,10 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           promises.push(base44.entities.CarerAvailability.create(data));
         }
       } else if (scheduleType === 'alternate_weeks') {
+        // Get the latest week data
+        const finalWeek1 = selectedWeek === 'week1' ? hours : hoursWeek1;
+        const finalWeek2 = selectedWeek === 'week2' ? hours : hoursWeek2;
+        
         // Save both week patterns
         const saveWeekPattern = (weekHours, pattern) => {
           for (const day of DAYS_OF_WEEK) {
@@ -130,9 +143,9 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           }
         };
 
-        // Always save both weeks
-        saveWeekPattern(hoursWeek1, 'alternate_week_1');
-        saveWeekPattern(hoursWeek2, 'alternate_week_2');
+        // Save both weeks with latest data
+        saveWeekPattern(finalWeek1, 'alternate_week_1');
+        saveWeekPattern(finalWeek2, 'alternate_week_2');
       } else {
         // Standard weekly pattern
         for (const day of DAYS_OF_WEEK) {
@@ -171,11 +184,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     };
     setHours(newHours);
     
-    // Update the appropriate week state
+    // Update the appropriate week state immediately
     if (scheduleType === 'alternate_weeks') {
       if (selectedWeek === 'week1') {
         setHoursWeek1(newHours);
-      } else if (selectedWeek === 'week2') {
+      } else {
         setHoursWeek2(newHours);
       }
     }
@@ -190,11 +203,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     };
     setHours(newHours);
     
-    // Update the appropriate week state
+    // Update the appropriate week state immediately
     if (scheduleType === 'alternate_weeks') {
       if (selectedWeek === 'week1') {
         setHoursWeek1(newHours);
-      } else if (selectedWeek === 'week2') {
+      } else {
         setHoursWeek2(newHours);
       }
     }
@@ -325,10 +338,19 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                 <Select 
                   value={selectedWeek} 
                   onValueChange={(val) => {
+                    // Save current edits to current week before switching
+                    if (selectedWeek === 'week1') {
+                      setHoursWeek1(hours);
+                    } else {
+                      setHoursWeek2(hours);
+                    }
+                    
                     setSelectedWeek(val);
+                    
+                    // Load the target week
                     if (val === 'week1') {
                       setHours(hoursWeek1);
-                    } else if (val === 'week2') {
+                    } else {
                       setHours(hoursWeek2);
                     }
                   }}
