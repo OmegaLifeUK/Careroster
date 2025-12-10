@@ -47,8 +47,6 @@ const residentialCareNav = [
   { title: "Care Documents", url: createPageUrl("CareDocuments"), icon: FolderOpen },
   { title: "Staff Supervisions", url: createPageUrl("SupervisionManagement"), icon: ClipboardList },
   { title: "Incident Management", url: createPageUrl("IncidentManagement"), icon: Shield },
-  { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
-  { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Notifications", url: createPageUrl("Notifications"), icon: Bell },
   { title: "Leave Requests", url: createPageUrl("LeaveRequests"), icon: ClipboardList },
   { title: "Daily Log", url: createPageUrl("DailyLog"), icon: ClipboardList },
@@ -64,7 +62,6 @@ const domCareNav = [
   { title: "Communications", url: createPageUrl("CommunicationHub"), icon: MessageSquare },
   { title: "Client Feedback", url: createPageUrl("ClientFeedback"), icon: MessageSquare },
   { title: "Training", url: createPageUrl("StaffTraining"), icon: GraduationCap },
-  { title: "Reports", url: createPageUrl("DomCareReports"), icon: FileText },
 ];
 
 const supportedLivingNav = [
@@ -109,6 +106,11 @@ const complianceNav = [
 const crmNav = [
   { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
   { title: "Client Comms Hub", url: createPageUrl("ClientCommunicationHub"), icon: MessageSquare },
+];
+
+const generalNav = [
+  { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
+  { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
 ];
 
 const systemNavigation = [
@@ -480,6 +482,29 @@ export default function Layout({ children, currentPageName }) {
                             location.pathname === item.url 
                               ? 'bg-cyan-50 text-cyan-700 font-medium shadow-sm' 
                               : 'text-gray-700 hover:bg-cyan-50 hover:text-cyan-700'
+                          }`}
+                        >
+                          <item.icon className="w-5 h-5" />
+                          <span className="text-sm">{item.title}</span>
+                        </Link>
+                      ))}
+                    </nav>
+                  </div>
+
+                  <div className="mb-6">
+                    <p className="text-xs font-semibold text-gray-500 uppercase tracking-wider px-3 py-2 mb-2">
+                      General
+                    </p>
+                    <nav className="space-y-1">
+                      {generalNav.map((item) => (
+                        <Link
+                          key={item.title}
+                          to={item.url}
+                          onClick={() => setSidebarOpen(false)}
+                          className={`flex items-center gap-3 px-3 py-2.5 rounded-lg transition-all duration-200 ${
+                            location.pathname === item.url 
+                              ? 'bg-gray-100 text-gray-900 font-medium shadow-sm' 
+                              : 'text-gray-700 hover:bg-gray-100 hover:text-gray-900'
                           }`}
                         >
                           <item.icon className="w-5 h-5" />
