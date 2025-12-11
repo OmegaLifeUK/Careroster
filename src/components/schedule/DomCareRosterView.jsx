@@ -1319,14 +1319,14 @@ export default function DomCareRosterView({
             </div>
 
             {/* Unassigned Row */}
-            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-400">
-              <div className="p-2 border-r flex items-center gap-2 bg-orange-100/50">
-                <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center animate-pulse">
-                  <AlertCircle className="w-5 h-5 text-white" />
+            <div className="grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b bg-gradient-to-r from-orange-50 to-orange-100 border-l-4 border-orange-500">
+              <div className="p-3 border-r flex items-center gap-2.5 bg-orange-100">
+                <div className="w-10 h-10 rounded-full bg-orange-500 flex items-center justify-center animate-pulse shadow-md">
+                  <AlertCircle className="w-6 h-6 text-white" />
                 </div>
                 <div>
-                  <p className="text-xs font-bold text-orange-900">Unallocated Visits</p>
-                  <p className="text-[10px] text-orange-700">Need assignment</p>
+                  <p className="text-sm font-bold text-orange-900">Unallocated Visits</p>
+                  <p className="text-[11px] text-orange-700">Need assignment</p>
                 </div>
               </div>
               {weekDays.map((day) => {
@@ -1724,7 +1724,7 @@ export default function DomCareRosterView({
           </div>
           <div className="max-h-32 overflow-y-auto">
             {runs.slice(0, 3).map(run => (
-              <div key={run.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-purple-50/30">
+              <div key={run.id} className="grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b hover:bg-purple-50/30">
                 <div className="p-1.5 border-r flex items-center gap-2">
                   <div className="w-7 h-7 rounded bg-purple-100 flex items-center justify-center">
                     <Navigation className="w-3.5 h-3.5 text-purple-600" />
