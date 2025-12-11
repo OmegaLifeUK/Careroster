@@ -416,6 +416,40 @@ export default function DomCareRosterView({
 
     onVisitUpdate(visitId, updates);
     
+    // Calculate and update travel times for affected visits
+    if (newStaffId && parts[0] !== 'client') {
+      setTimeout(() => {
+        const targetDate = parts[1];
+        const staffVisits = visits
+          .filter(v => {
+            const vStaffId = v.staff_id || v.assigned_staff_id;
+            const vDate = getVisitDate(v);
+            return (vStaffId === newStaffId || v.id === visitId) && vDate === targetDate;
+          })
+          .sort((a, b) => (a.scheduled_start || '').localeCompare(b.scheduled_start || ''));
+
+        staffVisits.forEach((visit, idx) => {
+          if (idx < staffVisits.length - 1) {
+            const currentClient = clients.find(c => c.id === visit.client_id);
+            const nextClient = clients.find(c => c.id === staffVisits[idx + 1].client_id);
+            const staffMember = staff.find(s => s.id === newStaffId);
+
+            if (currentClient?.address && nextClient?.address && staffMember) {
+              const travel = calculateTravelTime(
+                currentClient.address,
+                nextClient.address,
+                staffMember.vehicle_type
+              );
+              onVisitUpdate(visit.id, { estimated_travel_to_next: travel.time });
+            }
+          } else {
+            // Last visit - clear travel time
+            onVisitUpdate(visit.id, { estimated_travel_to_next: 0 });
+          }
+        });
+      }, 100);
+    }
+    
     if (parts[0] === 'client') {
       const clientName = activeClients.find(c => c.id === targetClientId)?.full_name;
       toast.success("Visit Updated", `Moved to ${clientName}`);
