@@ -303,43 +303,48 @@ export default function DomCareSchedule() {
             locationName="Domiciliary Care"
           />
         ) : view === "split" ? (
-          <div className="grid grid-cols-[350px_1fr] gap-4 h-[calc(100vh-280px)]">
-            <div className="bg-white rounded-lg border shadow-sm overflow-hidden flex flex-col">
-              <div className="bg-orange-500 text-white p-3 border-b">
-                <h3 className="font-bold flex items-center gap-2">
-                  <AlertTriangle className="w-5 h-5" />
-                  Unassigned Visits
-                </h3>
-                <p className="text-xs text-orange-100 mt-1">Drag to staff to assign</p>
+          <div className="grid grid-rows-[200px_1fr] gap-4 h-[calc(100vh-280px)]">
+            <div className="bg-white rounded-lg border shadow-sm overflow-hidden">
+              <div className="bg-orange-500 text-white p-3 border-b flex items-center justify-between">
+                <div>
+                  <h3 className="font-bold flex items-center gap-2">
+                    <AlertTriangle className="w-5 h-5" />
+                    Unassigned Visits
+                  </h3>
+                  <p className="text-xs text-orange-100 mt-1">Drag to staff in roster below to assign</p>
+                </div>
+                <span className="text-2xl font-bold">{visits.filter(v => !v.staff_id && !v.assigned_staff_id).length}</span>
               </div>
-              <div className="flex-1 overflow-y-auto p-3 space-y-2">
-                {visits.filter(v => !v.staff_id && !v.assigned_staff_id).map(visit => {
-                  const client = clients.find(c => c.id === visit.client_id);
-                  const visitDate = visit.scheduled_start ? new Date(visit.scheduled_start) : null;
-                  return (
-                    <div 
-                      key={visit.id}
-                      onClick={() => handleEditVisit(visit)}
-                      className="p-3 bg-orange-50 border-2 border-dashed border-orange-300 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors"
-                    >
-                      <p className="font-semibold text-sm text-gray-900">{client?.full_name || 'Unknown'}</p>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                        <Calendar className="w-3 h-3" />
-                        {visitDate ? format(visitDate, 'EEE, MMM d') : 'No date'}
+              <div className="overflow-x-auto p-3">
+                <div className="flex gap-2">
+                  {visits.filter(v => !v.staff_id && !v.assigned_staff_id).map(visit => {
+                    const client = clients.find(c => c.id === visit.client_id);
+                    const visitDate = visit.scheduled_start ? new Date(visit.scheduled_start) : null;
+                    return (
+                      <div 
+                        key={visit.id}
+                        onClick={() => handleEditVisit(visit)}
+                        className="p-3 bg-orange-50 border-2 border-dashed border-orange-300 rounded-lg cursor-pointer hover:bg-orange-100 transition-colors min-w-[200px]"
+                      >
+                        <p className="font-semibold text-sm text-gray-900 truncate">{client?.full_name || 'Unknown'}</p>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                          <Calendar className="w-3 h-3" />
+                          {visitDate ? format(visitDate, 'EEE, MMM d') : 'No date'}
+                        </div>
+                        <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
+                          <span>⏰ {visit.scheduled_start ? format(new Date(visit.scheduled_start), 'HH:mm') : 'No time'}</span>
+                          {visit.duration_minutes && <span>• {visit.duration_minutes}min</span>}
+                        </div>
                       </div>
-                      <div className="flex items-center gap-2 text-xs text-gray-600 mt-1">
-                        <span>⏰ {visit.scheduled_start ? format(new Date(visit.scheduled_start), 'HH:mm') : 'No time'}</span>
-                        {visit.duration_minutes && <span>• {visit.duration_minutes}min</span>}
-                      </div>
+                    );
+                  })}
+                  {visits.filter(v => !v.staff_id && !v.assigned_staff_id).length === 0 && (
+                    <div className="text-center py-8 text-gray-400 w-full">
+                      <AlertTriangle className="w-8 h-8 mx-auto mb-2 opacity-30" />
+                      <p className="text-sm">All visits assigned!</p>
                     </div>
-                  );
-                })}
-                {visits.filter(v => !v.staff_id && !v.assigned_staff_id).length === 0 && (
-                  <div className="text-center py-12 text-gray-400">
-                    <AlertTriangle className="w-12 h-12 mx-auto mb-3 opacity-30" />
-                    <p className="text-sm">All visits assigned!</p>
-                  </div>
-                )}
+                  )}
+                </div>
               </div>
             </div>
             
