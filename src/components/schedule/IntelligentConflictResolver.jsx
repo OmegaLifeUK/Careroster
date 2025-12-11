@@ -206,6 +206,10 @@ export default function IntelligentConflictResolver({
   // Apply solution mutation
   const applySolutionMutation = useMutation({
     mutationFn: async (solution) => {
+      if (!solution || !solution.shift || !solution.toCarer) {
+        throw new Error("Invalid solution data");
+      }
+
       if (solution.type === "reallocate") {
         // Update shift with new carer
         await base44.entities.Shift.update(solution.shift.id, {
@@ -214,15 +218,19 @@ export default function IntelligentConflictResolver({
         });
 
         // Send notification to new carer
-        await base44.entities.Notification.create({
-          recipient_email: solution.toCarer.email,
-          title: "New Shift Assigned",
-          message: `You have been assigned a shift on ${format(parseISO(solution.shift.date), "MMM d")} from ${solution.shift.start_time} to ${solution.shift.end_time}`,
-          type: "shift_assignment",
-          priority: "medium",
-          related_entity_type: "shift",
-          related_entity_id: solution.shift.id
-        });
+        try {
+          await base44.entities.Notification.create({
+            recipient_email: solution.toCarer.email,
+            title: "New Shift Assigned",
+            message: `You have been assigned a shift on ${format(parseISO(solution.shift.date), "MMM d")} from ${solution.shift.start_time} to ${solution.shift.end_time}`,
+            type: "shift_assignment",
+            priority: "medium",
+            related_entity_type: "shift",
+            related_entity_id: solution.shift.id
+          });
+        } catch (notifError) {
+          console.log("Notification failed but shift updated:", notifError);
+        }
       }
     },
     onSuccess: () => {
@@ -230,8 +238,9 @@ export default function IntelligentConflictResolver({
       toast.success("Resolved", "Conflict successfully resolved");
       onResolve?.();
     },
-    onError: () => {
-      toast.error("Error", "Failed to apply solution");
+    onError: (error) => {
+      console.error("Apply solution error:", error);
+      toast.error("Error", error.message || "Failed to apply solution");
     }
   });
 
