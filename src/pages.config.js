@@ -64,6 +64,7 @@ import ReportingEngine from './pages/ReportingEngine';
 import FollowUpTracker from './pages/FollowUpTracker';
 import EnquiryDetail from './pages/EnquiryDetail';
 import CarerDetail from './pages/CarerDetail';
+import CarerPerformanceDashboard from './pages/CarerPerformanceDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -134,6 +135,7 @@ export const PAGES = {
     "FollowUpTracker": FollowUpTracker,
     "EnquiryDetail": EnquiryDetail,
     "CarerDetail": CarerDetail,
+    "CarerPerformanceDashboard": CarerPerformanceDashboard,
 }
 
 export const pagesConfig = {
