@@ -18,10 +18,21 @@ import {
   Maximize2,
   Navigation,
   AlertTriangle,
-  X
+  X,
+  Mail,
+  Phone,
+  CheckCircle,
+  MessageSquare,
+  FileText,
+  Send,
+  MoreVertical,
+  Copy,
+  Filter
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -51,6 +62,15 @@ export default function DomCareRosterView({
   const [viewMode, setViewMode] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activePanel, setActivePanel] = useState("staff");
+  const [selectedVisit, setSelectedVisit] = useState(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [resourceMode, setResourceMode] = useState("resources");
+  const [viewByMode, setViewByMode] = useState("staff");
+  const [viewPlanMode, setViewPlanMode] = useState("planned");
+  const [durationMode, setDurationMode] = useState("1day");
+  const [branchFilter, setBranchFilter] = useState("all");
+  const [areaFilter, setAreaFilter] = useState("all");
+  const [typeFilter, setTypeFilter] = useState("all");
   const { toast } = useToast();
 
   const weekDays = useMemo(() => 
@@ -367,17 +387,27 @@ export default function DomCareRosterView({
       : (showStaff ? getStaffName(visitStaffId) : '');
     
     const startTime = getVisitTime(visit, 'scheduled_start') || visit.scheduled_start;
+    const isLocked = visit.status === 'completed' || visit.status === 'in_progress';
 
     return (
       <div
-        onClick={() => onVisitClick?.(visit)}
+        onClick={() => {
+          setSelectedVisit(visit);
+          setShowSidebar(true);
+          onVisitClick?.(visit);
+        }}
         className={`
-          px-2 py-1 rounded-md text-xs cursor-pointer transition-all
+          px-2 py-1 rounded-md text-xs cursor-pointer transition-all relative
           ${colors.bg} ${colors.border} ${colors.text} border
           hover:shadow-md hover:scale-[1.02]
           ${!visitStaffId ? 'border-dashed border-orange-400 bg-orange-50' : ''}
         `}
       >
+        {isLocked && (
+          <div className="absolute -top-1 -right-1 w-3.5 h-3.5 bg-green-600 rounded-full flex items-center justify-center z-10">
+            <CheckCircle className="w-2 h-2 text-white" />
+          </div>
+        )}
         <div className="flex items-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
           <span className="font-medium truncate">{label || 'Visit'}</span>
@@ -417,81 +447,423 @@ export default function DomCareRosterView({
     );
   };
 
-  return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
-      {/* Header */}
-      <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-4">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-4">
-            <div>
-              <h2 className="text-xl font-bold">{locationName}</h2>
-              <p className="text-teal-100 text-sm">Visit Schedule</p>
-            </div>
+  const SidebarPanel = () => {
+    if (!showSidebar || !selectedVisit) return null;
+
+    const visitStaff = staff.find(s => s?.id === (selectedVisit.staff_id || selectedVisit.assigned_staff_id));
+    const visitClient = clients.find(c => c?.id === selectedVisit.client_id);
+    const colors = VISIT_COLORS[selectedVisit.status] || VISIT_COLORS.scheduled;
+    const startTime = getVisitTime(selectedVisit, 'scheduled_start') || selectedVisit.scheduled_start;
+    const endTime = getVisitTime(selectedVisit, 'scheduled_end') || selectedVisit.scheduled_end;
+
+    const dayStats = useMemo(() => {
+      if (!selectedVisit) return { allocated: 0, unallocated: 0, total: 0 };
+      const visitDateStr = getVisitDate(selectedVisit);
+      const dayVisits = visits.filter(v => getVisitDate(v) === visitDateStr);
+      const allocated = dayVisits.filter(v => v.staff_id || v.assigned_staff_id).length;
+      const unallocated = dayVisits.filter(v => !v.staff_id && !v.assigned_staff_id).length;
+      const totalHours = dayVisits.reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
+      return { allocated, unallocated, total: dayVisits.length, totalHours: totalHours.toFixed(1) };
+    }, [selectedVisit, visits]);
+
+    return (
+      <div className="fixed right-0 top-0 bottom-0 w-80 bg-white border-l shadow-2xl z-50 overflow-y-auto slide-in-right">
+        <div className="sticky top-0 bg-white border-b z-10">
+          <div className="flex items-center justify-between p-3 border-b">
+            <h3 className="font-bold text-sm">Visit Details</h3>
+            <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => setShowSidebar(false)}>
+              <X className="w-4 h-4" />
+            </Button>
           </div>
           
-          <div className="flex items-center gap-6">
-            <div className="flex items-center gap-4 text-sm">
-              <div className="text-center">
-                <p className="text-2xl font-bold">{weeklyStats.total}</p>
-                <p className="text-teal-200 text-xs">Total Visits</p>
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="w-full justify-start border-b rounded-none bg-transparent px-3 h-9">
+              <TabsTrigger value="info" className="text-xs">Info</TabsTrigger>
+              <TabsTrigger value="visit" className="text-xs">Visit</TabsTrigger>
+              <TabsTrigger value="notes" className="text-xs">Notes</TabsTrigger>
+              <TabsTrigger value="summary" className="text-xs">Summary</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="p-3 space-y-3 mt-0">
+              {visitClient && (
+                <div className="border rounded-lg p-2.5">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Service User</p>
+                  <div className="flex items-center gap-2">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(visitClient.full_name || 'C')}&background=10b981&color=fff&size=40`}
+                      alt={visitClient.full_name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{visitClient.full_name}</p>
+                      <p className="text-xs text-gray-500 truncate">{visitClient.address?.postcode}</p>
+                    </div>
+                  </div>
+                  {visitClient.address && (
+                    <div className="mt-2 pt-2 border-t">
+                      <div className="flex items-start gap-1.5 text-xs text-gray-600">
+                        <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
+                        <span className="leading-tight">{visitClient.address.street}, {visitClient.address.city}, {visitClient.address.postcode}</span>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {visitStaff && (
+                <div className="border rounded-lg p-2.5">
+                  <p className="text-xs font-semibold text-gray-500 mb-2">Assigned Employee</p>
+                  <div className="flex items-center gap-2 mb-2">
+                    <img 
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(visitStaff.full_name || 'S')}&background=0ea5e9&color=fff&size=40`}
+                      alt={visitStaff.full_name}
+                      className="w-10 h-10 rounded-full"
+                    />
+                    <div className="flex-1 min-w-0">
+                      <p className="font-semibold text-sm truncate">{visitStaff.full_name}</p>
+                      <p className="text-xs text-gray-500">{visitStaff.vehicle_type ? `${visitStaff.vehicle_type}` : 'Care Worker'}</p>
+                    </div>
+                  </div>
+                  {visitStaff.phone && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-1">
+                      <Phone className="w-3 h-3" />
+                      <span>{visitStaff.phone}</span>
+                    </div>
+                  )}
+                  {visitStaff.email && (
+                    <div className="flex items-center gap-1.5 text-xs text-gray-600">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{visitStaff.email}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {!visitStaff && (
+                <div className="border-2 border-dashed border-orange-300 rounded-lg p-3 bg-orange-50">
+                  <div className="flex items-center gap-2 mb-2">
+                    <AlertCircle className="w-4 h-4 text-orange-600" />
+                    <p className="font-semibold text-sm text-orange-900">Unallocated</p>
+                  </div>
+                  <p className="text-xs text-orange-700">This visit needs to be assigned to a staff member</p>
+                </div>
+              )}
+
+              <div className={`p-2.5 rounded-lg ${colors.bg} border ${colors.border}`}>
+                <div className="space-y-1.5 text-xs">
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Visit Type:</span>
+                    <span className="font-semibold">{selectedVisit.visit_type?.replace('_', ' ')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Date:</span>
+                    <span className="font-semibold">{format(parseISO(getVisitDate(selectedVisit)), 'EEE, d MMM yyyy')}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Time:</span>
+                    <span className="font-semibold">{startTime} - {endTime}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-gray-600">Duration:</span>
+                    <span className="font-semibold">{selectedVisit.duration_minutes}m</span>
+                  </div>
+                  {selectedVisit.mileage > 0 && (
+                    <div className="flex justify-between">
+                      <span className="text-gray-600">Mileage:</span>
+                      <span className="font-semibold">{selectedVisit.mileage} miles</span>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div className="w-px h-8 bg-teal-400" />
-              <div className="text-center">
-                <p className="text-2xl font-bold text-emerald-300">{weeklyStats.completed}</p>
-                <p className="text-teal-200 text-xs">Completed</p>
+            </TabsContent>
+
+            <TabsContent value="visit" className="p-3 space-y-3 mt-0">
+              <div className="space-y-2">
+                <Button className="w-full justify-start" size="sm" variant="outline">
+                  <Plus className="w-3.5 h-3.5 mr-2" />
+                  Create New Visit
+                </Button>
+                <Button className="w-full justify-start" size="sm" variant="outline">
+                  <Send className="w-3.5 h-3.5 mr-2" />
+                  Send SMS
+                </Button>
+                <Button className="w-full justify-start" size="sm" variant="outline">
+                  <Mail className="w-3.5 h-3.5 mr-2" />
+                  Send Email
+                </Button>
+                <Button className="w-full justify-start" size="sm" variant="outline">
+                  <Clock className="w-3.5 h-3.5 mr-2" />
+                  Generate Timesheets
+                </Button>
+                <Button className="w-full justify-start" size="sm" variant="outline">
+                  <Copy className="w-3.5 h-3.5 mr-2" />
+                  Duplicate Visit
+                </Button>
               </div>
-              <div className="w-px h-8 bg-teal-400" />
-              <div className="text-center">
-                <p className="text-2xl font-bold text-orange-300">{weeklyStats.unassigned}</p>
-                <p className="text-teal-200 text-xs">Open</p>
+            </TabsContent>
+
+            <TabsContent value="notes" className="p-3 space-y-3 mt-0">
+              <div>
+                <Label className="text-xs font-medium mb-1.5 block">Visit Notes</Label>
+                <Textarea 
+                  value={selectedVisit.notes || ''} 
+                  readOnly
+                  placeholder="No notes available"
+                  rows={4}
+                  className="text-xs"
+                />
               </div>
-              <div className="w-px h-8 bg-teal-400" />
-              <div className="text-center">
-                <p className="text-2xl font-bold">{weeklyStats.totalMileage}</p>
-                <p className="text-teal-200 text-xs">Miles</p>
+
+              {visitClient?.care_needs && visitClient.care_needs.length > 0 && (
+                <div>
+                  <Label className="text-xs font-medium mb-1.5 block">Care Needs</Label>
+                  <div className="space-y-1">
+                    {visitClient.care_needs.map((need, idx) => (
+                      <div key={idx} className="flex items-center gap-1.5 text-xs">
+                        <CheckCircle className="w-3 h-3 text-teal-600" />
+                        <span>{need}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="summary" className="p-3 space-y-3 mt-0">
+              <div>
+                <p className="text-xs font-semibold text-gray-600 mb-2">
+                  {format(parseISO(getVisitDate(selectedVisit)), 'EEEE, d MMMM yyyy')}
+                </p>
+                <div className="bg-gray-50 rounded-lg p-2.5 space-y-2">
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">Total Visits</span>
+                    <span className="font-bold text-lg">{dayStats.total}</span>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">Allocated</span>
+                    <Badge className="bg-green-100 text-green-700 text-xs">{dayStats.allocated}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center text-xs">
+                    <span className="text-gray-600">Unallocated</span>
+                    <Badge className="bg-red-100 text-red-700 text-xs">{dayStats.unallocated}</Badge>
+                  </div>
+                  <div className="flex justify-between items-center text-xs pt-2 border-t">
+                    <span className="text-gray-600">Total Hours</span>
+                    <span className="font-semibold">{dayStats.totalHours}h</span>
+                  </div>
+                </div>
               </div>
+
+              <div className="pt-2">
+                <p className="text-xs font-semibold text-gray-600 mb-2">Quick Actions</p>
+                <div className="space-y-1.5">
+                  <Button className="w-full justify-start h-8" size="sm" variant="outline">
+                    <Navigation className="w-3.5 h-3.5 mr-2" />
+                    Manage Runs
+                  </Button>
+                  <Button className="w-full justify-start h-8" size="sm" variant="outline">
+                    <FileText className="w-3.5 h-3.5 mr-2" />
+                    View Report
+                  </Button>
+                </div>
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  };
+
+  return (
+    <div className="flex h-full">
+      <div className={`flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all ${showSidebar ? 'mr-80' : ''}`}>
+      {/* Top Filters Bar */}
+      <div className="px-3 py-2 border-b bg-white flex items-center gap-2 flex-wrap text-xs">
+        <Select value={resourceMode} onValueChange={setResourceMode}>
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="resources">Resources</SelectItem>
+            <SelectItem value="runs">Runs</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={viewByMode} onValueChange={setViewByMode}>
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="staff">By: Staff</SelectItem>
+            <SelectItem value="clients">By: Clients</SelectItem>
+            <SelectItem value="visit">By: Visit</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={viewPlanMode} onValueChange={setViewPlanMode}>
+          <SelectTrigger className="w-32 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="planned">View: Planned</SelectItem>
+            <SelectItem value="actual">View: Actual</SelectItem>
+            <SelectItem value="both">View: Both</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={durationMode} onValueChange={setDurationMode}>
+          <SelectTrigger className="w-32 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1day">Duration: 1 Day</SelectItem>
+            <SelectItem value="1week">Duration: 1 Week</SelectItem>
+            <SelectItem value="2weeks">Duration: 2 Weeks</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" size="sm" className="h-7 text-xs">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Locked Visits
+        </Button>
+
+        <div className="flex-1" />
+
+        <div className="flex items-center gap-1.5">
+          <Button variant="ghost" size="sm" className="h-7 text-xs">
+            <Filter className="w-3 h-3 mr-1" />
+            More Filters
+          </Button>
+        </div>
+      </div>
+
+      {/* Second Row Filters */}
+      <div className="px-3 py-2 border-b bg-gray-50 flex items-center gap-2 flex-wrap text-xs">
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-7 h-7 w-36 text-xs"
+          />
+        </div>
+
+        <Select value={branchFilter} onValueChange={setBranchFilter}>
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Branch: All</SelectItem>
+            <SelectItem value="brighton">Brighton</SelectItem>
+            <SelectItem value="hove">Hove</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={areaFilter} onValueChange={setAreaFilter}>
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Area: All</SelectItem>
+            <SelectItem value="east">East</SelectItem>
+            <SelectItem value="west">West</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={typeFilter} onValueChange={setTypeFilter}>
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Type: All</SelectItem>
+            <SelectItem value="personal_care">Personal Care</SelectItem>
+            <SelectItem value="medication">Medication</SelectItem>
+            <SelectItem value="meal_prep">Meal Prep</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue="all">
+          <SelectTrigger className="w-32 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Service Type: All</SelectItem>
+            <SelectItem value="homecare">Home Care</SelectItem>
+            <SelectItem value="supported">Supported Living</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue="all">
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Priority: All</SelectItem>
+            <SelectItem value="high">High</SelectItem>
+            <SelectItem value="medium">Medium</SelectItem>
+            <SelectItem value="low">Low</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue="all">
+          <SelectTrigger className="w-28 h-7">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">Status: All</SelectItem>
+            <SelectItem value="scheduled">Scheduled</SelectItem>
+            <SelectItem value="completed">Completed</SelectItem>
+          </SelectContent>
+        </Select>
+      </div>
+
+      {/* Header */}
+      <div className="bg-gradient-to-r from-teal-600 to-emerald-600 text-white p-3">
+        <div className="text-sm">
+          <p className="text-teal-100 text-xs mb-0.5">Week of {format(currentWeekStart, 'd MMM')} - {format(addDays(currentWeekStart, 6), 'd MMM yyyy')}</p>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2">
+              <span className="text-white/80">Total:</span>
+              <span className="text-xl font-bold">{weeklyStats.total}</span>
+            </div>
+            <div className="w-px h-6 bg-teal-400/50" />
+            <div className="flex items-center gap-2">
+              <span className="text-white/80">Allocated:</span>
+              <span className="text-xl font-bold text-emerald-300">{weeklyStats.total - weeklyStats.unassigned}</span>
+            </div>
+            <div className="w-px h-6 bg-teal-400/50" />
+            <div className="flex items-center gap-2">
+              <span className="text-white/80">Unallocated:</span>
+              <span className="text-xl font-bold text-orange-300">{weeklyStats.unassigned}</span>
+            </div>
+            <div className="w-px h-6 bg-teal-400/50" />
+            <div className="flex items-center gap-2">
+              <span className="text-white/80">Hours:</span>
+              <span className="text-xl font-bold">{weeklyStats.totalHours}h</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Controls */}
-      <div className="p-3 border-b bg-gray-50 flex items-center justify-between gap-4">
-        <div className="flex items-center gap-2">
+      {/* Navigation Controls */}
+      <div className="p-2 border-b bg-white flex items-center justify-between gap-3">
+        <div className="flex items-center gap-1.5">
           <Button 
             variant="outline" 
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7"
             onClick={() => viewMode === "day" 
               ? setSelectedDate(addDays(selectedDate, -1))
               : setCurrentWeekStart(subWeeks(currentWeekStart, 1))
             }
           >
-            <ChevronLeft className="w-4 h-4" />
+            <ChevronLeft className="w-3.5 h-3.5" />
           </Button>
-          
-          <div className="flex bg-white rounded-lg border p-0.5">
-            <button
-              onClick={() => setViewMode("day")}
-              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
-                viewMode === "day" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              Day
-            </button>
-            <button
-              onClick={() => setViewMode("week")}
-              className={`px-3 py-1.5 text-sm rounded-md transition-all ${
-                viewMode === "week" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              Week
-            </button>
-          </div>
 
-          <div className="flex items-center gap-2 px-3 py-1.5 bg-white rounded-lg border">
-            <Calendar className="w-4 h-4 text-gray-400" />
-            <span className="font-medium text-sm">
+          <div className="flex items-center gap-1.5 px-2.5 py-1 bg-gray-50 rounded border text-xs font-medium">
+            <Calendar className="w-3.5 h-3.5 text-gray-500" />
+            <span>
               {viewMode === "day" 
                 ? format(selectedDate, 'EEE, d MMM yyyy')
                 : `${format(currentWeekStart, 'd MMM')} - ${format(addDays(currentWeekStart, 6), 'd MMM yyyy')}`
@@ -502,18 +874,19 @@ export default function DomCareRosterView({
           <Button 
             variant="outline" 
             size="icon"
-            className="h-8 w-8"
+            className="h-7 w-7"
             onClick={() => viewMode === "day" 
               ? setSelectedDate(addDays(selectedDate, 1))
               : setCurrentWeekStart(addWeeks(currentWeekStart, 1))
             }
           >
-            <ChevronRight className="w-4 h-4" />
+            <ChevronRight className="w-3.5 h-3.5" />
           </Button>
 
           <Button 
             variant="outline" 
             size="sm"
+            className="h-7 text-xs"
             onClick={() => {
               setCurrentWeekStart(startOfWeek(new Date(), { weekStartsOn: 1 }));
               setSelectedDate(new Date());
@@ -523,21 +896,30 @@ export default function DomCareRosterView({
           </Button>
         </div>
 
-        <div className="flex items-center gap-2">
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search staff..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 w-48 text-sm"
-            />
+        <div className="flex items-center gap-1.5">
+          <div className="flex bg-white rounded border p-0.5">
+            <button
+              onClick={() => setViewMode("day")}
+              className={`px-2 py-0.5 text-xs rounded transition-all ${
+                viewMode === "day" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Day
+            </button>
+            <button
+              onClick={() => setViewMode("week")}
+              className={`px-2 py-0.5 text-xs rounded transition-all ${
+                viewMode === "week" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              Week
+            </button>
           </div>
 
-          <div className="flex bg-white rounded-lg border p-0.5">
+          <div className="flex bg-white rounded border p-0.5">
             <button
               onClick={() => setActivePanel("staff")}
-              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+              className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 transition-all ${
                 activePanel === "staff" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
               }`}
             >
@@ -546,21 +928,12 @@ export default function DomCareRosterView({
             </button>
             <button
               onClick={() => setActivePanel("clients")}
-              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+              className={`px-2 py-0.5 text-xs rounded flex items-center gap-1 transition-all ${
                 activePanel === "clients" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
               }`}
             >
               <User className="w-3 h-3" />
               Clients
-            </button>
-            <button
-              onClick={() => setActivePanel("both")}
-              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
-                activePanel === "both" ? "bg-teal-600 text-white" : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <Maximize2 className="w-3 h-3" />
-              Split
             </button>
           </div>
         </div>
@@ -592,34 +965,46 @@ export default function DomCareRosterView({
                   const dayVisits = getStaffDayVisits(staffMember.id, selectedDate);
                   const hoursStatus = getStaffHoursStatus(staffMember.id);
                   
+                  // Check for unavailability
+                  const staffUnavailable = staffAvailability.some(a => 
+                    a?.carer_id === staffMember.id && 
+                    a.availability_type === 'unavailable' &&
+                    a.specific_date === format(selectedDate, 'yyyy-MM-dd')
+                  );
+
                   return (
                     <div key={staffMember.id} className="flex border-b hover:bg-gray-50 transition-colors">
-                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
-                        <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
-                          hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                          hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
-                          'bg-gradient-to-br from-teal-400 to-emerald-600'
-                        }`}>
-                          {staffMember.full_name?.charAt(0)}
-                        </div>
+                      <div className="w-52 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <img 
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=36`}
+                          alt={staffMember.full_name}
+                          className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                        />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
-                          <div className="flex items-center gap-1">
-                            <Clock className="w-3 h-3 text-gray-400" />
-                            <span className={`text-xs ${
-                              hoursStatus.status === 'full' ? 'text-red-600 font-medium' :
+                          <p className="font-medium text-xs truncate">{staffMember.full_name}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                            {staffMember.vehicle_type && (
+                              <span className="flex items-center gap-0.5">
+                                <Car className="w-2.5 h-2.5" />
+                                {staffMember.vehicle_type}
+                              </span>
+                            )}
+                            <span className="mx-1">•</span>
+                            <span className={`${
+                              hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
                               hoursStatus.status === 'near' ? 'text-amber-600' : 'text-gray-500'
                             }`}>
-                              {hoursStatus.weekHours.toFixed(1)}h
-                              {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
+                              {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
                             </span>
-                            {hoursStatus.status === 'full' && (
-                              <Badge className="bg-red-100 text-red-700 text-[9px] py-0 px-1">Full</Badge>
-                            )}
                           </div>
                         </div>
                       </div>
-                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                      <div className={`flex-1 relative h-12 ${staffUnavailable ? 'bg-gray-100' : 'bg-white'}`}>
+                        {staffUnavailable && (
+                          <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
+                            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.04) 8px, rgba(0,0,0,.04) 16px)'
+                          }} />
+                        )}
                         <div className="absolute inset-0 flex">
                           {TIMELINE_HOURS.map(hour => (
                             <div key={hour} className="flex-1 border-r border-gray-100" />
@@ -695,51 +1080,62 @@ export default function DomCareRosterView({
           }}
         >
           <div className="flex flex-col" style={{ overscrollBehavior: 'contain' }}>
-            <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
-              <div className="p-3 border-r flex items-center gap-2">
+            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
+              <div className="p-2 border-r flex items-center gap-1.5">
                 {activePanel === "clients" ? (
                   <>
-                    <User className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium text-sm text-gray-700">Service Users</span>
+                    <User className="w-3.5 h-3.5 text-gray-500" />
+                    <span className="font-semibold text-xs text-gray-700">Service Users</span>
                   </>
                 ) : (
                   <>
-                    <Users className="w-4 h-4 text-gray-500" />
-                    <span className="font-medium text-sm text-gray-700">Staff</span>
+                    <Users className="w-3.5 h-3.5 text-gray-500" />
+                    <span className="font-semibold text-xs text-gray-700">Employee</span>
                   </>
                 )}
               </div>
               {weekDays.map((day, idx) => {
                 const isTodayDate = isToday(day);
                 const unassignedCount = getUnassignedVisits(day).length;
+                const dayVisitsCount = visits.filter(v => getVisitDate(v) === format(day, 'yyyy-MM-dd')).length;
+                const allocatedCount = dayVisitsCount - unassignedCount;
+                const dayTotalHours = visits
+                  .filter(v => getVisitDate(v) === format(day, 'yyyy-MM-dd'))
+                  .reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
+
                 return (
                   <div 
                     key={idx} 
-                    className={`p-2 border-r text-center transition-colors ${
-                      isTodayDate ? 'bg-teal-50' : ''
+                    className={`p-1.5 border-r text-center transition-colors ${
+                      isTodayDate ? 'bg-blue-50' : ''
                     }`}
                   >
-                    <p className={`text-xs font-medium ${isTodayDate ? 'text-teal-600' : 'text-gray-500'}`}>
+                    <p className={`text-[10px] font-semibold uppercase ${isTodayDate ? 'text-blue-600' : 'text-gray-500'}`}>
                       {format(day, 'EEE')}
                     </p>
-                    <p className={`text-lg font-bold ${isTodayDate ? 'text-teal-700' : 'text-gray-900'}`}>
+                    <p className={`text-base font-bold ${isTodayDate ? 'text-blue-700' : 'text-gray-900'}`}>
                       {format(day, 'd')}
                     </p>
-                    {unassignedCount > 0 && (
-                      <Badge className="bg-orange-100 text-orange-700 text-[10px] mt-1">
-                        {unassignedCount} open
+                    <div className="flex items-center justify-center gap-1 mt-0.5">
+                      <Badge variant="outline" className="text-[9px] px-1 py-0 bg-green-50 text-green-700 border-green-200">
+                        {allocatedCount}
                       </Badge>
-                    )}
+                      {unassignedCount > 0 && (
+                        <Badge variant="outline" className="text-[9px] px-1 py-0 bg-red-50 text-red-700 border-red-200">
+                          {unassignedCount}
+                        </Badge>
+                      )}
+                    </div>
                   </div>
                 );
               })}
             </div>
 
             {/* Unassigned Row */}
-            <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-orange-50/50">
-              <div className="p-2 border-r flex items-center gap-2">
-                <AlertCircle className="w-4 h-4 text-orange-500" />
-                <span className="text-sm font-medium text-orange-700">Open Visits</span>
+            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-orange-50/40">
+              <div className="p-1.5 border-r flex items-center gap-1.5">
+                <AlertCircle className="w-3.5 h-3.5 text-orange-600" />
+                <span className="text-xs font-semibold text-orange-700">Unallocated</span>
               </div>
               {weekDays.map((day) => {
                 const dayStr = format(day, 'yyyy-MM-dd');
@@ -750,8 +1146,8 @@ export default function DomCareRosterView({
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-1.5 min-h-[50px] border-r transition-colors ${
-                          snapshot.isDraggingOver ? 'bg-orange-100' : ''
+                        className={`p-0.5 min-h-[40px] border-r transition-colors ${
+                          snapshot.isDraggingOver ? 'bg-orange-100' : 'bg-white'
                         }`}
                       >
                         <div className="flex flex-wrap gap-1">
@@ -785,54 +1181,36 @@ export default function DomCareRosterView({
 
             {/* Staff Rows */}
             {(activePanel === "staff" || activePanel === "both") && (
-            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`} style={{ overscrollBehavior: 'contain' }}>
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[550px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activeStaff.map((staffMember) => {
                 const hoursStatus = getStaffHoursStatus(staffMember.id);
                 
                 return (
-                  <div key={staffMember.id} className={`grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors ${
-                    hoursStatus.status === 'full' ? 'bg-red-50/30' : ''
+                  <div key={staffMember.id} className={`grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors ${
+                    hoursStatus.status === 'full' ? 'bg-red-50/20' : ''
                   }`}>
-                    <div className="p-2 border-r flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
-                        hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                        hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
-                        'bg-gradient-to-br from-teal-400 to-emerald-600'
-                      }`}>
-                        {staffMember.full_name?.charAt(0)}
-                      </div>
+                    <div className="p-1.5 border-r flex items-center gap-2">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=36`}
+                        alt={staffMember.full_name}
+                        className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                      />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
-                        <div className="flex items-center gap-1 flex-wrap">
-                          <span className={`text-xs ${
-                            hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
-                            hoursStatus.status === 'near' ? 'text-amber-600 font-medium' :
-                            hoursStatus.status === 'low' ? 'text-teal-600' : 'text-gray-500'
-                          }`}>
-                            {hoursStatus.weekHours.toFixed(1)}h
-                            {hoursStatus.contracted && ` / ${hoursStatus.contracted}h`}
-                          </span>
-                          {hoursStatus.contracted && (
-                            <div className="w-12 h-1.5 bg-gray-200 rounded-full overflow-hidden">
-                              <div 
-                                className={`h-full transition-all ${
-                                  hoursStatus.status === 'full' ? 'bg-red-500' :
-                                  hoursStatus.status === 'near' ? 'bg-amber-500' :
-                                  hoursStatus.status === 'low' ? 'bg-teal-400' : 'bg-emerald-500'
-                                }`}
-                                style={{ width: `${Math.min(hoursStatus.percentage || 0, 100)}%` }}
-                              />
-                            </div>
-                          )}
+                        <p className="font-medium text-xs truncate">{staffMember.full_name}</p>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-500 flex-wrap">
                           {staffMember.vehicle_type && (
-                            <Badge variant="outline" className="text-[9px] py-0 px-1">
-                              <Car className="w-3 h-3 mr-0.5" />
+                            <span className="flex items-center gap-0.5">
+                              <Car className="w-2.5 h-2.5" />
                               {staffMember.vehicle_type}
-                            </Badge>
+                            </span>
                           )}
-                          {hoursStatus.status === 'full' && (
-                            <Badge className="bg-red-100 text-red-700 text-[9px] py-0 px-1">Full</Badge>
-                          )}
+                          {staffMember.vehicle_type && <span>•</span>}
+                          <span className={`${
+                            hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
+                            hoursStatus.status === 'near' ? 'text-amber-600' : 'text-gray-500'
+                          }`}>
+                            {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
+                          </span>
                         </div>
                       </div>
                     </div>
@@ -841,6 +1219,11 @@ export default function DomCareRosterView({
                       const dayStr = format(day, 'yyyy-MM-dd');
                       const dayVisits = getStaffDayVisits(staffMember.id, day);
                       const isTodayDate = isToday(day);
+                      const staffUnavailable = staffAvailability.some(a => 
+                        a?.carer_id === staffMember.id && 
+                        a.availability_type === 'unavailable' &&
+                        a.specific_date === dayStr
+                      );
 
                       return (
                         <Droppable key={`${staffMember.id}_${dayStr}`} droppableId={`${staffMember.id}_${dayStr}`}>
@@ -848,10 +1231,15 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-1 min-h-[60px] border-r transition-colors relative group ${
-                                isTodayDate ? 'bg-teal-50/30' : ''
-                              } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-2 ring-inset ring-teal-300' : ''}`}
+                              className={`p-0.5 min-h-[50px] border-r transition-colors relative group ${
+                                isTodayDate ? 'bg-blue-50/40' : 'bg-white'
+                              } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-1 ring-inset ring-teal-400' : ''}`}
                             >
+                              {staffUnavailable && (
+                                <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
+                                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.04) 8px, rgba(0,0,0,.04) 16px)'
+                                }} />
+                              )}
                               <div className="space-y-1 relative z-10">
                                     {dayVisits.map((visit, vIdx) => (
                                       <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
@@ -920,14 +1308,19 @@ export default function DomCareRosterView({
               )}
               {activeClients.map((client) => {
                 return (
-                  <div key={client.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
-                    <div className="p-2 border-r flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                        {client.full_name?.charAt(0)}
-                      </div>
+                  <div key={client.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors">
+                    <div className="p-1.5 border-r flex items-center gap-2">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=36`}
+                        alt={client.full_name}
+                        className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                      />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-sm truncate">{client.full_name}</p>
-                        <p className="text-xs text-gray-500 truncate">{client.address?.postcode || 'Location'}</p>
+                        <p className="font-medium text-xs truncate">{client.full_name}</p>
+                        <p className="text-[10px] text-gray-500 truncate flex items-center gap-0.5">
+                          <MapPin className="w-2.5 h-2.5" />
+                          {client.address?.postcode || 'Location'}
+                        </p>
                       </div>
                     </div>
 
@@ -942,9 +1335,9 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-1 min-h-[60px] border-r transition-colors relative group ${
-                                isTodayDate ? 'bg-teal-50/30' : ''
-                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-300' : ''}`}
+                              className={`p-0.5 min-h-[50px] border-r transition-colors relative group ${
+                                isTodayDate ? 'bg-blue-50/40' : 'bg-white'
+                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-1 ring-inset ring-emerald-400' : ''}`}
                             >
                               <div className="space-y-1 relative z-10">
                                     {dayVisits.map((visit, vIdx) => (
@@ -1095,6 +1488,40 @@ export default function DomCareRosterView({
           </div>
         </div>
       )}
+
+      {/* Runs Section at Bottom */}
+      {resourceMode === "runs" && runs && runs.length > 0 && viewMode === "week" && (
+        <div className="border-t">
+          <div className="bg-purple-50 px-3 py-1.5 border-b">
+            <div className="flex items-center gap-1.5">
+              <Navigation className="w-3.5 h-3.5 text-purple-600" />
+              <span className="text-xs font-semibold text-purple-900">Runs</span>
+              <Badge className="bg-purple-100 text-purple-700 text-[9px]">{runs.length}</Badge>
+            </div>
+          </div>
+          <div className="max-h-32 overflow-y-auto">
+            {runs.slice(0, 3).map(run => (
+              <div key={run.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-purple-50/30">
+                <div className="p-1.5 border-r flex items-center gap-2">
+                  <div className="w-7 h-7 rounded bg-purple-100 flex items-center justify-center">
+                    <Navigation className="w-3.5 h-3.5 text-purple-600" />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-medium text-xs truncate">{run.run_name || `Run ${run.id.slice(-4)}`}</p>
+                    <p className="text-[10px] text-gray-500">{run.area || 'Area'}</p>
+                  </div>
+                </div>
+                {weekDays.map((day) => (
+                  <div key={day.toISOString()} className="p-0.5 border-r min-h-[40px] bg-white" />
+                ))}
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+      </div>
+
+      <SidebarPanel />
     </div>
   );
 }
