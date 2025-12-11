@@ -357,20 +357,15 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                 <Select 
                   value={selectedWeek} 
                   onValueChange={(val) => {
-                    // Save current edits to current week before switching
+                    // Save current edits and switch in one go
                     if (selectedWeek === 'week1') {
                       setHoursWeek1(hours);
+                      setSelectedWeek(val);
+                      setHours(hoursWeek2);
                     } else {
                       setHoursWeek2(hours);
-                    }
-                    
-                    setSelectedWeek(val);
-                    
-                    // Load the target week
-                    if (val === 'week1') {
+                      setSelectedWeek(val);
                       setHours(hoursWeek1);
-                    } else {
-                      setHours(hoursWeek2);
                     }
                   }}
                 >
