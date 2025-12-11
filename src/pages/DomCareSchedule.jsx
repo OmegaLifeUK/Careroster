@@ -314,19 +314,20 @@ export default function DomCareSchedule() {
             entityType="Visit"
             onClose={() => setShowAutoSchedule(false)}
             onGenerate={(newVisits) => {
-              // Implement bulk create for visits
               console.log("Generated visits:", newVisits);
               setShowAutoSchedule(false);
             }}
           />
         )}
 
-        <SmartSuggestionsWidget 
-          shifts={visits} 
-          staff={staff} 
-          availability={staffAvailability}
-          entityType="Visit"
-        />
+        {!isLoading && visits.length > 0 && (
+          <SmartSuggestionsWidget 
+            shifts={visits} 
+            staff={staff} 
+            availability={staffAvailability}
+            entityType="Visit"
+          />
+        )}
       </div>
     </div>
   );
