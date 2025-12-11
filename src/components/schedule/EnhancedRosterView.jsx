@@ -18,10 +18,19 @@ import {
   Maximize2,
   Building,
   AlertTriangle,
-  X
+  X,
+  Mail,
+  Phone,
+  CheckCircle,
+  MessageSquare,
+  FileText,
+  Send,
+  MoreVertical
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -55,6 +64,10 @@ export default function EnhancedRosterView({
   const [viewMode, setViewMode] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activePanel, setActivePanel] = useState("staff"); // "staff" | "clients" | "locations" | "both"
+  const [selectedShift, setSelectedShift] = useState(null);
+  const [showSidebar, setShowSidebar] = useState(false);
+  const [resourceMode, setResourceMode] = useState("resources"); // "resources" | "runs"
+  const [viewByMode, setViewByMode] = useState("staff"); // "staff" | "client" | "visit"
   const { toast } = useToast();
 
   // Location-based view data
@@ -347,6 +360,7 @@ export default function EnhancedRosterView({
       ? (shift.location_name || getClientName(shift.client_id) || 'Shift')
       : (showCarer ? getCarerName(shift.carer_id) : shift.shift_type);
     const isSelected = selectedShifts.includes(shift.id);
+    const isLocked = shift.status === 'completed' || shift.status === 'in_progress';
 
     return (
       <div
@@ -355,6 +369,8 @@ export default function EnhancedRosterView({
             e.stopPropagation();
             toggleShiftSelection(shift.id);
           } else {
+            setSelectedShift(shift);
+            setShowSidebar(true);
             onShiftClick?.(shift);
           }
         }}
@@ -366,7 +382,12 @@ export default function EnhancedRosterView({
           ${isSelected ? 'ring-2 ring-blue-500 shadow-lg' : ''}
         `}
       >
-        {bulkMode && (
+        {isLocked && (
+          <div className="absolute -top-1 -right-1 w-4 h-4 bg-green-600 rounded-full flex items-center justify-center z-10">
+            <CheckCircle className="w-2.5 h-2.5 text-white" />
+          </div>
+        )}
+        {bulkMode && !isLocked && (
           <div className="absolute -top-1 -right-1 w-4 h-4 bg-blue-600 rounded-full flex items-center justify-center z-10">
             {isSelected && (
               <svg className="w-3 h-3 text-white" fill="currentColor" viewBox="0 0 20 20">
@@ -375,7 +396,7 @@ export default function EnhancedRosterView({
             )}
           </div>
         )}
-        {!bulkMode && onShiftDelete && (
+        {!bulkMode && !isLocked && onShiftDelete && (
           <button
             onClick={(e) => {
               e.stopPropagation();
@@ -426,8 +447,210 @@ export default function EnhancedRosterView({
     );
   };
 
+  const SidebarPanel = () => {
+    if (!showSidebar || !selectedShift) return null;
+
+    const shiftCarer = carers.find(c => c?.id === selectedShift.carer_id);
+    const shiftClient = clients.find(c => c?.id === selectedShift.client_id);
+    const colors = SHIFT_COLORS[selectedShift.shift_type] || SHIFT_COLORS.morning;
+
+    return (
+      <div className="fixed right-0 top-0 bottom-0 w-96 bg-white border-l shadow-2xl z-50 overflow-y-auto slide-in-right">
+        <div className="sticky top-0 bg-white border-b z-10">
+          <div className="flex items-center justify-between p-4">
+            <h3 className="font-bold text-lg">Visit Details</h3>
+            <Button variant="ghost" size="icon" onClick={() => setShowSidebar(false)}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+          
+          <Tabs defaultValue="info" className="w-full">
+            <TabsList className="w-full justify-start border-b rounded-none bg-transparent px-4">
+              <TabsTrigger value="info">Info</TabsTrigger>
+              <TabsTrigger value="visit">Visit</TabsTrigger>
+              <TabsTrigger value="notes">Notes</TabsTrigger>
+              <TabsTrigger value="advanced">Advanced</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="info" className="p-4 space-y-4">
+              <div className={`p-3 rounded-lg ${colors.bg} border ${colors.border}`}>
+                <div className="flex items-center gap-2 mb-2">
+                  <div className={`w-2 h-2 rounded-full ${colors.dot}`} />
+                  <span className={`font-semibold ${colors.text}`}>
+                    {selectedShift.shift_type?.replace('_', ' ').toUpperCase()}
+                  </span>
+                </div>
+                <div className="text-sm space-y-1">
+                  <p><strong>Date:</strong> {format(parseISO(selectedShift.date), 'EEE, d MMM yyyy')}</p>
+                  <p><strong>Time:</strong> {selectedShift.start_time} - {selectedShift.end_time}</p>
+                  <p><strong>Duration:</strong> {selectedShift.duration_hours}h</p>
+                </div>
+              </div>
+
+              {shiftCarer && (
+                <div className="border rounded-lg p-3">
+                  <div className="flex items-center gap-3 mb-3">
+                    <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-semibold">
+                      {shiftCarer.full_name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-semibold">{shiftCarer.full_name}</p>
+                      <p className="text-xs text-gray-500">{shiftCarer.employment_type?.replace('_', ' ')}</p>
+                    </div>
+                  </div>
+                  {shiftCarer.phone && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600 mb-1">
+                      <Phone className="w-3 h-3" />
+                      <span>{shiftCarer.phone}</span>
+                    </div>
+                  )}
+                  {shiftCarer.email && (
+                    <div className="flex items-center gap-2 text-sm text-gray-600">
+                      <Mail className="w-3 h-3" />
+                      <span className="truncate">{shiftCarer.email}</span>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {shiftClient && (
+                <div className="border rounded-lg p-3">
+                  <p className="font-semibold text-sm mb-2">Client</p>
+                  <div className="flex items-center gap-3">
+                    <div className="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white font-semibold text-sm">
+                      {shiftClient.full_name?.charAt(0)}
+                    </div>
+                    <div>
+                      <p className="font-medium">{shiftClient.full_name}</p>
+                      <p className="text-xs text-gray-500">{shiftClient.address?.city}</p>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {selectedShift.location_name && (
+                <div className="border rounded-lg p-3">
+                  <p className="font-semibold text-sm mb-2">Location</p>
+                  <div className="flex items-center gap-2">
+                    <MapPin className="w-4 h-4 text-gray-400" />
+                    <p className="text-sm">{selectedShift.location_name}</p>
+                  </div>
+                  {selectedShift.location_address && (
+                    <p className="text-xs text-gray-500 ml-6">{selectedShift.location_address}</p>
+                  )}
+                </div>
+              )}
+
+              {selectedShift.status && (
+                <div className="border rounded-lg p-3">
+                  <p className="font-semibold text-sm mb-2">Status</p>
+                  <Badge className={
+                    selectedShift.status === 'completed' ? 'bg-green-100 text-green-800' :
+                    selectedShift.status === 'in_progress' ? 'bg-blue-100 text-blue-800' :
+                    selectedShift.status === 'scheduled' ? 'bg-gray-100 text-gray-800' :
+                    'bg-orange-100 text-orange-800'
+                  }>
+                    {selectedShift.status?.replace('_', ' ')}
+                  </Badge>
+                </div>
+              )}
+            </TabsContent>
+
+            <TabsContent value="visit" className="p-4 space-y-4">
+              <div className="space-y-3">
+                <Button className="w-full" size="sm">
+                  <Plus className="w-4 h-4 mr-2" />
+                  Create New Visit
+                </Button>
+                <Button variant="outline" className="w-full" size="sm">
+                  <Send className="w-4 h-4 mr-2" />
+                  Send SMS
+                </Button>
+                <Button variant="outline" className="w-full" size="sm">
+                  <Mail className="w-4 h-4 mr-2" />
+                  Send Email
+                </Button>
+                <Button variant="outline" className="w-full" size="sm">
+                  <Clock className="w-4 h-4 mr-2" />
+                  Generate Timesheets
+                </Button>
+              </div>
+
+              <div className="border-t pt-4">
+                <p className="font-semibold text-sm mb-3">Daily Summary</p>
+                <div className="bg-gray-50 rounded-lg p-3 space-y-2">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Allocated Hours</span>
+                    <span className="font-semibold">{selectedShift.duration_hours || 0}h</span>
+                  </div>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-gray-600">Status</span>
+                    <Badge variant="outline" className="text-xs">
+                      {selectedShift.carer_id ? 'Allocated' : 'Unallocated'}
+                    </Badge>
+                  </div>
+                </div>
+              </div>
+            </TabsContent>
+
+            <TabsContent value="notes" className="p-4 space-y-4">
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Shift Notes</Label>
+                <Textarea 
+                  value={selectedShift.notes || ''} 
+                  readOnly
+                  placeholder="No notes available"
+                  rows={4}
+                  className="text-sm"
+                />
+              </div>
+
+              <div>
+                <Label className="text-sm font-medium mb-2 block">Tasks</Label>
+                {selectedShift.tasks && selectedShift.tasks.length > 0 ? (
+                  <ul className="space-y-2">
+                    {selectedShift.tasks.map((task, idx) => (
+                      <li key={idx} className="flex items-start gap-2 text-sm">
+                        <CheckCircle className="w-4 h-4 text-green-600 mt-0.5" />
+                        <span>{task}</span>
+                      </li>
+                    ))}
+                  </ul>
+                ) : (
+                  <p className="text-sm text-gray-500">No tasks assigned</p>
+                )}
+              </div>
+            </TabsContent>
+
+            <TabsContent value="advanced" className="p-4 space-y-4">
+              <div className="space-y-3">
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Shift ID</Label>
+                  <p className="text-sm text-gray-600 font-mono">{selectedShift.id}</p>
+                </div>
+                <div>
+                  <Label className="text-sm font-medium mb-2 block">Created</Label>
+                  <p className="text-sm text-gray-600">
+                    {selectedShift.created_date ? format(parseISO(selectedShift.created_date), 'dd/MM/yyyy HH:mm') : 'N/A'}
+                  </p>
+                </div>
+                {selectedShift.hours_override_reason && (
+                  <div className="border-l-4 border-amber-400 pl-3 py-2 bg-amber-50">
+                    <p className="text-sm font-semibold text-amber-900 mb-1">Hours Override</p>
+                    <p className="text-xs text-amber-700">{selectedShift.hours_override_reason}</p>
+                  </div>
+                )}
+              </div>
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
+    );
+  };
+
   return (
-    <div className="bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden">
+    <div className="flex h-full">
+      <div className={`flex-1 bg-white rounded-2xl shadow-sm border border-gray-200 overflow-hidden transition-all ${showSidebar ? 'mr-96' : ''}`}>
       {/* Header */}
       <div className="bg-gradient-to-r from-blue-600 to-indigo-600 text-white p-4">
         <div className="flex items-center justify-between">
@@ -461,6 +684,69 @@ export default function EnhancedRosterView({
               </div>
             </div>
           </div>
+        </div>
+      </div>
+
+      {/* Top Filters Bar */}
+      <div className="px-4 py-2 border-b bg-white flex items-center gap-3 flex-wrap">
+        <Select value={resourceMode} onValueChange={setResourceMode}>
+          <SelectTrigger className="w-32 h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="resources">Resources</SelectItem>
+            <SelectItem value="runs">Runs</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select value={viewByMode} onValueChange={setViewByMode}>
+          <SelectTrigger className="w-32 h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="staff">By Staff</SelectItem>
+            <SelectItem value="client">By Client</SelectItem>
+            <SelectItem value="visit">By Visit</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue="planned">
+          <SelectTrigger className="w-32 h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="planned">View: Planned</SelectItem>
+            <SelectItem value="actual">View: Actual</SelectItem>
+            <SelectItem value="both">View: Both</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Select defaultValue="1day">
+          <SelectTrigger className="w-32 h-8 text-sm">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="1day">Duration: 1 Day</SelectItem>
+            <SelectItem value="1week">Duration: 1 Week</SelectItem>
+            <SelectItem value="2weeks">Duration: 2 Weeks</SelectItem>
+          </SelectContent>
+        </Select>
+
+        <Button variant="outline" size="sm" className="h-8">
+          <CheckCircle className="w-3 h-3 mr-1" />
+          Locked Visits
+        </Button>
+
+        <div className="flex-1" />
+
+        <div className="relative">
+          <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+          <Input
+            placeholder="Search..."
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="pl-7 h-8 w-48 text-sm"
+          />
         </div>
       </div>
 
@@ -577,15 +863,6 @@ export default function EnhancedRosterView({
               Bulk Actions
             </Button>
           )}
-          <div className="relative">
-            <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search staff..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-8 h-8 w-48 text-sm"
-            />
-          </div>
 
           <div className="flex bg-white rounded-lg border p-0.5">
             <button
@@ -656,12 +933,21 @@ export default function EnhancedRosterView({
                   const dayShifts = getCarerDayShifts(carer.id, selectedDate);
                   const hoursStatus = getCarerHoursStatus(carer.id);
                   
+                  // Check if carer is unavailable (on leave, etc)
+                  const carerUnavailable = carerAvailability.some(a => 
+                    a?.carer_id === carer.id && 
+                    a.availability_type === 'unavailable' &&
+                    a.specific_date === format(selectedDate, 'yyyy-MM-dd')
+                  );
+
                   return (
                     <div key={carer.id} className="flex border-b hover:bg-gray-50 transition-colors">
                       <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                          {carer.full_name?.charAt(0)}
-                        </div>
+                        <img 
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(carer.full_name || 'U')}&background=3b82f6&color=fff&size=32`}
+                          alt={carer.full_name}
+                          className="w-8 h-8 rounded-full flex-shrink-0"
+                        />
                         <div className="flex-1 min-w-0">
                           <p className="font-medium text-sm truncate">{carer.full_name}</p>
                           <div className="flex items-center gap-1">
@@ -680,7 +966,12 @@ export default function EnhancedRosterView({
                           </div>
                         </div>
                       </div>
-                      <div className="flex-1 relative h-14 bg-gray-50/50">
+                      <div className={`flex-1 relative h-14 ${carerUnavailable ? 'bg-gray-100' : 'bg-gray-50/50'}`}>
+                        {carerUnavailable && (
+                          <div className="absolute inset-0 bg-repeat" style={{
+                            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.03) 10px, rgba(0,0,0,.03) 20px)'
+                          }} />
+                        )}
                         {/* Grid lines */}
                         <div className="absolute inset-0 flex">
                           {TIMELINE_HOURS.map(hour => (
@@ -883,13 +1174,15 @@ export default function EnhancedRosterView({
                     hoursStatus.status === 'full' ? 'bg-red-50/30' : ''
                   }`}>
                     <div className="p-2 border-r flex items-center gap-2">
-                      <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-sm font-medium flex-shrink-0 ${
-                        hoursStatus.status === 'full' ? 'bg-gradient-to-br from-red-400 to-red-600' :
-                        hoursStatus.status === 'near' ? 'bg-gradient-to-br from-amber-400 to-amber-600' :
-                        'bg-gradient-to-br from-blue-400 to-blue-600'
-                      }`}>
-                        {carer.full_name?.charAt(0)}
-                      </div>
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(carer.full_name || 'U')}&background=${
+                          hoursStatus.status === 'full' ? 'ef4444' :
+                          hoursStatus.status === 'near' ? 'f59e0b' :
+                          '3b82f6'
+                        }&color=fff&size=32`}
+                        alt={carer.full_name}
+                        className="w-8 h-8 rounded-full flex-shrink-0"
+                      />
                       <div className="flex-1 min-w-0">
                         <p className="font-medium text-sm truncate">{carer.full_name}</p>
                         <div className="flex items-center gap-1 flex-wrap">
@@ -928,6 +1221,11 @@ export default function EnhancedRosterView({
                       const dayStr = format(day, 'yyyy-MM-dd');
                       const dayShifts = getCarerDayShifts(carer.id, day);
                       const isTodayDate = isToday(day);
+                      const carerUnavailable = carerAvailability.some(a => 
+                        a?.carer_id === carer.id && 
+                        a.availability_type === 'unavailable' &&
+                        a.specific_date === dayStr
+                      );
 
                       return (
                         <Droppable key={`${carer.id}_${dayStr}`} droppableId={`${carer.id}_${dayStr}`}>
@@ -939,6 +1237,11 @@ export default function EnhancedRosterView({
                                 isTodayDate ? 'bg-blue-50/30' : ''
                               } ${snapshot.isDraggingOver ? 'bg-blue-100/50 ring-2 ring-inset ring-blue-300' : ''}`}
                             >
+                              {carerUnavailable && (
+                                <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
+                                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 10px, rgba(0,0,0,.05) 10px, rgba(0,0,0,.05) 20px)'
+                                }} />
+                              )}
                               <div className="space-y-1 relative z-10">
                                     {dayShifts.map((shift, sIdx) => (
                                       <Draggable key={shift.id} draggableId={shift.id} index={sIdx}>
@@ -1203,6 +1506,9 @@ export default function EnhancedRosterView({
           </div>
         </div>
       )}
+      </div>
+
+      <SidebarPanel />
     </div>
   );
 }
