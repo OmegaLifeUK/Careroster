@@ -409,10 +409,10 @@ export default function DomCareRosterView({
           onVisitClick?.(visit);
         }}
         className={`
-          px-2 py-1 rounded-md text-xs cursor-pointer transition-all relative
+          px-2 py-1.5 rounded text-xs cursor-pointer transition-all relative w-full
           ${colors.bg} ${colors.border} ${colors.text} border
-          hover:shadow-md hover:scale-[1.02]
-          ${!visitStaffId ? 'border-dashed border-orange-400 bg-orange-50' : ''}
+          hover:shadow-md hover:scale-[1.01]
+          ${!visitStaffId ? 'border-dashed border-2 border-orange-400 bg-orange-50' : ''}
         `}
       >
         {isLocked && (
@@ -420,24 +420,35 @@ export default function DomCareRosterView({
             <CheckCircle className="w-2 h-2 text-white" />
           </div>
         )}
-        <div className="flex items-center gap-1 justify-between">
-          <div className="flex items-center gap-1 flex-1 min-w-0">
-            <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`} />
-            <span className="font-medium truncate">{label || 'Visit'}</span>
+        <div className="flex items-start gap-1.5 mb-1">
+          <div className={`w-2 h-2 rounded-full ${colors.dot} flex-shrink-0 mt-0.5`} />
+          <div className="flex-1 min-w-0">
+            <p className="font-semibold truncate text-xs leading-tight">{label || 'Visit'}</p>
           </div>
-          {visit.estimated_travel_to_next > 0 && (
-            <Badge className="bg-blue-100 text-blue-700 text-[8px] px-1 py-0 ml-1">
-              <Navigation className="w-2 h-2 mr-0.5" />
-              {visit.estimated_travel_to_next}m
-            </Badge>
-          )}
         </div>
-        <div className="text-[10px] opacity-75 mt-0.5 flex items-center gap-1">
-          <span>{startTime}</span>
-          {visit.duration_minutes && <span>• {visit.duration_minutes}m</span>}
-          {visitStaff?.vehicle_type && (
-            <span className="ml-1">• {visitStaff.vehicle_type === 'car' ? '🚗' : visitStaff.vehicle_type === 'bike' ? '🚴' : '🚶'}</span>
-          )}
+        <div className="flex items-center justify-between gap-2 text-[10px]">
+          <div className="flex items-center gap-1 flex-wrap">
+            <Clock className="w-2.5 h-2.5 opacity-60" />
+            <span className="font-medium">{startTime}</span>
+            {visit.duration_minutes && (
+              <Badge className="bg-gray-100 text-gray-700 text-[9px] px-1 py-0">
+                {visit.duration_minutes}m
+              </Badge>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            {visitStaff?.vehicle_type && (
+              <Badge className="bg-indigo-50 text-indigo-700 text-[9px] px-1 py-0">
+                {visitStaff.vehicle_type === 'car' ? '🚗' : visitStaff.vehicle_type === 'bike' ? '🚴' : '🚶'}
+              </Badge>
+            )}
+            {visit.estimated_travel_to_next > 0 && (
+              <Badge className="bg-blue-100 text-blue-700 text-[9px] px-1 py-0">
+                <Navigation className="w-2.5 h-2.5 mr-0.5" />
+                {visit.estimated_travel_to_next}m
+              </Badge>
+            )}
+          </div>
         </div>
       </div>
     );
@@ -1224,10 +1235,15 @@ export default function DomCareRosterView({
             </div>
 
             {/* Unassigned Row */}
-            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-orange-50/40">
-              <div className="p-1.5 border-r flex items-center gap-1.5">
-                <AlertCircle className="w-3.5 h-3.5 text-orange-600" />
-                <span className="text-xs font-semibold text-orange-700">Unallocated</span>
+            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gradient-to-r from-orange-50 to-red-50 border-l-4 border-orange-400">
+              <div className="p-2 border-r flex items-center gap-2 bg-orange-100/50">
+                <div className="w-9 h-9 rounded-full bg-orange-500 flex items-center justify-center animate-pulse">
+                  <AlertCircle className="w-5 h-5 text-white" />
+                </div>
+                <div>
+                  <p className="text-xs font-bold text-orange-900">Unallocated Visits</p>
+                  <p className="text-[10px] text-orange-700">Need assignment</p>
+                </div>
               </div>
               {weekDays.map((day) => {
                 const dayStr = format(day, 'yyyy-MM-dd');
@@ -1238,11 +1254,11 @@ export default function DomCareRosterView({
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-0.5 min-h-[40px] border-r transition-colors ${
-                          snapshot.isDraggingOver ? 'bg-orange-100' : 'bg-white'
+                        className={`p-1.5 min-h-[80px] border-r transition-colors ${
+                          snapshot.isDraggingOver ? 'bg-orange-200 ring-2 ring-orange-400' : 'bg-orange-50/30'
                         }`}
                       >
-                        <div className="flex flex-wrap gap-1">
+                        <div className="space-y-1.5">
                           {unassigned.slice(0, 3).map((visit, vIdx) => (
                             <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
                               {(provided, snapshot) => (
@@ -1250,7 +1266,7 @@ export default function DomCareRosterView({
                                   ref={provided.innerRef}
                                   {...provided.draggableProps}
                                   {...provided.dragHandleProps}
-                                  className={snapshot.isDragging ? 'z-50' : ''}
+                                  className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
                                 >
                                   <VisitPill visit={visit} />
                                 </div>
@@ -1258,8 +1274,8 @@ export default function DomCareRosterView({
                             </Draggable>
                           ))}
                           {unassigned.length > 3 && (
-                            <Badge className="text-[10px] bg-orange-200 text-orange-700">
-                              +{unassigned.length - 3}
+                            <Badge className="text-[10px] px-2 py-1 bg-orange-200 text-orange-800 font-semibold w-full justify-center">
+                              +{unassigned.length - 3} more visits
                             </Badge>
                           )}
                         </div>
@@ -1281,35 +1297,31 @@ export default function DomCareRosterView({
                   <div key={staffMember.id} className={`grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors ${
                     hoursStatus.status === 'full' ? 'bg-red-50/20' : ''
                   }`}>
-                    <div className="p-1.5 border-r flex items-center gap-2">
+                    <div className="p-2 border-r flex items-center gap-2 bg-gray-50/50">
                       <img 
                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=36`}
                         alt={staffMember.full_name}
                         className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-xs truncate">{staffMember.full_name}</p>
-                        <div className="flex items-center gap-1 text-[10px] text-gray-500 flex-wrap">
+                        <p className="font-semibold text-xs truncate text-gray-900">{staffMember.full_name}</p>
+                        <div className="flex items-center gap-1 text-[10px] text-gray-600 flex-wrap mt-0.5">
                           {staffMember.vehicle_type && (
-                            <span className="flex items-center gap-0.5">
-                              <Car className="w-2.5 h-2.5" />
+                            <Badge className="bg-indigo-100 text-indigo-700 text-[9px] px-1.5 py-0">
+                              <Car className="w-2.5 h-2.5 mr-0.5" />
                               {staffMember.vehicle_type}
-                            </span>
+                            </Badge>
                           )}
-                          {staffMember.vehicle_type && <span>•</span>}
-                          <span className={`${
-                            hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
-                            hoursStatus.status === 'near' ? 'text-amber-600' : 'text-gray-500'
+                          <Badge className={`text-[9px] px-1.5 py-0 ${
+                            hoursStatus.status === 'full' ? 'bg-red-100 text-red-700' :
+                            hoursStatus.status === 'near' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
                           }`}>
                             {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
-                          </span>
+                          </Badge>
                           {hoursStatus.wtrCompliance && hoursStatus.wtrCompliance.summary.critical > 0 && (
-                            <>
-                              <span>•</span>
-                              <Badge className="bg-red-100 text-red-700 text-[8px] px-1 py-0">
-                                WTR: {hoursStatus.wtrCompliance.summary.critical}
-                              </Badge>
-                            </>
+                            <Badge className="bg-red-100 text-red-700 text-[9px] px-1.5 py-0 font-semibold">
+                              ⚠️ WTR
+                            </Badge>
                           )}
                         </div>
                       </div>
@@ -1331,16 +1343,16 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-0.5 min-h-[50px] border-r transition-colors relative group ${
+                              className={`p-1.5 min-h-[80px] border-r transition-colors relative group ${
                                 isTodayDate ? 'bg-blue-50/40' : 'bg-white'
-                              } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-1 ring-inset ring-teal-400' : ''}`}
+                              } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-2 ring-inset ring-teal-400' : ''}`}
                             >
                               {staffUnavailable && (
-                                <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
-                                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.04) 8px, rgba(0,0,0,.04) 16px)'
+                                <div className="absolute inset-0 bg-repeat pointer-events-none z-0" style={{
+                                  backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.05) 8px, rgba(0,0,0,.05) 16px)'
                                 }} />
                               )}
-                              <div className="space-y-1 relative z-10">
+                              <div className="space-y-1.5 relative z-10">
                                     {dayVisits.map((visit, vIdx) => (
                                       <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
                                         {(provided, snapshot) => (
@@ -1348,7 +1360,7 @@ export default function DomCareRosterView({
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className={snapshot.isDragging ? 'z-50' : ''}
+                                            className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
                                           >
                                             <VisitPill visit={visit} />
                                           </div>
@@ -1362,9 +1374,9 @@ export default function DomCareRosterView({
                                   {dayVisits.length === 0 && (
                                     <button
                                       onClick={() => onAddVisit?.({ staff_id: staffMember.id, scheduled_date: dayStr })}
-                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-teal-50/50"
+                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-teal-50/50 z-10"
                                     >
-                                      <div className="w-6 h-6 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-sm">
+                                      <div className="w-7 h-7 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-lg hover:bg-teal-600 transition-colors">
                                         <Plus className="w-4 h-4" />
                                       </div>
                                     </button>
@@ -1376,9 +1388,9 @@ export default function DomCareRosterView({
                                         e.stopPropagation();
                                         onAddVisit?.({ staff_id: staffMember.id, scheduled_date: dayStr });
                                       }}
-                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-teal-500 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-teal-600 z-20"
                                     >
-                                      <Plus className="w-3 h-3" />
+                                      <Plus className="w-3.5 h-3.5" />
                                     </button>
                                   )}
                                 </div>
