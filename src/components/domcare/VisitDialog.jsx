@@ -8,7 +8,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, MapPin, User, AlertCircle, FileText, Upload, Trash2 } from "lucide-react";
+import { X, Clock, MapPin, User, AlertCircle, FileText, Upload, Trash2, Search, Filter } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 
@@ -52,6 +52,9 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
 
   const [taskInput, setTaskInput] = useState("");
   const [isUploading, setIsUploading] = useState(false);
+  const [clientSearch, setClientSearch] = useState("");
+  const [staffSearch, setStaffSearch] = useState("");
+  const [clientFilter, setClientFilter] = useState("all");
   const { toast } = useToast();
 
   const queryClient = useQueryClient();
@@ -152,8 +155,15 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
     setFormData({ ...formData, tasks: formData.tasks.filter((_, i) => i !== index) });
   };
 
-  const activeStaff = staff.filter(s => s.is_active);
-  const activeClients = clients.filter(c => c.status === 'active');
+  const activeStaff = staff.filter(s => s.is_active && 
+    (!staffSearch || s.full_name?.toLowerCase().includes(staffSearch.toLowerCase()))
+  ).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+  
+  const activeClients = clients.filter(c => 
+    c.status === 'active' && 
+    (!clientSearch || c.full_name?.toLowerCase().includes(clientSearch.toLowerCase()) || 
+     c.address?.postcode?.toLowerCase().includes(clientSearch.toLowerCase()))
+  ).sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
 
   return (
     <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
@@ -183,22 +193,37 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
               <MapPin className="w-4 h-4 text-blue-600" />
               Client *
             </Label>
-            <Select
-              value={formData.client_id}
-              onValueChange={(value) => setFormData({ ...formData, client_id: value })}
-              required
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select client" />
-              </SelectTrigger>
-              <SelectContent>
-                {activeClients.map(client => (
-                  <SelectItem key={client.id} value={client.id}>
-                    {client.full_name} - {client.address?.postcode}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            <div className="space-y-2">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                <Input
+                  placeholder="Search clients by name or postcode..."
+                  value={clientSearch}
+                  onChange={(e) => setClientSearch(e.target.value)}
+                  className="pl-9"
+                />
+              </div>
+              <Select
+                value={formData.client_id}
+                onValueChange={(value) => setFormData({ ...formData, client_id: value })}
+                required
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {activeClients.length > 0 ? (
+                    activeClients.map(client => (
+                      <SelectItem key={client.id} value={client.id}>
+                        {client.full_name} - {client.address?.postcode}
+                      </SelectItem>
+                    ))
+                  ) : (
+                    <div className="p-2 text-sm text-gray-500 text-center">No clients found</div>
+                  )}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
 
           <div>
@@ -354,22 +379,37 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                   <User className="w-4 h-4 text-green-600" />
                   Assigned Staff
                 </Label>
-                <Select
-                  value={formData.assigned_staff_id || ""}
-                  onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value === "__unassigned__" ? "" : value })}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Unassigned" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="__unassigned__">Unassigned</SelectItem>
-                    {activeStaff.map(member => (
-                      <SelectItem key={member.id} value={member.id}>
-                        {member.full_name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="space-y-2">
+                  <div className="relative">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+                    <Input
+                      placeholder="Search staff..."
+                      value={staffSearch}
+                      onChange={(e) => setStaffSearch(e.target.value)}
+                      className="pl-9"
+                    />
+                  </div>
+                  <Select
+                    value={formData.assigned_staff_id || ""}
+                    onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value === "__unassigned__" ? "" : value })}
+                  >
+                    <SelectTrigger>
+                      <SelectValue placeholder="Unassigned" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__unassigned__">Unassigned</SelectItem>
+                      {activeStaff.length > 0 ? (
+                        activeStaff.map(member => (
+                          <SelectItem key={member.id} value={member.id}>
+                            {member.full_name}
+                          </SelectItem>
+                        ))
+                      ) : staffSearch ? (
+                        <div className="p-2 text-sm text-gray-500 text-center">No staff found</div>
+                      ) : null}
+                    </SelectContent>
+                  </Select>
+                </div>
               </div>
 
               <div>
