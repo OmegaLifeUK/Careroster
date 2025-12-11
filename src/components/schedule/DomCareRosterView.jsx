@@ -132,9 +132,24 @@ export default function DomCareRosterView({
     const completed = weekVisits.filter(v => v.status === 'completed').length;
     const unassigned = weekVisits.filter(v => !v.staff_id && !v.assigned_staff_id).length;
     const totalMileage = weekVisits.reduce((sum, v) => sum + (v.mileage || 0), 0);
-    const totalMinutes = weekVisits.reduce((sum, v) => sum + (v.duration_minutes || 0), 0);
+    const totalHours = weekVisits.reduce((sum, v) => {
+      if (v.duration_minutes) {
+        return sum + (v.duration_minutes / 60);
+      }
+      if (v.scheduled_start && v.scheduled_end) {
+        try {
+          const start = new Date(v.scheduled_start);
+          const end = new Date(v.scheduled_end);
+          const durationMs = end - start;
+          return sum + (durationMs / (1000 * 60 * 60));
+        } catch {
+          return sum;
+        }
+      }
+      return sum;
+    }, 0);
 
-    return { total, completed, unassigned, totalMileage, totalHours: (totalMinutes / 60).toFixed(0) };
+    return { total, completed, unassigned, totalMileage, totalHours: totalHours.toFixed(1) };
   }, [visits, currentWeekStart]);
 
   const getStaffDayVisits = (staffId, day) => {
@@ -172,10 +187,31 @@ export default function DomCareRosterView({
         const visitDateStr = getVisitDate(v);
         const visitStaffId = v.staff_id || v.assigned_staff_id;
         if (!visitDateStr || visitStaffId !== staffId) return false;
-        const visitDate = parseISO(visitDateStr);
-        return visitDate >= currentWeekStart && visitDate < addDays(currentWeekStart, 7);
+        try {
+          const visitDate = parseISO(visitDateStr);
+          return visitDate >= currentWeekStart && visitDate < addDays(currentWeekStart, 7);
+        } catch {
+          return false;
+        }
       })
-      .reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
+      .reduce((sum, v) => {
+        // Calculate duration from start/end times if duration_minutes not available
+        if (v.duration_minutes) {
+          return sum + (v.duration_minutes / 60);
+        }
+        if (v.scheduled_start && v.scheduled_end) {
+          try {
+            const start = new Date(v.scheduled_start);
+            const end = new Date(v.scheduled_end);
+            const durationMs = end - start;
+            const hours = durationMs / (1000 * 60 * 60);
+            return sum + hours;
+          } catch {
+            return sum;
+          }
+        }
+        return sum;
+      }, 0);
   };
 
   const getStaffContractedHours = (staffId) => {
@@ -1204,7 +1240,22 @@ export default function DomCareRosterView({
                 const allocatedCount = dayVisitsCount - unassignedCount;
                 const dayTotalHours = visits
                   .filter(v => getVisitDate(v) === format(day, 'yyyy-MM-dd'))
-                  .reduce((sum, v) => sum + ((v.duration_minutes || 0) / 60), 0);
+                  .reduce((sum, v) => {
+                    if (v.duration_minutes) {
+                      return sum + (v.duration_minutes / 60);
+                    }
+                    if (v.scheduled_start && v.scheduled_end) {
+                      try {
+                        const start = new Date(v.scheduled_start);
+                        const end = new Date(v.scheduled_end);
+                        const durationMs = end - start;
+                        return sum + (durationMs / (1000 * 60 * 60));
+                      } catch {
+                        return sum;
+                      }
+                    }
+                    return sum;
+                  }, 0);
 
                 return (
                   <div 
@@ -1259,8 +1310,8 @@ export default function DomCareRosterView({
                       <div
                         ref={provided.innerRef}
                         {...provided.droppableProps}
-                        className={`p-1.5 min-h-[80px] border-r transition-colors ${
-                          snapshot.isDraggingOver ? 'bg-orange-200 ring-2 ring-orange-400' : 'bg-orange-50/30'
+                        className={`p-2 min-h-[90px] border-r transition-colors ${
+                          snapshot.isDraggingOver ? 'bg-orange-200 ring-2 ring-orange-500' : 'bg-orange-50/40'
                         }`}
                       >
                         <div className="flex flex-col gap-1.5">
@@ -1297,33 +1348,33 @@ export default function DomCareRosterView({
                   <div key={staffMember.id} className={`grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors ${
                     hoursStatus.status === 'full' ? 'bg-red-50/20' : ''
                   }`}>
-                    <div className="p-2 border-r flex items-center gap-2 bg-gray-50/50">
-                      <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=36`}
-                        alt={staffMember.full_name}
-                        className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
-                      />
+                    <div className="p-3 border-r flex items-center gap-2.5 bg-white">
+                     <img 
+                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=40`}
+                       alt={staffMember.full_name}
+                       className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm"
+                     />
                       <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs truncate text-gray-900">{staffMember.full_name}</p>
-                        <div className="flex items-center gap-1 text-[10px] text-gray-600 flex-wrap mt-0.5">
-                          {staffMember.vehicle_type && (
-                            <Badge className="bg-indigo-100 text-indigo-700 text-[9px] px-1.5 py-0">
-                              <Car className="w-2.5 h-2.5 mr-0.5" />
-                              {staffMember.vehicle_type}
-                            </Badge>
-                          )}
-                          <Badge className={`text-[9px] px-1.5 py-0 ${
-                            hoursStatus.status === 'full' ? 'bg-red-100 text-red-700' :
-                            hoursStatus.status === 'near' ? 'bg-amber-100 text-amber-700' : 'bg-green-100 text-green-700'
-                          }`}>
-                            {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
-                          </Badge>
-                          {hoursStatus.wtrCompliance && hoursStatus.wtrCompliance.summary.critical > 0 && (
-                            <Badge className="bg-red-100 text-red-700 text-[9px] px-1.5 py-0 font-semibold">
-                              ⚠️ WTR
-                            </Badge>
-                          )}
-                        </div>
+                       <p className="font-semibold text-sm truncate text-gray-900">{staffMember.full_name}</p>
+                       <div className="flex items-center gap-1.5 text-[11px] text-gray-600 flex-wrap mt-1">
+                         {staffMember.vehicle_type && (
+                           <Badge className="bg-blue-50 text-blue-700 text-[10px] px-2 py-0.5 border border-blue-200">
+                             <Car className="w-3 h-3 mr-0.5" />
+                             {staffMember.vehicle_type}
+                           </Badge>
+                         )}
+                         <Badge className={`text-[10px] px-2 py-0.5 font-semibold ${
+                           hoursStatus.status === 'full' ? 'bg-red-100 text-red-700 border border-red-300' :
+                           hoursStatus.status === 'near' ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-green-100 text-green-700 border border-green-300'
+                         }`}>
+                           {hoursStatus.weekHours.toFixed(1)}h / {hoursStatus.contracted}h
+                         </Badge>
+                         {hoursStatus.wtrCompliance && hoursStatus.wtrCompliance.summary.critical > 0 && (
+                           <Badge className="bg-red-100 text-red-700 text-[10px] px-2 py-0.5 font-semibold border border-red-300">
+                             ⚠️ WTR
+                           </Badge>
+                         )}
+                       </div>
                       </div>
                     </div>
 
@@ -1343,7 +1394,7 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-1.5 min-h-[80px] border-r transition-colors relative group ${
+                              className={`p-1.5 min-h-[90px] border-r transition-colors relative group ${
                                 isTodayDate ? 'bg-blue-50/40' : 'bg-white'
                               } ${snapshot.isDraggingOver ? 'bg-teal-100/50 ring-2 ring-inset ring-teal-400' : ''}`}
                             >
@@ -1437,19 +1488,19 @@ export default function DomCareRosterView({
               {activeClients.map((client) => {
                 return (
                   <div key={client.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors">
-                    <div className="p-2 border-r flex items-center gap-2 bg-gray-50/50">
-                      <img 
-                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=36`}
-                        alt={client.full_name}
-                        className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
-                      />
-                      <div className="flex-1 min-w-0">
-                        <p className="font-semibold text-xs truncate text-gray-900">{client.full_name}</p>
-                        <p className="text-[10px] text-gray-600 truncate flex items-center gap-0.5 mt-0.5">
-                          <MapPin className="w-2.5 h-2.5" />
-                          {client.address?.postcode || 'Location'}
-                        </p>
-                      </div>
+                    <div className="p-3 border-r flex items-center gap-2.5 bg-white">
+                     <img 
+                       src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=40`}
+                       alt={client.full_name}
+                       className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-emerald-200 shadow-sm"
+                     />
+                     <div className="flex-1 min-w-0">
+                       <p className="font-semibold text-sm truncate text-gray-900">{client.full_name}</p>
+                       <p className="text-[11px] text-gray-600 truncate flex items-center gap-1 mt-1">
+                         <MapPin className="w-3 h-3" />
+                         {client.address?.postcode || 'Location'}
+                       </p>
+                     </div>
                     </div>
 
                     {weekDays.map((day) => {
@@ -1463,9 +1514,9 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-1.5 min-h-[80px] border-r transition-colors relative group ${
+                              className={`p-2 min-h-[90px] border-r transition-colors relative group ${
                                 isTodayDate ? 'bg-blue-50/40' : 'bg-white'
-                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-400' : ''}`}
+                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-500' : ''}`}
                             >
                               <div className="flex flex-col gap-1.5 relative z-10">
                                     {dayVisits.map((visit, vIdx) => {
