@@ -1,4 +1,4 @@
-import { parseISO, getDay, isWithinInterval } from "date-fns";
+import { parseISO, getDay, isWithinInterval, getWeek, startOfYear } from "date-fns";
 
 /**
  * Utility to check carer availability for scheduling
@@ -85,9 +85,28 @@ export function checkCarerAvailability(carerId, date, startTime, endTime, availa
     return result;
   }
 
-  // Check working hours
+  // Check working hours - handle alternate weeks
   const workingHours = carerAvailability.filter(a => a.availability_type === 'working_hours');
-  const dayWorkingHours = workingHours.find(w => w.day_of_week === dayOfWeek);
+  
+  // Determine which week pattern to use for alternate weeks
+  let dayWorkingHours = null;
+  const hasAlternateWeeks = workingHours.some(w => 
+    w.schedule_pattern === 'alternate_week_1' || w.schedule_pattern === 'alternate_week_2'
+  );
+  
+  if (hasAlternateWeeks) {
+    // Calculate which week pattern this date falls into (1 or 2)
+    const weekNumber = getWeek(dateObj, { weekStartsOn: 1 });
+    const isWeek1 = weekNumber % 2 === 1;
+    const targetPattern = isWeek1 ? 'alternate_week_1' : 'alternate_week_2';
+    
+    dayWorkingHours = workingHours.find(w => 
+      w.day_of_week === dayOfWeek && w.schedule_pattern === targetPattern
+    );
+  } else {
+    // Standard weekly pattern or specific dates
+    dayWorkingHours = workingHours.find(w => w.day_of_week === dayOfWeek);
+  }
 
   if (workingHours.length > 0 && !dayWorkingHours) {
     result.isAvailable = false;
@@ -145,20 +164,43 @@ function isWithinWorkingHours(shiftStart, shiftEnd, workStart, workEnd) {
   return ss >= ws && se <= we;
 }
 
-export function getCarerWorkingHoursForDay(carerId, dayOfWeek, availability = []) {
+export function getCarerWorkingHoursForDay(carerId, dayOfWeek, availability = [], date = null) {
   const carerAvailability = Array.isArray(availability) 
     ? availability.filter(a => a && a.carer_id === carerId && a.availability_type === 'working_hours') 
     : [];
+  
+  // Handle alternate weeks if date is provided
+  if (date) {
+    const dateObj = typeof date === 'string' ? parseISO(date) : date;
+    const hasAlternateWeeks = carerAvailability.some(w => 
+      w.schedule_pattern === 'alternate_week_1' || w.schedule_pattern === 'alternate_week_2'
+    );
+    
+    if (hasAlternateWeeks) {
+      const weekNumber = getWeek(dateObj, { weekStartsOn: 1 });
+      const isWeek1 = weekNumber % 2 === 1;
+      const targetPattern = isWeek1 ? 'alternate_week_1' : 'alternate_week_2';
+      
+      return carerAvailability.find(w => 
+        w.day_of_week === dayOfWeek && w.schedule_pattern === targetPattern
+      ) || null;
+    }
+  }
   
   return carerAvailability.find(w => w.day_of_week === dayOfWeek) || null;
 }
 
-export function getCarerWeeklyHours(carerId, availability = []) {
+export function getCarerWeeklyHours(carerId, availability = [], weekPattern = null) {
   const carerAvailability = Array.isArray(availability) 
     ? availability.filter(a => a && a.carer_id === carerId && a.availability_type === 'working_hours') 
     : [];
   
-  return carerAvailability.reduce((total, wh) => {
+  // Filter by week pattern if specified (for alternate weeks)
+  const relevantAvailability = weekPattern 
+    ? carerAvailability.filter(a => a.schedule_pattern === weekPattern)
+    : carerAvailability;
+  
+  return relevantAvailability.reduce((total, wh) => {
     if (wh.start_time && wh.end_time) {
       const [startH, startM] = wh.start_time.split(':').map(Number);
       const [endH, endM] = wh.end_time.split(':').map(Number);
