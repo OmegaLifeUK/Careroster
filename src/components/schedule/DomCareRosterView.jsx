@@ -27,7 +27,8 @@ import {
   Send,
   MoreVertical,
   Copy,
-  Filter
+  Filter,
+  Sparkles
 } from "lucide-react";
 import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
@@ -74,6 +75,9 @@ export default function DomCareRosterView({
   const [branchFilter, setBranchFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
   const [typeFilter, setTypeFilter] = useState("all");
+  const [optimizingRoutes, setOptimizingRoutes] = useState(false);
+  const [optimizedRoutes, setOptimizedRoutes] = useState({});
+  const [showOptimizationPanel, setShowOptimizationPanel] = useState(false);
   const { toast } = useToast();
 
   const weekDays = useMemo(() => 
@@ -448,6 +452,154 @@ export default function DomCareRosterView({
     setShowOverrideDialog(false);
     setPendingAssignment(null);
     setOverrideReason("");
+  };
+
+  // AI Route Optimization
+  const optimizeStaffRoutes = async (staffId = null, date = null) => {
+    setOptimizingRoutes(true);
+    const targetDate = date || (viewMode === "day" ? selectedDate : null);
+    const targetStaff = staffId ? [staffId] : activeStaff.map(s => s.id);
+    
+    const optimizations = {};
+    
+    for (const sId of targetStaff) {
+      const staffMember = staff.find(s => s.id === sId);
+      if (!staffMember?.address) continue;
+      
+      let staffVisits;
+      if (targetDate) {
+        staffVisits = getStaffDayVisits(sId, targetDate);
+      } else {
+        // Optimize for entire week
+        staffVisits = visits.filter(v => {
+          const visitStaffId = v.staff_id || v.assigned_staff_id;
+          const visitDateStr = getVisitDate(v);
+          if (!visitDateStr || visitStaffId !== sId) return false;
+          try {
+            const visitDate = parseISO(visitDateStr);
+            return visitDate >= currentWeekStart && visitDate < addDays(currentWeekStart, 7);
+          } catch {
+            return false;
+          }
+        });
+      }
+      
+      if (staffVisits.length < 2) continue;
+      
+      // Group by date if optimizing week
+      const visitsByDate = {};
+      staffVisits.forEach(v => {
+        const dateKey = getVisitDate(v);
+        if (!visitsByDate[dateKey]) visitsByDate[dateKey] = [];
+        visitsByDate[dateKey].push(v);
+      });
+      
+      // Optimize each day
+      Object.entries(visitsByDate).forEach(([dateKey, dayVisits]) => {
+        if (dayVisits.length < 2) return;
+        
+        // Calculate optimal route using nearest neighbor algorithm
+        const optimized = [];
+        const remaining = [...dayVisits];
+        let currentLocation = staffMember.address;
+        
+        while (remaining.length > 0) {
+          let nearestIdx = 0;
+          let nearestDistance = Infinity;
+          
+          remaining.forEach((visit, idx) => {
+            const client = clients.find(c => c.id === visit.client_id);
+            if (!client?.address) return;
+            
+            const travel = calculateTravelTime(currentLocation, client.address, staffMember.vehicle_type);
+            if (travel.distance < nearestDistance) {
+              nearestDistance = travel.distance;
+              nearestIdx = idx;
+            }
+          });
+          
+          const nextVisit = remaining.splice(nearestIdx, 1)[0];
+          optimized.push(nextVisit);
+          
+          const nextClient = clients.find(c => c.id === nextVisit.client_id);
+          if (nextClient?.address) {
+            currentLocation = nextClient.address;
+          }
+        }
+        
+        // Calculate travel times between optimized visits
+        const optimizedWithTravel = optimized.map((visit, idx) => {
+          if (idx < optimized.length - 1) {
+            const currentClient = clients.find(c => c.id === visit.client_id);
+            const nextClient = clients.find(c => c.id === optimized[idx + 1].client_id);
+            
+            if (currentClient?.address && nextClient?.address) {
+              const travel = calculateTravelTime(
+                currentClient.address,
+                nextClient.address,
+                staffMember.vehicle_type
+              );
+              return { ...visit, estimated_travel_to_next: travel.time, optimized_sequence: idx + 1 };
+            }
+          }
+          return { ...visit, optimized_sequence: idx + 1 };
+        });
+        
+        // Calculate savings
+        const originalTravel = dayVisits.reduce((sum, v) => sum + (v.estimated_travel_to_next || 0), 0);
+        const optimizedTravel = optimizedWithTravel.reduce((sum, v) => sum + (v.estimated_travel_to_next || 0), 0);
+        const savings = originalTravel - optimizedTravel;
+        
+        const key = `${sId}_${dateKey}`;
+        optimizations[key] = {
+          staffId: sId,
+          staffName: staffMember.full_name,
+          date: dateKey,
+          original: dayVisits,
+          optimized: optimizedWithTravel,
+          originalTravel,
+          optimizedTravel,
+          savings,
+          savingsPercent: originalTravel > 0 ? ((savings / originalTravel) * 100).toFixed(0) : 0
+        };
+      });
+    }
+    
+    setOptimizedRoutes(optimizations);
+    setShowOptimizationPanel(true);
+    setOptimizingRoutes(false);
+    
+    const totalSavings = Object.values(optimizations).reduce((sum, opt) => sum + opt.savings, 0);
+    toast.success(
+      "Routes Optimized", 
+      `Found ${Object.keys(optimizations).length} optimizations saving ${totalSavings.toFixed(0)} minutes of travel time`
+    );
+  };
+
+  const applyOptimization = (key) => {
+    const optimization = optimizedRoutes[key];
+    if (!optimization) return;
+    
+    optimization.optimized.forEach((visit) => {
+      onVisitUpdate?.(visit.id, {
+        sequence_number: visit.optimized_sequence,
+        estimated_travel_to_next: visit.estimated_travel_to_next || 0
+      });
+    });
+    
+    // Remove this optimization from the list
+    const updated = { ...optimizedRoutes };
+    delete updated[key];
+    setOptimizedRoutes(updated);
+    
+    toast.success("Route Applied", `Optimized route for ${optimization.staffName} on ${format(parseISO(optimization.date), 'MMM d')}`);
+  };
+
+  const applyAllOptimizations = () => {
+    Object.keys(optimizedRoutes).forEach(key => {
+      applyOptimization(key);
+    });
+    setShowOptimizationPanel(false);
   };
 
   const getClientName = (clientId) => clients.find(c => c?.id === clientId)?.full_name || '';
@@ -898,6 +1050,36 @@ export default function DomCareRosterView({
         <div className="flex-1" />
 
         <div className="flex items-center gap-1.5">
+          <Button 
+            variant="outline" 
+            size="sm" 
+            className="h-7 text-xs border-purple-300 text-purple-700 hover:bg-purple-50"
+            onClick={() => optimizeStaffRoutes()}
+            disabled={optimizingRoutes}
+          >
+            {optimizingRoutes ? (
+              <>
+                <div className="w-3 h-3 border-2 border-purple-600 border-t-transparent rounded-full animate-spin mr-1" />
+                Optimizing...
+              </>
+            ) : (
+              <>
+                <Navigation className="w-3 h-3 mr-1" />
+                AI Optimize Routes
+              </>
+            )}
+          </Button>
+          {Object.keys(optimizedRoutes).length > 0 && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              className="h-7 text-xs border-green-300 text-green-700 hover:bg-green-50"
+              onClick={() => setShowOptimizationPanel(true)}
+            >
+              <CheckCircle className="w-3 h-3 mr-1" />
+              {Object.keys(optimizedRoutes).length} Optimizations
+            </Button>
+          )}
           <Button variant="ghost" size="sm" className="h-7 text-xs">
             <Filter className="w-3 h-3 mr-1" />
             More Filters
@@ -1813,6 +1995,149 @@ export default function DomCareRosterView({
       </div>
 
       <SidebarPanel />
+
+      {/* Route Optimization Panel */}
+      {showOptimizationPanel && Object.keys(optimizedRoutes).length > 0 && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+          <div className="bg-white rounded-lg shadow-2xl max-w-4xl w-full max-h-[90vh] overflow-hidden flex flex-col">
+            <div className="p-4 border-b bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <Navigation className="w-6 h-6" />
+                </div>
+                <div>
+                  <h3 className="font-bold text-lg">AI Route Optimizations</h3>
+                  <p className="text-sm text-purple-100">
+                    {Object.keys(optimizedRoutes).length} optimized route{Object.keys(optimizedRoutes).length !== 1 ? 's' : ''} ready to apply
+                  </p>
+                </div>
+              </div>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowOptimizationPanel(false)}
+                className="text-white hover:bg-white/20"
+              >
+                <X className="w-5 h-5" />
+              </Button>
+            </div>
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3">
+              {Object.entries(optimizedRoutes).map(([key, opt]) => (
+                <div key={key} className="border rounded-lg overflow-hidden bg-white shadow-sm">
+                  <div className="bg-gradient-to-r from-purple-50 to-indigo-50 p-3 border-b flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                      <img 
+                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(opt.staffName)}&background=8b5cf6&color=fff&size=40`}
+                        alt={opt.staffName}
+                        className="w-10 h-10 rounded-full border-2 border-purple-200"
+                      />
+                      <div>
+                        <p className="font-semibold text-gray-900">{opt.staffName}</p>
+                        <p className="text-sm text-gray-600">{format(parseISO(opt.date), 'EEEE, MMM d')}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center gap-3">
+                      <div className="text-right">
+                        <p className="text-xs text-gray-500">Travel Time Savings</p>
+                        <p className="text-2xl font-bold text-green-600">-{opt.savings.toFixed(0)}min</p>
+                        <p className="text-xs text-green-600">({opt.savingsPercent}% reduction)</p>
+                      </div>
+                      <Button
+                        size="sm"
+                        onClick={() => applyOptimization(key)}
+                        className="bg-green-600 hover:bg-green-700"
+                      >
+                        <CheckCircle className="w-4 h-4 mr-1" />
+                        Apply
+                      </Button>
+                    </div>
+                  </div>
+
+                  <div className="p-3 grid grid-cols-2 gap-4">
+                    <div>
+                      <p className="text-xs font-semibold text-gray-500 mb-2">Current Route</p>
+                      <div className="space-y-1">
+                        {opt.original.map((visit, idx) => {
+                          const client = clients.find(c => c.id === visit.client_id);
+                          return (
+                            <div key={visit.id} className="flex items-center gap-2 text-xs">
+                              <span className="w-5 h-5 rounded-full bg-gray-200 text-gray-700 flex items-center justify-center font-semibold text-[10px]">
+                                {idx + 1}
+                              </span>
+                              <span className="flex-1">{client?.full_name || 'Unknown'}</span>
+                              {visit.estimated_travel_to_next > 0 && (
+                                <span className="text-gray-500">→ {visit.estimated_travel_to_next}min</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <div className="pt-2 border-t text-xs font-semibold text-gray-700">
+                          Total Travel: {opt.originalTravel.toFixed(0)}min
+                        </div>
+                      </div>
+                    </div>
+
+                    <div>
+                      <p className="text-xs font-semibold text-purple-700 mb-2 flex items-center gap-1">
+                        <Sparkles className="w-3 h-3" />
+                        Optimized Route
+                      </p>
+                      <div className="space-y-1">
+                        {opt.optimized.map((visit, idx) => {
+                          const client = clients.find(c => c.id === visit.client_id);
+                          const wasReordered = opt.original[idx]?.id !== visit.id;
+                          return (
+                            <div key={visit.id} className={`flex items-center gap-2 text-xs ${wasReordered ? 'bg-green-50 px-1 py-0.5 rounded' : ''}`}>
+                              <span className={`w-5 h-5 rounded-full flex items-center justify-center font-semibold text-[10px] ${
+                                wasReordered ? 'bg-green-500 text-white' : 'bg-purple-200 text-purple-700'
+                              }`}>
+                                {idx + 1}
+                              </span>
+                              <span className="flex-1">{client?.full_name || 'Unknown'}</span>
+                              {visit.estimated_travel_to_next > 0 && (
+                                <span className="text-green-600 font-semibold">→ {visit.estimated_travel_to_next}min</span>
+                              )}
+                            </div>
+                          );
+                        })}
+                        <div className="pt-2 border-t text-xs font-semibold text-green-700">
+                          Total Travel: {opt.optimizedTravel.toFixed(0)}min
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            <div className="p-4 border-t bg-gray-50 flex items-center justify-between">
+              <div className="text-sm">
+                <p className="text-gray-600">Total time savings: 
+                  <span className="font-bold text-green-600 ml-2">
+                    {Object.values(optimizedRoutes).reduce((sum, opt) => sum + opt.savings, 0).toFixed(0)} minutes
+                  </span>
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button
+                  variant="outline"
+                  onClick={() => setShowOptimizationPanel(false)}
+                >
+                  Close
+                </Button>
+                <Button
+                  onClick={applyAllOptimizations}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="w-4 h-4 mr-2" />
+                  Apply All Optimizations
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }
