@@ -2,7 +2,7 @@ import React from "react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp, Edit, Send, Trash2, UserMinus, RefreshCw } from "lucide-react";
+import { AlertTriangle, Clock, Users, Calendar, ChevronDown, ChevronUp, Edit, Send, Trash2, UserMinus, RefreshCw, Brain, Sparkles } from "lucide-react";
 import { format, parseISO, getDay } from "date-fns";
 import { checkCarerAvailability } from "@/components/availability/AvailabilityChecker";
 import {
@@ -12,6 +12,7 @@ import {
   DropdownMenuTrigger,
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
+import IntelligentConflictResolver from "./IntelligentConflictResolver";
 
 export default function ConflictDetector({ 
   shifts = [], 
@@ -29,6 +30,8 @@ export default function ConflictDetector({
   const [filterType, setFilterType] = React.useState("all");
   const [selectedConflicts, setSelectedConflicts] = React.useState([]);
   const [bulkActionMode, setBulkActionMode] = React.useState(false);
+  const [showResolver, setShowResolver] = React.useState(false);
+  const [resolverConflict, setResolverConflict] = React.useState(null);
 
   const detectConflicts = () => {
     const conflicts = [];
@@ -310,7 +313,25 @@ export default function ConflictDetector({
   };
 
   return (
-    <Card className="border-orange-200">
+    <>
+      {showResolver && resolverConflict && (
+        <IntelligentConflictResolver
+          conflict={resolverConflict}
+          carers={carers}
+          shifts={shifts}
+          carerAvailability={carerAvailability}
+          leaveRequests={leaveRequests}
+          onResolve={() => {
+            setShowResolver(false);
+            setResolverConflict(null);
+          }}
+          onClose={() => {
+            setShowResolver(false);
+            setResolverConflict(null);
+          }}
+        />
+      )}
+      <Card className="border-orange-200">
       <div 
         className="p-4 bg-orange-50 cursor-pointer hover:bg-orange-100 transition-colors"
         onClick={() => setIsExpanded(!isExpanded)}
@@ -439,11 +460,13 @@ export default function ConflictDetector({
               return (
                 <div
                   key={idx}
-                  className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)} hover:shadow-md transition-shadow ${
+                  className={`p-3 border rounded-lg ${getSeverityColor(conflict.severity)} hover:shadow-md transition-shadow cursor-pointer ${
                     isSelected ? 'ring-2 ring-blue-500' : ''
                   }`}
-                  onClick={bulkActionMode ? () => toggleConflictSelection(idx) : undefined}
-                  style={bulkActionMode ? { cursor: 'pointer' } : undefined}
+                  onClick={bulkActionMode ? () => toggleConflictSelection(idx) : () => {
+                    setResolverConflict(conflict);
+                    setShowResolver(true);
+                  }}
                 >
                   <div className="flex items-start gap-3">
                     {bulkActionMode ? (
@@ -517,47 +540,65 @@ export default function ConflictDetector({
                     </div>
                     
                     {/* Action buttons */}
-                    {hasActions && !bulkActionMode && (
-                      <DropdownMenu>
-                        <DropdownMenuTrigger asChild>
-                          <Button size="sm" variant="outline" className="flex-shrink-0">
-                            Actions
-                            <ChevronDown className="w-3 h-3 ml-1" />
+                    {!bulkActionMode && (
+                      <div className="flex gap-2 flex-shrink-0">
+                        {(conflict.type === "overallocation" || conflict.type === "overlap") && (
+                          <Button
+                            size="sm"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              setResolverConflict(conflict);
+                              setShowResolver(true);
+                            }}
+                            className="bg-purple-600 hover:bg-purple-700"
+                          >
+                            <Brain className="w-4 h-4 mr-1" />
+                            AI Resolve
                           </Button>
-                        </DropdownMenuTrigger>
-                        <DropdownMenuContent align="end">
-                          {canEdit && (
-                            <DropdownMenuItem onClick={() => handleAction('edit', conflict)}>
-                              <Edit className="w-4 h-4 mr-2" />
-                              Edit Shift
-                            </DropdownMenuItem>
-                          )}
-                          {canUnassign && (
-                            <DropdownMenuItem onClick={() => handleAction('unassign', conflict)}>
-                              <UserMinus className="w-4 h-4 mr-2" />
-                              Unassign Carer
-                            </DropdownMenuItem>
-                          )}
-                          {canRequest && (
-                            <DropdownMenuItem onClick={() => handleAction('request', conflict)}>
-                              <Send className="w-4 h-4 mr-2" />
-                              Send Coverage Request
-                            </DropdownMenuItem>
-                          )}
-                          {(canDelete && conflict.type === "unfilled") && (
-                            <>
-                              <DropdownMenuSeparator />
-                              <DropdownMenuItem 
-                                onClick={() => handleAction('delete', conflict)}
-                                className="text-red-600"
-                              >
-                                <Trash2 className="w-4 h-4 mr-2" />
-                                Delete Shift
-                              </DropdownMenuItem>
-                            </>
-                          )}
-                        </DropdownMenuContent>
-                      </DropdownMenu>
+                        )}
+                        {hasActions && (
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button size="sm" variant="outline" onClick={(e) => e.stopPropagation()}>
+                                Actions
+                                <ChevronDown className="w-3 h-3 ml-1" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              {canEdit && (
+                                <DropdownMenuItem onClick={() => handleAction('edit', conflict)}>
+                                  <Edit className="w-4 h-4 mr-2" />
+                                  Edit Shift
+                                </DropdownMenuItem>
+                              )}
+                              {canUnassign && (
+                                <DropdownMenuItem onClick={() => handleAction('unassign', conflict)}>
+                                  <UserMinus className="w-4 h-4 mr-2" />
+                                  Unassign Carer
+                                </DropdownMenuItem>
+                              )}
+                              {canRequest && (
+                                <DropdownMenuItem onClick={() => handleAction('request', conflict)}>
+                                  <Send className="w-4 h-4 mr-2" />
+                                  Send Coverage Request
+                                </DropdownMenuItem>
+                              )}
+                              {(canDelete && conflict.type === "unfilled") && (
+                                <>
+                                  <DropdownMenuSeparator />
+                                  <DropdownMenuItem 
+                                    onClick={() => handleAction('delete', conflict)}
+                                    className="text-red-600"
+                                  >
+                                    <Trash2 className="w-4 h-4 mr-2" />
+                                    Delete Shift
+                                  </DropdownMenuItem>
+                                </>
+                              )}
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        )}
+                      </div>
                     )}
                   </div>
                 </div>
@@ -567,5 +608,6 @@ export default function ConflictDetector({
         </div>
       )}
     </Card>
+    </>
   );
 }
