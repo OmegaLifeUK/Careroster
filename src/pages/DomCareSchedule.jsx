@@ -326,12 +326,15 @@ export default function DomCareSchedule() {
         )}
 
         {!isLoading && visits.length > 0 && (
-          <SmartSuggestionsWidget 
-            shifts={visits} 
-            staff={staff} 
-            availability={staffAvailability}
-            entityType="Visit"
-          />
+          <div className="mt-6">
+            <SmartSuggestionsWidget 
+              shifts={visits} 
+              staff={staff} 
+              clients={clients}
+              leaveRequests={leaveRequests}
+              availability={staffAvailability}
+            />
+          </div>
         )}
       </div>
     </div>
