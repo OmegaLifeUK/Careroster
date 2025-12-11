@@ -15,11 +15,18 @@ import {
   Filter,
   Edit,
   LayoutGrid,
-  List
+  List,
+  Sparkles,
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import SupportedLivingShiftDialog from "../components/supportedliving/SupportedLivingShiftDialog";
 import SupportedLivingRosterView from "../components/schedule/SupportedLivingRosterView";
+import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
+import ConflictDetector from "../components/schedule/ConflictDetector";
+import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
+import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 
 export default function SupportedLivingSchedule() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -27,6 +34,9 @@ export default function SupportedLivingSchedule() {
   const [selectedShift, setSelectedShift] = useState(null);
   const [showShiftDialog, setShowShiftDialog] = useState(false);
   const [editingShift, setEditingShift] = useState(null);
+  const [showAIAllocator, setShowAIAllocator] = useState(false);
+  const [showConflicts, setShowConflicts] = useState(false);
+  const [showAutoSchedule, setShowAutoSchedule] = useState(false);
 
   const queryClient = useQueryClient();
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
@@ -55,6 +65,11 @@ export default function SupportedLivingSchedule() {
   const { data: staffAvailability = [] } = useQuery({
     queryKey: ['staff-availability'],
     queryFn: () => base44.entities.CarerAvailability.list(),
+  });
+
+  const { data: leaveRequests = [] } = useQuery({
+    queryKey: ['leave-requests'],
+    queryFn: () => base44.entities.LeaveRequest.list(),
   });
 
   const createShiftMutation = useMutation({
@@ -279,7 +294,31 @@ export default function SupportedLivingSchedule() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Support Shift Schedule</h1>
             <p className="text-gray-500">Manage support sessions and shifts</p>
           </div>
-          <div className="flex gap-2">
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={() => setShowAIAllocator(true)}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Allocate
+            </Button>
+            <Button
+              onClick={() => setShowConflicts(true)}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Conflicts
+            </Button>
+            <Button
+              onClick={() => setShowAutoSchedule(true)}
+              variant="outline"
+              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Auto Schedule
+            </Button>
             <Button variant="outline">
               <Filter className="w-4 h-4 mr-2" />
               Filters
@@ -555,6 +594,65 @@ export default function SupportedLivingSchedule() {
             }}
           />
         )}
+
+        {showAIAllocator && (
+          <AIShiftAllocator
+            shifts={shifts}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="SupportedLivingShift"
+            onClose={() => setShowAIAllocator(false)}
+            onAllocate={(allocations) => {
+              allocations.forEach(({ shiftId, staffId }) => {
+                updateShiftMutation.mutate({ 
+                  id: shiftId, 
+                  data: { staff_id: staffId, status: 'published' }
+                });
+              });
+              setShowAIAllocator(false);
+            }}
+          />
+        )}
+
+        {showConflicts && (
+          <ConflictDetector
+            shifts={shifts}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="SupportedLivingShift"
+            onClose={() => setShowConflicts(false)}
+            onResolve={(shiftId, updates) => {
+              updateShiftMutation.mutate({ id: shiftId, data: updates });
+            }}
+          />
+        )}
+
+        {showAutoSchedule && (
+          <AutoScheduleHelper
+            shifts={shifts}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="SupportedLivingShift"
+            onClose={() => setShowAutoSchedule(false)}
+            onGenerate={(newShifts) => {
+              newShifts.forEach(shift => createShiftMutation.mutate(shift));
+              setShowAutoSchedule(false);
+            }}
+          />
+        )}
+
+        <SmartSuggestionsWidget 
+          shifts={shifts} 
+          staff={staff} 
+          availability={staffAvailability}
+          entityType="SupportedLivingShift"
+        />
       </div>
     </div>
   );

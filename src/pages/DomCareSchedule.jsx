@@ -2,13 +2,17 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid } from "lucide-react";
+import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles, Zap, AlertTriangle, BarChart3 } from "lucide-react";
 import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 
 import VisitDialog from "../components/domcare/VisitDialog";
 import RunDialog from "../components/domcare/RunDialog";
 import DomCareTimeline from "../components/domcare/DomCareTimeline";
 import DomCareRosterView from "../components/schedule/DomCareRosterView";
+import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
+import ConflictDetector from "../components/schedule/ConflictDetector";
+import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
+import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 
 export default function DomCareSchedule() {
   const [view, setView] = useState("roster");
@@ -17,6 +21,9 @@ export default function DomCareSchedule() {
   const [showRunDialog, setShowRunDialog] = useState(false);
   const [editingVisit, setEditingVisit] = useState(null);
   const [editingRun, setEditingRun] = useState(null);
+  const [showAIAllocator, setShowAIAllocator] = useState(false);
+  const [showConflicts, setShowConflicts] = useState(false);
+  const [showAutoSchedule, setShowAutoSchedule] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -43,6 +50,11 @@ export default function DomCareSchedule() {
   const { data: staffAvailability = [] } = useQuery({
     queryKey: ['staff-availability'],
     queryFn: () => base44.entities.CarerAvailability.list(),
+  });
+
+  const { data: leaveRequests = [] } = useQuery({
+    queryKey: ['leave-requests'],
+    queryFn: () => base44.entities.LeaveRequest.list(),
   });
 
   const updateVisitMutation = useMutation({
@@ -116,17 +128,41 @@ export default function DomCareSchedule() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Visit Schedule</h1>
             <p className="text-gray-500">Drag and drop visits to organize care runs</p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto flex-wrap">
+          <div className="flex gap-2 w-full md:w-auto flex-wrap">
+            <Button
+              onClick={() => setShowAIAllocator(true)}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Allocate
+            </Button>
+            <Button
+              onClick={() => setShowConflicts(true)}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Conflicts
+            </Button>
+            <Button
+              onClick={() => setShowAutoSchedule(true)}
+              variant="outline"
+              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Auto Schedule
+            </Button>
             <Button
               onClick={handleCreateRun}
-              className="flex-1 md:flex-none bg-purple-600 hover:bg-purple-700"
+              className="bg-purple-600 hover:bg-purple-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Run
             </Button>
             <Button
               onClick={handleCreateVisit}
-              className="flex-1 md:flex-none bg-blue-600 hover:bg-blue-700"
+              className="bg-blue-600 hover:bg-blue-700"
             >
               <Plus className="w-4 h-4 mr-2" />
               New Visit
@@ -231,6 +267,66 @@ export default function DomCareSchedule() {
             onClose={handleCloseDialogs}
           />
         )}
+
+        {showAIAllocator && (
+          <AIShiftAllocator
+            shifts={visits}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="Visit"
+            onClose={() => setShowAIAllocator(false)}
+            onAllocate={(allocations) => {
+              allocations.forEach(({ shiftId, staffId }) => {
+                updateVisitMutation.mutate({ 
+                  id: shiftId, 
+                  data: { staff_id: staffId, assigned_staff_id: staffId, status: 'published' }
+                });
+              });
+              setShowAIAllocator(false);
+            }}
+          />
+        )}
+
+        {showConflicts && (
+          <ConflictDetector
+            shifts={visits}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="Visit"
+            onClose={() => setShowConflicts(false)}
+            onResolve={(visitId, updates) => {
+              updateVisitMutation.mutate({ id: visitId, data: updates });
+            }}
+          />
+        )}
+
+        {showAutoSchedule && (
+          <AutoScheduleHelper
+            shifts={visits}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="Visit"
+            onClose={() => setShowAutoSchedule(false)}
+            onGenerate={(newVisits) => {
+              // Implement bulk create for visits
+              console.log("Generated visits:", newVisits);
+              setShowAutoSchedule(false);
+            }}
+          />
+        )}
+
+        <SmartSuggestionsWidget 
+          shifts={visits} 
+          staff={staff} 
+          availability={staffAvailability}
+          entityType="Visit"
+        />
       </div>
     </div>
   );

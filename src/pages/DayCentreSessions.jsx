@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,12 +16,19 @@ import {
   CheckCircle,
   LayoutGrid,
   List,
-  FileText
+  FileText,
+  Sparkles,
+  Zap,
+  AlertTriangle
 } from "lucide-react";
 import { format, parseISO, startOfWeek, endOfWeek, addDays, isToday, isSameDay } from "date-fns";
 import DayCentreRosterView from "../components/schedule/DayCentreRosterView";
 import SessionDialog from "../components/daycentre/SessionDialog";
 import SessionReportDialog from "../components/daycentre/SessionReportDialog";
+import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
+import ConflictDetector from "../components/schedule/ConflictDetector";
+import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
+import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
 
 export default function DayCentreSessions() {
   const [currentDate, setCurrentDate] = useState(new Date());
@@ -31,6 +38,11 @@ export default function DayCentreSessions() {
   const [editingSession, setEditingSession] = useState(null);
   const [showReportDialog, setShowReportDialog] = useState(false);
   const [reportingSession, setReportingSession] = useState(null);
+  const [showAIAllocator, setShowAIAllocator] = useState(false);
+  const [showConflicts, setShowConflicts] = useState(false);
+  const [showAutoSchedule, setShowAutoSchedule] = useState(false);
+
+  const queryClient = useQueryClient();
 
   const weekStart = startOfWeek(currentDate, { weekStartsOn: 1 });
   const weekEnd = endOfWeek(currentDate, { weekStartsOn: 1 });
@@ -53,6 +65,23 @@ export default function DayCentreSessions() {
   const { data: staff = [] } = useQuery({
     queryKey: ['staff'],
     queryFn: () => base44.entities.Staff.list(),
+  });
+
+  const { data: staffAvailability = [] } = useQuery({
+    queryKey: ['staff-availability'],
+    queryFn: () => base44.entities.CarerAvailability.list(),
+  });
+
+  const { data: leaveRequests = [] } = useQuery({
+    queryKey: ['leave-requests'],
+    queryFn: () => base44.entities.LeaveRequest.list(),
+  });
+
+  const updateSessionMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.DayCentreSession.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['daycentre-sessions'] });
+    },
   });
 
   const weekDays = Array.from({ length: 7 }, (_, i) => addDays(weekStart, i));
@@ -303,16 +332,42 @@ export default function DayCentreSessions() {
             <h1 className="text-3xl font-bold text-gray-900 mb-2">Day Centre Sessions</h1>
             <p className="text-gray-500">Manage activity sessions and bookings</p>
           </div>
-          <Button
-            onClick={() => {
-              setEditingSession(null);
-              setShowSessionDialog(true);
-            }}
-            className="bg-amber-600 hover:bg-amber-700"
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Schedule Session
-          </Button>
+          <div className="flex gap-2 flex-wrap">
+            <Button
+              onClick={() => setShowAIAllocator(true)}
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              AI Allocate
+            </Button>
+            <Button
+              onClick={() => setShowConflicts(true)}
+              variant="outline"
+              className="border-orange-300 text-orange-700 hover:bg-orange-50"
+            >
+              <AlertTriangle className="w-4 h-4 mr-2" />
+              Conflicts
+            </Button>
+            <Button
+              onClick={() => setShowAutoSchedule(true)}
+              variant="outline"
+              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+            >
+              <Zap className="w-4 h-4 mr-2" />
+              Auto Schedule
+            </Button>
+            <Button
+              onClick={() => {
+                setEditingSession(null);
+                setShowSessionDialog(true);
+              }}
+              className="bg-amber-600 hover:bg-amber-700"
+            >
+              <Plus className="w-4 h-4 mr-2" />
+              Schedule Session
+            </Button>
+          </div>
         </div>
 
         {/* View Toggle */}
@@ -727,6 +782,70 @@ export default function DayCentreSessions() {
             }}
           />
         )}
+
+        {showAIAllocator && (
+          <AIShiftAllocator
+            shifts={sessions}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="DayCentreSession"
+            onClose={() => setShowAIAllocator(false)}
+            onAllocate={(allocations) => {
+              allocations.forEach(({ shiftId, staffId }) => {
+                const session = sessions.find(s => s.id === shiftId);
+                const currentStaffIds = session?.facilitator_staff_ids || [];
+                updateSessionMutation.mutate({ 
+                  id: shiftId, 
+                  data: { 
+                    facilitator_staff_ids: [...currentStaffIds, staffId],
+                    status: 'scheduled' 
+                  }
+                });
+              });
+              setShowAIAllocator(false);
+            }}
+          />
+        )}
+
+        {showConflicts && (
+          <ConflictDetector
+            shifts={sessions}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="DayCentreSession"
+            onClose={() => setShowConflicts(false)}
+            onResolve={(sessionId, updates) => {
+              updateSessionMutation.mutate({ id: sessionId, data: updates });
+            }}
+          />
+        )}
+
+        {showAutoSchedule && (
+          <AutoScheduleHelper
+            shifts={sessions}
+            staff={staff}
+            clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
+            entityType="DayCentreSession"
+            onClose={() => setShowAutoSchedule(false)}
+            onGenerate={(newSessions) => {
+              console.log("Generated sessions:", newSessions);
+              setShowAutoSchedule(false);
+            }}
+          />
+        )}
+
+        <SmartSuggestionsWidget 
+          shifts={sessions} 
+          staff={staff} 
+          availability={staffAvailability}
+          entityType="DayCentreSession"
+        />
       </div>
     </div>
   );
