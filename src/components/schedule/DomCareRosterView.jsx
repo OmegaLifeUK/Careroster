@@ -1258,8 +1258,8 @@ export default function DomCareRosterView({
                           snapshot.isDraggingOver ? 'bg-orange-200 ring-2 ring-orange-400' : 'bg-orange-50/30'
                         }`}
                       >
-                        <div className="space-y-1.5">
-                          {unassigned.slice(0, 3).map((visit, vIdx) => (
+                        <div className="flex flex-col gap-1.5">
+                          {unassigned.map((visit, vIdx) => (
                             <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
                               {(provided, snapshot) => (
                                 <div
@@ -1273,11 +1273,6 @@ export default function DomCareRosterView({
                               )}
                             </Draggable>
                           ))}
-                          {unassigned.length > 3 && (
-                            <Badge className="text-[10px] px-2 py-1 bg-orange-200 text-orange-800 font-semibold w-full justify-center">
-                              +{unassigned.length - 3} more visits
-                            </Badge>
-                          )}
                         </div>
                         {provided.placeholder}
                       </div>
@@ -1352,21 +1347,37 @@ export default function DomCareRosterView({
                                   backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.05) 8px, rgba(0,0,0,.05) 16px)'
                                 }} />
                               )}
-                              <div className="space-y-1.5 relative z-10">
-                                    {dayVisits.map((visit, vIdx) => (
-                                      <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
-                                        {(provided, snapshot) => (
-                                          <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
-                                          >
-                                            <VisitPill visit={visit} />
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))}
+                              <div className="flex flex-col gap-1.5 relative z-10">
+                                    {dayVisits.map((visit, vIdx) => {
+                                      const nextVisit = dayVisits[vIdx + 1];
+                                      const hasTravel = visit.estimated_travel_to_next > 0;
+                                      
+                                      return (
+                                        <div key={visit.id}>
+                                          <Draggable draggableId={visit.id} index={vIdx}>
+                                            {(provided, snapshot) => (
+                                              <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
+                                              >
+                                                <VisitPill visit={visit} />
+                                              </div>
+                                            )}
+                                          </Draggable>
+                                          {hasTravel && nextVisit && (
+                                            <div className="flex items-center gap-1 py-0.5">
+                                              <div className="flex-1 h-1 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" 
+                                                   style={{ width: `${Math.min(visit.estimated_travel_to_next * 2, 100)}%` }} />
+                                              <span className="text-[9px] text-blue-600 font-semibold">
+                                                {visit.estimated_travel_to_next}min
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   {provided.placeholder}
 
