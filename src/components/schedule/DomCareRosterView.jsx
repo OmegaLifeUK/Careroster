@@ -255,36 +255,49 @@ export default function DomCareRosterView({
   };
 
   // Check for conflicts before updating
-  const checkForConflicts = (staffIdToCheck, dateToCheck, visitToMove) => {
+  const checkForConflicts = (staffIdToCheck, dateToCheck, visitToMove, clientIdToCheck = null) => {
     if (!staffIdToCheck || !dateToCheck || !visitToMove) return null;
     
     const conflictingVisits = visits.filter(v => {
-      if (!v || v.staff_id !== staffIdToCheck || v.scheduled_date !== dateToCheck) return false;
-      if (v.id === visitToMove.id) return false; // Skip the visit being moved
+      if (!v || v.id === visitToMove.id) return false;
       
-      const visitStart = v.scheduled_start || "00:00";
-      const visitEnd = v.scheduled_end || "23:59";
-      const moveStart = visitToMove.scheduled_start || "00:00";
-      const moveEnd = visitToMove.scheduled_end || "23:59";
+      const visitDateStr = getVisitDate(v);
+      if (visitDateStr !== dateToCheck) return false;
       
-      // Extract time from datetime strings if needed
-      const getTime = (str) => {
-        if (!str) return "00:00";
-        if (str.includes('T')) return str.split('T')[1]?.substring(0, 5) || "00:00";
-        if (str.includes(' ')) return str.split(' ')[1]?.substring(0, 5) || str;
-        return str;
-      };
+      const visitStaffId = v.staff_id || v.assigned_staff_id;
       
-      const start1 = getTime(visitStart);
-      const end1 = getTime(visitEnd);
-      const start2 = getTime(moveStart);
-      const end2 = getTime(moveEnd);
+      // Check staff conflicts
+      if (visitStaffId === staffIdToCheck) {
+        const visitStart = getVisitTime(v, 'scheduled_start') || "00:00";
+        const visitEnd = getVisitTime(v, 'scheduled_end') || "23:59";
+        const moveStart = getVisitTime(visitToMove, 'scheduled_start') || "00:00";
+        const moveEnd = getVisitTime(visitToMove, 'scheduled_end') || "23:59";
+        
+        // Check for time overlap
+        return (
+          (moveStart >= visitStart && moveStart < visitEnd) ||
+          (moveEnd > visitStart && moveEnd <= visitEnd) ||
+          (moveStart <= visitStart && moveEnd >= visitEnd)
+        );
+      }
       
-      return (
-        (start2 >= start1 && start2 < end1) ||
-        (end2 > start1 && end2 <= end1) ||
-        (start2 <= start1 && end2 >= end1)
-      );
+      // Check client conflicts - same client can't have overlapping visits
+      if (clientIdToCheck && v.client_id === clientIdToCheck) {
+        const visitStart = getVisitTime(v, 'scheduled_start') || "00:00";
+        const visitEnd = getVisitTime(v, 'scheduled_end') || "23:59";
+        const moveStart = getVisitTime(visitToMove, 'scheduled_start') || "00:00";
+        const moveEnd = getVisitTime(visitToMove, 'scheduled_end') || "23:59";
+        
+        // Check for exact time match or overlap
+        return (
+          (moveStart >= visitStart && moveStart < visitEnd) ||
+          (moveEnd > visitStart && moveEnd <= visitEnd) ||
+          (moveStart <= visitStart && moveEnd >= visitEnd) ||
+          (moveStart === visitStart && moveEnd === visitEnd)
+        );
+      }
+      
+      return false;
     });
     
     return conflictingVisits.length > 0 ? conflictingVisits : null;
@@ -324,16 +337,31 @@ export default function DomCareRosterView({
       targetDate = parts[1];
     }
     
-    // Check for time conflicts if assigning to staff
+    // Check for conflicts
+    const conflicts = checkForConflicts(newStaffId, targetDate, visit, targetClientId);
+    if (conflicts) {
+      const conflictMessages = [];
+      conflicts.forEach(c => {
+        const conflictStaffId = c.staff_id || c.assigned_staff_id;
+        if (conflictStaffId === newStaffId) {
+          const staffName = activeStaff.find(s => s.id === newStaffId)?.full_name || 'Staff member';
+          const timeStart = getVisitTime(c, 'scheduled_start');
+          conflictMessages.push(`${staffName} is already scheduled at ${timeStart}`);
+        }
+        if (c.client_id === targetClientId) {
+          const clientName = activeClients.find(cl => cl.id === targetClientId)?.full_name || 'Client';
+          const timeStart = getVisitTime(c, 'scheduled_start');
+          const conflictStaff = activeStaff.find(s => s.id === (c.staff_id || c.assigned_staff_id))?.full_name || 'another carer';
+          conflictMessages.push(`${clientName} already has a visit at ${timeStart} with ${conflictStaff}`);
+        }
+      });
+      
+      toast.error("Scheduling Conflict", conflictMessages.join('\n'));
+      return;
+    }
+    
+    // Check for hours capacity if assigning to staff
     if (newStaffId && parts[0] !== 'client') {
-      const conflicts = checkForConflicts(newStaffId, targetDate, visit);
-      if (conflicts) {
-        const staffName = activeStaff.find(s => s.id === newStaffId)?.full_name || 'This staff member';
-        const proceed = window.confirm(
-          `⚠️ Scheduling Conflict!\n\n${staffName} already has visit(s) at overlapping times on this date.\n\nThis will create overlapping visits. Continue?`
-        );
-        if (!proceed) return;
-      }
       
       // Check for hours capacity
       const hoursStatus = getStaffHoursStatus(newStaffId);
@@ -1218,8 +1246,8 @@ export default function DomCareRosterView({
             disabled: false
           }}
         >
-          <div className="flex flex-col" style={{ overscrollBehavior: 'contain' }}>
-            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gradient-to-b from-gray-100 to-gray-50 sticky top-0 z-20 shadow-sm">
+          <div className="flex flex-col h-full" style={{ overscrollBehavior: 'contain' }}>
+            <div className="grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b bg-gradient-to-b from-gray-100 to-gray-50 sticky top-0 z-20 shadow-sm">
               <div className="p-3 border-r flex items-center gap-2 bg-gray-100">
                 {activePanel === "clients" ? (
                   <>
@@ -1345,7 +1373,7 @@ export default function DomCareRosterView({
                 const hoursStatus = getStaffHoursStatus(staffMember.id);
                 
                 return (
-                  <div key={staffMember.id} className={`grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors ${
+                  <div key={staffMember.id} className={`grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b hover:bg-gray-50/30 transition-colors ${
                     hoursStatus.status === 'full' ? 'bg-red-50/20' : ''
                   }`}>
                     <div className="p-3 border-r flex items-center gap-2.5 bg-white">
@@ -1475,7 +1503,7 @@ export default function DomCareRosterView({
             {(activePanel === "clients" || activePanel === "both") && (
             <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[550px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activePanel === "both" && (
-                <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-emerald-50">
+                <div className="grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b bg-emerald-50">
                   <div className="p-2 border-r flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-600" />
                     <span className="text-sm font-medium text-emerald-700">Service Users</span>
@@ -1487,7 +1515,7 @@ export default function DomCareRosterView({
               )}
               {activeClients.map((client) => {
                 return (
-                  <div key={client.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors">
+                  <div key={client.id} className="grid grid-cols-[200px_repeat(7,minmax(0,1fr))] border-b hover:bg-gray-50/30 transition-colors">
                     <div className="p-3 border-r flex items-center gap-2.5 bg-white">
                      <img 
                        src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=40`}
