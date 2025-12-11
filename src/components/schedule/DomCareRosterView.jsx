@@ -35,6 +35,9 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
+import { TravelTimeBadge, calculateTravelTime } from "./TravelTimeCalculator";
+import { WorkingTimeComplianceIndicator, WTRStatusBadge, checkWorkingTimeCompliance } from "./WorkingTimeRegulations";
+import RouteOptimizer from "./RouteOptimizer";
 
 const VISIT_COLORS = {
   scheduled: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-800", dot: "bg-sky-500" },
@@ -189,12 +192,19 @@ export default function DomCareRosterView({
   const getStaffHoursStatus = (staffId) => {
     const weekHours = getStaffWeekHours(staffId);
     const contracted = getStaffContractedHours(staffId);
-    if (!contracted) return { status: 'unknown', weekHours, contracted: null };
+    const staffMember = staff.find(s => s?.id === staffId);
+    const wtrCompliance = checkWorkingTimeCompliance(staffMember || {}, visits.filter(v => 
+      (v.staff_id === staffId || v.assigned_staff_id === staffId) &&
+      getVisitDate(v) >= format(currentWeekStart, 'yyyy-MM-dd') &&
+      getVisitDate(v) < format(addDays(currentWeekStart, 7), 'yyyy-MM-dd')
+    ));
+    
+    if (!contracted) return { status: 'unknown', weekHours, contracted: null, wtrCompliance };
     const percentage = (weekHours / contracted) * 100;
-    if (percentage >= 100) return { status: 'full', weekHours, contracted, percentage };
-    if (percentage >= 80) return { status: 'near', weekHours, contracted, percentage };
-    if (percentage < 50) return { status: 'low', weekHours, contracted, percentage };
-    return { status: 'ok', weekHours, contracted, percentage };
+    if (percentage >= 100) return { status: 'full', weekHours, contracted, percentage, wtrCompliance };
+    if (percentage >= 80) return { status: 'near', weekHours, contracted, percentage, wtrCompliance };
+    if (percentage < 50) return { status: 'low', weekHours, contracted, percentage, wtrCompliance };
+    return { status: 'ok', weekHours, contracted, percentage, wtrCompliance };
   };
 
   const getTimePosition = (time) => {
@@ -388,6 +398,8 @@ export default function DomCareRosterView({
     
     const startTime = getVisitTime(visit, 'scheduled_start') || visit.scheduled_start;
     const isLocked = visit.status === 'completed' || visit.status === 'in_progress';
+    const visitClient = clients.find(c => c?.id === visit.client_id);
+    const visitStaff = staff.find(s => s?.id === visitStaffId);
 
     return (
       <div
@@ -408,13 +420,24 @@ export default function DomCareRosterView({
             <CheckCircle className="w-2 h-2 text-white" />
           </div>
         )}
-        <div className="flex items-center gap-1">
-          <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
-          <span className="font-medium truncate">{label || 'Visit'}</span>
+        <div className="flex items-center gap-1 justify-between">
+          <div className="flex items-center gap-1 flex-1 min-w-0">
+            <div className={`w-1.5 h-1.5 rounded-full ${colors.dot} flex-shrink-0`} />
+            <span className="font-medium truncate">{label || 'Visit'}</span>
+          </div>
+          {visit.estimated_travel_to_next > 0 && (
+            <Badge className="bg-blue-100 text-blue-700 text-[8px] px-1 py-0 ml-1">
+              <Navigation className="w-2 h-2 mr-0.5" />
+              {visit.estimated_travel_to_next}m
+            </Badge>
+          )}
         </div>
         <div className="text-[10px] opacity-75 mt-0.5 flex items-center gap-1">
           <span>{startTime}</span>
           {visit.duration_minutes && <span>• {visit.duration_minutes}m</span>}
+          {visitStaff?.vehicle_type && (
+            <span className="ml-1">• {visitStaff.vehicle_type === 'car' ? '🚗' : visitStaff.vehicle_type === 'bike' ? '🚴' : '🚶'}</span>
+          )}
         </div>
       </div>
     );
@@ -501,10 +524,26 @@ export default function DomCareRosterView({
                   </div>
                   {visitClient.address && (
                     <div className="mt-2 pt-2 border-t">
-                      <div className="flex items-start gap-1.5 text-xs text-gray-600">
+                      <div className="flex items-start gap-1.5 text-xs text-gray-600 mb-2">
                         <MapPin className="w-3 h-3 mt-0.5 flex-shrink-0" />
                         <span className="leading-tight">{visitClient.address.street}, {visitClient.address.city}, {visitClient.address.postcode}</span>
                       </div>
+                      {visitStaff?.address && (
+                        <TravelTimeBadge
+                          fromAddress={visitStaff.address}
+                          toAddress={visitClient.address}
+                          transportMode={visitStaff.vehicle_type || 'car'}
+                          showDetails={true}
+                        />
+                      )}
+                    </div>
+                  )}
+                  {visitClient.access_instructions && (
+                    <div className="mt-2 pt-2 border-t">
+                      <p className="text-xs text-gray-500 mb-1">Access Instructions</p>
+                      <p className="text-xs text-gray-700 bg-yellow-50 p-2 rounded border border-yellow-200">
+                        {visitClient.access_instructions}
+                      </p>
                     </div>
                   )}
                 </div>
@@ -653,6 +692,59 @@ export default function DomCareRosterView({
                   </div>
                 </div>
               </div>
+
+              {visitStaff && (
+                <div>
+                  <p className="text-xs font-semibold text-gray-600 mb-2">WTR Compliance</p>
+                  <WorkingTimeComplianceIndicator 
+                    staff={visitStaff}
+                    shifts={visits.filter(v => 
+                      (v.staff_id === visitStaff.id || v.assigned_staff_id === visitStaff.id) &&
+                      getVisitDate(v) >= format(currentWeekStart, 'yyyy-MM-dd') &&
+                      getVisitDate(v) < format(addDays(currentWeekStart, 7), 'yyyy-MM-dd')
+                    )}
+                    compact={false}
+                  />
+                </div>
+              )}
+
+              {visitStaff && selectedVisit && (
+                <RouteOptimizer
+                  visits={visits.filter(v => {
+                    const vStaffId = v.staff_id || v.assigned_staff_id;
+                    return vStaffId === visitStaff.id && 
+                           getVisitDate(v) === getVisitDate(selectedVisit);
+                  }).map(v => ({
+                    ...v,
+                    client: clients.find(c => c?.id === v.client_id)
+                  }))}
+                  staff={visitStaff}
+                  onApplyOptimization={(optimized) => {
+                    optimized.forEach((visit, idx) => {
+                      if (idx < optimized.length - 1) {
+                        const current = optimized[idx];
+                        const next = optimized[idx + 1];
+                        const currentClient = clients.find(c => c?.id === current.client_id);
+                        const nextClient = clients.find(c => c?.id === next.client_id);
+                        
+                        if (currentClient?.address && nextClient?.address) {
+                          const travel = calculateTravelTime(
+                            currentClient.address,
+                            nextClient.address,
+                            visitStaff?.vehicle_type
+                          );
+                          onVisitUpdate?.(current.id, { 
+                            sequence_number: idx + 1,
+                            estimated_travel_to_next: travel.time
+                          });
+                        }
+                      } else {
+                        onVisitUpdate?.(visit.id, { sequence_number: idx + 1 });
+                      }
+                    });
+                  }}
+                />
+              )}
 
               <div className="pt-2">
                 <p className="text-xs font-semibold text-gray-600 mb-2">Quick Actions</p>
@@ -1211,6 +1303,14 @@ export default function DomCareRosterView({
                           }`}>
                             {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
                           </span>
+                          {hoursStatus.wtrCompliance && hoursStatus.wtrCompliance.summary.critical > 0 && (
+                            <>
+                              <span>•</span>
+                              <Badge className="bg-red-100 text-red-700 text-[8px] px-1 py-0">
+                                WTR: {hoursStatus.wtrCompliance.summary.critical}
+                              </Badge>
+                            </>
+                          )}
                         </div>
                       </div>
                     </div>
