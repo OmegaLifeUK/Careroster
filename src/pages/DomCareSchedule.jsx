@@ -2,11 +2,14 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles, Zap, AlertTriangle, BarChart3 } from "lucide-react";
+import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles, Zap, AlertTriangle, BarChart3, Repeat, FileText, Edit } from "lucide-react";
 import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 
 import VisitDialog from "../components/domcare/VisitDialog";
 import RunDialog from "../components/domcare/RunDialog";
+import RecurringVisitDialog from "../components/domcare/RecurringVisitDialog";
+import VisitTemplateManager from "../components/domcare/VisitTemplateManager";
+import BulkEditVisitsDialog from "../components/domcare/BulkEditVisitsDialog";
 import DomCareTimeline from "../components/domcare/DomCareTimeline";
 import DomCareRosterView from "../components/schedule/DomCareRosterView";
 import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
@@ -24,6 +27,9 @@ export default function DomCareSchedule() {
   const [showAIAllocator, setShowAIAllocator] = useState(false);
   const [showConflicts, setShowConflicts] = useState(false);
   const [showAutoSchedule, setShowAutoSchedule] = useState(false);
+  const [showRecurringDialog, setShowRecurringDialog] = useState(false);
+  const [showTemplateManager, setShowTemplateManager] = useState(false);
+  const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -74,6 +80,22 @@ export default function DomCareSchedule() {
 
   const handleCreateVisit = () => {
     setEditingVisit(null);
+    setShowVisitDialog(true);
+  };
+
+  const handleTemplateSelect = (template) => {
+    const now = new Date();
+    const scheduledEnd = new Date(now.getTime() + template.duration_minutes * 60000);
+    
+    setEditingVisit({
+      visit_type: template.visit_type,
+      duration_minutes: template.duration_minutes,
+      scheduled_start: format(now, "yyyy-MM-dd'T'HH:mm"),
+      scheduled_end: format(scheduledEnd, "yyyy-MM-dd'T'HH:mm"),
+      tasks: template.tasks,
+      visit_notes: template.notes
+    });
+    setShowTemplateManager(false);
     setShowVisitDialog(true);
   };
 
@@ -155,6 +177,33 @@ export default function DomCareSchedule() {
             >
               <Zap className="w-4 h-4 mr-1" />
               <span className="hidden sm:inline">Auto Schedule</span>
+            </Button>
+            <Button
+              onClick={() => setShowBulkEdit(true)}
+              variant="outline"
+              size="sm"
+              className="border-green-300 text-green-700 hover:bg-green-50"
+            >
+              <Edit className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Bulk Edit</span>
+            </Button>
+            <Button
+              onClick={() => setShowTemplateManager(true)}
+              variant="outline"
+              size="sm"
+              className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
+            >
+              <FileText className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Templates</span>
+            </Button>
+            <Button
+              onClick={() => setShowRecurringDialog(true)}
+              variant="outline"
+              size="sm"
+              className="border-teal-300 text-teal-700 hover:bg-teal-50"
+            >
+              <Repeat className="w-4 h-4 mr-1" />
+              <span className="hidden sm:inline">Recurring</span>
             </Button>
             <Button
               onClick={handleCreateRun}
@@ -393,6 +442,30 @@ export default function DomCareSchedule() {
               console.log("Generated visits:", newVisits);
               setShowAutoSchedule(false);
             }}
+          />
+        )}
+
+        {showRecurringDialog && (
+          <RecurringVisitDialog
+            clients={clients}
+            staff={staff}
+            onClose={() => setShowRecurringDialog(false)}
+          />
+        )}
+
+        {showTemplateManager && (
+          <VisitTemplateManager
+            onSelectTemplate={handleTemplateSelect}
+            onClose={() => setShowTemplateManager(false)}
+          />
+        )}
+
+        {showBulkEdit && (
+          <BulkEditVisitsDialog
+            visits={visits}
+            staff={staff}
+            clients={clients}
+            onClose={() => setShowBulkEdit(false)}
           />
         )}
 
