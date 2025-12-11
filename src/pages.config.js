@@ -63,6 +63,7 @@ import TechnicalSpecification from './pages/TechnicalSpecification';
 import ReportingEngine from './pages/ReportingEngine';
 import FollowUpTracker from './pages/FollowUpTracker';
 import EnquiryDetail from './pages/EnquiryDetail';
+import CarerDetail from './pages/CarerDetail';
 import __Layout from './Layout.jsx';
 
 
@@ -132,6 +133,7 @@ export const PAGES = {
     "ReportingEngine": ReportingEngine,
     "FollowUpTracker": FollowUpTracker,
     "EnquiryDetail": EnquiryDetail,
+    "CarerDetail": CarerDetail,
 }
 
 export const pagesConfig = {
