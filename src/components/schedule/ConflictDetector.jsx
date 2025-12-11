@@ -99,8 +99,10 @@ export default function ConflictDetector({
           type: "overallocation",
           severity: "high",
           carer: carer?.full_name || "Unknown",
+          carerId,
           date,
           totalHours,
+          shifts: shiftsForDay,
           message: `${carer?.full_name || 'Unknown'} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (exceeds 10 hours)`,
         });
       } else if (totalHours > 8) {
@@ -108,8 +110,10 @@ export default function ConflictDetector({
           type: "overallocation",
           severity: "medium",
           carer: carer?.full_name || "Unknown",
+          carerId,
           date,
           totalHours,
+          shifts: shiftsForDay,
           message: `${carer?.full_name || 'Unknown'} scheduled for ${totalHours.toFixed(1)} hours on ${format(parseISO(date), "MMM d")} (approaching limit)`,
         });
       }

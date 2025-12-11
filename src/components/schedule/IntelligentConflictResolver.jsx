@@ -34,6 +34,9 @@ export default function IntelligentConflictResolver({
   // Get all shifts involved in this conflict
   const conflictShifts = useMemo(() => {
     const shiftList = [];
+    if (conflict.shifts && Array.isArray(conflict.shifts)) {
+      return conflict.shifts;
+    }
     if (conflict.shift) shiftList.push(conflict.shift);
     if (conflict.shift1) shiftList.push(conflict.shift1);
     if (conflict.shift2) shiftList.push(conflict.shift2);
@@ -42,6 +45,9 @@ export default function IntelligentConflictResolver({
 
   // Find the carer involved
   const conflictCarer = useMemo(() => {
+    if (conflict.carerId) {
+      return carers.find(c => c?.id === conflict.carerId);
+    }
     if (conflict.shift?.carer_id) {
       return carers.find(c => c?.id === conflict.shift.carer_id);
     }
