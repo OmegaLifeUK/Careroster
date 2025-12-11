@@ -30,7 +30,10 @@ import DocumentAttachment from "@/components/documents/DocumentAttachment";
 
 export default function ShiftDialog({ shift, carers = [], clients = [], shifts = [], leaveRequests = [], onClose }) {
   // Determine if this is an existing shift (has id) or a new one (just pre-filled data)
-  const isExistingShift = shift?.id;
+  const isExistingShift = Boolean(shift?.id);
+  
+  // Store the shift ID separately to ensure it's not lost
+  const shiftIdRef = React.useRef(shift?.id);
   
   const [formData, setFormData] = useState({
     care_type: shift?.care_type || "residential_care",
@@ -107,8 +110,11 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
         duration_hours: calculateDuration(data.start_time, data.end_time),
       };
 
-      if (isExistingShift) {
-        return base44.entities.Shift.update(shift.id, shiftData);
+      // Use the stored ref ID to ensure we don't lose it
+      const existingShiftId = shiftIdRef.current;
+      
+      if (existingShiftId) {
+        return base44.entities.Shift.update(existingShiftId, shiftData);
       } else if (isRecurring && recurringSettings.endDate) {
         // Create multiple shifts for recurring
         const shifts = [];
