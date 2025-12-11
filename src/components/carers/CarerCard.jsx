@@ -4,7 +4,8 @@ import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Award, Edit, Trash2, ClipboardList, CheckCircle, AlertTriangle, Clock } from "lucide-react";
+import { Phone, Mail, MapPin, Award, Edit, Trash2, ClipboardList, CheckCircle, AlertTriangle, Clock, Eye } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { differenceInDays } from "date-fns";
 
 const statusColors = {
@@ -125,12 +126,12 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             size="sm" 
             onClick={(e) => {
               e.stopPropagation();
-              if (onEdit) onEdit(carer);
+              window.location.href = createPageUrl('CarerDetail') + `?id=${carer.id}`;
             }}
             className="flex-1"
           >
-            <Edit className="w-4 h-4 mr-2" />
-            Edit
+            <Eye className="w-4 h-4 mr-2" />
+            View Details
           </Button>
           <Button 
             variant="outline" 
