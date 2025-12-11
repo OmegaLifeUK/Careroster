@@ -1406,9 +1406,9 @@ export default function DomCareRosterView({
 
             {/* Clients Rows */}
             {(activePanel === "clients" || activePanel === "both") && (
-            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`} style={{ overscrollBehavior: 'contain' }}>
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[550px]"}`} style={{ overscrollBehavior: 'contain' }}>
               {activePanel === "both" && (
-                <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-emerald-50">
+                <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-emerald-50">
                   <div className="p-2 border-r flex items-center gap-2">
                     <User className="w-4 h-4 text-emerald-600" />
                     <span className="text-sm font-medium text-emerald-700">Service Users</span>
@@ -1421,15 +1421,15 @@ export default function DomCareRosterView({
               {activeClients.map((client) => {
                 return (
                   <div key={client.id} className="grid grid-cols-[200px_repeat(7,1fr)] border-b hover:bg-gray-50/30 transition-colors">
-                    <div className="p-1.5 border-r flex items-center gap-2">
+                    <div className="p-2 border-r flex items-center gap-2 bg-gray-50/50">
                       <img 
                         src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=36`}
                         alt={client.full_name}
                         className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
                       />
                       <div className="flex-1 min-w-0">
-                        <p className="font-medium text-xs truncate">{client.full_name}</p>
-                        <p className="text-[10px] text-gray-500 truncate flex items-center gap-0.5">
+                        <p className="font-semibold text-xs truncate text-gray-900">{client.full_name}</p>
+                        <p className="text-[10px] text-gray-600 truncate flex items-center gap-0.5 mt-0.5">
                           <MapPin className="w-2.5 h-2.5" />
                           {client.address?.postcode || 'Location'}
                         </p>
@@ -1447,11 +1447,11 @@ export default function DomCareRosterView({
                             <div
                               ref={provided.innerRef}
                               {...provided.droppableProps}
-                              className={`p-0.5 min-h-[50px] border-r transition-colors relative group ${
+                              className={`p-1.5 min-h-[80px] border-r transition-colors relative group ${
                                 isTodayDate ? 'bg-blue-50/40' : 'bg-white'
-                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-1 ring-inset ring-emerald-400' : ''}`}
+                              } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-400' : ''}`}
                             >
-                              <div className="space-y-1 relative z-10">
+                              <div className="space-y-1.5 relative z-10">
                                     {dayVisits.map((visit, vIdx) => (
                                       <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
                                         {(provided, snapshot) => (
@@ -1459,7 +1459,7 @@ export default function DomCareRosterView({
                                             ref={provided.innerRef}
                                             {...provided.draggableProps}
                                             {...provided.dragHandleProps}
-                                            className={snapshot.isDragging ? 'z-50' : ''}
+                                            className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
                                           >
                                             <VisitPill visit={visit} showStaff={true} showClient={false} />
                                           </div>
@@ -1473,9 +1473,9 @@ export default function DomCareRosterView({
                                   {dayVisits.length === 0 && (
                                     <button
                                       onClick={() => onAddVisit?.({ client_id: client.id, scheduled_date: dayStr })}
-                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50"
+                                      className="absolute inset-0 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity bg-emerald-50/50 z-10"
                                     >
-                                      <div className="w-6 h-6 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm">
+                                      <div className="w-7 h-7 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-lg hover:bg-emerald-600 transition-colors">
                                         <Plus className="w-4 h-4" />
                                       </div>
                                     </button>
@@ -1487,9 +1487,9 @@ export default function DomCareRosterView({
                                         e.stopPropagation();
                                         onAddVisit?.({ client_id: client.id, scheduled_date: dayStr });
                                       }}
-                                      className="absolute top-0.5 right-0.5 w-4 h-4 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-sm opacity-0 group-hover:opacity-100 transition-opacity z-20"
+                                      className="absolute top-1 right-1 w-5 h-5 rounded-full bg-emerald-500 text-white flex items-center justify-center shadow-md opacity-0 group-hover:opacity-100 transition-all hover:bg-emerald-600 z-20"
                                     >
-                                      <Plus className="w-3 h-3" />
+                                      <Plus className="w-3.5 h-3.5" />
                                     </button>
                                   )}
                                 </div>
