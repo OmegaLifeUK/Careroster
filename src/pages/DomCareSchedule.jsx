@@ -11,7 +11,7 @@ import RecurringVisitDialog from "../components/domcare/RecurringVisitDialog";
 import VisitTemplateManager from "../components/domcare/VisitTemplateManager";
 import BulkEditVisitsDialog from "../components/domcare/BulkEditVisitsDialog";
 import DomCareTimeline from "../components/domcare/DomCareTimeline";
-import DomCareRosterView from "../components/schedule/DomCareRosterView";
+import SimpleDomCareRoster from "../components/schedule/SimpleDomCareRoster";
 import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
@@ -288,19 +288,16 @@ export default function DomCareSchedule() {
             <p className="text-gray-500">Loading schedule...</p>
           </div>
         ) : view === "roster" ? (
-          <DomCareRosterView
+          <SimpleDomCareRoster
             visits={visits}
             staff={staff}
             clients={clients}
-            runs={runs}
-            staffAvailability={staffAvailability}
             onVisitClick={handleEditVisit}
             onVisitUpdate={handleVisitUpdate}
             onAddVisit={(visitData) => {
               setEditingVisit(visitData);
               setShowVisitDialog(true);
             }}
-            locationName="Domiciliary Care"
           />
         ) : view === "split" ? (
           <div className="grid grid-rows-[200px_1fr] gap-4 h-[calc(100vh-280px)]">
@@ -348,19 +345,16 @@ export default function DomCareSchedule() {
               </div>
             </div>
             
-            <DomCareRosterView
+            <SimpleDomCareRoster
               visits={visits}
               staff={staff}
               clients={clients}
-              runs={runs}
-              staffAvailability={staffAvailability}
               onVisitClick={handleEditVisit}
               onVisitUpdate={handleVisitUpdate}
               onAddVisit={(visitData) => {
                 setEditingVisit(visitData);
                 setShowVisitDialog(true);
               }}
-              locationName="Domiciliary Care"
             />
           </div>
         ) : view === "timeline" ? (
