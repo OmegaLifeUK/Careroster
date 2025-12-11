@@ -518,7 +518,7 @@ export default function DomCareRosterView({
     );
   };
 
-  const TimelineVisit = ({ visit }) => {
+  const TimelineVisit = ({ visit, isDragging = false }) => {
     const colors = VISIT_COLORS[visit.status] || VISIT_COLORS.scheduled;
     const startTime = getVisitTime(visit, 'scheduled_start') || visit.scheduled_start;
     const left = getTimePosition(startTime);
@@ -532,11 +532,12 @@ export default function DomCareRosterView({
           absolute top-1 bottom-1 rounded cursor-pointer transition-all
           ${colors.bg} ${colors.border} border
           hover:shadow-lg hover:z-10
-          ${!visitStaffId ? 'border-dashed border-orange-400 bg-orange-50/80' : ''}
+          ${!visitStaffId ? 'border-dashed border-2 border-orange-400 bg-orange-50/80' : ''}
+          ${isDragging ? 'shadow-2xl z-50 opacity-90' : ''}
         `}
-        style={{ left: `${left}%`, width: `${width}%`, minWidth: '40px' }}
+        style={{ left: `${left}%`, width: `${width}%`, minWidth: '50px' }}
       >
-        <div className="px-1.5 py-0.5 text-[10px] truncate">
+        <div className="px-2 py-1 text-[10px] truncate">
           <span className={`font-semibold ${colors.text}`}>
             {getClientName(visit.client_id)}
           </span>
@@ -1108,9 +1109,10 @@ export default function DomCareRosterView({
 
       {viewMode === "day" ? (
         /* DAY TIMELINE VIEW */
+        <DragDropContext onDragEnd={handleDragEnd}>
         <div className="flex flex-col">
           <div className="flex border-b bg-gray-50">
-            <div className="w-56 p-2 border-r flex-shrink-0" />
+            <div className="w-[200px] p-2 border-r flex-shrink-0" />
             <div className="flex-1 flex">
               {TIMELINE_HOURS.map(hour => (
                 <div key={hour} className="flex-1 text-center py-2 text-xs text-gray-500 border-r">
@@ -1141,46 +1143,88 @@ export default function DomCareRosterView({
 
                   return (
                     <div key={staffMember.id} className="flex border-b hover:bg-gray-50 transition-colors">
-                      <div className="w-52 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                      <div className="w-[200px] p-3 border-r flex-shrink-0 flex items-center gap-2 bg-white">
                         <img 
-                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=36`}
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=0ea5e9&color=fff&size=40`}
                           alt={staffMember.full_name}
-                          className="w-9 h-9 rounded-full flex-shrink-0 border-2 border-white shadow-sm"
+                          className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-blue-200 shadow-sm"
                         />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-xs truncate">{staffMember.full_name}</p>
-                          <div className="flex items-center gap-1 text-[10px] text-gray-500">
+                          <p className="font-semibold text-sm truncate">{staffMember.full_name}</p>
+                          <div className="flex items-center gap-1 text-[10px] text-gray-500 mt-1">
                             {staffMember.vehicle_type && (
-                              <span className="flex items-center gap-0.5">
-                                <Car className="w-2.5 h-2.5" />
+                              <Badge className="bg-blue-50 text-blue-700 text-[9px] px-1.5 py-0.5 border border-blue-200">
+                                <Car className="w-2.5 h-2.5 mr-0.5" />
                                 {staffMember.vehicle_type}
-                              </span>
+                              </Badge>
                             )}
-                            <span className="mx-1">•</span>
-                            <span className={`${
-                              hoursStatus.status === 'full' ? 'text-red-600 font-semibold' :
-                              hoursStatus.status === 'near' ? 'text-amber-600' : 'text-gray-500'
+                            <Badge className={`text-[9px] px-1.5 py-0.5 font-semibold ${
+                              hoursStatus.status === 'full' ? 'bg-red-100 text-red-700 border border-red-300' :
+                              hoursStatus.status === 'near' ? 'bg-amber-100 text-amber-700 border border-amber-300' : 'bg-green-100 text-green-700 border border-green-300'
                             }`}>
-                              {hoursStatus.weekHours.toFixed(0)}h/{hoursStatus.contracted}h
-                            </span>
+                              {hoursStatus.weekHours.toFixed(1)}h/{hoursStatus.contracted}h
+                            </Badge>
                           </div>
                         </div>
                       </div>
-                      <div className={`flex-1 relative h-12 ${staffUnavailable ? 'bg-gray-100' : 'bg-white'}`}>
-                        {staffUnavailable && (
-                          <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
-                            backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.04) 8px, rgba(0,0,0,.04) 16px)'
-                          }} />
+                      <Droppable droppableId={`${staffMember.id}_${format(selectedDate, 'yyyy-MM-dd')}`}>
+                        {(provided, snapshot) => (
+                          <div 
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`flex-1 relative min-h-[80px] ${staffUnavailable ? 'bg-gray-100' : 'bg-white'} ${
+                              snapshot.isDraggingOver ? 'bg-teal-100/50 ring-2 ring-inset ring-teal-400' : ''
+                            }`}
+                          >
+                            {staffUnavailable && (
+                              <div className="absolute inset-0 bg-repeat pointer-events-none" style={{
+                                backgroundImage: 'repeating-linear-gradient(45deg, transparent, transparent 8px, rgba(0,0,0,.04) 8px, rgba(0,0,0,.04) 16px)'
+                              }} />
+                            )}
+                            <div className="absolute inset-0 flex">
+                              {TIMELINE_HOURS.map(hour => (
+                                <div key={hour} className="flex-1 border-r border-gray-100" />
+                              ))}
+                            </div>
+                            {dayVisits.map((visit, vIdx) => {
+                              const nextVisit = dayVisits[vIdx + 1];
+                              const hasTravel = visit.estimated_travel_to_next > 0;
+                              
+                              return (
+                                <React.Fragment key={visit.id}>
+                                  <Draggable draggableId={visit.id} index={vIdx}>
+                                    {(provided, snapshot) => (
+                                      <div
+                                        ref={provided.innerRef}
+                                        {...provided.draggableProps}
+                                        {...provided.dragHandleProps}
+                                      >
+                                        <TimelineVisit visit={visit} isDragging={snapshot.isDragging} />
+                                      </div>
+                                    )}
+                                  </Draggable>
+                                  {hasTravel && nextVisit && (
+                                    <div 
+                                      className="absolute h-4 bg-gradient-to-r from-blue-400 via-blue-500 to-blue-600 rounded-full flex items-center justify-center shadow-md z-30 border border-blue-300"
+                                      style={{ 
+                                        left: `${getTimePosition(getVisitTime(visit, 'scheduled_end')) + 0.5}%`,
+                                        width: `${Math.max(visit.estimated_travel_to_next * 0.8, 3)}%`,
+                                        top: '50%',
+                                        transform: 'translateY(-50%)'
+                                      }}
+                                    >
+                                      <span className="text-[9px] text-white font-bold px-1.5">
+                                        🚗 {visit.estimated_travel_to_next}min
+                                      </span>
+                                    </div>
+                                  )}
+                                </React.Fragment>
+                              );
+                            })}
+                            {provided.placeholder}
+                          </div>
                         )}
-                        <div className="absolute inset-0 flex">
-                          {TIMELINE_HOURS.map(hour => (
-                            <div key={hour} className="flex-1 border-r border-gray-100" />
-                          ))}
-                        </div>
-                        {dayVisits.map(visit => (
-                          <TimelineVisit key={visit.id} visit={visit} />
-                        ))}
-                      </div>
+                      </Droppable>
                     </div>
                   );
                 })}
@@ -1201,28 +1245,51 @@ export default function DomCareRosterView({
                   
                   return (
                     <div key={client.id} className="flex border-b hover:bg-gray-50 transition-colors">
-                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
-                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-400 to-emerald-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
-                          {client.full_name?.charAt(0)}
-                        </div>
+                      <div className="w-[200px] p-3 border-r flex-shrink-0 flex items-center gap-2 bg-white">
+                        <img 
+                          src={`https://ui-avatars.com/api/?name=${encodeURIComponent(client.full_name || 'C')}&background=10b981&color=fff&size=40`}
+                          alt={client.full_name}
+                          className="w-10 h-10 rounded-full flex-shrink-0 border-2 border-emerald-200 shadow-sm"
+                        />
                         <div className="flex-1 min-w-0">
-                          <p className="font-medium text-sm truncate">{client.full_name}</p>
-                          <p className="text-xs text-gray-500 truncate flex items-center gap-1">
+                          <p className="font-semibold text-sm truncate">{client.full_name}</p>
+                          <p className="text-[11px] text-gray-600 truncate flex items-center gap-1 mt-1">
                             <MapPin className="w-3 h-3" />
                             {client.address?.postcode || 'Location'}
                           </p>
                         </div>
                       </div>
-                      <div className="flex-1 relative h-14 bg-gray-50/50">
-                        <div className="absolute inset-0 flex">
-                          {TIMELINE_HOURS.map(hour => (
-                            <div key={hour} className="flex-1 border-r border-gray-100" />
-                          ))}
-                        </div>
-                        {dayVisits.map(visit => (
-                          <TimelineVisit key={visit.id} visit={visit} />
-                        ))}
-                      </div>
+                      <Droppable droppableId={`client_${client.id}_${format(selectedDate, 'yyyy-MM-dd')}`}>
+                        {(provided, snapshot) => (
+                          <div 
+                            ref={provided.innerRef}
+                            {...provided.droppableProps}
+                            className={`flex-1 relative min-h-[80px] bg-white ${
+                              snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-400' : ''
+                            }`}
+                          >
+                            <div className="absolute inset-0 flex">
+                              {TIMELINE_HOURS.map(hour => (
+                                <div key={hour} className="flex-1 border-r border-gray-100" />
+                              ))}
+                            </div>
+                            {dayVisits.map((visit, vIdx) => (
+                              <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
+                                {(provided, snapshot) => (
+                                  <div
+                                    ref={provided.innerRef}
+                                    {...provided.draggableProps}
+                                    {...provided.dragHandleProps}
+                                  >
+                                    <TimelineVisit visit={visit} isDragging={snapshot.isDragging} />
+                                  </div>
+                                )}
+                              </Draggable>
+                            ))}
+                            {provided.placeholder}
+                          </div>
+                        )}
+                      </Droppable>
                     </div>
                   );
                 })}
@@ -1230,6 +1297,7 @@ export default function DomCareRosterView({
             </div>
           )}
         </div>
+        </DragDropContext>
       ) : (
         /* WEEK GRID VIEW */
         <DragDropContext 
