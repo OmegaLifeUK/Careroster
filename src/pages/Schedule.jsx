@@ -497,6 +497,7 @@ export default function Schedule() {
               carerAvailability={carerAvailability}
               onShiftClick={handleEdit}
               onShiftUpdate={handleShiftUpdate}
+              onShiftDelete={handleDelete}
               onAddShift={(shiftData) => {
                 setEditingShift(shiftData);
                 setShowShiftDialog(true);

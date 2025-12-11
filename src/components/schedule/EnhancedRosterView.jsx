@@ -47,6 +47,7 @@ export default function EnhancedRosterView({
   onShiftClick,
   onShiftUpdate,
   onAddShift,
+  onShiftDelete,
   locationName = "Care Home"
 }) {
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -358,7 +359,7 @@ export default function EnhancedRosterView({
           }
         }}
         className={`
-          px-2 py-1 rounded-md text-xs cursor-pointer transition-all relative
+          px-2 py-1 rounded-md text-xs cursor-pointer transition-all relative group/shift
           ${colors.bg} ${colors.border} ${colors.text} border
           hover:shadow-md hover:scale-[1.02]
           ${!shift.carer_id ? 'border-dashed border-orange-400 bg-orange-50' : ''}
@@ -373,6 +374,19 @@ export default function EnhancedRosterView({
               </svg>
             )}
           </div>
+        )}
+        {!bulkMode && onShiftDelete && (
+          <button
+            onClick={(e) => {
+              e.stopPropagation();
+              if (confirm('Delete this shift?')) {
+                onShiftDelete(shift.id);
+              }
+            }}
+            className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 hover:bg-red-600 rounded-full flex items-center justify-center z-10 opacity-0 group-hover/shift:opacity-100 transition-opacity shadow-sm"
+          >
+            <X className="w-3 h-3 text-white" />
+          </button>
         )}
         <div className="flex items-center gap-1">
           <div className={`w-1.5 h-1.5 rounded-full ${colors.dot}`} />
