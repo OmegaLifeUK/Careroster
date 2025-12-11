@@ -13,6 +13,7 @@ import {
   DropdownMenuSeparator,
 } from "@/components/ui/dropdown-menu";
 import IntelligentConflictResolver from "./IntelligentConflictResolver";
+import BulkConflictResolver from "./BulkConflictResolver";
 
 export default function ConflictDetector({ 
   shifts = [], 
@@ -32,6 +33,7 @@ export default function ConflictDetector({
   const [bulkActionMode, setBulkActionMode] = React.useState(false);
   const [showResolver, setShowResolver] = React.useState(false);
   const [resolverConflict, setResolverConflict] = React.useState(null);
+  const [showBulkResolver, setShowBulkResolver] = React.useState(false);
 
   const detectConflicts = () => {
     const conflicts = [];
@@ -316,6 +318,10 @@ export default function ConflictDetector({
     return severity === "high" ? "text-red-600" : "text-yellow-600";
   };
 
+  const getSelectedConflicts = () => {
+    return selectedConflicts.map(idx => conflicts[idx]).filter(Boolean);
+  };
+
   return (
     <>
       {showResolver && resolverConflict && (
@@ -333,6 +339,21 @@ export default function ConflictDetector({
             setShowResolver(false);
             setResolverConflict(null);
           }}
+        />
+      )}
+      {showBulkResolver && (
+        <BulkConflictResolver
+          conflicts={getSelectedConflicts()}
+          carers={carers}
+          shifts={shifts}
+          carerAvailability={carerAvailability}
+          leaveRequests={leaveRequests}
+          onResolve={() => {
+            setShowBulkResolver(false);
+            setSelectedConflicts([]);
+            setBulkActionMode(false);
+          }}
+          onClose={() => setShowBulkResolver(false)}
         />
       )}
       <Card className="border-orange-200">
@@ -418,6 +439,15 @@ export default function ConflictDetector({
               <div className="flex gap-2">
                 <Button
                   size="sm"
+                  disabled={selectedConflicts.length === 0}
+                  onClick={() => setShowBulkResolver(true)}
+                  className="bg-purple-600 hover:bg-purple-700"
+                >
+                  <Brain className="w-4 h-4 mr-1" />
+                  AI Resolve All
+                </Button>
+                <Button
+                  size="sm"
                   variant="outline"
                   disabled={selectedConflicts.length === 0}
                   onClick={() => handleBulkAction('unassign')}
@@ -433,7 +463,7 @@ export default function ConflictDetector({
                   className="text-blue-700 border-blue-300"
                 >
                   <Send className="w-4 h-4 mr-1" />
-                  Send Coverage Requests
+                  Send Requests
                 </Button>
                 <Button
                   size="sm"
@@ -443,7 +473,7 @@ export default function ConflictDetector({
                   className="text-red-700 border-red-300"
                 >
                   <Trash2 className="w-4 h-4 mr-1" />
-                  Cancel Shifts
+                  Cancel
                 </Button>
               </div>
             </div>
