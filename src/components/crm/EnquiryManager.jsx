@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Plus, Phone, Mail, Calendar, User, FileText, Send } from "lucide-react";
+import { createPageUrl } from "@/utils";
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 
@@ -326,7 +327,12 @@ Care Team`,
               </div>
 
               <div className="flex gap-2">
-                <Button size="sm" variant="outline" onClick={() => handleEdit(enquiry)} className="flex-1">
+                <Button 
+                  size="sm" 
+                  variant="outline" 
+                  onClick={() => window.location.href = createPageUrl('EnquiryDetail') + `?id=${enquiry.id}`} 
+                  className="flex-1"
+                >
                   View Details
                 </Button>
                 {enquiry.status === "contacted" && enquiry.contact_email && (
