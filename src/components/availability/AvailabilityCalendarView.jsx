@@ -14,7 +14,8 @@ import {
   parseISO,
   isWithinInterval,
   addMonths,
-  subMonths
+  subMonths,
+  getWeek
 } from "date-fns";
 
 export default function AvailabilityCalendarView({ carerId, availability = [], leaveRequests = [] }) {
@@ -60,10 +61,27 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
     });
     if (isUnavailable) return { status: 'unavailable', label: 'Unavailable', color: 'bg-orange-500' };
 
-    // Check working hours
-    const hasWorkingHours = workingHours.some(w => w.day_of_week === dayOfWeek);
-    if (hasWorkingHours) {
-      const hours = workingHours.find(w => w.day_of_week === dayOfWeek);
+    // Check working hours - handle alternate weeks
+    const hasAlternateWeeks = workingHours.some(w => 
+      w.schedule_pattern === 'alternate_week_1' || w.schedule_pattern === 'alternate_week_2'
+    );
+    
+    let hours = null;
+    if (hasAlternateWeeks) {
+      // Determine which week pattern this date falls into
+      const weekNumber = getWeek(date, { weekStartsOn: 1 });
+      const isWeek1 = weekNumber % 2 === 1;
+      const targetPattern = isWeek1 ? 'alternate_week_1' : 'alternate_week_2';
+      
+      hours = workingHours.find(w => 
+        w.day_of_week === dayOfWeek && w.schedule_pattern === targetPattern
+      );
+    } else {
+      // Standard weekly pattern or specific dates
+      hours = workingHours.find(w => w.day_of_week === dayOfWeek);
+    }
+    
+    if (hours) {
       return { 
         status: 'working', 
         label: `${hours.start_time} - ${hours.end_time}`,
