@@ -1183,17 +1183,17 @@ export default function DomCareRosterView({
           }}
         >
           <div className="flex flex-col" style={{ overscrollBehavior: 'contain' }}>
-            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
-              <div className="p-2 border-r flex items-center gap-1.5">
+            <div className="grid grid-cols-[200px_repeat(7,1fr)] border-b bg-gradient-to-b from-gray-100 to-gray-50 sticky top-0 z-20 shadow-sm">
+              <div className="p-3 border-r flex items-center gap-2 bg-gray-100">
                 {activePanel === "clients" ? (
                   <>
-                    <User className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="font-semibold text-xs text-gray-700">Service Users</span>
+                    <User className="w-4 h-4 text-gray-600" />
+                    <span className="font-bold text-sm text-gray-800">Service Users</span>
                   </>
                 ) : (
                   <>
-                    <Users className="w-3.5 h-3.5 text-gray-500" />
-                    <span className="font-semibold text-xs text-gray-700">Employee</span>
+                    <Users className="w-4 h-4 text-gray-600" />
+                    <span className="font-bold text-sm text-gray-800">Care Workers</span>
                   </>
                 )}
               </div>
@@ -1209,25 +1209,30 @@ export default function DomCareRosterView({
                 return (
                   <div 
                     key={idx} 
-                    className={`p-1.5 border-r text-center transition-colors ${
-                      isTodayDate ? 'bg-blue-50' : ''
+                    className={`p-2 border-r text-center transition-colors ${
+                      isTodayDate ? 'bg-blue-100 border-l-2 border-r-2 border-blue-400' : ''
                     }`}
                   >
-                    <p className={`text-[10px] font-semibold uppercase ${isTodayDate ? 'text-blue-600' : 'text-gray-500'}`}>
+                    <p className={`text-[10px] font-bold uppercase tracking-wide mb-0.5 ${isTodayDate ? 'text-blue-700' : 'text-gray-600'}`}>
                       {format(day, 'EEE')}
                     </p>
-                    <p className={`text-base font-bold ${isTodayDate ? 'text-blue-700' : 'text-gray-900'}`}>
+                    <p className={`text-2xl font-black mb-1 ${isTodayDate ? 'text-blue-700' : 'text-gray-900'}`}>
                       {format(day, 'd')}
                     </p>
-                    <div className="flex items-center justify-center gap-1 mt-0.5">
-                      <Badge variant="outline" className="text-[9px] px-1 py-0 bg-green-50 text-green-700 border-green-200">
-                        {allocatedCount}
-                      </Badge>
-                      {unassignedCount > 0 && (
-                        <Badge variant="outline" className="text-[9px] px-1 py-0 bg-red-50 text-red-700 border-red-200">
-                          {unassignedCount}
+                    <div className="flex flex-col gap-1 items-center">
+                      <div className="flex items-center gap-1">
+                        <Badge className="text-[9px] px-1.5 py-0.5 bg-green-100 text-green-800 border border-green-300 font-semibold">
+                          ✓ {allocatedCount}
                         </Badge>
-                      )}
+                        {unassignedCount > 0 && (
+                          <Badge className="text-[9px] px-1.5 py-0.5 bg-red-100 text-red-800 border border-red-300 font-semibold">
+                            ! {unassignedCount}
+                          </Badge>
+                        )}
+                      </div>
+                      <Badge className="text-[9px] px-1.5 py-0.5 bg-gray-100 text-gray-700 border border-gray-300">
+                        {dayTotalHours.toFixed(1)}h
+                      </Badge>
                     </div>
                   </div>
                 );
@@ -1462,21 +1467,37 @@ export default function DomCareRosterView({
                                 isTodayDate ? 'bg-blue-50/40' : 'bg-white'
                               } ${snapshot.isDraggingOver ? 'bg-emerald-100/50 ring-2 ring-inset ring-emerald-400' : ''}`}
                             >
-                              <div className="space-y-1.5 relative z-10">
-                                    {dayVisits.map((visit, vIdx) => (
-                                      <Draggable key={visit.id} draggableId={visit.id} index={vIdx}>
-                                        {(provided, snapshot) => (
-                                          <div
-                                            ref={provided.innerRef}
-                                            {...provided.draggableProps}
-                                            {...provided.dragHandleProps}
-                                            className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
-                                          >
-                                            <VisitPill visit={visit} showStaff={true} showClient={false} />
-                                          </div>
-                                        )}
-                                      </Draggable>
-                                    ))}
+                              <div className="flex flex-col gap-1.5 relative z-10">
+                                    {dayVisits.map((visit, vIdx) => {
+                                      const nextVisit = dayVisits[vIdx + 1];
+                                      const hasTravel = visit.estimated_travel_to_next > 0;
+                                      
+                                      return (
+                                        <div key={visit.id}>
+                                          <Draggable draggableId={visit.id} index={vIdx}>
+                                            {(provided, snapshot) => (
+                                              <div
+                                                ref={provided.innerRef}
+                                                {...provided.draggableProps}
+                                                {...provided.dragHandleProps}
+                                                className={snapshot.isDragging ? 'z-50 shadow-2xl' : ''}
+                                              >
+                                                <VisitPill visit={visit} showStaff={true} showClient={false} />
+                                              </div>
+                                            )}
+                                          </Draggable>
+                                          {hasTravel && nextVisit && (
+                                            <div className="flex items-center gap-1 py-0.5">
+                                              <div className="flex-1 h-1 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" 
+                                                   style={{ width: `${Math.min(visit.estimated_travel_to_next * 2, 100)}%` }} />
+                                              <span className="text-[9px] text-blue-600 font-semibold">
+                                                {visit.estimated_travel_to_next}min
+                                              </span>
+                                            </div>
+                                          )}
+                                        </div>
+                                      );
+                                    })}
                                   </div>
                                   {provided.placeholder}
 
