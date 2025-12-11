@@ -398,7 +398,12 @@ export default function DayCentreSessions() {
           </Button>
         </div>
 
-        {viewMode === "roster" ? (
+        {isLoading ? (
+          <div className="bg-white rounded-lg border p-12 text-center">
+            <div className="animate-spin w-12 h-12 border-4 border-amber-500 border-t-transparent rounded-full mx-auto mb-4" />
+            <p className="text-gray-500">Loading sessions...</p>
+          </div>
+        ) : viewMode === "roster" ? (
           <DayCentreRosterView
             sessions={sessions}
             activities={activities}
@@ -408,6 +413,7 @@ export default function DayCentreSessions() {
             onSessionUpdate={async (sessionId, updatedData) => {
               try {
                 await base44.entities.DayCentreSession.update(sessionId, updatedData);
+                queryClient.invalidateQueries({ queryKey: ['daycentre-sessions'] });
               } catch (error) {
                 console.error('Error updating session:', error);
               }
