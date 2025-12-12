@@ -1,162 +1,184 @@
-import React, { useState } from "react";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Navigation, MapPin, Clock, Zap, Map, ArrowRight } from "lucide-react";
 import { calculateTravelTime } from "./TravelTimeCalculator";
 
 /**
- * Route Optimizer Component
- * Optimizes visit sequences to minimize travel time and distance
- * Provides visual route planning for domiciliary care runs
+ * AI-Powered Route Optimizer using nearest neighbor heuristic with 2-opt improvement
+ * Calculates the most efficient visiting order to minimize total travel time
  */
 
-export default function RouteOptimizer({ visits, staff, onApplyOptimization }) {
-  const [optimizing, setOptimizing] = useState(false);
+export function optimizeRoute(visits, staffMember, clients) {
+  if (!visits || visits.length <= 1) {
+    return {
+      optimizedVisits: visits,
+      totalTravelTime: 0,
+      totalDistance: 0,
+      savings: 0
+    };
+  }
 
-  const calculateRouteStats = (visitSequence, staffAddress) => {
-    let totalDistance = 0;
-    let totalTravelTime = 0;
-    let currentLocation = staffAddress;
+  // Sort visits by scheduled start time first (to respect time constraints)
+  const sortedByTime = [...visits].sort((a, b) => 
+    a.scheduled_start.localeCompare(b.scheduled_start)
+  );
 
-    visitSequence.forEach(visit => {
-      if (visit.client?.address && currentLocation) {
-        const travel = calculateTravelTime(currentLocation, visit.client.address, staff?.vehicle_type || 'car');
-        totalDistance += travel.distance;
-        totalTravelTime += travel.time;
-        currentLocation = visit.client.address;
+  // Get client addresses
+  const visitsWithClients = sortedByTime.map(v => ({
+    ...v,
+    client: clients.find(c => c.id === v.client_id)
+  }));
+
+  // Calculate original route metrics
+  const originalMetrics = calculateRouteMetrics(visitsWithClients, staffMember);
+
+  // Apply nearest neighbor with time windows
+  const optimized = nearestNeighborWithTimeWindows(visitsWithClients, staffMember);
+
+  // Apply 2-opt improvement
+  const improved = twoOptImprovement(optimized, staffMember);
+
+  // Calculate optimized metrics
+  const optimizedMetrics = calculateRouteMetrics(improved, staffMember);
+
+  return {
+    optimizedVisits: improved,
+    totalTravelTime: optimizedMetrics.travelTime,
+    totalDistance: optimizedMetrics.distance,
+    originalTravelTime: originalMetrics.travelTime,
+    savings: originalMetrics.travelTime - optimizedMetrics.travelTime,
+    savingsPercent: originalMetrics.travelTime > 0 
+      ? Math.round(((originalMetrics.travelTime - optimizedMetrics.travelTime) / originalMetrics.travelTime) * 100)
+      : 0
+  };
+}
+
+function calculateRouteMetrics(visits, staffMember) {
+  let totalTravelTime = 0;
+  let totalDistance = 0;
+
+  for (let i = 0; i < visits.length - 1; i++) {
+    const current = visits[i];
+    const next = visits[i + 1];
+
+    if (current.client?.address && next.client?.address) {
+      const travel = calculateTravelTime(
+        current.client.address,
+        next.client.address,
+        staffMember.vehicle_type || 'car'
+      );
+      totalTravelTime += travel.time;
+      totalDistance += travel.distance;
+    }
+  }
+
+  return { travelTime: totalTravelTime, distance: totalDistance };
+}
+
+function nearestNeighborWithTimeWindows(visits, staffMember) {
+  if (visits.length <= 2) return visits;
+
+  const result = [visits[0]]; // Start with first visit
+  const remaining = visits.slice(1);
+
+  while (remaining.length > 0) {
+    const current = result[result.length - 1];
+    let bestIdx = -1;
+    let bestScore = Infinity;
+
+    remaining.forEach((candidate, idx) => {
+      // Calculate score: weighted combination of distance and time constraint
+      const travel = calculateTravelTime(
+        current.client?.address || {},
+        candidate.client?.address || {},
+        staffMember.vehicle_type || 'car'
+      );
+
+      // Time feasibility check
+      const currentEnd = new Date(current.scheduled_end);
+      const candidateStart = new Date(candidate.scheduled_start);
+      const travelTimeMs = travel.time * 60 * 1000;
+      const arrivalTime = new Date(currentEnd.getTime() + travelTimeMs);
+
+      // Penalize if we'd arrive late
+      const latePenalty = arrivalTime > candidateStart ? 
+        (arrivalTime - candidateStart) / (60 * 1000) : 0;
+
+      const score = travel.time + (latePenalty * 10); // Heavy penalty for being late
+
+      if (score < bestScore) {
+        bestScore = score;
+        bestIdx = idx;
       }
     });
 
-    return { totalDistance, totalTravelTime };
-  };
-
-  const optimizeRoute = () => {
-    setOptimizing(true);
-
-    // Nearest neighbor algorithm for route optimization
-    const staffAddress = staff?.address;
-    if (!staffAddress || !visits || visits.length === 0) {
-      setOptimizing(false);
-      return;
-    }
-
-    const optimized = [];
-    let currentLocation = staffAddress;
-    const remaining = [...visits];
-
-    while (remaining.length > 0) {
-      let nearestIndex = 0;
-      let nearestDistance = Infinity;
-
-      remaining.forEach((visit, index) => {
-        if (!visit.client?.address) return;
-        const travel = calculateTravelTime(currentLocation, visit.client.address, staff?.vehicle_type);
-        if (travel.distance < nearestDistance) {
-          nearestDistance = travel.distance;
-          nearestIndex = index;
-        }
-      });
-
-      const nextVisit = remaining.splice(nearestIndex, 1)[0];
-      optimized.push({
-        ...nextVisit,
-        sequence_number: optimized.length + 1
-      });
-      currentLocation = nextVisit.client?.address || currentLocation;
-    }
-
-    setOptimizing(false);
-    onApplyOptimization?.(optimized);
-  };
-
-  const currentStats = calculateRouteStats(visits, staff?.address);
-  
-  // Calculate optimized stats
-  let optimizedSequence = [];
-  if (staff?.address && visits.length > 0) {
-    let currentLocation = staff.address;
-    const remaining = [...visits];
-    
-    while (remaining.length > 0) {
-      let nearestIndex = 0;
-      let nearestDistance = Infinity;
-
-      remaining.forEach((visit, index) => {
-        if (!visit.client?.address) return;
-        const travel = calculateTravelTime(currentLocation, visit.client.address);
-        if (travel.distance < nearestDistance) {
-          nearestDistance = travel.distance;
-          nearestIndex = index;
-        }
-      });
-
-      const nextVisit = remaining.splice(nearestIndex, 1)[0];
-      optimizedSequence.push(nextVisit);
-      currentLocation = nextVisit.client?.address || currentLocation;
+    if (bestIdx !== -1) {
+      result.push(remaining[bestIdx]);
+      remaining.splice(bestIdx, 1);
     }
   }
-  
-  const optimizedStats = calculateRouteStats(optimizedSequence, staff?.address);
-  const savings = {
-    distance: currentStats.totalDistance - optimizedStats.totalDistance,
-    time: currentStats.totalTravelTime - optimizedStats.totalTravelTime
-  };
 
-  return (
-    <div className="border rounded-lg p-4 bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="flex items-center justify-between mb-3">
-        <div className="flex items-center gap-2">
-          <Navigation className="w-5 h-5 text-blue-600" />
-          <h3 className="font-semibold text-sm">Route Optimization</h3>
-        </div>
-        <Button
-          size="sm"
-          onClick={optimizeRoute}
-          disabled={optimizing || visits.length < 2}
-          className="bg-blue-600 hover:bg-blue-700"
-        >
-          <Zap className="w-3.5 h-3.5 mr-1.5" />
-          Optimize Route
-        </Button>
-      </div>
+  return result;
+}
 
-      <div className="grid grid-cols-2 gap-3 text-xs">
-        <div className="bg-white rounded-lg p-2.5 border">
-          <p className="text-gray-500 mb-1">Current Route</p>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Distance:</span>
-              <span className="font-semibold">{currentStats.totalDistance.toFixed(1)} mi</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-gray-600">Travel Time:</span>
-              <span className="font-semibold">{currentStats.totalTravelTime} min</span>
-            </div>
-          </div>
-        </div>
+function twoOptImprovement(visits, staffMember) {
+  if (visits.length <= 3) return visits;
 
-        <div className="bg-green-50 rounded-lg p-2.5 border border-green-200">
-          <p className="text-green-700 mb-1 font-medium">Optimized Route</p>
-          <div className="space-y-1">
-            <div className="flex items-center justify-between">
-              <span className="text-green-700">Distance:</span>
-              <span className="font-bold text-green-800">{optimizedStats.totalDistance.toFixed(1)} mi</span>
-            </div>
-            <div className="flex items-center justify-between">
-              <span className="text-green-700">Travel Time:</span>
-              <span className="font-bold text-green-800">{optimizedStats.totalTravelTime} min</span>
-            </div>
-          </div>
-        </div>
-      </div>
+  let route = [...visits];
+  let improved = true;
 
-      {savings.time > 0 && (
-        <div className="mt-3 p-2 bg-green-100 border border-green-300 rounded-lg text-center">
-          <p className="text-green-800 font-semibold text-xs">
-            Save {savings.time} min & {savings.distance.toFixed(1)} miles
-          </p>
-        </div>
-      )}
-    </div>
-  );
+  while (improved) {
+    improved = false;
+
+    for (let i = 1; i < route.length - 2; i++) {
+      for (let j = i + 1; j < route.length - 1; j++) {
+        // Try reversing segment between i and j
+        const newRoute = [
+          ...route.slice(0, i),
+          ...route.slice(i, j + 1).reverse(),
+          ...route.slice(j + 1)
+        ];
+
+        const currentCost = calculateRouteMetrics(route, staffMember).travelTime;
+        const newCost = calculateRouteMetrics(newRoute, staffMember).travelTime;
+
+        if (newCost < currentCost && isTimeFeasible(newRoute)) {
+          route = newRoute;
+          improved = true;
+        }
+      }
+    }
+  }
+
+  return route;
+}
+
+function isTimeFeasible(visits) {
+  for (let i = 0; i < visits.length - 1; i++) {
+    const current = visits[i];
+    const next = visits[i + 1];
+
+    const currentEnd = new Date(current.scheduled_end);
+    const nextStart = new Date(next.scheduled_start);
+
+    if (currentEnd >= nextStart) {
+      return false; // Overlap or impossible timing
+    }
+  }
+  return true;
+}
+
+export function calculateRouteCoordinates(visits, clients) {
+  return visits
+    .map(v => {
+      const client = clients.find(c => c.id === v.client_id);
+      if (!client?.address?.latitude || !client?.address?.longitude) {
+        return null;
+      }
+      return {
+        lat: client.address.latitude,
+        lng: client.address.longitude,
+        clientName: client.full_name,
+        visitTime: v.scheduled_start,
+        address: client.address
+      };
+    })
+    .filter(Boolean);
 }

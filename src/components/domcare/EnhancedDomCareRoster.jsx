@@ -20,7 +20,8 @@ import {
 import { format, parseISO } from "date-fns";
 import { calculateTravelTime } from "../schedule/TravelTimeCalculator";
 import { checkWorkingTimeCompliance } from "../schedule/WorkingTimeRegulations";
-import AIRouteOptimizer from "./AIRouteOptimizer";
+import { optimizeRoute, calculateRouteCoordinates } from "../schedule/RouteOptimizer";
+import RouteMapViewer from "./RouteMapViewer";
 
 const CARE_COLORS = {
   ideal: { bg: "bg-emerald-50", border: "border-emerald-300", text: "text-emerald-800", indicator: "bg-emerald-500" },
@@ -43,8 +44,8 @@ export default function EnhancedDomCareRoster({
   const [timeFilter, setTimeFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
   const [selectedVisit, setSelectedVisit] = useState(null);
-  const [selectedStaffForRoute, setSelectedStaffForRoute] = useState(null);
-  const [autoOptimizeEnabled, setAutoOptimizeEnabled] = useState(false);
+  const [optimizingStaffId, setOptimizingStaffId] = useState(null);
+  const [routeOptimizations, setRouteOptimizations] = useState({});
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -208,26 +209,38 @@ export default function EnhancedDomCareRoster({
       status: 'published'
     });
 
-    // Auto-optimize if enabled
-    if (autoOptimizeEnabled) {
-      setSelectedStaffForRoute(staffId);
-    }
+    // Trigger route optimization for the staff member
+    setTimeout(() => handleOptimizeRoute(staffId), 500);
   };
 
-  const handleApplyOptimization = (optimizedVisits, staffId) => {
-    // Apply sequence numbers to optimized visits
-    optimizedVisits.forEach((visit, idx) => {
+  const handleOptimizeRoute = (staffId) => {
+    const staffSchedule = staffSchedule.find(ss => ss.staff.id === staffId);
+    if (!staffSchedule || staffSchedule.visits.length < 2) return;
+
+    const optimized = optimizeRoute(
+      staffSchedule.visits,
+      staffSchedule.staff,
+      clients
+    );
+
+    setRouteOptimizations(prev => ({
+      ...prev,
+      [staffId]: optimized
+    }));
+  };
+
+  const handleApplyOptimizedRoute = (staffId) => {
+    const optimization = routeOptimizations[staffId];
+    if (!optimization) return;
+
+    // Update visit sequence numbers based on optimized order
+    optimization.optimizedVisits.forEach((visit, idx) => {
       onVisitUpdate?.(visit.id, {
-        sequence_number: idx + 1,
-        estimated_travel_to_next: idx < optimizedVisits.length - 1 
-          ? calculateTravelTime(
-              clients.find(c => c.id === visit.client_id)?.address,
-              clients.find(c => c.id === optimizedVisits[idx + 1].client_id)?.address,
-              staff.find(s => s.id === staffId)?.vehicle_type
-            ).time
-          : 0
+        sequence_number: idx + 1
       });
     });
+
+    setOptimizingStaffId(null);
   };
 
   const UnallocatedVisitCard = ({ visit, index }) => {
@@ -307,7 +320,9 @@ export default function EnhancedDomCareRoster({
 
   const StaffTimelineRow = ({ staffSchedule }) => {
     const { staff: staffMember, visits: dayVisits, totalHours, travelHours, wtr } = staffSchedule;
-    const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
+    
+    const hasOptimization = routeOptimizations[staffMember.id];
+    const showOptimizationBadge = hasOptimization && hasOptimization.savings > 0;
     
     // Calculate contracted/available hours from availability data
     const dayOfWeek = selectedDate.getDay();
@@ -340,24 +355,11 @@ export default function EnhancedDomCareRoster({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`transition-colors ${
+            className={`border-b transition-colors ${
               snapshot.isDraggingOver ? 'bg-teal-50' : 'bg-white hover:bg-gray-50'
             }`}
-            >
-            {/* Route Optimizer Panel */}
-            {showRouteOptimizer && dayVisits.length > 1 && (
-              <div className="p-2 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
-                <AIRouteOptimizer
-                  staff={staffMember}
-                  visits={dayVisits}
-                  clients={clients}
-                  onApplyOptimization={handleApplyOptimization}
-                  autoOptimize={false}
-                />
-              </div>
-            )}
-
-            <div className="grid grid-cols-[220px_1fr] min-h-[60px] border-b">
+          >
+            <div className="grid grid-cols-[220px_1fr] min-h-[60px]">
               {/* Staff Info Panel */}
               <div className="border-r bg-white p-1.5 flex items-start gap-2">
                 <div className="relative flex-shrink-0">
@@ -415,6 +417,30 @@ export default function EnhancedDomCareRoster({
                     {travelHours > 0 && (
                       <span className="text-[10px] text-blue-600">🚗{travelHours.toFixed(1)}h</span>
                     )}
+                    {showOptimizationBadge && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          setOptimizingStaffId(staffMember.id);
+                        }}
+                        className="flex items-center gap-0.5 bg-green-100 text-green-700 text-[9px] h-3.5 px-1 rounded hover:bg-green-200 transition-colors"
+                      >
+                        <Navigation className="w-2 h-2" />
+                        Save {hasOptimization.savings}m
+                      </button>
+                    )}
+                    {dayVisits.length >= 3 && !hasOptimization && (
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleOptimizeRoute(staffMember.id);
+                        }}
+                        className="flex items-center gap-0.5 bg-blue-100 text-blue-700 text-[9px] h-3.5 px-1 rounded hover:bg-blue-200 transition-colors"
+                      >
+                        <Navigation className="w-2 h-2" />
+                        Optimize
+                      </button>
+                    )}
                     {availableForMore && contractedHours > 0 && (
                       <Badge className="bg-emerald-100 text-emerald-700 text-[9px] h-3.5 px-1 leading-none">
                         +{(contractedHours - totalHours).toFixed(1)}h available
@@ -429,18 +455,6 @@ export default function EnhancedDomCareRoster({
                       <Badge className="bg-amber-100 text-amber-700 text-[9px] h-3.5 px-1 leading-none">
                         ⚠️
                       </Badge>
-                    )}
-                    {dayVisits.length > 1 && (
-                      <Button
-                        size="sm"
-                        variant="ghost"
-                        onClick={() => setShowRouteOptimizer(!showRouteOptimizer)}
-                        className="h-5 px-1.5 text-[10px]"
-                        title="Optimize route"
-                      >
-                        <Navigation className="w-3 h-3 mr-0.5 text-indigo-600" />
-                        {showRouteOptimizer ? 'Hide' : 'Route'}
-                      </Button>
                     )}
                   </div>
                 </div>
@@ -510,8 +524,29 @@ export default function EnhancedDomCareRoster({
 
   const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
 
+  // Get optimization data for map viewer
+  const selectedOptimization = optimizingStaffId ? routeOptimizations[optimizingStaffId] : null;
+  const selectedStaff = optimizingStaffId ? staff.find(s => s.id === optimizingStaffId) : null;
+  const routeCoordinates = selectedOptimization ? 
+    calculateRouteCoordinates(selectedOptimization.optimizedVisits, clients) : [];
+
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
+    <>
+      {optimizingStaffId && selectedOptimization && selectedStaff && (
+        <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+          <div className="w-full max-w-6xl">
+            <RouteMapViewer
+              staffMember={selectedStaff}
+              routeData={selectedOptimization}
+              coordinates={routeCoordinates}
+              onClose={() => setOptimizingStaffId(null)}
+              onApplyRoute={() => handleApplyOptimizedRoute(optimizingStaffId)}
+            />
+          </div>
+        </div>
+      )}
+
+      <DragDropContext onDragEnd={handleDragEnd}>
       <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded border overflow-hidden">
         {/* Date Header */}
         <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 flex items-center justify-center border-b">
@@ -618,5 +653,6 @@ export default function EnhancedDomCareRoster({
         </div>
       </div>
     </DragDropContext>
+    </>
   );
 }
