@@ -407,6 +407,14 @@ export default function EnhancedDomCareRoster({
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded border overflow-hidden">
+        {/* Date Header */}
+        <div className="bg-gradient-to-r from-blue-600 to-blue-700 text-white px-4 py-2 flex items-center justify-center border-b">
+          <h2 className="text-lg font-bold">
+            {format(selectedDate, 'EEEE, MMMM d, yyyy')}
+            {isToday && <span className="ml-3 text-sm bg-white/30 px-3 py-1 rounded-full">TODAY</span>}
+          </h2>
+        </div>
+
         {/* TOP PANEL - Unallocated Visits */}
         <div className="flex-shrink-0 border-b">
           <div className="px-3 py-1.5 bg-orange-500 text-white flex items-center justify-between">
