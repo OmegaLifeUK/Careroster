@@ -24,6 +24,7 @@ import WorkingHoursEditor from "@/components/availability/WorkingHoursEditor";
 import UnavailabilityManager from "@/components/availability/UnavailabilityManager";
 import AvailabilityCalendarView from "@/components/availability/AvailabilityCalendarView";
 import CarerAvailabilitySummary from "@/components/availability/CarerAvailabilitySummary";
+import AvailabilityConflictDetector from "@/components/availability/AvailabilityConflictDetector";
 
 export default function CarerAvailability() {
   const [selectedCarerId, setSelectedCarerId] = useState(null);
@@ -53,6 +54,30 @@ export default function CarerAvailability() {
     queryFn: async () => {
       const data = await base44.entities.LeaveRequest.list();
       return Array.isArray(data) ? data : [];
+    }
+  });
+
+  const { data: shifts = [] } = useQuery({
+    queryKey: ['shifts'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Shift.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: visits = [] } = useQuery({
+    queryKey: ['visits'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Visit.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
     }
   });
 
@@ -198,11 +223,20 @@ export default function CarerAvailability() {
                   </TabsList>
 
                   <TabsContent value="overview" className="mt-4">
-                    <AvailabilityCalendarView 
-                      carerId={selectedCarerId}
-                      availability={carerAvailability}
-                      leaveRequests={carerLeave}
-                    />
+                    <div className="space-y-4">
+                      <AvailabilityConflictDetector
+                        carerId={selectedCarerId}
+                        availability={carerAvailability}
+                        leaveRequests={carerLeave}
+                        shifts={shifts}
+                        visits={visits}
+                      />
+                      <AvailabilityCalendarView 
+                        carerId={selectedCarerId}
+                        availability={carerAvailability}
+                        leaveRequests={carerLeave}
+                      />
+                    </div>
                   </TabsContent>
 
                   <TabsContent value="working-hours" className="mt-4">

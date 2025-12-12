@@ -30,6 +30,7 @@ import SecurePhotoUpload from "../components/staff/SecurePhotoUpload";
 import MyPayslips from "../components/staff/MyPayslips";
 import SafeguardingInfo from "../components/staff/SafeguardingInfo";
 import ConfidentialIssue from "../components/staff/ConfidentialIssue";
+import MyAvailability from "../components/staff/MyAvailability";
 
 export default function StaffPortal() {
   const [activeTab, setActiveTab] = useState("shifts");
@@ -133,7 +134,7 @@ export default function StaffPortal() {
 
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-9 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-10 h-auto p-1">
               <TabsTrigger value="shifts" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">My</span> Shifts
@@ -141,6 +142,10 @@ export default function StaffPortal() {
               <TabsTrigger value="clock" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Clock className="w-4 h-4" />
                 Clock
+              </TabsTrigger>
+              <TabsTrigger value="availability" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Calendar className="w-4 h-4" />
+                Availability
               </TabsTrigger>
               <TabsTrigger value="requests" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <MessageSquare className="w-4 h-4" />
@@ -181,6 +186,10 @@ export default function StaffPortal() {
 
             <TabsContent value="clock" className="p-4 md:p-6">
               <ClockInOut />
+            </TabsContent>
+
+            <TabsContent value="availability" className="p-4 md:p-6">
+              <MyAvailability user={user} />
             </TabsContent>
 
             <TabsContent value="requests" className="p-4 md:p-6">
