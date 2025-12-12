@@ -306,33 +306,29 @@ export default function EnhancedDomCareRoster({
               snapshot.isDraggingOver ? 'bg-teal-50' : 'bg-white hover:bg-gray-50'
             }`}
           >
-            <div className="grid grid-cols-[180px_1fr] min-h-[80px]">
+            <div className="grid grid-cols-[160px_1fr] min-h-[60px]">
               {/* Staff Info Panel */}
-              <div className="border-r p-2 flex items-center gap-2">
+              <div className="border-r p-1.5 flex items-center gap-1.5">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=32`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=28`}
                   alt={staffMember.full_name}
-                  className="w-8 h-8 rounded-full border border-teal-200"
+                  className="w-7 h-7 rounded-full"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate text-xs">{staffMember.full_name}</h4>
-                  <div className="flex items-center gap-1 mt-0.5">
-                    <Badge className={`${statusColor.bg} ${statusColor.text} text-xs h-4 px-1`}>
-                      <span className={`w-1.5 h-1.5 rounded-full ${statusColor.indicator} mr-0.5`} />
-                      {totalHours.toFixed(1)}h
-                    </Badge>
-                    {staffMember.vehicle_type && (
-                      <Car className="w-3 h-3 text-gray-500" />
-                    )}
+                  <h4 className="font-semibold text-gray-900 truncate text-xs leading-tight">{staffMember.full_name}</h4>
+                  <div className="flex items-center gap-1">
+                    <span className={`w-1.5 h-1.5 rounded-full ${statusColor.indicator}`} />
+                    <span className="text-xs text-gray-600">{totalHours.toFixed(1)}h</span>
+                    {staffMember.vehicle_type && <Car className="w-3 h-3 text-gray-400" />}
                   </div>
                 </div>
               </div>
 
               {/* Timeline Panel */}
-              <div className="p-2 relative">
+              <div className="p-1.5 relative">
                 {dayVisits.length === 0 && !snapshot.isDraggingOver && (
                   <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
-                    <span>Drag visits here</span>
+                    <span>Drop here</span>
                   </div>
                 )}
                 
@@ -341,37 +337,29 @@ export default function EnhancedDomCareRoster({
                     <React.Fragment key={visit.id}>
                       <div
                         onClick={() => onVisitClick?.(visit)}
-                        className="bg-teal-50 border border-teal-300 rounded p-2 cursor-pointer hover:shadow transition-all"
+                        className="bg-teal-50 border border-teal-300 rounded p-1.5 cursor-pointer hover:shadow transition-all"
                       >
-                        <div className="flex items-start justify-between gap-1">
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-1 mb-0.5">
-                              <span className="font-semibold text-gray-900 truncate text-xs">
-                                {visit.client?.full_name}
-                              </span>
-                              {visit.client?.preferred_staff?.includes(staffMember.id) && (
-                                <Heart className="w-3 h-3 text-rose-500 flex-shrink-0" />
-                              )}
-                            </div>
-                            <div className="flex items-center gap-2 text-xs text-gray-600">
-                              <Clock className="w-3 h-3" />
-                              <span>{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
-                              <span>-</span>
-                              <span>{format(new Date(visit.scheduled_end), 'HH:mm')}</span>
-                              <Badge variant="secondary" className="text-xs h-4 px-1">{visit.duration_minutes}m</Badge>
-                            </div>
+                        <div className="flex items-center justify-between gap-1">
+                          <div className="flex items-center gap-1 flex-1 min-w-0">
+                            <span className="font-semibold text-gray-900 truncate text-xs">{visit.client?.full_name}</span>
+                            {visit.client?.preferred_staff?.includes(staffMember.id) && (
+                              <Heart className="w-2.5 h-2.5 text-rose-500 flex-shrink-0" />
+                            )}
+                          </div>
+                          <div className="flex items-center gap-1 text-xs text-gray-600 flex-shrink-0">
+                            <Clock className="w-2.5 h-2.5" />
+                            <span>{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
+                            <span className="text-gray-400">·</span>
+                            <span>{visit.duration_minutes}m</span>
                           </div>
                         </div>
                       </div>
 
                       {visit.travelToNext > 0 && idx < dayVisits.length - 1 && (
-                        <div className="flex items-center gap-1 py-0.5">
-                          <div className="flex-1 h-0.5 bg-blue-400 rounded-full" />
-                          <div className="flex items-center gap-0.5 bg-blue-500 text-white px-1 rounded-full text-xs">
-                            <Navigation className="w-2.5 h-2.5" />
-                            {visit.travelToNext}m
-                          </div>
-                          <div className="flex-1 h-0.5 bg-blue-400 rounded-full" />
+                        <div className="flex items-center gap-1">
+                          <div className="flex-1 h-px bg-blue-300" />
+                          <span className="text-xs text-blue-600 font-medium">{visit.travelToNext}m</span>
+                          <div className="flex-1 h-px bg-blue-300" />
                         </div>
                       )}
                     </React.Fragment>
@@ -397,57 +385,46 @@ export default function EnhancedDomCareRoster({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="h-[calc(100vh-160px)] flex flex-col bg-white rounded border overflow-hidden">
+      <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded border overflow-hidden">
         {/* TOP PANEL - Unallocated Visits */}
         <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
-          <div className="p-2 border-b bg-orange-500 text-white">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <AlertTriangle className="w-5 h-5" />
-                <div>
-                  <h3 className="font-bold text-sm">Unallocated Visits</h3>
-                  <p className="text-xs text-orange-100">{unallocatedVisits.length} need assignment</p>
-                </div>
-              </div>
-              <div className="text-2xl font-bold">{unallocatedVisits.length}</div>
+          <div className="px-2 py-1 border-b bg-orange-500 text-white flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <AlertTriangle className="w-4 h-4" />
+              <span className="font-bold text-xs">Unallocated ({unallocatedVisits.length})</span>
             </div>
-          </div>
 
-          {/* Filters */}
-          <div className="p-2 bg-white border-b flex items-center gap-2 flex-wrap">
-            <div className="relative flex-1 min-w-[150px]">
-              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+            <div className="flex items-center gap-1 flex-wrap px-2 py-1">
+              <Search className="w-3 h-3 text-gray-400" />
               <Input
                 placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-7 h-7 text-xs"
+                className="h-6 text-xs w-32 border-0 focus-visible:ring-0 px-1"
               />
+              <Select value={timeFilter} onValueChange={setTimeFilter}>
+                <SelectTrigger className="w-20 h-6 text-xs border-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="morning">AM</SelectItem>
+                  <SelectItem value="afternoon">PM</SelectItem>
+                  <SelectItem value="evening">Eve</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select value={areaFilter} onValueChange={setAreaFilter}>
+                <SelectTrigger className="w-20 h-6 text-xs border-0">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All</SelectItem>
+                  {areas.map(area => (
+                    <SelectItem key={area} value={area}>{area}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
-            
-            <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-28 h-7 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Times</SelectItem>
-                <SelectItem value="morning">Morning (6-12)</SelectItem>
-                <SelectItem value="afternoon">Afternoon (12-18)</SelectItem>
-                <SelectItem value="evening">Evening (18+)</SelectItem>
-              </SelectContent>
-            </Select>
-
-            <Select value={areaFilter} onValueChange={setAreaFilter}>
-              <SelectTrigger className="w-28 h-7 text-xs">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">All Areas</SelectItem>
-                {areas.map(area => (
-                  <SelectItem key={area} value={area}>{area}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
           </div>
 
           {/* Unallocated Visits List */}
@@ -456,12 +433,12 @@ export default function EnhancedDomCareRoster({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="p-2 max-h-[180px] overflow-y-auto"
+                className="p-1.5 max-h-[140px] overflow-y-auto"
               >
                 {unallocatedVisits.length === 0 ? (
-                  <div className="text-center py-8 text-gray-400">
-                    <Shield className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                    <p>All visits allocated!</p>
+                  <div className="text-center py-4 text-gray-400 text-xs">
+                    <Shield className="w-8 h-8 mx-auto mb-1 opacity-30" />
+                    <p>All allocated</p>
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
@@ -478,25 +455,23 @@ export default function EnhancedDomCareRoster({
 
         {/* BOTTOM PANEL - Staff Timeline */}
         <div className="flex-1 overflow-y-auto">
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-teal-700 text-white p-2 border-b">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-2">
-                <User className="w-4 h-4" />
-                <span className="font-semibold text-sm">Staff ({staff.filter(s => s.is_active !== false).length})</span>
+          <div className="sticky top-0 z-10 bg-teal-600 text-white px-2 py-1 border-b flex items-center justify-between">
+            <div className="flex items-center gap-1.5">
+              <User className="w-3.5 h-3.5" />
+              <span className="font-semibold text-xs">Staff ({staff.filter(s => s.is_active !== false).length})</span>
+            </div>
+            <div className="flex items-center gap-2 text-xs">
+              <div className="flex items-center gap-0.5">
+                <div className="w-1.5 h-1.5 bg-emerald-400 rounded-full" />
+                <span className="text-xs">OK</span>
               </div>
-              <div className="flex items-center gap-3 text-xs">
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
-                  <span>Ideal</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-amber-500 rounded-full" />
-                  <span>Caution</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <div className="w-2 h-2 bg-red-500 rounded-full" />
-                  <span>Violation</span>
-                </div>
+              <div className="flex items-center gap-0.5">
+                <div className="w-1.5 h-1.5 bg-amber-400 rounded-full" />
+                <span className="text-xs">Warn</span>
+              </div>
+              <div className="flex items-center gap-0.5">
+                <div className="w-1.5 h-1.5 bg-red-400 rounded-full" />
+                <span className="text-xs">Over</span>
               </div>
             </div>
           </div>

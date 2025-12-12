@@ -214,9 +214,9 @@ export default function DomCareSchedule() {
         </div>
 
         {isLoading ? (
-          <div className="bg-white rounded-lg border p-12 text-center">
-            <div className="animate-spin w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-4" />
-            <p className="text-gray-500">Loading schedule...</p>
+          <div className="bg-white rounded border p-8 text-center">
+            <div className="animate-spin w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full mx-auto mb-2" />
+            <p className="text-gray-500 text-sm">Loading...</p>
           </div>
         ) : view === "roster" ? (
           <EnhancedDomCareRoster
