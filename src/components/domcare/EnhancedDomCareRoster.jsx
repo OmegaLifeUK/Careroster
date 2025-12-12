@@ -489,7 +489,6 @@ export default function EnhancedDomCareRoster({
             <div className="flex items-center gap-2">
               <User className="w-4 h-4" />
               <span className="font-bold text-sm">Care Workers ({staff.filter(s => s.is_active !== false).length})</span>
-              {isToday && <span className="text-xs bg-white/20 px-2 py-0.5 rounded">TODAY</span>}
             </div>
             <div className="flex items-center gap-3 text-xs">
               <div className="flex items-center gap-1">
