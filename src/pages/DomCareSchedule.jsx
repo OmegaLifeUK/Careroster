@@ -21,7 +21,12 @@ import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidg
 
 export default function DomCareSchedule() {
   const [view, setView] = useState("roster");
-  const [selectedDate, setSelectedDate] = useState(new Date());
+  const [selectedDate, setSelectedDate] = useState(() => {
+    // Always start with today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return today;
+  });
   const [showVisitDialog, setShowVisitDialog] = useState(false);
   const [showRunDialog, setShowRunDialog] = useState(false);
   const [editingVisit, setEditingVisit] = useState(null);
@@ -139,7 +144,9 @@ export default function DomCareSchedule() {
   };
 
   const goToToday = () => {
-    setSelectedDate(new Date());
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    setSelectedDate(today);
   };
 
   const isLoading = visitsLoading || staffLoading || clientsLoading || runsLoading;
