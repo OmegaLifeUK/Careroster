@@ -381,7 +381,7 @@ export default function EnhancedDomCareRoster({
                             )}
                           </div>
                           
-                          {visit.client && client?.preferred_staff?.includes(staffMember.id) && (
+                          {visit.client?.preferred_staff?.includes(staffMember.id) && (
                             <Heart className="w-4 h-4 text-rose-500 flex-shrink-0" />
                           )}
                         </div>
@@ -419,121 +419,121 @@ export default function EnhancedDomCareRoster({
   }, [clients]);
 
   return (
-    <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded-lg shadow-sm border overflow-hidden">
-      {/* TOP PANEL - Unallocated Visits */}
-      <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
-        <div className="p-4 border-b bg-orange-500 text-white">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                <AlertTriangle className="w-6 h-6" />
-              </div>
-              <div>
-                <h3 className="font-bold text-lg">Unallocated Visits</h3>
-                <p className="text-sm text-orange-100">
-                  {unallocatedVisits.length} visits need assignment • Drag to staff below
-                </p>
-              </div>
-            </div>
-            <div className="text-3xl font-bold">{unallocatedVisits.length}</div>
-          </div>
-        </div>
-
-        {/* Filters */}
-        <div className="p-3 bg-white border-b flex items-center gap-3 flex-wrap">
-          <div className="relative flex-1 min-w-[200px]">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-            <Input
-              placeholder="Search client..."
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-9"
-            />
-          </div>
-          
-          <Select value={timeFilter} onValueChange={setTimeFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Times</SelectItem>
-              <SelectItem value="morning">Morning (6-12)</SelectItem>
-              <SelectItem value="afternoon">Afternoon (12-18)</SelectItem>
-              <SelectItem value="evening">Evening (18+)</SelectItem>
-            </SelectContent>
-          </Select>
-
-          <Select value={areaFilter} onValueChange={setAreaFilter}>
-            <SelectTrigger className="w-36">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="all">All Areas</SelectItem>
-              {areas.map(area => (
-                <SelectItem key={area} value={area}>{area}</SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
-        </div>
-
-        {/* Unallocated Visits List */}
-        <Droppable droppableId={`unallocated_${dateStr}`}>
-          {(provided) => (
-            <div
-              ref={provided.innerRef}
-              {...provided.droppableProps}
-              className="p-3 max-h-[280px] overflow-y-auto"
-            >
-              {unallocatedVisits.length === 0 ? (
-                <div className="text-center py-8 text-gray-400">
-                  <Shield className="w-12 h-12 mx-auto mb-2 opacity-30" />
-                  <p>All visits allocated!</p>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded-lg shadow-sm border overflow-hidden">
+        {/* TOP PANEL - Unallocated Visits */}
+        <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
+          <div className="p-4 border-b bg-orange-500 text-white">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                  <AlertTriangle className="w-6 h-6" />
                 </div>
-              ) : (
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                  {unallocatedVisits.map((visit, idx) => (
-                    <UnallocatedVisitCard key={visit.id} visit={visit} index={idx} />
-                  ))}
+                <div>
+                  <h3 className="font-bold text-lg">Unallocated Visits</h3>
+                  <p className="text-sm text-orange-100">
+                    {unallocatedVisits.length} visits need assignment • Drag to staff below
+                  </p>
                 </div>
-              )}
-              {provided.placeholder}
+              </div>
+              <div className="text-3xl font-bold">{unallocatedVisits.length}</div>
             </div>
-          )}
-        </Droppable>
-      </div>
+          </div>
 
-      {/* BOTTOM PANEL - Staff Timeline */}
-      <div className="flex-1 overflow-y-auto">
-        <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 border-b">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-3">
-              <User className="w-5 h-5" />
-              <span className="font-semibold">Care Workers</span>
-              <Badge className="bg-teal-500 text-white">{staff.filter(s => s.is_active !== false).length}</Badge>
+          {/* Filters */}
+          <div className="p-3 bg-white border-b flex items-center gap-3 flex-wrap">
+            <div className="relative flex-1 min-w-[200px]">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+              <Input
+                placeholder="Search client..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-9"
+              />
             </div>
-            <div className="flex items-center gap-4 text-sm">
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-                <span className="text-teal-100">Ideal</span>
+            
+            <Select value={timeFilter} onValueChange={setTimeFilter}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Times</SelectItem>
+                <SelectItem value="morning">Morning (6-12)</SelectItem>
+                <SelectItem value="afternoon">Afternoon (12-18)</SelectItem>
+                <SelectItem value="evening">Evening (18+)</SelectItem>
+              </SelectContent>
+            </Select>
+
+            <Select value={areaFilter} onValueChange={setAreaFilter}>
+              <SelectTrigger className="w-36">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">All Areas</SelectItem>
+                {areas.map(area => (
+                  <SelectItem key={area} value={area}>{area}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {/* Unallocated Visits List */}
+          <Droppable droppableId={`unallocated_${dateStr}`}>
+            {(provided) => (
+              <div
+                ref={provided.innerRef}
+                {...provided.droppableProps}
+                className="p-3 max-h-[280px] overflow-y-auto"
+              >
+                {unallocatedVisits.length === 0 ? (
+                  <div className="text-center py-8 text-gray-400">
+                    <Shield className="w-12 h-12 mx-auto mb-2 opacity-30" />
+                    <p>All visits allocated!</p>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {unallocatedVisits.map((visit, idx) => (
+                      <UnallocatedVisitCard key={visit.id} visit={visit} index={idx} />
+                    ))}
+                  </div>
+                )}
+                {provided.placeholder}
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-amber-500 rounded-full" />
-                <span className="text-teal-100">Caution</span>
+            )}
+          </Droppable>
+        </div>
+
+        {/* BOTTOM PANEL - Staff Timeline */}
+        <div className="flex-1 overflow-y-auto">
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 border-b">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <User className="w-5 h-5" />
+                <span className="font-semibold">Care Workers</span>
+                <Badge className="bg-teal-500 text-white">{staff.filter(s => s.is_active !== false).length}</Badge>
               </div>
-              <div className="flex items-center gap-2">
-                <div className="w-3 h-3 bg-red-500 rounded-full" />
-                <span className="text-teal-100">Violation</span>
+              <div className="flex items-center gap-4 text-sm">
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-emerald-500 rounded-full" />
+                  <span className="text-teal-100">Ideal</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-amber-500 rounded-full" />
+                  <span className="text-teal-100">Caution</span>
+                </div>
+                <div className="flex items-center gap-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full" />
+                  <span className="text-teal-100">Violation</span>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        <DragDropContext onDragEnd={handleDragEnd}>
           {staffSchedule.map(ss => (
             <StaffTimelineRow key={ss.staff.id} staffSchedule={ss} />
           ))}
-        </DragDropContext>
+        </div>
       </div>
-    </div>
+    </DragDropContext>
   );
 }
