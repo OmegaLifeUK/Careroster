@@ -896,9 +896,22 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
                         <div className="flex items-center justify-between mb-2">
                           <div>
                             <p className="font-medium text-sm">
-                              {format(parseISO(gap.shift.date), 'EEE dd MMM')} • {gap.shift.start_time} - {gap.shift.end_time}
+                              {gap.isVisit ? (
+                                <>
+                                  {format(new Date(gap.shift.scheduled_start), 'EEE dd MMM')} • {format(new Date(gap.shift.scheduled_start), 'HH:mm')} - {format(new Date(gap.shift.scheduled_end), 'HH:mm')}
+                                </>
+                              ) : (
+                                <>
+                                  {format(parseISO(gap.shift.date), 'EEE dd MMM')} • {gap.shift.start_time} - {gap.shift.end_time}
+                                </>
+                              )}
                             </p>
                             <p className="text-xs text-gray-600">{gap.client?.full_name || gap.shift.location_name}</p>
+                            {gap.isVisit && (
+                              <Badge className="bg-teal-100 text-teal-800 text-xs">
+                                Visit
+                              </Badge>
+                            )}
                           </div>
                           <Badge className="bg-orange-100 text-orange-800">
                             {candidates.length} potential carers
@@ -978,11 +991,24 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
                       <div className="flex items-center gap-4">
                         <div>
                           <p className="font-medium">
-                            {format(parseISO(allocation.shift.date), 'EEE dd MMM')} • {allocation.shift.start_time} - {allocation.shift.end_time}
+                            {allocation.isVisit ? (
+                              <>
+                                {format(new Date(allocation.shift.scheduled_start), 'EEE dd MMM')} • {format(new Date(allocation.shift.scheduled_start), 'HH:mm')} - {format(new Date(allocation.shift.scheduled_end), 'HH:mm')}
+                              </>
+                            ) : (
+                              <>
+                                {format(parseISO(allocation.shift.date), 'EEE dd MMM')} • {allocation.shift.start_time} - {allocation.shift.end_time}
+                              </>
+                            )}
                           </p>
                           <p className="text-sm text-gray-600">
                             {allocation.client?.full_name || allocation.shift.location_name || 'Unassigned'}
                           </p>
+                          {allocation.isVisit && (
+                            <Badge className="bg-teal-100 text-teal-800 mt-1 text-xs">
+                              Visit
+                            </Badge>
+                          )}
                           {allocation.shift.required_qualification && (
                             <Badge variant="outline" className="mt-1">
                               <Award className="w-3 h-3 mr-1" />
