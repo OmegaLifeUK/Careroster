@@ -319,20 +319,54 @@ export default function EnhancedDomCareRoster({
                 </div>
                 <div className="flex-1 min-w-0">
                   <h4 className="font-bold text-gray-900 truncate text-sm">{staffMember.full_name}</h4>
+                  
+                  {/* Hours Tracking */}
                   <div className="flex items-center gap-2 mt-0.5">
                     <div className="flex items-center gap-1">
-                      <Clock className="w-3 h-3 text-gray-500" />
-                      <span className="text-xs font-medium text-gray-700">{totalHours.toFixed(1)}h</span>
+                      <Clock className={`w-3 h-3 ${hoursColor}`} />
+                      <span className={`text-xs font-bold ${hoursColor}`}>{totalHours.toFixed(1)}h</span>
                       <span className="text-xs text-gray-400">/ {staffMember.max_hours_per_day || 12}h</span>
                     </div>
                     {staffMember.vehicle_type && (
-                      <Car className="w-3.5 h-3.5 text-teal-600" />
+                      <Car className="w-3.5 h-3.5 text-teal-600" title="Has vehicle" />
                     )}
                   </div>
+
+                  {/* Qualifications */}
+                  {staffMember.qualifications && staffMember.qualifications.length > 0 && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <Award className="w-3 h-3 text-blue-600" />
+                      <span className="text-xs text-gray-600">{staffMember.qualifications.length} quals</span>
+                    </div>
+                  )}
+
+                  {/* Area Coverage */}
+                  {staffMember.address?.postcode && (
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <MapPin className="w-3 h-3 text-purple-600" />
+                      <span className="text-xs text-gray-600">{staffMember.address.postcode.split(' ')[0]}</span>
+                    </div>
+                  )}
+
+                  {/* Visits Count */}
+                  <div className="flex items-center gap-2 mt-0.5">
+                    <span className="text-xs font-semibold text-teal-700">{dayVisits.length} visits</span>
+                    {travelHours > 0 && (
+                      <span className="text-xs text-blue-600">🚗 {travelHours.toFixed(1)}h travel</span>
+                    )}
+                  </div>
+
+                  {/* WTR Warnings */}
                   {wtr?.summary?.critical > 0 && (
                     <Badge className="bg-red-100 text-red-700 text-xs mt-1 h-4 px-1">
                       <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
-                      WTR
+                      WTR VIOLATION
+                    </Badge>
+                  )}
+                  {wtr?.summary?.warnings > 0 && !wtr?.summary?.critical && (
+                    <Badge className="bg-amber-100 text-amber-700 text-xs mt-1 h-4 px-1">
+                      <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
+                      WTR WARNING
                     </Badge>
                   )}
                 </div>
