@@ -145,139 +145,68 @@ export default function DomCareSchedule() {
   const isLoading = visitsLoading || staffLoading || clientsLoading || runsLoading;
 
   return (
-    <div className="p-4 bg-gray-50 min-h-screen">
+    <div className="p-2 bg-gray-50 min-h-screen">
         <div className="w-full">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-3 bg-white p-4 rounded-lg border shadow-sm">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-2 gap-2 bg-white p-2 rounded border">
             <div className="flex-shrink-0">
-              <h1 className="text-xl font-bold text-gray-900">Visit Schedule</h1>
-              <p className="text-xs text-gray-500">Drag and drop visits to organize care runs</p>
+              <h1 className="text-lg font-bold text-gray-900">Visit Schedule</h1>
             </div>
-          <div className="flex gap-2 flex-wrap">
-            <Button
-              onClick={() => setShowAIAllocator(true)}
-              variant="outline"
-              size="sm"
-              className="border-purple-300 text-purple-700 hover:bg-purple-50"
-            >
-              <Sparkles className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">AI Allocate</span>
+          <div className="flex gap-1 flex-wrap">
+            <Button onClick={() => setShowAIAllocator(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-purple-300 text-purple-700 hover:bg-purple-50">
+              <Sparkles className="w-3 h-3 mr-1" />AI
             </Button>
-            <Button
-              onClick={() => setShowConflicts(true)}
-              variant="outline"
-              size="sm"
-              className="border-orange-300 text-orange-700 hover:bg-orange-50"
-            >
-              <AlertTriangle className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Conflicts</span>
+            <Button onClick={() => setShowConflicts(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-orange-300 text-orange-700 hover:bg-orange-50">
+              <AlertTriangle className="w-3 h-3 mr-1" />Conflicts
             </Button>
-            <Button
-              onClick={() => setShowAutoSchedule(true)}
-              variant="outline"
-              size="sm"
-              className="border-blue-300 text-blue-700 hover:bg-blue-50"
-            >
-              <Zap className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Auto Schedule</span>
+            <Button onClick={() => setShowAutoSchedule(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-blue-300 text-blue-700 hover:bg-blue-50">
+              <Zap className="w-3 h-3 mr-1" />Auto
             </Button>
-            <Button
-              onClick={() => setShowBulkEdit(true)}
-              variant="outline"
-              size="sm"
-              className="border-green-300 text-green-700 hover:bg-green-50"
-            >
-              <Edit className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Bulk Edit</span>
+            <Button onClick={() => setShowBulkEdit(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-green-300 text-green-700 hover:bg-green-50">
+              <Edit className="w-3 h-3 mr-1" />Bulk
             </Button>
-            <Button
-              onClick={() => setShowTemplateManager(true)}
-              variant="outline"
-              size="sm"
-              className="border-indigo-300 text-indigo-700 hover:bg-indigo-50"
-            >
-              <FileText className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Templates</span>
+            <Button onClick={() => setShowTemplateManager(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-indigo-300 text-indigo-700 hover:bg-indigo-50">
+              <FileText className="w-3 h-3 mr-1" />Templates
             </Button>
-            <Button
-              onClick={() => setShowRecurringDialog(true)}
-              variant="outline"
-              size="sm"
-              className="border-teal-300 text-teal-700 hover:bg-teal-50"
-            >
-              <Repeat className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Recurring</span>
+            <Button onClick={() => setShowRecurringDialog(true)} variant="outline" size="sm" className="h-7 px-2 text-xs border-teal-300 text-teal-700 hover:bg-teal-50">
+              <Repeat className="w-3 h-3 mr-1" />Recurring
             </Button>
-            <Button
-              onClick={handleCreateRun}
-              size="sm"
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Run</span>
+            <Button onClick={handleCreateRun} size="sm" className="h-7 px-2 text-xs bg-purple-600 hover:bg-purple-700">
+              <Plus className="w-3 h-3 mr-1" />Run
             </Button>
-            <Button
-              onClick={handleCreateVisit}
-              size="sm"
-              className="bg-blue-600 hover:bg-blue-700"
-            >
-              <Plus className="w-4 h-4 mr-1" />
-              <span className="hidden sm:inline">Visit</span>
+            <Button onClick={handleCreateVisit} size="sm" className="h-7 px-2 text-xs bg-blue-600 hover:bg-blue-700">
+              <Plus className="w-3 h-3 mr-1" />Visit
             </Button>
           </div>
         </div>
 
-        <div className="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-2 rounded-lg border shadow-sm">
-          <div className="flex gap-1.5 flex-wrap">
-            <Button
-              variant={view === "roster" ? "default" : "ghost"}
-              onClick={() => setView("roster")}
-              size="sm"
-              className="flex items-center gap-1.5"
-            >
-              <LayoutGrid className="w-3.5 h-3.5" />
-              <span className="text-xs">Roster</span>
+        <div className="mb-2 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 bg-white p-1.5 rounded border">
+          <div className="flex gap-1 flex-wrap">
+            <Button variant={view === "roster" ? "default" : "ghost"} onClick={() => setView("roster")} size="sm" className="h-7 px-2 text-xs">
+              <LayoutGrid className="w-3 h-3 mr-1" />Roster
             </Button>
-            <Button
-              variant={view === "split" ? "default" : "ghost"}
-              onClick={() => setView("split")}
-              size="sm"
-              className="flex items-center gap-1.5"
-            >
-              <BarChart3 className="w-3.5 h-3.5" />
-              <span className="text-xs">Split</span>
+            <Button variant={view === "split" ? "default" : "ghost"} onClick={() => setView("split")} size="sm" className="h-7 px-2 text-xs">
+              <BarChart3 className="w-3 h-3 mr-1" />Split
             </Button>
-            <Button
-              variant={view === "timeline" ? "default" : "ghost"}
-              onClick={() => setView("timeline")}
-              size="sm"
-              className="flex items-center gap-1.5"
-            >
-              <Calendar className="w-3.5 h-3.5" />
-              <span className="text-xs">Timeline</span>
+            <Button variant={view === "timeline" ? "default" : "ghost"} onClick={() => setView("timeline")} size="sm" className="h-7 px-2 text-xs">
+              <Calendar className="w-3 h-3 mr-1" />Timeline
             </Button>
-            <Button
-              variant={view === "list" ? "default" : "ghost"}
-              onClick={() => setView("list")}
-              size="sm"
-              className="flex items-center gap-1.5"
-            >
-              <List className="w-3.5 h-3.5" />
-              <span className="text-xs">List</span>
+            <Button variant={view === "list" ? "default" : "ghost"} onClick={() => setView("list")} size="sm" className="h-7 px-2 text-xs">
+              <List className="w-3 h-3 mr-1" />List
             </Button>
           </div>
 
           {view !== "list" && (
-            <div className="flex items-center gap-1.5">
-              <Button variant="outline" size="sm" onClick={goToPreviousWeek} className="h-8 px-2">
-                <ChevronLeft className="w-3.5 h-3.5" />
+            <div className="flex items-center gap-1">
+              <Button variant="outline" size="sm" onClick={goToPreviousWeek} className="h-7 px-1.5">
+                <ChevronLeft className="w-3 h-3" />
               </Button>
-              <div className="px-3 py-1.5 bg-gray-50 rounded text-xs font-medium whitespace-nowrap">
+              <div className="px-2 py-1 bg-gray-50 rounded text-xs font-medium whitespace-nowrap">
                 {format(weekStart, "MMM d")} - {format(addDays(weekStart, 6), "MMM d, yyyy")}
               </div>
-              <Button variant="outline" size="sm" onClick={goToNextWeek} className="h-8 px-2">
-                <ChevronRight className="w-3.5 h-3.5" />
+              <Button variant="outline" size="sm" onClick={goToNextWeek} className="h-7 px-1.5">
+                <ChevronRight className="w-3 h-3" />
               </Button>
-              <Button variant="outline" size="sm" onClick={goToToday} className="h-8 px-3 text-xs">
+              <Button variant="outline" size="sm" onClick={goToToday} className="h-7 px-2 text-xs">
                 Today
               </Button>
             </div>
