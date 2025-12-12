@@ -251,39 +251,37 @@ export default function EnhancedDomCareRoster({
                   <span>{client.address.postcode}</span>
                 </div>
               )}
-            </div>
-
               {visit.required_qualification_id && (
-                <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded">
+                <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded mt-1">
                   <Award className="w-3 h-3" />
                   <span>Qualified staff only</span>
                 </div>
               )}
-            </div>
 
-            {isExpanded && topMatches.length > 0 && (
-              <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
-                <p className="text-xs font-bold text-gray-700 mb-1">Best Matches:</p>
-                {topMatches.slice(0, 2).map((match, idx) => (
-                  <div 
-                    key={match.staff.id} 
-                    className={`p-1.5 rounded text-xs ${
-                      idx === 0 ? 'bg-teal-50 border border-teal-300' : 'bg-gray-50'
-                    }`}
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="font-semibold text-xs">{match.staff.full_name}</span>
-                      <Badge className="bg-teal-600 text-white text-xs px-1 py-0">{match.score}</Badge>
+              {isExpanded && topMatches.length > 0 && (
+                <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
+                  <p className="text-xs font-bold text-gray-700 mb-1">Best Matches:</p>
+                  {topMatches.slice(0, 2).map((match, idx) => (
+                    <div 
+                      key={match.staff.id} 
+                      className={`p-1.5 rounded text-xs ${
+                        idx === 0 ? 'bg-teal-50 border border-teal-300' : 'bg-gray-50'
+                      }`}
+                    >
+                      <div className="flex items-center justify-between">
+                        <span className="font-semibold text-xs">{match.staff.full_name}</span>
+                        <Badge className="bg-teal-600 text-white text-xs px-1 py-0">{match.score}</Badge>
+                      </div>
+                      <div className="flex flex-wrap gap-0.5 mt-0.5">
+                        {match.reasons.slice(0, 3).map((r, i) => (
+                          <span key={i} className="text-xs text-emerald-700">• {r}</span>
+                        ))}
+                      </div>
                     </div>
-                    <div className="flex flex-wrap gap-0.5 mt-0.5">
-                      {match.reasons.slice(0, 3).map((r, i) => (
-                        <span key={i} className="text-xs text-emerald-700">• {r}</span>
-                      ))}
-                    </div>
-                  </div>
-                ))}
-              </div>
-            )}
+                  ))}
+                </div>
+              )}
+            </div>
           </div>
         )}
       </Draggable>
