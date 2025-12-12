@@ -221,35 +221,31 @@ export default function EnhancedDomCareRoster({
             {...provided.dragHandleProps}
             onClick={() => setSelectedVisit(isExpanded ? null : visit.id)}
             className={`
-              bg-white border-2 rounded-lg p-3 cursor-pointer transition-all
-              ${snapshot.isDragging ? 'shadow-2xl border-blue-500 scale-105' : 'border-gray-200 hover:border-teal-400 hover:shadow-md'}
-              ${isExpanded ? 'ring-2 ring-teal-500' : ''}
+              bg-white border rounded p-2 cursor-pointer transition-all text-xs
+              ${snapshot.isDragging ? 'shadow-lg border-blue-500' : 'border-gray-200 hover:border-teal-400'}
+              ${isExpanded ? 'ring-1 ring-teal-500' : ''}
             `}
           >
-            <div className="flex items-start justify-between gap-3 mb-2">
+            <div className="flex items-start justify-between gap-2 mb-1">
               <div className="flex-1 min-w-0">
-                <h4 className="font-semibold text-gray-900 truncate">{client?.full_name || 'Unknown'}</h4>
-                <div className="flex items-center gap-2 mt-1 text-sm text-gray-600">
-                  <Clock className="w-3.5 h-3.5" />
+                <h4 className="font-semibold text-gray-900 truncate text-xs">{client?.full_name || 'Unknown'}</h4>
+                <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-600">
+                  <Clock className="w-3 h-3" />
                   <span>{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
                   <span className="text-gray-400">•</span>
-                  <span>{visit.duration_minutes}min</span>
+                  <span>{visit.duration_minutes}m</span>
                 </div>
                 {client?.address?.postcode && (
-                  <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                    <MapPin className="w-3 h-3" />
-                    <span>{client.address.postcode}</span>
+                  <div className="flex items-center gap-1 mt-0.5 text-xs text-gray-500">
+                    <MapPin className="w-2.5 h-2.5" />
+                    <span className="text-xs">{client.address.postcode.split(' ')[0]}</span>
                   </div>
                 )}
               </div>
               {bestMatch && bestMatch.score > 0 && (
-                <div className="flex-shrink-0 text-right">
-                  <Badge className="bg-teal-500 text-white font-semibold">
-                    <TrendingUp className="w-3 h-3 mr-1" />
-                    {bestMatch.score}
-                  </Badge>
-                  <p className="text-xs text-gray-600 mt-1">{bestMatch.staff.full_name}</p>
-                </div>
+                <Badge className="bg-teal-500 text-white text-xs h-5">
+                  {bestMatch.score}
+                </Badge>
               )}
             </div>
 
@@ -310,93 +306,72 @@ export default function EnhancedDomCareRoster({
               snapshot.isDraggingOver ? 'bg-teal-50' : 'bg-white hover:bg-gray-50'
             }`}
           >
-            <div className="grid grid-cols-[250px_1fr] min-h-[120px]">
+            <div className="grid grid-cols-[180px_1fr] min-h-[80px]">
               {/* Staff Info Panel */}
-              <div className="border-r p-4 flex items-center gap-3">
+              <div className="border-r p-2 flex items-center gap-2">
                 <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=48`}
+                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=32`}
                   alt={staffMember.full_name}
-                  className="w-12 h-12 rounded-full border-2 border-teal-200"
+                  className="w-8 h-8 rounded-full border border-teal-200"
                 />
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold text-gray-900 truncate">{staffMember.full_name}</h4>
-                  <div className="flex items-center gap-2 mt-1">
-                    <Badge className={`${statusColor.bg} ${statusColor.text} text-xs`}>
-                      <span className={`w-2 h-2 rounded-full ${statusColor.indicator} mr-1`} />
-                      {totalHours.toFixed(1)}h / {staffMember.max_hours_per_day || 12}h
+                  <h4 className="font-semibold text-gray-900 truncate text-xs">{staffMember.full_name}</h4>
+                  <div className="flex items-center gap-1 mt-0.5">
+                    <Badge className={`${statusColor.bg} ${statusColor.text} text-xs h-4 px-1`}>
+                      <span className={`w-1.5 h-1.5 rounded-full ${statusColor.indicator} mr-0.5`} />
+                      {totalHours.toFixed(1)}h
                     </Badge>
                     {staffMember.vehicle_type && (
-                      <Badge variant="secondary" className="text-xs">
-                        <Car className="w-3 h-3 mr-1" />
-                        {staffMember.vehicle_type}
-                      </Badge>
+                      <Car className="w-3 h-3 text-gray-500" />
                     )}
                   </div>
-                  {wtr?.summary?.critical > 0 && (
-                    <div className="flex items-center gap-1 mt-1 text-xs text-red-600">
-                      <AlertTriangle className="w-3 h-3" />
-                      <span>WTR Issue</span>
-                    </div>
-                  )}
                 </div>
               </div>
 
               {/* Timeline Panel */}
-              <div className="p-3 relative">
+              <div className="p-2 relative">
                 {dayVisits.length === 0 && !snapshot.isDraggingOver && (
-                  <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-sm">
-                    <span>Drag visits here to assign</span>
+                  <div className="absolute inset-0 flex items-center justify-center text-gray-400 text-xs">
+                    <span>Drag visits here</span>
                   </div>
                 )}
                 
-                <div className="space-y-2">
+                <div className="space-y-1">
                   {dayVisits.map((visit, idx) => (
                     <React.Fragment key={visit.id}>
                       <div
                         onClick={() => onVisitClick?.(visit)}
-                        className="bg-teal-50 border border-teal-300 rounded-lg p-3 cursor-pointer hover:shadow-md transition-all"
+                        className="bg-teal-50 border border-teal-300 rounded p-2 cursor-pointer hover:shadow transition-all"
                       >
-                        <div className="flex items-start justify-between gap-2">
+                        <div className="flex items-start justify-between gap-1">
                           <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 mb-1">
-                              <User className="w-4 h-4 text-teal-600" />
-                              <span className="font-semibold text-gray-900 truncate">
+                            <div className="flex items-center gap-1 mb-0.5">
+                              <span className="font-semibold text-gray-900 truncate text-xs">
                                 {visit.client?.full_name}
                               </span>
+                              {visit.client?.preferred_staff?.includes(staffMember.id) && (
+                                <Heart className="w-3 h-3 text-rose-500 flex-shrink-0" />
+                              )}
                             </div>
-                            <div className="flex items-center gap-3 text-xs text-gray-600">
-                              <div className="flex items-center gap-1">
-                                <Clock className="w-3 h-3" />
-                                <span>{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
-                                <span className="text-gray-400">→</span>
-                                <span>{format(new Date(visit.scheduled_end), 'HH:mm')}</span>
-                              </div>
-                              <Badge variant="secondary" className="text-xs">
-                                {visit.duration_minutes}m
-                              </Badge>
+                            <div className="flex items-center gap-2 text-xs text-gray-600">
+                              <Clock className="w-3 h-3" />
+                              <span>{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
+                              <span>-</span>
+                              <span>{format(new Date(visit.scheduled_end), 'HH:mm')}</span>
+                              <Badge variant="secondary" className="text-xs h-4 px-1">{visit.duration_minutes}m</Badge>
                             </div>
-                            {visit.client?.address?.postcode && (
-                              <div className="flex items-center gap-1 mt-1 text-xs text-gray-500">
-                                <MapPin className="w-3 h-3" />
-                                <span>{visit.client.address.postcode}</span>
-                              </div>
-                            )}
                           </div>
-                          
-                          {visit.client?.preferred_staff?.includes(staffMember.id) && (
-                            <Heart className="w-4 h-4 text-rose-500 flex-shrink-0" />
-                          )}
                         </div>
                       </div>
 
                       {visit.travelToNext > 0 && idx < dayVisits.length - 1 && (
-                        <div className="flex items-center gap-2 py-1 px-3">
-                          <div className="flex-1 h-1 bg-gradient-to-r from-blue-400 to-blue-500 rounded-full" />
-                          <div className="flex items-center gap-1 bg-blue-500 text-white px-2 py-0.5 rounded-full text-xs font-semibold">
-                            <Navigation className="w-3 h-3" />
+                        <div className="flex items-center gap-1 py-0.5">
+                          <div className="flex-1 h-0.5 bg-blue-400 rounded-full" />
+                          <div className="flex items-center gap-0.5 bg-blue-500 text-white px-1 rounded-full text-xs">
+                            <Navigation className="w-2.5 h-2.5" />
                             {visit.travelToNext}m
                           </div>
-                          <div className="flex-1 h-1 bg-gradient-to-r from-blue-500 to-blue-400 rounded-full" />
+                          <div className="flex-1 h-0.5 bg-blue-400 rounded-full" />
                         </div>
                       )}
                     </React.Fragment>
@@ -422,40 +397,36 @@ export default function EnhancedDomCareRoster({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded border overflow-hidden">
+      <div className="h-[calc(100vh-160px)] flex flex-col bg-white rounded border overflow-hidden">
         {/* TOP PANEL - Unallocated Visits */}
         <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
-          <div className="p-4 border-b bg-orange-500 text-white">
+          <div className="p-2 border-b bg-orange-500 text-white">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
-                  <AlertTriangle className="w-6 h-6" />
-                </div>
+              <div className="flex items-center gap-2">
+                <AlertTriangle className="w-5 h-5" />
                 <div>
-                  <h3 className="font-bold text-lg">Unallocated Visits</h3>
-                  <p className="text-sm text-orange-100">
-                    {unallocatedVisits.length} visits need assignment • Drag to staff below
-                  </p>
+                  <h3 className="font-bold text-sm">Unallocated Visits</h3>
+                  <p className="text-xs text-orange-100">{unallocatedVisits.length} need assignment</p>
                 </div>
               </div>
-              <div className="text-3xl font-bold">{unallocatedVisits.length}</div>
+              <div className="text-2xl font-bold">{unallocatedVisits.length}</div>
             </div>
           </div>
 
           {/* Filters */}
-          <div className="p-3 bg-white border-b flex items-center gap-3 flex-wrap">
-            <div className="relative flex-1 min-w-[200px]">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+          <div className="p-2 bg-white border-b flex items-center gap-2 flex-wrap">
+            <div className="relative flex-1 min-w-[150px]">
+              <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
               <Input
-                placeholder="Search client..."
+                placeholder="Search..."
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-9"
+                className="pl-7 h-7 text-xs"
               />
             </div>
             
             <Select value={timeFilter} onValueChange={setTimeFilter}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-28 h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -467,7 +438,7 @@ export default function EnhancedDomCareRoster({
             </Select>
 
             <Select value={areaFilter} onValueChange={setAreaFilter}>
-              <SelectTrigger className="w-36">
+              <SelectTrigger className="w-28 h-7 text-xs">
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
@@ -485,7 +456,7 @@ export default function EnhancedDomCareRoster({
               <div
                 ref={provided.innerRef}
                 {...provided.droppableProps}
-                className="p-3 max-h-[280px] overflow-y-auto"
+                className="p-2 max-h-[180px] overflow-y-auto"
               >
                 {unallocatedVisits.length === 0 ? (
                   <div className="text-center py-8 text-gray-400">
@@ -493,7 +464,7 @@ export default function EnhancedDomCareRoster({
                     <p>All visits allocated!</p>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                  <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-2">
                     {unallocatedVisits.map((visit, idx) => (
                       <UnallocatedVisitCard key={visit.id} visit={visit} index={idx} />
                     ))}
@@ -507,25 +478,24 @@ export default function EnhancedDomCareRoster({
 
         {/* BOTTOM PANEL - Staff Timeline */}
         <div className="flex-1 overflow-y-auto">
-          <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-teal-700 text-white p-3 border-b">
+          <div className="sticky top-0 z-10 bg-gradient-to-r from-teal-600 to-teal-700 text-white p-2 border-b">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <User className="w-5 h-5" />
-                <span className="font-semibold">Care Workers</span>
-                <Badge className="bg-teal-500 text-white">{staff.filter(s => s.is_active !== false).length}</Badge>
+              <div className="flex items-center gap-2">
+                <User className="w-4 h-4" />
+                <span className="font-semibold text-sm">Staff ({staff.filter(s => s.is_active !== false).length})</span>
               </div>
-              <div className="flex items-center gap-4 text-sm">
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-emerald-500 rounded-full" />
-                  <span className="text-teal-100">Ideal</span>
+              <div className="flex items-center gap-3 text-xs">
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-emerald-500 rounded-full" />
+                  <span>Ideal</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-amber-500 rounded-full" />
-                  <span className="text-teal-100">Caution</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-amber-500 rounded-full" />
+                  <span>Caution</span>
                 </div>
-                <div className="flex items-center gap-2">
-                  <div className="w-3 h-3 bg-red-500 rounded-full" />
-                  <span className="text-teal-100">Violation</span>
+                <div className="flex items-center gap-1">
+                  <div className="w-2 h-2 bg-red-500 rounded-full" />
+                  <span>Violation</span>
                 </div>
               </div>
             </div>
