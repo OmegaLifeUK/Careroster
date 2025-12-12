@@ -241,6 +241,7 @@ export default function DomCareSchedule() {
             visits={visits}
             staff={staff}
             clients={clients}
+            availability={staffAvailability}
             onVisitClick={handleEditVisit}
             onVisitUpdate={handleVisitUpdate}
             onAddVisit={(visitData) => {
