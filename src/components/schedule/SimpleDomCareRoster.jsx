@@ -13,7 +13,9 @@ import {
   MapPin,
   Navigation,
   AlertCircle,
-  Car
+  Car,
+  Award,
+  AlertTriangle
 } from "lucide-react";
 import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/toast";
@@ -31,6 +33,7 @@ export default function SimpleDomCareRoster({
   visits = [],
   staff = [],
   clients = [],
+  availability = [],
   onVisitClick,
   onVisitUpdate,
   onAddVisit,
@@ -198,6 +201,32 @@ export default function SimpleDomCareRoster({
     </div>
   );
 
+  // Calculate staff metrics for a specific day
+  const getStaffDayMetrics = (staffId, day) => {
+    const dayVisits = getStaffDayVisits(staffId, day);
+    const totalHours = dayVisits.reduce((sum, v) => sum + (v.duration_minutes || 60) / 60, 0);
+    const travelHours = dayVisits.reduce((sum, v) => sum + (v.estimated_travel_to_next || 0) / 60, 0);
+    
+    // Get contracted hours for this day
+    const dayOfWeek = day.getDay();
+    const staffAvailability = availability.filter(a => 
+      a.carer_id === staffId && 
+      a.availability_type === 'working_hours' &&
+      a.day_of_week === dayOfWeek
+    );
+    
+    let contractedHours = 0;
+    staffAvailability.forEach(avail => {
+      if (avail.start_time && avail.end_time) {
+        const [startH, startM] = avail.start_time.split(':').map(Number);
+        const [endH, endM] = avail.end_time.split(':').map(Number);
+        contractedHours += ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+      }
+    });
+
+    return { totalHours, travelHours, contractedHours, visitsCount: dayVisits.length };
+  };
+
   const weekStats = useMemo(() => {
     const weekVisits = visits.filter(v => {
       const vDate = getVisitDate(v);
@@ -346,31 +375,80 @@ export default function SimpleDomCareRoster({
           </div>
 
           {/* Staff Rows */}
-          {activeStaff.map((staffMember) => (
+          {activeStaff.map((staffMember) => {
+            // Calculate weekly totals for this staff
+            const weeklyMetrics = weekDays.map(day => getStaffDayMetrics(staffMember.id, day));
+            const weeklyTotalHours = weeklyMetrics.reduce((sum, m) => sum + m.totalHours, 0);
+            const weeklyTotalVisits = weeklyMetrics.reduce((sum, m) => sum + m.visitsCount, 0);
+            
+            return (
             <div
               key={staffMember.id}
               className="grid grid-cols-[200px_repeat(7,minmax(150px,1fr))] border-b hover:bg-gray-50"
             >
-              <div className="p-3 border-r flex items-center gap-3">
-                <img
-                  src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=3b82f6&color=fff&size=40`}
-                  alt={staffMember.full_name}
-                  className="w-10 h-10 rounded-full"
-                />
-                <div className="flex-1 min-w-0">
-                  <div className="font-semibold text-sm truncate">{staffMember.full_name}</div>
-                  {staffMember.vehicle_type && (
-                    <Badge variant="secondary" className="text-xs mt-1">
-                      <Car className="w-3 h-3 mr-1" />
-                      {staffMember.vehicle_type}
-                    </Badge>
-                  )}
+              <div className="p-2 border-r">
+                <div className="flex items-start gap-2">
+                  <div className="relative flex-shrink-0">
+                    <img
+                      src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name || 'S')}&background=14b8a6&color=fff&size=36`}
+                      alt={staffMember.full_name}
+                      className="w-9 h-9 rounded-full ring-2 ring-white shadow"
+                    />
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <h4 className="font-bold text-gray-900 truncate text-xs leading-tight">{staffMember.full_name}</h4>
+                    
+                    {/* Core Metrics */}
+                    <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
+                      {/* Weekly Hours */}
+                      <div className="flex items-center gap-0.5">
+                        <Clock className="w-3 h-3 text-teal-600" />
+                        <span className="text-[10px] font-bold text-teal-700">{weeklyTotalHours.toFixed(1)}h</span>
+                      </div>
+                      
+                      {/* Transport */}
+                      {staffMember.vehicle_type && (
+                        <div className="flex items-center gap-0.5">
+                          <Car className="w-3 h-3 text-blue-600" />
+                          <span className="text-[10px] text-gray-600">{staffMember.vehicle_type}</span>
+                        </div>
+                      )}
+                      
+                      {/* Qualifications */}
+                      {staffMember.qualifications && staffMember.qualifications.length > 0 && (
+                        <div className="flex items-center gap-0.5">
+                          <Award className="w-3 h-3 text-indigo-600" />
+                          <span className="text-[10px] text-gray-600">{staffMember.qualifications.length}</span>
+                        </div>
+                      )}
+                      
+                      {/* Area */}
+                      {staffMember.address?.postcode && (
+                        <div className="flex items-center gap-0.5">
+                          <MapPin className="w-3 h-3 text-purple-600" />
+                          <span className="text-[10px] text-gray-600">{staffMember.address.postcode.split(' ')[0]}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    {/* Status Row */}
+                    <div className="flex items-center gap-1 mt-0.5">
+                      <span className="text-[10px] font-semibold text-teal-700">{weeklyTotalVisits} visits</span>
+                    </div>
+                  </div>
                 </div>
               </div>
 
               {weekDays.map((day) => {
                 const dayStr = format(day, 'yyyy-MM-dd');
                 const dayVisits = getStaffDayVisits(staffMember.id, day);
+                const dayMetrics = getStaffDayMetrics(staffMember.id, day);
+                
+                const hoursColor = dayMetrics.totalHours > 12 ? 'text-red-600' : 
+                                   dayMetrics.totalHours > 10 ? 'text-amber-600' : 'text-emerald-600';
+                const capacityPercent = dayMetrics.contractedHours > 0 
+                  ? Math.round((dayMetrics.totalHours / dayMetrics.contractedHours) * 100) 
+                  : 0;
 
                 return (
                   <Droppable
@@ -385,6 +463,28 @@ export default function SimpleDomCareRoster({
                           snapshot.isDraggingOver ? 'bg-blue-50' : ''
                         }`}
                       >
+                        {/* Day Summary Header */}
+                        {dayVisits.length > 0 && (
+                          <div className="flex items-center justify-between mb-1 pb-1 border-b border-gray-200">
+                            <div className="flex items-center gap-1">
+                              <Clock className={`w-3 h-3 ${hoursColor}`} />
+                              <span className={`text-[10px] font-bold ${hoursColor}`}>
+                                {dayMetrics.totalHours.toFixed(1)}h
+                              </span>
+                              {dayMetrics.contractedHours > 0 && (
+                                <span className="text-[10px] text-gray-500">
+                                  ({capacityPercent}%)
+                                </span>
+                              )}
+                            </div>
+                            {dayMetrics.travelHours > 0 && (
+                              <div className="flex items-center gap-0.5">
+                                <Navigation className="w-2.5 h-2.5 text-blue-600" />
+                                <span className="text-[10px] text-blue-600">{dayMetrics.travelHours.toFixed(1)}h</span>
+                              </div>
+                            )}
+                          </div>
+                        )>
                         {dayVisits.map((visit, idx) => (
                           <React.Fragment key={visit.id}>
                             <Draggable draggableId={visit.id} index={idx}>
@@ -419,7 +519,8 @@ export default function SimpleDomCareRoster({
                 );
               })}
             </div>
-          ))}
+          );
+          })}
         </div>
       </DragDropContext>
     </div>
