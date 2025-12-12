@@ -56,23 +56,67 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const { data: shifts = [] } = useQuery({
     queryKey: ['shifts-for-allocation', dateRange],
     queryFn: async () => {
-      const allShifts = await base44.entities.Shift.list();
-      const shiftsArray = Array.isArray(allShifts) ? allShifts : [];
-      // Get unfilled shifts: no carer assigned OR status is draft/unfilled
-      return shiftsArray.filter(s => 
-        s && s.date >= dateRange.start && 
-        s.date <= dateRange.end &&
-        (!s.carer_id || s.status === 'draft' || s.status === 'unfilled')
-      );
+      try {
+        const allShifts = await base44.entities.Shift.list();
+        const shiftsArray = Array.isArray(allShifts) ? allShifts : [];
+        return shiftsArray.filter(s => 
+          s && s.date >= dateRange.start && 
+          s.date <= dateRange.end &&
+          (!s.carer_id || s.status === 'draft' || s.status === 'unfilled')
+        );
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: visits = [] } = useQuery({
+    queryKey: ['visits-for-allocation', dateRange],
+    queryFn: async () => {
+      try {
+        const allVisits = await base44.entities.Visit.list();
+        const visitsArray = Array.isArray(allVisits) ? allVisits : [];
+        return visitsArray.filter(v => {
+          if (!v) return false;
+          const visitDate = v.scheduled_start ? format(new Date(v.scheduled_start), 'yyyy-MM-dd') : null;
+          return visitDate && 
+            visitDate >= dateRange.start && 
+            visitDate <= dateRange.end &&
+            (!v.staff_id && !v.assigned_staff_id);
+        });
+      } catch {
+        return [];
+      }
     }
   });
 
   const { data: allShifts = [] } = useQuery({
     queryKey: ['all-shifts-period', dateRange],
     queryFn: async () => {
-      const data = await base44.entities.Shift.list();
-      const shiftsArray = Array.isArray(data) ? data : [];
-      return shiftsArray.filter(s => s && s.date >= dateRange.start && s.date <= dateRange.end);
+      try {
+        const data = await base44.entities.Shift.list();
+        const shiftsArray = Array.isArray(data) ? data : [];
+        return shiftsArray.filter(s => s && s.date >= dateRange.start && s.date <= dateRange.end);
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const { data: allVisits = [] } = useQuery({
+    queryKey: ['all-visits-period', dateRange],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.Visit.list();
+        const visitsArray = Array.isArray(data) ? data : [];
+        return visitsArray.filter(v => {
+          if (!v) return false;
+          const visitDate = v.scheduled_start ? format(new Date(v.scheduled_start), 'yyyy-MM-dd') : null;
+          return visitDate && visitDate >= dateRange.start && visitDate <= dateRange.end;
+        });
+      } catch {
+        return [];
+      }
     }
   });
 
@@ -95,10 +139,28 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   const { data: clients = [] } = useQuery({
     queryKey: ['clients-for-allocation'],
     queryFn: async () => {
-      const data = await base44.entities.Client.list();
-      return Array.isArray(data) ? data : [];
+      try {
+        const data = await base44.entities.Client.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
     }
   });
+
+  const { data: domClients = [] } = useQuery({
+    queryKey: ['domclients-for-allocation'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.DomCareClient.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    }
+  });
+
+  const allClients = [...clients, ...domClients];
 
   const { data: qualifications = [] } = useQuery({
     queryKey: ['qualifications'],
@@ -137,6 +199,13 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    }
+  });
+
+  const updateVisitMutation = useMutation({
+    mutationFn: ({ id, data }) => base44.entities.Visit.update(id, data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
     }
   });
 
@@ -232,7 +301,11 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
         careType === 'all' || s.care_type === careType
       );
 
-      if (unfilledShifts.length === 0) {
+      const unfilledVisits = visits;
+
+      const allUnfilled = [...unfilledShifts, ...unfilledVisits];
+
+      if (allUnfilled.length === 0) {
         toast.info("No Unfilled Shifts", "All shifts in this period are already allocated");
         setIsAnalyzing(false);
         return;
@@ -243,8 +316,14 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
       const detectedConflicts = [];
       const detectedGaps = [];
 
-      for (const shift of unfilledShifts) {
-        const client = clients.find(c => c.id === shift.client_id);
+      for (const shift of allUnfilled) {
+        const isVisit = !!shift.scheduled_start;
+        const shiftDate = isVisit ? format(new Date(shift.scheduled_start), 'yyyy-MM-dd') : shift.date;
+        const shiftStartTime = isVisit ? format(new Date(shift.scheduled_start), 'HH:mm') : shift.start_time;
+        const shiftEndTime = isVisit ? format(new Date(shift.scheduled_end), 'HH:mm') : shift.end_time;
+        const shiftDuration = isVisit ? shift.duration_minutes / 60 : shift.duration_hours;
+
+        const client = allClients.find(c => c.id === shift.client_id);
         const candidateScores = [];
 
         for (const carer of allCarers) {
@@ -253,10 +332,10 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
           const warnings = [];
 
           // Check full availability using availability module
-          const availabilityCheck = checkFullAvailability(carer.id, shift.date, shift.start_time, shift.end_time);
+          const availabilityCheck = checkFullAvailability(carer.id, shiftDate, shiftStartTime, shiftEndTime);
           if (!availabilityCheck.isAvailable) {
             if (availabilityCheck.reason === 'On approved leave') {
-              continue; // Skip completely if on leave
+              continue;
             }
             if (availabilityCheck.reason === 'Not a working day') {
               warnings.push("Not scheduled to work");
@@ -265,15 +344,29 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
               warnings.push("Outside working hours");
               score -= 30;
             } else {
-              continue; // Skip if marked unavailable
+              continue;
             }
           } else if (availabilityCheck.workingHours) {
             reasons.push("Within working hours");
             score += 15;
           }
 
-          // Check for conflicting shifts
-          if (hasConflictingShift(carer.id, shift.date, shift.start_time, shift.end_time)) {
+          // Check for conflicting shifts/visits
+          const hasConflict = allShifts.some(s => 
+            s.carer_id === carer.id &&
+            s.date === shiftDate &&
+            timeOverlaps(s.start_time, s.end_time, shiftStartTime, shiftEndTime)
+          ) || allVisits.some(v => {
+            const vStaffId = v.staff_id || v.assigned_staff_id;
+            if (vStaffId !== carer.id) return false;
+            const vDate = v.scheduled_start ? format(new Date(v.scheduled_start), 'yyyy-MM-dd') : null;
+            if (vDate !== shiftDate) return false;
+            const vStart = format(new Date(v.scheduled_start), 'HH:mm');
+            const vEnd = format(new Date(v.scheduled_end), 'HH:mm');
+            return timeOverlaps(vStart, vEnd, shiftStartTime, shiftEndTime);
+          });
+
+          if (hasConflict) {
             warnings.push("Has overlapping shift");
             score -= 100;
           }
@@ -331,9 +424,8 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
 
           // Workload balance (-points if overworked)
           const workload = getStaffWorkload(carer.id);
-          const dayWorkload = getDayWorkload(carer.id, shift.date);
+          const dayWorkload = getDayWorkload(carer.id, shiftDate);
           const constraints = getCarerHoursConstraints(carer.id);
-          const shiftDuration = shift.duration_hours || ((parseInt(shift.end_time?.split(':')[0] || 0) - parseInt(shift.start_time?.split(':')[0] || 0)));
 
           // Check max weekly hours
           if (workload + shiftDuration > constraints.maxPerWeek) {
@@ -341,7 +433,7 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
               score -= 15;
               warnings.push("Would require overtime");
             } else {
-              score -= 100; // Heavy penalty - exceeds max hours
+              score -= 100;
               warnings.push(`Exceeds max ${constraints.maxPerWeek}h/week`);
             }
           } else if (workload > 40) {
@@ -383,17 +475,27 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
         candidateScores.sort((a, b) => b.score - a.score);
 
         if (candidateScores.length === 0) {
-          // For gaps, find carers who could potentially cover (overtime candidates)
+          // For gaps, find carers who could potentially cover
           const overtimeCandidates = allCarers.filter(carer => {
-            // Skip if on leave
-            if (isOnLeave(carer.id, shift.date)) return false;
-            // Skip if has conflicting shift
-            if (hasConflictingShift(carer.id, shift.date, shift.start_time, shift.end_time)) return false;
-            // Check qualification
+            if (isOnLeave(carer.id, shiftDate)) return false;
+            const hasConflict = allShifts.some(s => 
+              s.carer_id === carer.id &&
+              s.date === shiftDate &&
+              timeOverlaps(s.start_time, s.end_time, shiftStartTime, shiftEndTime)
+            ) || allVisits.some(v => {
+              const vStaffId = v.staff_id || v.assigned_staff_id;
+              if (vStaffId !== carer.id) return false;
+              const vDate = v.scheduled_start ? format(new Date(v.scheduled_start), 'yyyy-MM-dd') : null;
+              if (vDate !== shiftDate) return false;
+              const vStart = format(new Date(v.scheduled_start), 'HH:mm');
+              const vEnd = format(new Date(v.scheduled_end), 'HH:mm');
+              return timeOverlaps(vStart, vEnd, shiftStartTime, shiftEndTime);
+            });
+            if (hasConflict) return false;
             if (!hasRequiredQualification(carer.qualifications, shift.required_qualification)) return false;
             return true;
           }).map(carer => {
-            const availability = checkFullAvailability(carer.id, shift.date, shift.start_time, shift.end_time);
+            const availability = checkFullAvailability(carer.id, shiftDate, shiftStartTime, shiftEndTime);
             return {
               carer,
               reason: availability.reason || "Not scheduled to work",
@@ -404,6 +506,7 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
           detectedGaps.push({
             shift,
             client,
+            isVisit,
             reason: "No available staff with required qualifications",
             overtimeCandidates
           });
@@ -411,7 +514,8 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
           suggestions.push({
             shift,
             client,
-            candidates: candidateScores.slice(0, 5), // Top 5 candidates
+            isVisit,
+            candidates: candidateScores.slice(0, 5),
             recommended: candidateScores[0]
           });
         }
@@ -419,11 +523,25 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
 
       // Detect scheduling conflicts
       const staffShiftMap = {};
-      for (const s of [...allShifts, ...suggestions.map(sg => ({ ...sg.shift, carer_id: sg.recommended?.carer?.id }))]) {
+      for (const s of allShifts) {
         if (!s.carer_id) continue;
         const key = `${s.carer_id}-${s.date}`;
         if (!staffShiftMap[key]) staffShiftMap[key] = [];
-        staffShiftMap[key].push(s);
+        staffShiftMap[key].push({ ...s, start_time: s.start_time, end_time: s.end_time });
+      }
+      for (const v of allVisits) {
+        const vStaffId = v.staff_id || v.assigned_staff_id;
+        if (!vStaffId) continue;
+        const vDate = v.scheduled_start ? format(new Date(v.scheduled_start), 'yyyy-MM-dd') : null;
+        if (!vDate) continue;
+        const key = `${vStaffId}-${vDate}`;
+        if (!staffShiftMap[key]) staffShiftMap[key] = [];
+        staffShiftMap[key].push({ 
+          ...v, 
+          date: vDate,
+          start_time: format(new Date(v.scheduled_start), 'HH:mm'),
+          end_time: format(new Date(v.scheduled_end), 'HH:mm')
+        });
       }
 
       for (const [key, dayShifts] of Object.entries(staffShiftMap)) {
@@ -431,8 +549,8 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
           for (let j = i + 1; j < dayShifts.length; j++) {
             if (timeOverlaps(dayShifts[i].start_time, dayShifts[i].end_time, dayShifts[j].start_time, dayShifts[j].end_time)) {
               detectedConflicts.push({
-                staffId: dayShifts[i].carer_id,
-                staffName: allCarers.find(c => c.id === dayShifts[i].carer_id)?.full_name,
+                staffId: dayShifts[i].carer_id || dayShifts[i].staff_id || dayShifts[i].assigned_staff_id,
+                staffName: allCarers.find(c => c.id === (dayShifts[i].carer_id || dayShifts[i].staff_id || dayShifts[i].assigned_staff_id))?.full_name,
                 date: dayShifts[i].date,
                 shifts: [dayShifts[i], dayShifts[j]]
               });
@@ -542,13 +660,27 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
 
     for (const [shiftId, carerId] of toApply) {
       try {
-        await updateShiftMutation.mutateAsync({
-          id: shiftId,
-          data: { carer_id: carerId, status: 'scheduled' }
-        });
+        const allocation = allocations.find(a => a.shift.id === shiftId);
+        if (!allocation) continue;
+
+        if (allocation.isVisit) {
+          await updateVisitMutation.mutateAsync({
+            id: shiftId,
+            data: { 
+              staff_id: carerId, 
+              assigned_staff_id: carerId,
+              status: 'published' 
+            }
+          });
+        } else {
+          await updateShiftMutation.mutateAsync({
+            id: shiftId,
+            data: { carer_id: carerId, status: 'scheduled' }
+          });
+        }
         successCount++;
       } catch (error) {
-        console.error("Failed to update shift:", shiftId, error);
+        console.error("Failed to update:", shiftId, error);
       }
     }
 
@@ -557,6 +689,7 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
     
     if (onAllocationsApplied) onAllocationsApplied();
     queryClient.invalidateQueries({ queryKey: ['shifts'] });
+    queryClient.invalidateQueries({ queryKey: ['visits'] });
   };
 
   const getQualificationName = (id) => {
@@ -642,8 +775,8 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4 text-center">
                   <Calendar className="w-6 h-6 mx-auto text-blue-600 mb-1" />
-                  <p className="text-2xl font-bold text-blue-700">{shifts.length}</p>
-                  <p className="text-xs text-blue-600">Unfilled Shifts</p>
+                  <p className="text-2xl font-bold text-blue-700">{shifts.length + visits.length}</p>
+                  <p className="text-xs text-blue-600">Unfilled Shifts/Visits</p>
                 </CardContent>
               </Card>
               <Card className="border-green-200 bg-green-50">
