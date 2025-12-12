@@ -144,13 +144,13 @@ export default function DomCareSchedule() {
   const isLoading = visitsLoading || staffLoading || clientsLoading || runsLoading;
 
   return (
-    <div className="p-4 md:p-8 bg-gray-50 min-h-screen">
-      <div className="max-w-[98%] mx-auto">
-        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-4 gap-3">
-          <div className="flex-shrink-0">
-            <h1 className="text-2xl font-bold text-gray-900">Visit Schedule</h1>
-            <p className="text-sm text-gray-500">Drag and drop visits to organize care runs</p>
-          </div>
+    <div className="p-4 bg-gray-50 min-h-screen">
+        <div className="w-full">
+        <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center mb-3 gap-3 bg-white p-4 rounded-lg border shadow-sm">
+            <div className="flex-shrink-0">
+              <h1 className="text-xl font-bold text-gray-900">Visit Schedule</h1>
+              <p className="text-xs text-gray-500">Drag and drop visits to organize care runs</p>
+            </div>
           <div className="flex gap-2 flex-wrap">
             <Button
               onClick={() => setShowAIAllocator(true)}
@@ -225,7 +225,7 @@ export default function DomCareSchedule() {
           </div>
         </div>
 
-        <div className="mb-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-3 rounded-lg border shadow-sm">
+        <div className="mb-3 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 bg-white p-2 rounded-lg border shadow-sm">
           <div className="flex gap-1.5 flex-wrap">
             <Button
               variant={view === "roster" ? "default" : "ghost"}
@@ -468,17 +468,7 @@ export default function DomCareSchedule() {
           />
         )}
 
-        {!isLoading && visits.length > 0 && (
-          <div className="mt-6">
-            <SmartSuggestionsWidget 
-              shifts={visits} 
-              staff={staff} 
-              clients={clients}
-              leaveRequests={leaveRequests}
-              availability={staffAvailability}
-            />
-          </div>
-        )}
+
       </div>
     </div>
   );

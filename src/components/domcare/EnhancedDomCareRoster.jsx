@@ -422,7 +422,7 @@ export default function EnhancedDomCareRoster({
 
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
-      <div className="h-[calc(100vh-200px)] flex flex-col bg-white rounded-lg shadow-sm border overflow-hidden">
+      <div className="h-[calc(100vh-280px)] flex flex-col bg-white rounded-lg shadow-sm border overflow-hidden">
         {/* TOP PANEL - Unallocated Visits */}
         <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
           <div className="p-4 border-b bg-orange-500 text-white">
