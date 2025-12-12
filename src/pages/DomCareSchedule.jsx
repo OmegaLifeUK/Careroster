@@ -12,6 +12,7 @@ import VisitTemplateManager from "../components/domcare/VisitTemplateManager";
 import BulkEditVisitsDialog from "../components/domcare/BulkEditVisitsDialog";
 import DomCareTimeline from "../components/domcare/DomCareTimeline";
 import SimpleDomCareRoster from "../components/schedule/SimpleDomCareRoster";
+import EnhancedDomCareRoster from "../components/domcare/EnhancedDomCareRoster";
 import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
@@ -288,16 +289,15 @@ export default function DomCareSchedule() {
             <p className="text-gray-500">Loading schedule...</p>
           </div>
         ) : view === "roster" ? (
-          <SimpleDomCareRoster
+          <EnhancedDomCareRoster
+            selectedDate={selectedDate}
             visits={visits}
             staff={staff}
             clients={clients}
+            availability={staffAvailability}
+            leaveRequests={leaveRequests}
             onVisitClick={handleEditVisit}
             onVisitUpdate={handleVisitUpdate}
-            onAddVisit={(visitData) => {
-              setEditingVisit(visitData);
-              setShowVisitDialog(true);
-            }}
           />
         ) : view === "split" ? (
           <div className="grid grid-rows-[200px_1fr] gap-4 h-[calc(100vh-280px)]">
