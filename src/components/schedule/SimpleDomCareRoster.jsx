@@ -484,7 +484,7 @@ export default function SimpleDomCareRoster({
                               </div>
                             )}
                           </div>
-                        )>
+                        )}
                         {dayVisits.map((visit, idx) => (
                           <React.Fragment key={visit.id}>
                             <Draggable draggableId={visit.id} index={idx}>
