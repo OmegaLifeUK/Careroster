@@ -2,7 +2,8 @@ import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
-import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles, Zap, AlertTriangle, BarChart3, Repeat, FileText, Edit } from "lucide-react";
+import { Calendar, List, Plus, Filter, ChevronLeft, ChevronRight, LayoutGrid, Sparkles, Zap, AlertTriangle, BarChart3, Repeat, FileText, Edit, X } from "lucide-react";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { startOfWeek, addDays, addWeeks, subWeeks, format } from "date-fns";
 
 import VisitDialog from "../components/domcare/VisitDialog";
@@ -429,19 +430,41 @@ export default function DomCareSchedule() {
         )}
 
         {showAutoSchedule && (
-          <AutoScheduleHelper
-            shifts={visits}
-            staff={staff}
-            clients={clients}
-            availability={staffAvailability}
-            leaveRequests={leaveRequests}
-            entityType="Visit"
-            onClose={() => setShowAutoSchedule(false)}
-            onGenerate={(newVisits) => {
-              console.log("Generated visits:", newVisits);
-              setShowAutoSchedule(false);
-            }}
-          />
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+            <Card className="w-full max-w-2xl">
+              <CardHeader className="border-b">
+                <div className="flex items-center justify-between">
+                  <CardTitle className="flex items-center gap-2">
+                    <Zap className="w-5 h-5 text-blue-600" />
+                    Auto Schedule Helper
+                  </CardTitle>
+                  <Button variant="ghost" size="icon" onClick={() => setShowAutoSchedule(false)}>
+                    <X className="w-4 h-4" />
+                  </Button>
+                </div>
+              </CardHeader>
+              <CardContent className="p-6">
+                <p className="text-center text-gray-600 py-8">
+                  Auto-scheduling for domiciliary visits will intelligently assign all unallocated visits to optimal staff based on continuity, proximity, and availability.
+                </p>
+                <div className="flex justify-center gap-3">
+                  <Button variant="outline" onClick={() => setShowAutoSchedule(false)}>
+                    Cancel
+                  </Button>
+                  <Button 
+                    className="bg-blue-600 hover:bg-blue-700"
+                    onClick={() => {
+                      setShowAIAllocator(true);
+                      setShowAutoSchedule(false);
+                    }}
+                  >
+                    <Sparkles className="w-4 h-4 mr-2" />
+                    Use AI Allocator
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
         )}
 
         {showRecurringDialog && (
