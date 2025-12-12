@@ -110,7 +110,7 @@ export default function EnhancedDomCareRoster({
   }, [staff, visits, clients, dateStr]);
 
   // Calculate AI match score for visit + staff
-  const calculateMatchScore = (visit, staffMember) => {
+  const calculateMatchScore = (visit, staffMember, currentStaffSchedule) => {
     let score = 0;
     const reasons = [];
     const warnings = [];
@@ -157,16 +157,18 @@ export default function EnhancedDomCareRoster({
       reasons.push("Has vehicle");
     }
 
-    // Check WTR compliance
-    const staffSchedule = staffSchedule.find(ss => ss.staff.id === staffMember.id);
-    if (staffSchedule) {
-      const projectedHours = staffSchedule.totalHours + (visit.duration_minutes || 60) / 60;
-      if (projectedHours > 12) {
-        score -= 30;
-        warnings.push("Exceeds 12h/day");
-      } else if (projectedHours > 10) {
-        score -= 10;
-        warnings.push("Long day");
+    // Check WTR compliance using passed schedule data
+    if (currentStaffSchedule) {
+      const staffSched = currentStaffSchedule.find(ss => ss.staff.id === staffMember.id);
+      if (staffSched) {
+        const projectedHours = staffSched.totalHours + (visit.duration_minutes || 60) / 60;
+        if (projectedHours > 12) {
+          score -= 30;
+          warnings.push("Exceeds 12h/day");
+        } else if (projectedHours > 10) {
+          score -= 10;
+          warnings.push("Long day");
+        }
       }
     }
 
@@ -179,7 +181,7 @@ export default function EnhancedDomCareRoster({
       .filter(s => s.is_active !== false)
       .map(s => ({
         staff: s,
-        ...calculateMatchScore(visit, s)
+        ...calculateMatchScore(visit, s, staffSchedule)
       }))
       .filter(m => m.score > -50)
       .sort((a, b) => b.score - a.score)
