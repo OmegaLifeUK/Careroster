@@ -404,42 +404,46 @@ export default function EnhancedDomCareRoster({
     return Array.from(postcodes).sort();
   }, [clients]);
 
+  const isToday = format(selectedDate, 'yyyy-MM-dd') === format(new Date(), 'yyyy-MM-dd');
+
   return (
     <DragDropContext onDragEnd={handleDragEnd}>
       <div className="h-[calc(100vh-140px)] flex flex-col bg-white rounded border overflow-hidden">
         {/* TOP PANEL - Unallocated Visits */}
-        <div className="flex-shrink-0 border-b bg-gradient-to-r from-orange-50 to-orange-100">
-          <div className="px-2 py-1 border-b bg-orange-500 text-white flex items-center justify-between">
+        <div className="flex-shrink-0 border-b">
+          <div className="px-3 py-1.5 bg-orange-500 text-white flex items-center justify-between">
             <div className="flex items-center gap-2">
               <AlertTriangle className="w-4 h-4" />
-              <span className="font-bold text-xs">Unallocated ({unallocatedVisits.length})</span>
+              <span className="font-bold text-sm">Unallocated ({unallocatedVisits.length})</span>
+              {isToday && <span className="text-xs bg-white/20 px-2 py-0.5 rounded">TODAY</span>}
             </div>
-
-            <div className="flex items-center gap-1 flex-wrap px-2 py-1">
-              <Search className="w-3 h-3 text-gray-400" />
-              <Input
-                placeholder="Search..."
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="h-6 text-xs w-32 border-0 focus-visible:ring-0 px-1"
-              />
+            <div className="flex items-center gap-2">
+              <div className="relative">
+                <Search className="absolute left-2 top-1/2 -translate-y-1/2 w-3 h-3 text-gray-400" />
+                <Input
+                  placeholder="Search client..."
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  className="h-7 text-xs w-40 pl-7 bg-white/90"
+                />
+              </div>
               <Select value={timeFilter} onValueChange={setTimeFilter}>
-                <SelectTrigger className="w-20 h-6 text-xs border-0">
+                <SelectTrigger className="w-24 h-7 text-xs bg-white/90">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">All Times</SelectItem>
                   <SelectItem value="morning">AM</SelectItem>
                   <SelectItem value="afternoon">PM</SelectItem>
                   <SelectItem value="evening">Eve</SelectItem>
                 </SelectContent>
               </Select>
               <Select value={areaFilter} onValueChange={setAreaFilter}>
-                <SelectTrigger className="w-20 h-6 text-xs border-0">
+                <SelectTrigger className="w-24 h-7 text-xs bg-white/90">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="all">All</SelectItem>
+                  <SelectItem value="all">All Areas</SelectItem>
                   {areas.map(area => (
                     <SelectItem key={area} value={area}>{area}</SelectItem>
                   ))}
