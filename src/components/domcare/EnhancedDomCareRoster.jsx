@@ -20,6 +20,7 @@ import {
 import { format, parseISO } from "date-fns";
 import { calculateTravelTime } from "../schedule/TravelTimeCalculator";
 import { checkWorkingTimeCompliance } from "../schedule/WorkingTimeRegulations";
+import AIRouteOptimizer from "./AIRouteOptimizer";
 
 const CARE_COLORS = {
   ideal: { bg: "bg-emerald-50", border: "border-emerald-300", text: "text-emerald-800", indicator: "bg-emerald-500" },
@@ -42,6 +43,8 @@ export default function EnhancedDomCareRoster({
   const [timeFilter, setTimeFilter] = useState("all");
   const [areaFilter, setAreaFilter] = useState("all");
   const [selectedVisit, setSelectedVisit] = useState(null);
+  const [selectedStaffForRoute, setSelectedStaffForRoute] = useState(null);
+  const [autoOptimizeEnabled, setAutoOptimizeEnabled] = useState(false);
 
   const dateStr = format(selectedDate, 'yyyy-MM-dd');
 
@@ -204,6 +207,27 @@ export default function EnhancedDomCareRoster({
       assigned_staff_id: staffId,
       status: 'published'
     });
+
+    // Auto-optimize if enabled
+    if (autoOptimizeEnabled) {
+      setSelectedStaffForRoute(staffId);
+    }
+  };
+
+  const handleApplyOptimization = (optimizedVisits, staffId) => {
+    // Apply sequence numbers to optimized visits
+    optimizedVisits.forEach((visit, idx) => {
+      onVisitUpdate?.(visit.id, {
+        sequence_number: idx + 1,
+        estimated_travel_to_next: idx < optimizedVisits.length - 1 
+          ? calculateTravelTime(
+              clients.find(c => c.id === visit.client_id)?.address,
+              clients.find(c => c.id === optimizedVisits[idx + 1].client_id)?.address,
+              staff.find(s => s.id === staffId)?.vehicle_type
+            ).time
+          : 0
+      });
+    });
   };
 
   const UnallocatedVisitCard = ({ visit, index }) => {
@@ -283,6 +307,7 @@ export default function EnhancedDomCareRoster({
 
   const StaffTimelineRow = ({ staffSchedule }) => {
     const { staff: staffMember, visits: dayVisits, totalHours, travelHours, wtr } = staffSchedule;
+    const [showRouteOptimizer, setShowRouteOptimizer] = useState(false);
     
     // Calculate contracted/available hours from availability data
     const dayOfWeek = selectedDate.getDay();
@@ -315,11 +340,24 @@ export default function EnhancedDomCareRoster({
           <div
             ref={provided.innerRef}
             {...provided.droppableProps}
-            className={`border-b transition-colors ${
+            className={`transition-colors ${
               snapshot.isDraggingOver ? 'bg-teal-50' : 'bg-white hover:bg-gray-50'
             }`}
-          >
-            <div className="grid grid-cols-[220px_1fr] min-h-[60px]">
+            >
+            {/* Route Optimizer Panel */}
+            {showRouteOptimizer && dayVisits.length > 1 && (
+              <div className="p-2 border-b bg-gradient-to-r from-indigo-50 to-blue-50">
+                <AIRouteOptimizer
+                  staff={staffMember}
+                  visits={dayVisits}
+                  clients={clients}
+                  onApplyOptimization={handleApplyOptimization}
+                  autoOptimize={false}
+                />
+              </div>
+            )}
+
+            <div className="grid grid-cols-[220px_1fr] min-h-[60px] border-b">
               {/* Staff Info Panel */}
               <div className="border-r bg-white p-1.5 flex items-start gap-2">
                 <div className="relative flex-shrink-0">
@@ -391,6 +429,18 @@ export default function EnhancedDomCareRoster({
                       <Badge className="bg-amber-100 text-amber-700 text-[9px] h-3.5 px-1 leading-none">
                         ⚠️
                       </Badge>
+                    )}
+                    {dayVisits.length > 1 && (
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setShowRouteOptimizer(!showRouteOptimizer)}
+                        className="h-5 px-1.5 text-[10px]"
+                        title="Optimize route"
+                      >
+                        <Navigation className="w-3 h-3 mr-0.5 text-indigo-600" />
+                        {showRouteOptimizer ? 'Hide' : 'Route'}
+                      </Button>
                     )}
                   </div>
                 </div>
