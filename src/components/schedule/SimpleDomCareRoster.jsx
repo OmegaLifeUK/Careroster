@@ -76,12 +76,31 @@ export default function SimpleDomCareRoster({
 
   const getStaffDayVisits = (staffId, day) => {
     const dayStr = format(day, 'yyyy-MM-dd');
-    return visits
+    const dayVisits = visits
       .filter(v => {
         const visitStaffId = v.staff_id || v.assigned_staff_id;
         return getVisitDate(v) === dayStr && visitStaffId === staffId;
       })
       .sort((a, b) => (a.scheduled_start || '').localeCompare(b.scheduled_start || ''));
+    
+    // Calculate travel times for display
+    const staffMember = staff.find(s => s.id === staffId);
+    return dayVisits.map((visit, idx) => {
+      if (idx < dayVisits.length - 1) {
+        const currentClient = clients.find(c => c.id === visit.client_id);
+        const nextClient = clients.find(c => c.id === dayVisits[idx + 1].client_id);
+        
+        if (currentClient?.address && nextClient?.address && staffMember) {
+          const travel = calculateTravelTime(
+            currentClient.address,
+            nextClient.address,
+            staffMember.vehicle_type
+          );
+          return { ...visit, calculated_travel_to_next: travel.time };
+        }
+      }
+      return visit;
+    });
   };
 
   const getUnassignedVisits = (day) => {
@@ -205,7 +224,7 @@ export default function SimpleDomCareRoster({
   const getStaffDayMetrics = (staffId, day) => {
     const dayVisits = getStaffDayVisits(staffId, day);
     const totalHours = dayVisits.reduce((sum, v) => sum + (v.duration_minutes || 60) / 60, 0);
-    const travelHours = dayVisits.reduce((sum, v) => sum + (v.estimated_travel_to_next || 0) / 60, 0);
+    const travelHours = dayVisits.reduce((sum, v) => sum + (v.estimated_travel_to_next || v.calculated_travel_to_next || 0) / 60, 0);
     
     // Get contracted hours for this day
     const dayOfWeek = day.getDay();
@@ -498,8 +517,8 @@ export default function SimpleDomCareRoster({
                                 </div>
                               )}
                             </Draggable>
-                            {visit.estimated_travel_to_next > 0 && dayVisits[idx + 1] && (
-                              <TravelIndicator minutes={visit.estimated_travel_to_next} />
+                            {dayVisits[idx + 1] && (visit.estimated_travel_to_next > 0 || visit.calculated_travel_to_next > 0) && (
+                              <TravelIndicator minutes={visit.estimated_travel_to_next || visit.calculated_travel_to_next} />
                             )}
                           </React.Fragment>
                         ))}
