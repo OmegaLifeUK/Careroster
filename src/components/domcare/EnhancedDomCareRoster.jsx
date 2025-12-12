@@ -221,61 +221,54 @@ export default function EnhancedDomCareRoster({
             {...provided.dragHandleProps}
             onClick={() => setSelectedVisit(isExpanded ? null : visit.id)}
             className={`
-              flex-shrink-0 w-48 bg-white border-2 rounded-lg p-2.5 cursor-move transition-all
+              flex-shrink-0 w-40 bg-white border-2 rounded p-1.5 cursor-move transition-all
               ${snapshot.isDragging ? 'shadow-xl border-teal-500 rotate-2' : 'border-orange-300 hover:border-orange-400 hover:shadow-md'}
               ${isExpanded ? 'ring-2 ring-teal-400' : ''}
             `}
           >
-            <div className="space-y-1.5">
-              <div className="flex items-start justify-between gap-2">
-                <h4 className="font-bold text-gray-900 text-sm leading-tight">{client?.full_name || 'Unknown'}</h4>
+            <div className="space-y-1">
+              <div className="flex items-start justify-between gap-1">
+                <h4 className="font-bold text-gray-900 text-xs leading-tight">{client?.full_name || 'Unknown'}</h4>
                 {bestMatch && bestMatch.score > 0 && (
-                  <div className="flex flex-col items-end">
-                    <Badge className="bg-teal-500 text-white text-xs px-1.5 py-0.5">
-                      <TrendingUp className="w-3 h-3 mr-0.5" />
-                      {bestMatch.score}
-                    </Badge>
-                    <span className="text-xs text-gray-500 mt-0.5">{bestMatch.staff.full_name.split(' ')[0]}</span>
-                  </div>
+                  <Badge className="bg-teal-500 text-white text-[10px] px-1 py-0 leading-tight">
+                    {bestMatch.score}
+                  </Badge>
                 )}
               </div>
-              <div className="flex items-center gap-1.5 text-xs text-gray-700">
-                <Clock className="w-3.5 h-3.5 text-orange-600" />
+              <div className="flex items-center gap-1 text-[10px] text-gray-700">
+                <Clock className="w-3 h-3 text-orange-600" />
                 <span className="font-medium">{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
                 <span className="text-gray-400">•</span>
-                <span className="font-medium">{visit.duration_minutes}min</span>
+                <span className="font-medium">{visit.duration_minutes}m</span>
               </div>
               {client?.address?.postcode && (
-                <div className="flex items-center gap-1 text-xs text-gray-600">
-                  <MapPin className="w-3 h-3 text-gray-400" />
-                  <span>{client.address.postcode}</span>
+                <div className="flex items-center gap-0.5 text-[10px] text-gray-600">
+                  <MapPin className="w-2.5 h-2.5 text-gray-400" />
+                  <span>{client.address.postcode.split(' ')[0]}</span>
                 </div>
               )}
-              {visit.required_qualification_id && (
-                <div className="flex items-center gap-1 text-xs text-amber-700 bg-amber-50 px-1.5 py-0.5 rounded mt-1">
-                  <Award className="w-3 h-3" />
-                  <span>Qualified staff only</span>
+              {bestMatch && bestMatch.score > 0 && (
+                <div className="text-[10px] text-teal-700 font-medium truncate">
+                  → {bestMatch.staff.full_name.split(' ')[0]}
                 </div>
               )}
 
               {isExpanded && topMatches.length > 0 && (
-                <div className="mt-2 pt-2 border-t border-gray-200 space-y-1">
-                  <p className="text-xs font-bold text-gray-700 mb-1">Best Matches:</p>
+                <div className="mt-1 pt-1 border-t border-gray-200 space-y-0.5">
+                  <p className="text-[10px] font-bold text-gray-700 mb-0.5">Best:</p>
                   {topMatches.slice(0, 2).map((match, idx) => (
                     <div 
                       key={match.staff.id} 
-                      className={`p-1.5 rounded text-xs ${
+                      className={`p-1 rounded text-[10px] ${
                         idx === 0 ? 'bg-teal-50 border border-teal-300' : 'bg-gray-50'
                       }`}
                     >
                       <div className="flex items-center justify-between">
-                        <span className="font-semibold text-xs">{match.staff.full_name}</span>
-                        <Badge className="bg-teal-600 text-white text-xs px-1 py-0">{match.score}</Badge>
+                        <span className="font-semibold">{match.staff.full_name.split(' ')[0]}</span>
+                        <Badge className="bg-teal-600 text-white text-[9px] px-1 py-0">{match.score}</Badge>
                       </div>
-                      <div className="flex flex-wrap gap-0.5 mt-0.5">
-                        {match.reasons.slice(0, 3).map((r, i) => (
-                          <span key={i} className="text-xs text-emerald-700">• {r}</span>
-                        ))}
+                      <div className="text-[9px] text-emerald-700 truncate">
+                        {match.reasons.slice(0, 2).join(', ')}
                       </div>
                     </div>
                   ))}
@@ -290,6 +283,26 @@ export default function EnhancedDomCareRoster({
 
   const StaffTimelineRow = ({ staffSchedule }) => {
     const { staff: staffMember, visits: dayVisits, totalHours, travelHours, wtr } = staffSchedule;
+    
+    // Calculate contracted/available hours from availability data
+    const dayOfWeek = selectedDate.getDay();
+    const staffAvailabilityToday = availability.filter(a => 
+      a.carer_id === staffMember.id && 
+      a.availability_type === 'working_hours' &&
+      a.day_of_week === dayOfWeek
+    );
+    
+    let contractedHours = 0;
+    staffAvailabilityToday.forEach(avail => {
+      if (avail.start_time && avail.end_time) {
+        const [startH, startM] = avail.start_time.split(':').map(Number);
+        const [endH, endM] = avail.end_time.split(':').map(Number);
+        contractedHours += ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+      }
+    });
+    
+    const availableForMore = contractedHours > totalHours;
+    const capacityPercent = contractedHours > 0 ? Math.round((totalHours / contractedHours) * 100) : 0;
     
     const hoursColor = totalHours > 12 ? 'text-red-600' : totalHours > 10 ? 'text-amber-600' : 'text-emerald-600';
     const wtrStatus = wtr?.summary?.critical > 0 ? 'violation' : 
@@ -306,69 +319,80 @@ export default function EnhancedDomCareRoster({
               snapshot.isDraggingOver ? 'bg-teal-50' : 'bg-white hover:bg-gray-50'
             }`}
           >
-            <div className="grid grid-cols-[200px_1fr] min-h-[70px]">
+            <div className="grid grid-cols-[220px_1fr] min-h-[60px]">
               {/* Staff Info Panel */}
-              <div className="border-r bg-white p-2 flex items-center gap-2">
-                <div className="relative">
+              <div className="border-r bg-white p-1.5 flex items-start gap-2">
+                <div className="relative flex-shrink-0">
                   <img
-                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=40`}
+                    src={`https://ui-avatars.com/api/?name=${encodeURIComponent(staffMember.full_name)}&background=14b8a6&color=fff&size=36`}
                     alt={staffMember.full_name}
-                    className="w-10 h-10 rounded-full ring-2 ring-white shadow"
+                    className="w-9 h-9 rounded-full ring-2 ring-white shadow"
                   />
-                  <div className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${statusColor.indicator}`} />
+                  <div className={`absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 rounded-full border-2 border-white ${statusColor.indicator}`} />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <h4 className="font-bold text-gray-900 truncate text-sm">{staffMember.full_name}</h4>
+                  <h4 className="font-bold text-gray-900 truncate text-xs leading-tight">{staffMember.full_name}</h4>
                   
-                  {/* Hours Tracking */}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <div className="flex items-center gap-1">
+                  {/* Core Metrics Row */}
+                  <div className="flex items-center gap-2 mt-0.5 flex-wrap">
+                    {/* Hours: Scheduled vs Contracted */}
+                    <div className="flex items-center gap-0.5">
                       <Clock className={`w-3 h-3 ${hoursColor}`} />
-                      <span className={`text-xs font-bold ${hoursColor}`}>{totalHours.toFixed(1)}h</span>
-                      <span className="text-xs text-gray-400">/ {staffMember.max_hours_per_day || 12}h</span>
+                      <span className={`text-[10px] font-bold ${hoursColor}`}>{totalHours.toFixed(1)}h</span>
+                      {contractedHours > 0 ? (
+                        <span className="text-[10px] text-gray-500">/{contractedHours.toFixed(1)}h ({capacityPercent}%)</span>
+                      ) : (
+                        <span className="text-[10px] text-gray-400">/no shift</span>
+                      )}
                     </div>
-                    {staffMember.vehicle_type && (
-                      <Car className="w-3.5 h-3.5 text-teal-600" title="Has vehicle" />
+                    
+                    {/* Transport */}
+                    {staffMember.vehicle_type && staffMember.vehicle_type !== 'walking' && (
+                      <div className="flex items-center gap-0.5">
+                        <Car className="w-3 h-3 text-blue-600" />
+                        <span className="text-[10px] text-gray-600">{staffMember.vehicle_type}</span>
+                      </div>
+                    )}
+                    
+                    {/* Qualifications */}
+                    {staffMember.qualifications && staffMember.qualifications.length > 0 && (
+                      <div className="flex items-center gap-0.5">
+                        <Award className="w-3 h-3 text-indigo-600" />
+                        <span className="text-[10px] text-gray-600">{staffMember.qualifications.length}</span>
+                      </div>
+                    )}
+                    
+                    {/* Area */}
+                    {staffMember.address?.postcode && (
+                      <div className="flex items-center gap-0.5">
+                        <MapPin className="w-3 h-3 text-purple-600" />
+                        <span className="text-[10px] text-gray-600">{staffMember.address.postcode.split(' ')[0]}</span>
+                      </div>
                     )}
                   </div>
 
-                  {/* Qualifications */}
-                  {staffMember.qualifications && staffMember.qualifications.length > 0 && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <Award className="w-3 h-3 text-blue-600" />
-                      <span className="text-xs text-gray-600">{staffMember.qualifications.length} quals</span>
-                    </div>
-                  )}
-
-                  {/* Area Coverage */}
-                  {staffMember.address?.postcode && (
-                    <div className="flex items-center gap-1 mt-0.5">
-                      <MapPin className="w-3 h-3 text-purple-600" />
-                      <span className="text-xs text-gray-600">{staffMember.address.postcode.split(' ')[0]}</span>
-                    </div>
-                  )}
-
-                  {/* Visits Count */}
-                  <div className="flex items-center gap-2 mt-0.5">
-                    <span className="text-xs font-semibold text-teal-700">{dayVisits.length} visits</span>
+                  {/* Status Indicators Row */}
+                  <div className="flex items-center gap-1.5 mt-0.5">
+                    <span className="text-[10px] font-semibold text-teal-700">{dayVisits.length} visits</span>
                     {travelHours > 0 && (
-                      <span className="text-xs text-blue-600">🚗 {travelHours.toFixed(1)}h travel</span>
+                      <span className="text-[10px] text-blue-600">🚗{travelHours.toFixed(1)}h</span>
+                    )}
+                    {availableForMore && contractedHours > 0 && (
+                      <Badge className="bg-emerald-100 text-emerald-700 text-[9px] h-3.5 px-1 leading-none">
+                        +{(contractedHours - totalHours).toFixed(1)}h available
+                      </Badge>
+                    )}
+                    {wtr?.summary?.critical > 0 && (
+                      <Badge className="bg-red-100 text-red-700 text-[9px] h-3.5 px-1 leading-none">
+                        <AlertTriangle className="w-2 h-2 mr-0.5" />WTR!
+                      </Badge>
+                    )}
+                    {wtr?.summary?.warnings > 0 && !wtr?.summary?.critical && (
+                      <Badge className="bg-amber-100 text-amber-700 text-[9px] h-3.5 px-1 leading-none">
+                        ⚠️
+                      </Badge>
                     )}
                   </div>
-
-                  {/* WTR Warnings */}
-                  {wtr?.summary?.critical > 0 && (
-                    <Badge className="bg-red-100 text-red-700 text-xs mt-1 h-4 px-1">
-                      <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
-                      WTR VIOLATION
-                    </Badge>
-                  )}
-                  {wtr?.summary?.warnings > 0 && !wtr?.summary?.critical && (
-                    <Badge className="bg-amber-100 text-amber-700 text-xs mt-1 h-4 px-1">
-                      <AlertTriangle className="w-2.5 h-2.5 mr-0.5" />
-                      WTR WARNING
-                    </Badge>
-                  )}
                 </div>
               </div>
 
@@ -385,34 +409,32 @@ export default function EnhancedDomCareRoster({
                     <React.Fragment key={visit.id}>
                       <div
                         onClick={() => onVisitClick?.(visit)}
-                        className="inline-flex items-center gap-2 bg-gradient-to-br from-teal-50 to-teal-100 border-2 border-teal-300 rounded-lg px-3 py-2 cursor-pointer hover:shadow-md hover:border-teal-400 transition-all"
+                        className="inline-flex items-center gap-1 bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-300 rounded px-2 py-1 cursor-pointer hover:shadow-md hover:border-teal-400 transition-all"
                       >
                         <div className="flex flex-col">
-                          <div className="flex items-center gap-1">
-                            <span className="font-bold text-gray-900 text-sm">{visit.client?.full_name}</span>
+                          <div className="flex items-center gap-0.5">
+                            <span className="font-bold text-gray-900 text-xs">{visit.client?.full_name}</span>
                             {visit.client?.preferred_staff?.includes(staffMember.id) && (
-                              <Heart className="w-3.5 h-3.5 text-rose-500 fill-rose-500" />
+                              <Heart className="w-3 h-3 text-rose-500 fill-rose-500" />
                             )}
                           </div>
-                          <div className="flex items-center gap-2 text-xs text-gray-700 mt-0.5">
-                            <div className="flex items-center gap-1">
-                              <Clock className="w-3 h-3 text-teal-600" />
-                              <span className="font-medium">{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
-                              <span>-</span>
-                              <span className="font-medium">{format(new Date(visit.scheduled_end), 'HH:mm')}</span>
-                            </div>
-                            <Badge className="bg-teal-600 text-white text-xs px-1.5 py-0">
-                              {visit.duration_minutes}min
+                          <div className="flex items-center gap-1 text-[10px] text-gray-700">
+                            <Clock className="w-2.5 h-2.5 text-teal-600" />
+                            <span className="font-medium">{format(new Date(visit.scheduled_start), 'HH:mm')}</span>
+                            <span className="text-gray-400">-</span>
+                            <span className="font-medium">{format(new Date(visit.scheduled_end), 'HH:mm')}</span>
+                            <Badge className="bg-teal-600 text-white text-[9px] px-1 py-0 leading-none">
+                              {visit.duration_minutes}m
                             </Badge>
                           </div>
                         </div>
                       </div>
 
                       {visit.travelToNext > 0 && idx < dayVisits.length - 1 && (
-                        <div className="inline-flex items-center gap-1 px-2">
-                          <Navigation className="w-3 h-3 text-blue-600" />
-                          <span className="text-xs font-bold text-blue-700">{visit.travelToNext}m</span>
-                          <div className="w-8 h-0.5 bg-blue-400" />
+                        <div className="inline-flex items-center gap-0.5 px-1">
+                          <Navigation className="w-2.5 h-2.5 text-blue-600" />
+                          <span className="text-[10px] font-bold text-blue-700">{visit.travelToNext}m</span>
+                          <div className="w-6 h-0.5 bg-blue-400" />
                         </div>
                       )}
                     </React.Fragment>
