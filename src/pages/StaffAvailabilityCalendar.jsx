@@ -16,7 +16,6 @@ import {
   Settings
 } from "lucide-react";
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, parseISO } from "date-fns";
-import AvailabilityDialog from "../components/availability/AvailabilityDialog";
 import WorkingHoursSetup from "../components/availability/WorkingHoursSetup";
 import UnavailabilityDialog from "../components/availability/UnavailabilityDialog";
 
