@@ -49,6 +49,7 @@ const residentialCareNav = [
 const domCareNav = [
   { title: "Dom Care Dashboard", url: createPageUrl("DomCareDashboard"), icon: LayoutDashboard },
   { title: "Visit Schedule", url: createPageUrl("DomCareSchedule"), icon: MapPin },
+  { title: "Staff Availability", url: createPageUrl("StaffAvailabilityCalendar"), icon: Calendar },
   { title: "Staff", url: createPageUrl("DomCareStaff"), icon: Users },
   { title: "Clients", url: createPageUrl("DomCareClients"), icon: UserCircle },
   { title: "Runs", url: createPageUrl("DomCareRuns"), icon: Navigation },

@@ -65,6 +65,7 @@ import FollowUpTracker from './pages/FollowUpTracker';
 import EnquiryDetail from './pages/EnquiryDetail';
 import CarerDetail from './pages/CarerDetail';
 import CarerPerformanceDashboard from './pages/CarerPerformanceDashboard';
+import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
 import __Layout from './Layout.jsx';
 
 
@@ -136,6 +137,7 @@ export const PAGES = {
     "EnquiryDetail": EnquiryDetail,
     "CarerDetail": CarerDetail,
     "CarerPerformanceDashboard": CarerPerformanceDashboard,
+    "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
 }
 
 export const pagesConfig = {
