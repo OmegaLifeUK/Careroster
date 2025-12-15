@@ -34,6 +34,7 @@ import KeyboardShortcuts from "@/components/ui/keyboard-shortcuts";
 import GlobalSearch from "@/components/ui/global-search";
 import { ToastProvider } from "@/components/ui/toast";
 import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
+import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -512,6 +513,7 @@ export default function Layout({ children, currentPageName }) {
               {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </Button>
             <h1 className="text-xl font-bold text-gray-900 flex-1">CareRoster</h1>
+            <NotificationDropdown user={user} />
             <Button
               variant="ghost"
               size="icon"

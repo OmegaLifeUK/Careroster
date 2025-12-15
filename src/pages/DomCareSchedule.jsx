@@ -18,6 +18,7 @@ import AIShiftAllocator from "../components/schedule/AIShiftAllocator";
 import ConflictDetector from "../components/schedule/ConflictDetector";
 import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
 import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidget";
+import { useNotifications } from "../components/notifications/useNotifications";
 
 export default function DomCareSchedule() {
   const [view, setView] = useState("roster");
@@ -39,6 +40,7 @@ export default function DomCareSchedule() {
   const [showBulkEdit, setShowBulkEdit] = useState(false);
 
   const queryClient = useQueryClient();
+  const { notifyVisitAssignment, notifyVisitCancellation, notifyVisitRescheduled } = useNotifications();
 
   const { data: visits = [], isLoading: visitsLoading } = useQuery({
     queryKey: ['visits'],
@@ -72,16 +74,76 @@ export default function DomCareSchedule() {
 
   const updateVisitMutation = useMutation({
     mutationFn: ({ id, data }) => base44.entities.Visit.update(id, data),
-    onSuccess: () => {
+    onSuccess: async (updatedVisit, variables) => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
       queryClient.invalidateQueries({ queryKey: ['runs'] });
+      
+      // Send notifications for key changes
+      const visit = visits.find(v => v.id === variables.id);
+      if (!visit) return;
+      
+      const staffId = variables.data.staff_id || variables.data.assigned_staff_id;
+      const staffMember = staff.find(s => s.id === staffId);
+      const client = clients.find(c => c.id === visit.client_id);
+      
+      if (!staffMember || !client) return;
+      
+      // New assignment
+      if (staffId && staffId !== visit.staff_id && staffId !== visit.assigned_staff_id) {
+        await notifyVisitAssignment({ 
+          visit: { ...visit, ...variables.data }, 
+          staff: staffMember, 
+          client,
+          sendEmail: true 
+        });
+      }
+      
+      // Cancellation
+      if (variables.data.status === 'cancelled' && visit.status !== 'cancelled') {
+        await notifyVisitCancellation({ 
+          visit, 
+          staff: staffMember, 
+          client,
+          sendEmail: true 
+        });
+      }
+      
+      // Rescheduling
+      if (variables.data.scheduled_start && variables.data.scheduled_start !== visit.scheduled_start) {
+        await notifyVisitRescheduled({ 
+          visit: { ...visit, ...variables.data }, 
+          staff: staffMember, 
+          client,
+          oldTime: visit.scheduled_start,
+          newTime: variables.data.scheduled_start,
+          sendEmail: true 
+        });
+      }
     },
   });
 
   const deleteVisitMutation = useMutation({
     mutationFn: (visitId) => base44.entities.Visit.delete(visitId),
-    onSuccess: () => {
+    onSuccess: async (_, deletedVisitId) => {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
+      
+      // Notify staff of deletion
+      const visit = visits.find(v => v.id === deletedVisitId);
+      if (visit) {
+        const staffId = visit.staff_id || visit.assigned_staff_id;
+        const staffMember = staff.find(s => s.id === staffId);
+        const client = clients.find(c => c.id === visit.client_id);
+        
+        if (staffMember && client) {
+          await notifyVisitCancellation({ 
+            visit, 
+            staff: staffMember, 
+            client,
+            reason: 'Visit deleted',
+            sendEmail: true 
+          });
+        }
+      }
     },
   });
 
