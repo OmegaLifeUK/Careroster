@@ -27,15 +27,26 @@ export default function CarerAvailabilitySummary({ availability = [], leaveReque
 
   // Count upcoming unavailability
   const upcomingUnavailable = unavailability.filter(u => {
-    const date = u.specific_date ? parseISO(u.specific_date) : parseISO(u.date_range_start);
-    return isAfter(date, today) && isBefore(date, nextWeek);
+    try {
+      const dateStr = u.specific_date || u.date_range_start;
+      if (!dateStr) return false;
+      const date = parseISO(dateStr);
+      return isAfter(date, today) && isBefore(date, nextWeek);
+    } catch {
+      return false;
+    }
   }).length;
 
   // Count upcoming leave
   const upcomingLeave = leaveRequests.filter(l => {
-    if (l.status !== 'approved') return false;
-    const start = parseISO(l.start_date);
-    return isAfter(start, today) || (isBefore(start, today) && isAfter(parseISO(l.end_date), today));
+    if (l.status !== 'approved' || !l.start_date || !l.end_date) return false;
+    try {
+      const start = parseISO(l.start_date);
+      const end = parseISO(l.end_date);
+      return isAfter(start, today) || (isBefore(start, today) && isAfter(end, today));
+    } catch {
+      return false;
+    }
   }).length;
 
   return (

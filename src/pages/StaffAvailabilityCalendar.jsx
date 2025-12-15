@@ -79,9 +79,19 @@ export default function StaffAvailabilityCalendar() {
       const visitStaffId = v.staff_id || v.assigned_staff_id;
       if (visitStaffId !== staffId) return false;
       if (!v.scheduled_start) return false;
-      const visitDate = format(new Date(v.scheduled_start), 'yyyy-MM-dd');
-      return visitDate === dayStr;
-    }).sort((a, b) => a.scheduled_start.localeCompare(b.scheduled_start));
+      try {
+        const visitDate = format(new Date(v.scheduled_start), 'yyyy-MM-dd');
+        return visitDate === dayStr;
+      } catch {
+        return false;
+      }
+    }).sort((a, b) => {
+      try {
+        return a.scheduled_start.localeCompare(b.scheduled_start);
+      } catch {
+        return 0;
+      }
+    });
   };
 
   const getStaffAvailabilityForDay = (staffId, day) => {
@@ -97,11 +107,14 @@ export default function StaffAvailabilityCalendar() {
     const dayStr = format(day, 'yyyy-MM-dd');
     
     // Check specific date unavailability
-    const specificUnavailability = availability.filter(a => 
-      a.carer_id === staffId && 
-      a.availability_type === 'unavailable' &&
-      a.specific_date && format(new Date(a.specific_date), 'yyyy-MM-dd') === dayStr
-    );
+    const specificUnavailability = availability.filter(a => {
+      if (a.carer_id !== staffId || a.availability_type !== 'unavailable' || !a.specific_date) return false;
+      try {
+        return format(new Date(a.specific_date), 'yyyy-MM-dd') === dayStr;
+      } catch {
+        return false;
+      }
+    });
 
     // Check date range unavailability
     const rangeUnavailability = availability.filter(a => 
@@ -109,19 +122,28 @@ export default function StaffAvailabilityCalendar() {
       a.availability_type === 'unavailable' &&
       a.date_range_start && a.date_range_end
     ).filter(a => {
-      const start = new Date(a.date_range_start);
-      const end = new Date(a.date_range_end);
-      return day >= start && day <= end;
+      try {
+        const start = new Date(a.date_range_start);
+        const end = new Date(a.date_range_end);
+        return day >= start && day <= end;
+      } catch {
+        return false;
+      }
     });
 
     // Check leave requests
     const approvedLeave = leaveRequests.filter(lr =>
       lr.carer_id === staffId &&
-      lr.status === 'approved'
+      lr.status === 'approved' &&
+      lr.start_date && lr.end_date
     ).filter(lr => {
-      const start = new Date(lr.start_date);
-      const end = new Date(lr.end_date);
-      return day >= start && day <= end;
+      try {
+        const start = new Date(lr.start_date);
+        const end = new Date(lr.end_date);
+        return day >= start && day <= end;
+      } catch {
+        return false;
+      }
     });
 
     return [...specificUnavailability, ...rangeUnavailability, ...approvedLeave];
@@ -193,7 +215,13 @@ export default function StaffAvailabilityCalendar() {
                 }`}
               >
                 <div className="font-medium text-gray-900">
-                  {format(new Date(visit.scheduled_start), 'HH:mm')}
+                  {visit.scheduled_start ? (() => {
+                    try {
+                      return format(new Date(visit.scheduled_start), 'HH:mm');
+                    } catch {
+                      return 'Invalid time';
+                    }
+                  })() : 'No time'}
                 </div>
                 <div className="text-gray-600 truncate text-[10px]">
                   {visit.duration_minutes}min visit
