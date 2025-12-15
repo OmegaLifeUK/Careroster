@@ -43,9 +43,14 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
 
     // Check if on leave
     const onLeave = approvedLeave.some(leave => {
-      const start = parseISO(leave.start_date);
-      const end = parseISO(leave.end_date);
-      return isWithinInterval(date, { start, end });
+      if (!leave.start_date || !leave.end_date) return false;
+      try {
+        const start = parseISO(leave.start_date);
+        const end = parseISO(leave.end_date);
+        return isWithinInterval(date, { start, end });
+      } catch {
+        return false;
+      }
     });
     if (onLeave) return { status: 'leave', label: 'On Leave', color: 'bg-purple-500' };
 
@@ -53,9 +58,13 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
     const isUnavailable = unavailability.some(u => {
       if (u.specific_date === dateStr) return true;
       if (u.date_range_start && u.date_range_end) {
-        const start = parseISO(u.date_range_start);
-        const end = parseISO(u.date_range_end);
-        return isWithinInterval(date, { start, end });
+        try {
+          const start = parseISO(u.date_range_start);
+          const end = parseISO(u.date_range_end);
+          return isWithinInterval(date, { start, end });
+        } catch {
+          return false;
+        }
       }
       return false;
     });
