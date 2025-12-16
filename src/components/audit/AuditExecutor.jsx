@@ -333,15 +333,73 @@ export default function AuditExecutor({ task, auditTemplate, onClose, onComplete
                       </div>
                     )}
 
-                    <div className="ml-11 mt-3">
-                      <Label className="text-sm">Notes (Optional)</Label>
-                      <Textarea
-                        value={response.notes || ''}
-                        onChange={(e) => handleResponseChange(item, 'notes', e.target.value)}
-                        placeholder="Add any observations or comments..."
-                        rows={2}
-                        className="mt-1"
-                      />
+                    <div className="ml-11 mt-3 space-y-3">
+                      <div>
+                        <Label className="text-sm">Notes (Optional)</Label>
+                        <Textarea
+                          value={response.notes || ''}
+                          onChange={(e) => handleResponseChange(item, 'notes', e.target.value)}
+                          placeholder="Add any observations or comments..."
+                          rows={2}
+                          className="mt-1"
+                        />
+                      </div>
+                      <div>
+                        <Label className="text-sm flex items-center gap-2">
+                          <Camera className="w-4 h-4" />
+                          Photo Evidence (Optional)
+                        </Label>
+                        <Input
+                          type="file"
+                          accept="image/*"
+                          multiple
+                          onChange={async (e) => {
+                            const files = Array.from(e.target.files);
+                            if (files.length === 0) return;
+                            
+                            const uploadedUrls = [];
+                            for (const file of files) {
+                              try {
+                                const result = await base44.integrations.Core.UploadFile({ file });
+                                uploadedUrls.push(result.file_url);
+                              } catch (error) {
+                                console.error("Upload error:", error);
+                                toast.error("Upload Failed", `Failed to upload ${file.name}`);
+                              }
+                            }
+                            
+                            if (uploadedUrls.length > 0) {
+                              const existingUrls = response.photo_urls || [];
+                              handleResponseChange(item, 'photo_urls', [...existingUrls, ...uploadedUrls]);
+                              toast.success("Photos Uploaded", `${uploadedUrls.length} photo(s) added`);
+                            }
+                          }}
+                          className="mt-1"
+                        />
+                        {response.photo_urls && response.photo_urls.length > 0 && (
+                          <div className="flex gap-2 mt-2 flex-wrap">
+                            {response.photo_urls.map((url, photoIdx) => (
+                              <div key={photoIdx} className="relative group">
+                                <img 
+                                  src={url} 
+                                  alt={`Evidence ${photoIdx + 1}`}
+                                  className="w-20 h-20 object-cover rounded border"
+                                />
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const newUrls = response.photo_urls.filter((_, i) => i !== photoIdx);
+                                    handleResponseChange(item, 'photo_urls', newUrls);
+                                  }}
+                                  className="absolute -top-2 -right-2 bg-red-500 text-white rounded-full w-5 h-5 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity"
+                                >
+                                  ×
+                                </button>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
                     </div>
                   </div>
                 );
