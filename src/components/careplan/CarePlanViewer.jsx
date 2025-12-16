@@ -29,6 +29,7 @@ import {
 import { format, parseISO } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
+import PrintableCarePlan from "./PrintableCarePlan";
 
 const TASK_CATEGORIES = {
   personal_care: "Personal Care",
@@ -45,6 +46,7 @@ const TASK_CATEGORIES = {
 export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
   const printRef = React.useRef();
   const [printing, setPrinting] = React.useState(false);
+  const [viewMode, setViewMode] = React.useState('standard'); // 'standard' or 'printable'
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
@@ -116,12 +118,29 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between print:hidden">
+      <div className="flex items-center justify-between print:hidden mb-4">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Care Plans
         </Button>
         <div className="flex gap-2">
+          <div className="flex gap-1 mr-2">
+            <Button
+              variant={viewMode === 'standard' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('standard')}
+            >
+              Standard View
+            </Button>
+            <Button
+              variant={viewMode === 'printable' ? 'default' : 'outline'}
+              size="sm"
+              onClick={() => setViewMode('printable')}
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              CQC Print Format
+            </Button>
+          </div>
           <Button 
             variant="outline" 
             onClick={handlePrint}
@@ -148,6 +167,10 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
 
       {/* Printable Content */}
       <div ref={printRef}>
+        {viewMode === 'printable' ? (
+          <PrintableCarePlan carePlan={carePlan} client={client} />
+        ) : (
+          <div>
 
       {/* Plan Header */}
       <Card>
@@ -884,6 +907,8 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
           </CardContent>
         </Card>
       )}
+        </div>
+        )}
       </div>
     </div>
   );
