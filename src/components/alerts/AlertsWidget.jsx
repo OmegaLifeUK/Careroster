@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Checkbox } from "@/components/ui/checkbox";
 import { 
   AlertTriangle, 
   AlertCircle, 
@@ -12,7 +13,8 @@ import {
   Clock,
   Pill,
   Calendar,
-  Shield
+  Shield,
+  XCircle
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -64,6 +66,7 @@ const SEVERITY_STYLES = {
 export default function AlertsWidget({ alerts = [], compact = false, showAll = false }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
+  const [selectedAlerts, setSelectedAlerts] = useState([]);
 
   const acknowledgeAlertMutation = useMutation({
     mutationFn: async ({ alertId, userId, userName }) => {
@@ -109,6 +112,64 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
     },
   });
 
+  const bulkAcknowledgeMutation = useMutation({
+    mutationFn: async (alertIds) => {
+      const user = await base44.auth.me();
+      const promises = alertIds.map(async (alertId) => {
+        const alert = alerts.find(a => a.id === alertId);
+        const acknowledgments = alert.acknowledgments || [];
+        if (!acknowledgments.some(a => a.staff_id === (user.id || user.email))) {
+          return base44.entities.ClientAlert.update(alertId, {
+            acknowledgments: [
+              ...acknowledgments,
+              {
+                staff_id: user.id || user.email,
+                staff_name: user.full_name,
+                acknowledged_at: new Date().toISOString(),
+              }
+            ]
+          });
+        }
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-alerts'] });
+      setSelectedAlerts([]);
+      toast.success("Bulk Action Complete", "Selected alerts acknowledged");
+    },
+  });
+
+  const bulkResolveMutation = useMutation({
+    mutationFn: async (alertIds) => {
+      const user = await base44.auth.me();
+      const eligibleAlerts = alertIds.filter(id => {
+        const alert = alerts.find(a => a.id === id);
+        return canBulkResolve(alert);
+      });
+      const promises = eligibleAlerts.map(async (alertId) => {
+        const alert = alerts.find(a => a.id === alertId);
+        return base44.entities.ClientAlert.update(alertId, {
+          ...alert,
+          status: "resolved",
+          resolved_by_staff_id: user.id || user.email,
+          resolved_date: new Date().toISOString(),
+        });
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-alerts'] });
+      setSelectedAlerts([]);
+      toast.success("Bulk Action Complete", "Selected alerts resolved");
+    },
+  });
+
+  const canBulkResolve = (alert) => {
+    const restrictedTypes = ['safeguarding', 'medication', 'allergy'];
+    return alert.severity !== 'critical' && !restrictedTypes.includes(alert.alert_type);
+  };
+
   const handleAcknowledge = async (alertId) => {
     try {
       const user = await base44.auth.me();
@@ -145,6 +206,39 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
 
   const displayAlerts = showAll ? activeAlerts : activeAlerts.slice(0, compact ? 3 : 5);
 
+  const handleSelectAll = () => {
+    if (selectedAlerts.length === displayAlerts.length) {
+      setSelectedAlerts([]);
+    } else {
+      setSelectedAlerts(displayAlerts.map(a => a.id));
+    }
+  };
+
+  const handleBulkAcknowledge = () => {
+    const eligibleAlerts = selectedAlerts.filter(id => {
+      const alert = alerts.find(a => a.id === id);
+      return alert && alert.requires_acknowledgment && alert.status === 'active';
+    });
+    if (eligibleAlerts.length > 0) {
+      bulkAcknowledgeMutation.mutate(eligibleAlerts);
+    }
+  };
+
+  const handleBulkResolve = () => {
+    const eligibleAlerts = selectedAlerts.filter(id => {
+      const alert = alerts.find(a => a.id === id);
+      return alert && alert.status === 'active' && canBulkResolve(alert);
+    });
+    if (eligibleAlerts.length > 0 && confirm(`Resolve ${eligibleAlerts.length} alert(s)?`)) {
+      bulkResolveMutation.mutate(eligibleAlerts);
+    }
+  };
+
+  const selectedEligibleForBulkResolve = selectedAlerts.filter(id => {
+    const alert = alerts.find(a => a.id === id);
+    return alert && canBulkResolve(alert) && alert.status === 'active';
+  }).length;
+
   if (activeAlerts.length === 0) {
     return (
       <Card className="shadow-lg">
@@ -168,15 +262,67 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
   return (
     <Card className="shadow-lg">
       <CardHeader className="border-b bg-gradient-to-r from-red-50 to-orange-50">
-        <CardTitle className="flex items-center gap-2">
-          <AlertTriangle className="w-5 h-5 text-red-600" />
-          System Alerts
-          <Badge className="bg-red-600 text-white ml-auto">
-            {activeAlerts.length} Active
-          </Badge>
-        </CardTitle>
+        <div className="flex items-center justify-between">
+          <CardTitle className="flex items-center gap-2">
+            <AlertTriangle className="w-5 h-5 text-red-600" />
+            System Alerts
+            <Badge className="bg-red-600 text-white">
+              {activeAlerts.length} Active
+            </Badge>
+          </CardTitle>
+          {displayAlerts.length > 0 && (
+            <Button size="sm" variant="outline" onClick={handleSelectAll}>
+              <Checkbox
+                checked={selectedAlerts.length === displayAlerts.length}
+                onCheckedChange={handleSelectAll}
+                className="mr-2"
+              />
+              Select All
+            </Button>
+          )}
+        </div>
       </CardHeader>
       <CardContent className="p-3">
+        {selectedAlerts.length > 0 && (
+          <div className="mb-3 p-2 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-medium text-blue-900">
+                {selectedAlerts.length} selected
+              </span>
+              <div className="flex gap-1">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkAcknowledge}
+                  disabled={bulkAcknowledgeMutation.isPending}
+                  className="text-xs h-6"
+                >
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Acknowledge
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleBulkResolve}
+                  disabled={bulkResolveMutation.isPending || selectedEligibleForBulkResolve === 0}
+                  className="bg-green-600 hover:bg-green-700 text-xs h-6"
+                >
+                  Resolve ({selectedEligibleForBulkResolve})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedAlerts([])}
+                  className="text-xs h-6"
+                >
+                  <XCircle className="w-3 h-3" />
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-blue-700 mt-1">
+              Critical & safeguarding/medication/allergy alerts require individual review
+            </p>
+          </div>
+        )}
         <div className="space-y-1.5">
           {displayAlerts.map((alert) => {
             if (!alert) return null;
@@ -186,12 +332,25 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
             const requiresAck = alert.requires_acknowledgment;
             const hasAcknowledged = Array.isArray(alert.acknowledgments) && alert.acknowledgments.length > 0;
 
+            const isSelected = selectedAlerts.includes(alert.id);
+
             return (
               <div
                 key={alert.id}
-                className={`border rounded-lg p-2 ${styles.bg} ${styles.border}`}
+                className={`border rounded-lg p-2 ${styles.bg} ${styles.border} ${isSelected ? 'ring-2 ring-blue-500' : ''}`}
               >
                 <div className="flex items-start gap-2">
+                  <Checkbox
+                    checked={isSelected}
+                    onCheckedChange={(checked) => {
+                      if (checked) {
+                        setSelectedAlerts([...selectedAlerts, alert.id]);
+                      } else {
+                        setSelectedAlerts(selectedAlerts.filter(id => id !== alert.id));
+                      }
+                    }}
+                    className="mt-1"
+                  />
                   <Icon className={`w-4 h-4 ${styles.icon} mt-0.5 flex-shrink-0`} />
                   
                   <div className="flex-1 min-w-0">
@@ -212,6 +371,12 @@ export default function AlertsWidget({ alerts = [], compact = false, showAll = f
                       <div className="mt-1 px-2 py-1 bg-white/50 rounded text-xs font-medium">
                         ⚡ {alert.action_required}
                       </div>
+                    )}
+
+                    {!canBulkResolve(alert) && alert.status === 'active' && (
+                      <Badge variant="outline" className="text-xs bg-amber-50 border-amber-300 text-amber-800 mt-1">
+                        Requires Individual Review
+                      </Badge>
                     )}
 
                     <div className="flex items-center gap-2 mt-1.5 text-xs text-gray-600">
