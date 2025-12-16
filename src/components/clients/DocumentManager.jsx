@@ -8,12 +8,14 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { FileText, Upload, Download, Trash2, Eye, Lock, Calendar, AlertCircle } from "lucide-react";
+import { FileText, Upload, Download, Trash2, Eye, Lock, Calendar, AlertCircle, Sparkles } from "lucide-react";
 import { format, parseISO, isPast } from "date-fns";
+import { useToast } from "@/components/ui/toast";
 
 export default function DocumentManager({ client }) {
   const [showUploadForm, setShowUploadForm] = useState(false);
   const [uploading, setUploading] = useState(false);
+  const [generating, setGenerating] = useState(false);
   const [formData, setFormData] = useState({
     document_type: "other",
     document_name: "",
@@ -26,6 +28,7 @@ export default function DocumentManager({ client }) {
   });
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const { data: documents = [], isLoading } = useQuery({
     queryKey: ['client-documents', client.id],
@@ -120,6 +123,72 @@ export default function DocumentManager({ client }) {
     }
   };
 
+  const handleGenerateFromDocuments = async () => {
+    const assessmentDocs = documents.filter(doc => 
+      doc.document_type === 'assessment' || 
+      doc.document_type === 'care_plan' ||
+      doc.document_type === 'medical_report'
+    );
+
+    if (assessmentDocs.length === 0) {
+      toast.error("No assessment documents", "Please upload assessment or medical documents first");
+      return;
+    }
+
+    setGenerating(true);
+    try {
+      toast.info("Generating care plan", "AI is analyzing uploaded documents...");
+
+      const { AssessmentToCarePlanWorkflow } = await import('./AssessmentToCarePlanWorkflow');
+
+      const assessment = {
+        type: 'uploaded_documents',
+        id: `docs_${client.id}`,
+        client_id: client.id,
+        documents: assessmentDocs.map(doc => ({
+          document_name: doc.document_name,
+          document_url: doc.file_url,
+          document_type: doc.document_type,
+          uploaded_date: doc.upload_date
+        })),
+        documentCount: assessmentDocs.length
+      };
+
+      const aiResult = await AssessmentToCarePlanWorkflow.generateCarePlanFromAssessment(
+        assessment,
+        client.id
+      );
+
+      if (!aiResult.success) {
+        toast.error("Generation failed", aiResult.error);
+        return;
+      }
+
+      const draftResult = await AssessmentToCarePlanWorkflow.createDraftCarePlan(
+        aiResult.carePlanData,
+        client.id,
+        assessment
+      );
+
+      if (!draftResult.success) {
+        toast.error("Failed to create care plan", draftResult.error);
+        return;
+      }
+
+      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['client-documents'] });
+      
+      toast.success(
+        "Care plan created from documents", 
+        "Draft care plan ready for review - switch to Care Plan tab"
+      );
+    } catch (error) {
+      toast.error("Error", error.message);
+    } finally {
+      setGenerating(false);
+    }
+  };
+
   const getStaffName = (staffId) => {
     const staffMember = staff.find(s => s.id === staffId);
     return staffMember?.full_name || "Unknown Staff";
@@ -168,14 +237,54 @@ export default function DocumentManager({ client }) {
             </CardTitle>
             <p className="text-sm text-gray-500 mt-1">Store and manage client-related documents</p>
           </div>
-          <Button onClick={() => setShowUploadForm(!showUploadForm)} size="sm" className="bg-blue-600 hover:bg-blue-700">
-            <Upload className="w-4 h-4 mr-2" />
-            Upload Document
-          </Button>
+          <div className="flex gap-2">
+            <Button 
+              onClick={handleGenerateFromDocuments}
+              disabled={generating || documents.length === 0}
+              size="sm" 
+              variant="outline"
+              className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            >
+              {generating ? (
+                <>
+                  <span className="animate-spin mr-2">⏳</span>
+                  Generating...
+                </>
+              ) : (
+                <>
+                  <Sparkles className="w-4 h-4 mr-2" />
+                  Generate Care Plan
+                </>
+              )}
+            </Button>
+            <Button onClick={() => setShowUploadForm(!showUploadForm)} size="sm" className="bg-blue-600 hover:bg-blue-700">
+              <Upload className="w-4 h-4 mr-2" />
+              Upload Document
+            </Button>
+          </div>
         </div>
       </CardHeader>
 
       <CardContent className="p-6">
+        {/* Info banner for transfers */}
+        {documents.length > 0 && documents.some(d => 
+          d.document_type === 'assessment' || d.document_type === 'care_plan' || d.document_type === 'medical_report'
+        ) && (
+          <div className="mb-4 p-3 bg-purple-50 border border-purple-200 rounded-lg">
+            <div className="flex items-start gap-2">
+              <Sparkles className="w-5 h-5 text-purple-600 flex-shrink-0 mt-0.5" />
+              <div className="flex-1">
+                <p className="text-sm font-medium text-purple-900">
+                  Assessment documents detected
+                </p>
+                <p className="text-xs text-purple-700 mt-1">
+                  Click "Generate Care Plan" to automatically create care plan, medications, and risk assessments from uploaded documents
+                </p>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showUploadForm && (
           <form onSubmit={handleSubmit} className="mb-6 p-4 border rounded-lg bg-blue-50">
             <h3 className="font-semibold mb-4 flex items-center gap-2">

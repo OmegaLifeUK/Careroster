@@ -312,6 +312,20 @@ export const createDraftCarePlan = async (carePlanData, clientId, assessmentSour
       await base44.entities.Shift.update(assessmentSource.id, {
         linked_care_plan_id: carePlan.id
       });
+    } else if (assessmentSource.type === 'uploaded_documents') {
+      // Tag documents as processed
+      for (const doc of assessmentSource.documents) {
+        const clientDocs = await base44.entities.ClientDocument.filter({ 
+          client_id: clientId,
+          file_url: doc.document_url 
+        });
+        if (clientDocs.length > 0) {
+          await base44.entities.ClientDocument.update(clientDocs[0].id, {
+            tags: [...(clientDocs[0].tags || []), 'processed_for_care_plan'],
+            notes: `${clientDocs[0].notes || ''}\n\nUsed to generate care plan ${carePlan.id} on ${new Date().toLocaleDateString()}`
+          });
+        }
+      }
     }
 
     // Create notification for staff to review

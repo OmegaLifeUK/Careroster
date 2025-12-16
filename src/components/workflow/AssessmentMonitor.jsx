@@ -19,24 +19,15 @@ export default function AssessmentMonitor({ clientId }) {
   const { data: pendingAssessments = [], refetch } = useQuery({
     queryKey: ['pending-assessments', clientId],
     queryFn: async () => {
-      // Find assessments without linked care plans
+      const pending = [];
+
+      // Check visits with assessment documents
       const visits = await base44.entities.Visit.filter({ 
         client_id: clientId,
         visit_type: 'assessment',
         status: 'completed'
       });
 
-      const shifts = await base44.entities.Shift.filter({ 
-        client_id: clientId
-      });
-
-      const assessmentShifts = shifts.filter(s => 
-        s.shift_type === 'assessment' && s.status === 'completed'
-      );
-
-      const pending = [];
-
-      // Check visits
       for (const visit of visits) {
         if (visit.assessment_documents?.length > 0 && !visit.linked_care_plan_id) {
           pending.push({
@@ -50,7 +41,15 @@ export default function AssessmentMonitor({ clientId }) {
         }
       }
 
-      // Check shifts
+      // Check shifts with assessment documents
+      const shifts = await base44.entities.Shift.filter({ 
+        client_id: clientId
+      });
+
+      const assessmentShifts = shifts.filter(s => 
+        s.shift_type === 'assessment' && s.status === 'completed'
+      );
+
       for (const shift of assessmentShifts) {
         if (shift.assessment_documents?.length > 0 && !shift.linked_care_plan_id) {
           pending.push({
@@ -60,6 +59,41 @@ export default function AssessmentMonitor({ clientId }) {
             documents: shift.assessment_documents,
             date: shift.actual_end_time || shift.date,
             documentCount: shift.assessment_documents.length
+          });
+        }
+      }
+
+      // Check uploaded client documents (for transfers from other providers)
+      const clientDocs = await base44.entities.ClientDocument.filter({ 
+        client_id: clientId
+      });
+
+      const assessmentDocs = clientDocs.filter(doc => 
+        doc.document_type === 'assessment' || 
+        doc.document_type === 'care_plan' ||
+        doc.document_type === 'medical_report'
+      );
+
+      // Check if we have care plan documents but no active care plan
+      if (assessmentDocs.length > 0) {
+        const carePlans = await base44.entities.CarePlan.filter({ 
+          client_id: clientId, 
+          status: 'active' 
+        });
+
+        if (carePlans.length === 0) {
+          pending.push({
+            type: 'uploaded_documents',
+            id: `docs_${clientId}`,
+            client_id: clientId,
+            documents: assessmentDocs.map(doc => ({
+              document_name: doc.document_name,
+              document_url: doc.file_url,
+              document_type: doc.document_type,
+              uploaded_date: doc.upload_date
+            })),
+            date: assessmentDocs[0].upload_date,
+            documentCount: assessmentDocs.length
           });
         }
       }
@@ -148,13 +182,18 @@ export default function AssessmentMonitor({ clientId }) {
                     <FileText className="w-5 h-5 text-purple-600" />
                     <div>
                       <p className="font-medium text-sm">
-                        {assessment.type === 'visit' ? 'Assessment Visit' : 'Assessment Session'}
+                        {assessment.type === 'visit' ? 'Assessment Visit' : 
+                         assessment.type === 'shift' ? 'Assessment Session' : 
+                         'Uploaded Assessment Documents'}
                       </p>
                       <div className="flex items-center gap-2 text-xs text-gray-600">
                         <span>Date: {new Date(assessment.date).toLocaleDateString()}</span>
                         <Badge variant="outline" className="text-xs">
                           {assessment.documentCount} document{assessment.documentCount > 1 ? 's' : ''}
                         </Badge>
+                        {assessment.type === 'uploaded_documents' && (
+                          <Badge className="bg-orange-100 text-orange-700 text-xs">Transfer/Import</Badge>
+                        )}
                       </div>
                     </div>
                   </div>
