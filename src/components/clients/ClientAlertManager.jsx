@@ -54,6 +54,8 @@ export default function ClientAlertManager({ client }) {
   const [filterStatus, setFilterStatus] = useState("active");
   const [filterType, setFilterType] = useState("all");
   const [sortBy, setSortBy] = useState("severity");
+  const [selectedAlerts, setSelectedAlerts] = useState([]);
+  const [showBulkActions, setShowBulkActions] = useState(false);
   
   const [formData, setFormData] = useState({
     alert_type: "medical",
@@ -99,6 +101,58 @@ export default function ClientAlertManager({ client }) {
     mutationFn: ({ id, data }) => base44.entities.ClientAlert.update(id, data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['client-alerts'] });
+    },
+  });
+
+  const bulkAcknowledgeMutation = useMutation({
+    mutationFn: async (alertIds) => {
+      const staffMember = staff.find(s => s.email === currentUser?.email);
+      const promises = alertIds.map(async (alertId) => {
+        const alert = alerts.find(a => a.id === alertId);
+        const acknowledgments = alert.acknowledgments || [];
+        if (!acknowledgments.some(a => a.staff_id === staffMember?.id)) {
+          return base44.entities.ClientAlert.update(alertId, {
+            ...alert,
+            acknowledgments: [
+              ...acknowledgments,
+              {
+                staff_id: staffMember?.id || currentUser?.id,
+                staff_name: staffMember?.full_name || currentUser?.full_name,
+                acknowledged_at: new Date().toISOString(),
+              }
+            ]
+          });
+        }
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-alerts'] });
+      setSelectedAlerts([]);
+      setShowBulkActions(false);
+    },
+  });
+
+  const bulkResolveMutation = useMutation({
+    mutationFn: async (alertIds) => {
+      const staffMember = staff.find(s => s.email === currentUser?.email);
+      const promises = alertIds.map(async (alertId) => {
+        const alert = alerts.find(a => a.id === alertId);
+        if (canBulkResolve(alert)) {
+          return base44.entities.ClientAlert.update(alertId, {
+            ...alert,
+            status: "resolved",
+            resolved_by_staff_id: staffMember?.id || currentUser?.id,
+            resolved_date: new Date().toISOString(),
+          });
+        }
+      });
+      return Promise.all(promises);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['client-alerts'] });
+      setSelectedAlerts([]);
+      setShowBulkActions(false);
     },
   });
 
@@ -225,9 +279,48 @@ export default function ClientAlertManager({ client }) {
     return staffMember?.full_name || "Unknown Staff";
   };
 
+  const canBulkResolve = (alert) => {
+    // For compliance: cannot bulk resolve critical alerts or certain types
+    const restrictedTypes = ['safeguarding', 'medication', 'allergy'];
+    return alert.severity !== 'critical' && !restrictedTypes.includes(alert.alert_type);
+  };
+
+  const handleSelectAll = () => {
+    if (selectedAlerts.length === filteredAlerts.length) {
+      setSelectedAlerts([]);
+    } else {
+      setSelectedAlerts(filteredAlerts.map(a => a.id));
+    }
+  };
+
+  const handleBulkAcknowledge = () => {
+    const eligibleAlerts = selectedAlerts.filter(id => {
+      const alert = alerts.find(a => a.id === id);
+      return alert && alert.requires_acknowledgment && alert.status === 'active';
+    });
+    if (eligibleAlerts.length > 0) {
+      bulkAcknowledgeMutation.mutate(eligibleAlerts);
+    }
+  };
+
+  const handleBulkResolve = () => {
+    const eligibleAlerts = selectedAlerts.filter(id => {
+      const alert = alerts.find(a => a.id === id);
+      return alert && alert.status === 'active' && canBulkResolve(alert);
+    });
+    if (eligibleAlerts.length > 0 && confirm(`Resolve ${eligibleAlerts.length} alert(s)? This action maintains full audit trail for compliance.`)) {
+      bulkResolveMutation.mutate(eligibleAlerts);
+    }
+  };
+
   const filteredAlerts = getFilteredAndSortedAlerts();
   const activeCount = alerts.filter(a => a.status === 'active').length;
   const criticalCount = alerts.filter(a => a.severity === 'critical' && a.status === 'active').length;
+  
+  const selectedEligibleForBulkResolve = selectedAlerts.filter(id => {
+    const alert = alerts.find(a => a.id === id);
+    return alert && canBulkResolve(alert) && alert.status === 'active';
+  }).length;
 
   return (
     <Card>
@@ -394,11 +487,69 @@ export default function ClientAlertManager({ client }) {
           </form>
         )}
 
+        {/* Bulk Actions Bar */}
+        {selectedAlerts.length > 0 && (
+          <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <span className="text-sm font-medium text-blue-900">
+                {selectedAlerts.length} alert(s) selected
+              </span>
+              <div className="flex gap-2">
+                <Button
+                  size="sm"
+                  variant="outline"
+                  onClick={handleBulkAcknowledge}
+                  disabled={bulkAcknowledgeMutation.isPending}
+                >
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Acknowledge Selected
+                </Button>
+                <Button
+                  size="sm"
+                  onClick={handleBulkResolve}
+                  disabled={bulkResolveMutation.isPending || selectedEligibleForBulkResolve === 0}
+                  className="bg-green-600 hover:bg-green-700"
+                >
+                  <CheckCircle className="w-3 h-3 mr-1" />
+                  Resolve ({selectedEligibleForBulkResolve})
+                </Button>
+                <Button
+                  size="sm"
+                  variant="ghost"
+                  onClick={() => setSelectedAlerts([])}
+                >
+                  <XCircle className="w-3 h-3 mr-1" />
+                  Clear
+                </Button>
+              </div>
+            </div>
+            <p className="text-xs text-blue-700 mt-2">
+              Note: Critical alerts and safeguarding/medication/allergy alerts cannot be bulk resolved for compliance
+            </p>
+          </div>
+        )}
+
         {/* Filters and Sorting */}
         <div className="mb-6 p-4 bg-gray-50 rounded-lg border">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-4 h-4 text-gray-600" />
-            <span className="font-medium text-sm">Filters & Sorting</span>
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-gray-600" />
+              <span className="font-medium text-sm">Filters & Sorting</span>
+            </div>
+            {filteredAlerts.length > 0 && (
+              <Button
+                size="sm"
+                variant="outline"
+                onClick={handleSelectAll}
+              >
+                <Checkbox
+                  checked={selectedAlerts.length === filteredAlerts.length}
+                  onCheckedChange={handleSelectAll}
+                  className="mr-2"
+                />
+                Select All
+              </Button>
+            )}
           </div>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
             <div>
@@ -480,16 +631,28 @@ export default function ClientAlertManager({ client }) {
             filteredAlerts.map((alert) => {
               const AlertIcon = ALERT_TYPE_ICONS[alert.alert_type];
               const hasAcknowledged = alert.acknowledgments?.some(a => a.staff_id === staff.find(s => s.email === currentUser?.email)?.id);
+              const isSelected = selectedAlerts.includes(alert.id);
               
               return (
-                <Card key={alert.id} className={`border-l-4 ${
+                <Card key={alert.id} className={`border-l-4 ${isSelected ? 'ring-2 ring-blue-500 ' : ''}${
                   alert.severity === 'critical' ? 'border-red-600 bg-red-50' :
                   alert.severity === 'high' ? 'border-orange-500 bg-orange-50' :
                   alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
                   'border-blue-500 bg-blue-50'
                 }`}>
                   <CardContent className="p-3">
-                    <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-start gap-3 mb-2">
+                      <Checkbox
+                        checked={isSelected}
+                        onCheckedChange={(checked) => {
+                          if (checked) {
+                            setSelectedAlerts([...selectedAlerts, alert.id]);
+                          } else {
+                            setSelectedAlerts(selectedAlerts.filter(id => id !== alert.id));
+                          }
+                        }}
+                        className="mt-1"
+                      />
                       <div className="flex-1">
                         <div className="flex items-center gap-2 mb-1 flex-wrap">
                           <AlertIcon className={`w-4 h-4 ${
@@ -510,6 +673,11 @@ export default function ClientAlertManager({ client }) {
                           </Badge>
                         </div>
                         <p className="text-xs text-gray-700 mb-2 leading-tight">{alert.description}</p>
+                        {!canBulkResolve(alert) && alert.status === 'active' && (
+                          <Badge variant="outline" className="text-xs bg-amber-50 border-amber-300 text-amber-800">
+                            Requires Individual Review
+                          </Badge>
+                        )}
                       </div>
                     </div>
 
