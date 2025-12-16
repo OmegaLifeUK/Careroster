@@ -80,11 +80,11 @@ export default function Clients() {
   }) : [];
 
   const handleEdit = (client) => {
-    if (!client) {
-      console.error("No client provided to handleEdit");
+    if (!client || !client.id) {
+      console.error("No valid client provided to handleEdit");
+      toast.error("Cannot edit client", "Invalid client data");
       return;
     }
-    console.log("Editing client:", client);
     setEditingClient(client);
     setShowDialog(true);
   };
