@@ -444,25 +444,52 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
 
           {formData.task_type === "audit" ? (
             <div>
-              <label className="text-sm font-medium">Audit Form *</label>
+              <label className="text-sm font-medium">Audit Form/Template *</label>
               <Select 
-                value={formData.form_template_id} 
-                onValueChange={(v) => setFormData({ ...formData, form_template_id: v })}
+                value={formData.form_template_id || formData.audit_template_id} 
+                onValueChange={(v) => {
+                  // Check if it's a form template or audit template
+                  const isFormTemplate = formTemplates.some(t => t.id === v);
+                  if (isFormTemplate) {
+                    setFormData({ ...formData, form_template_id: v, audit_template_id: "" });
+                  } else {
+                    setFormData({ ...formData, audit_template_id: v, form_template_id: "" });
+                  }
+                }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select audit form" />
+                  <SelectValue placeholder="Select audit form or template" />
                 </SelectTrigger>
                 <SelectContent>
-                  {formTemplates.filter(t => t.category === 'audit' || t.form_name.toLowerCase().includes('audit')).map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.form_name}</SelectItem>
-                  ))}
-                  {formTemplates.filter(t => t.category === 'audit' || t.form_name.toLowerCase().includes('audit')).length === 0 && (
+                  {formTemplates.filter(t => t.category === 'audit' || t.form_name?.toLowerCase().includes('audit')).length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500">Form Builder Audits (Recommended)</div>
+                      {formTemplates.filter(t => t.category === 'audit' || t.form_name?.toLowerCase().includes('audit')).map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.form_name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {auditTemplates.length > 0 && (
+                    <>
+                      <div className="px-2 py-1.5 text-xs font-semibold text-gray-500 mt-2">Legacy Audit Templates</div>
+                      {auditTemplates.map(t => (
+                        <SelectItem key={t.id} value={t.id}>
+                          {t.template_name}
+                        </SelectItem>
+                      ))}
+                    </>
+                  )}
+                  {formTemplates.filter(t => t.category === 'audit' || t.form_name?.toLowerCase().includes('audit')).length === 0 && auditTemplates.length === 0 && (
                     <SelectItem value={null} disabled>No audit forms available - create one in Form Builder</SelectItem>
                   )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
-                Audit forms are built in Form Builder with logic and triggers
+                {formTemplates.filter(t => t.category === 'audit').length > 0 
+                  ? "Create audit forms in Form Builder (category: audit) for advanced logic and triggers"
+                  : "Create audit forms in Form Builder with category 'audit' to enable logic and triggers"}
               </p>
             </div>
           ) : (
