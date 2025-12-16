@@ -19,9 +19,16 @@ import {
   CloudMoon,
   ThumbsUp,
   ThumbsDown,
-  Star
+  Star,
+  Download,
+  Printer,
+  Activity,
+  Brain,
+  Shield
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
+import html2canvas from "html2canvas";
+import jsPDF from "jspdf";
 
 const TASK_CATEGORIES = {
   personal_care: "Personal Care",
@@ -36,6 +43,9 @@ const TASK_CATEGORIES = {
 };
 
 export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
+  const printRef = React.useRef();
+  const [printing, setPrinting] = React.useState(false);
+
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
     active: "bg-green-100 text-green-800",
@@ -57,26 +67,94 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
     high: "bg-red-100 text-red-700"
   };
 
+  const handlePrint = () => {
+    window.print();
+  };
+
+  const handleExportPDF = async () => {
+    setPrinting(true);
+    try {
+      const element = printRef.current;
+      const canvas = await html2canvas(element, {
+        scale: 2,
+        useCORS: true,
+        logging: false,
+      });
+      
+      const imgData = canvas.toDataURL('image/png');
+      const pdf = new jsPDF('p', 'mm', 'a4');
+      const pdfWidth = pdf.internal.pageSize.getWidth();
+      const pdfHeight = pdf.internal.pageSize.getHeight();
+      const imgWidth = canvas.width;
+      const imgHeight = canvas.height;
+      const ratio = Math.min(pdfWidth / imgWidth, pdfHeight / imgHeight);
+      const imgX = (pdfWidth - imgWidth * ratio) / 2;
+      const imgY = 0;
+
+      let heightLeft = imgHeight * ratio;
+      let position = 0;
+
+      pdf.addImage(imgData, 'PNG', imgX, imgY, imgWidth * ratio, imgHeight * ratio);
+      heightLeft -= pdfHeight;
+
+      while (heightLeft > 0) {
+        position = heightLeft - imgHeight * ratio;
+        pdf.addPage();
+        pdf.addImage(imgData, 'PNG', imgX, position, imgWidth * ratio, imgHeight * ratio);
+        heightLeft -= pdfHeight;
+      }
+
+      pdf.save(`care-plan-${client.full_name.replace(/\s+/g, '-')}-${format(new Date(), 'yyyy-MM-dd')}.pdf`);
+    } catch (error) {
+      console.error('Error generating PDF:', error);
+      alert('Failed to generate PDF');
+    } finally {
+      setPrinting(false);
+    }
+  };
+
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex items-center justify-between print:hidden">
         <Button variant="outline" onClick={onBack}>
           <ArrowLeft className="w-4 h-4 mr-2" />
           Back to Care Plans
         </Button>
-        <Button onClick={onEdit} className="bg-blue-600 hover:bg-blue-700">
-          <Edit className="w-4 h-4 mr-2" />
-          Edit Plan
-        </Button>
+        <div className="flex gap-2">
+          <Button 
+            variant="outline" 
+            onClick={handlePrint}
+            className="border-blue-300 text-blue-700"
+          >
+            <Printer className="w-4 h-4 mr-2" />
+            Print
+          </Button>
+          <Button 
+            variant="outline" 
+            onClick={handleExportPDF}
+            disabled={printing}
+            className="border-green-300 text-green-700"
+          >
+            <Download className="w-4 h-4 mr-2" />
+            {printing ? 'Generating...' : 'Export PDF'}
+          </Button>
+          <Button onClick={onEdit} className="bg-blue-600 hover:bg-blue-700">
+            <Edit className="w-4 h-4 mr-2" />
+            Edit Plan
+          </Button>
+        </div>
       </div>
+
+      {/* Printable Content */}
+      <div ref={printRef}>
 
       {/* Plan Header */}
       <Card>
         <CardHeader className="bg-gradient-to-r from-blue-50 to-indigo-50">
           <div className="flex items-center justify-between">
             <div>
-              <CardTitle className="flex items-center gap-2 text-xl">
+              <CardTitle className="flex items-center gap-2 text-2xl">
                 <Heart className="w-6 h-6 text-blue-600" />
                 Care Plan - {client.full_name}
               </CardTitle>
@@ -89,7 +167,7 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
             </Badge>
           </div>
         </CardHeader>
-        <CardContent className="pt-4">
+        <CardContent className="pt-4 space-y-6">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm">
             <div>
               <p className="text-gray-500">Assessment Date</p>
@@ -105,15 +183,205 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
                 <p className="font-medium">{format(parseISO(carePlan.review_date), 'PPP')}</p>
               </div>
             )}
-            {carePlan.personal_details?.preferred_name && (
-              <div>
-                <p className="text-gray-500">Preferred Name</p>
-                <p className="font-medium">{carePlan.personal_details.preferred_name}</p>
-              </div>
-            )}
+            <div>
+              <p className="text-gray-500">Version</p>
+              <p className="font-medium">v{carePlan.version || 1}</p>
+            </div>
           </div>
+
+          {/* Personal Details */}
+          {carePlan.personal_details && (
+            <div>
+              <h3 className="font-semibold text-lg mb-3">Personal Details</h3>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 text-sm">
+                {carePlan.personal_details.preferred_name && (
+                  <div>
+                    <p className="text-gray-500">Preferred Name</p>
+                    <p className="font-medium">{carePlan.personal_details.preferred_name}</p>
+                  </div>
+                )}
+                {carePlan.personal_details.language && (
+                  <div>
+                    <p className="text-gray-500">Language</p>
+                    <p className="font-medium">{carePlan.personal_details.language}</p>
+                  </div>
+                )}
+                {carePlan.personal_details.religion && (
+                  <div>
+                    <p className="text-gray-500">Religion</p>
+                    <p className="font-medium">{carePlan.personal_details.religion}</p>
+                  </div>
+                )}
+                {carePlan.personal_details.cultural_needs && (
+                  <div className="col-span-2 md:col-span-3">
+                    <p className="text-gray-500">Cultural Needs</p>
+                    <p className="font-medium">{carePlan.personal_details.cultural_needs}</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
         </CardContent>
       </Card>
+
+      {/* Physical Health */}
+      {carePlan.physical_health && Object.keys(carePlan.physical_health).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Activity className="w-5 h-5 text-red-600" />
+              Physical Health
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+              {carePlan.physical_health.mobility && (
+                <div>
+                  <p className="text-sm text-gray-500">Mobility</p>
+                  <p className="font-medium capitalize">{carePlan.physical_health.mobility.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+              {carePlan.physical_health.continence && (
+                <div>
+                  <p className="text-sm text-gray-500">Continence</p>
+                  <p className="font-medium capitalize">{carePlan.physical_health.continence.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+              {carePlan.physical_health.skin_integrity && (
+                <div>
+                  <p className="text-sm text-gray-500">Skin Integrity</p>
+                  <p className="font-medium">{carePlan.physical_health.skin_integrity}</p>
+                </div>
+              )}
+            </div>
+
+            {carePlan.physical_health.nutrition && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Nutrition Needs</p>
+                <p className="text-gray-700">{carePlan.physical_health.nutrition}</p>
+              </div>
+            )}
+
+            {carePlan.physical_health.pain_management && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Pain Management</p>
+                <p className="text-gray-700">{carePlan.physical_health.pain_management}</p>
+              </div>
+            )}
+
+            {carePlan.physical_health.medical_conditions?.length > 0 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Medical Conditions</p>
+                <div className="flex flex-wrap gap-2">
+                  {carePlan.physical_health.medical_conditions.map((condition, idx) => (
+                    <Badge key={idx} variant="outline" className="bg-red-50 text-red-700 border-red-200">
+                      {condition}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {carePlan.physical_health.allergies?.length > 0 && (
+              <div className="p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-sm font-medium text-red-800 mb-2">⚠️ Allergies</p>
+                <div className="flex flex-wrap gap-2">
+                  {carePlan.physical_health.allergies.map((allergy, idx) => (
+                    <Badge key={idx} className="bg-red-100 text-red-800">
+                      {allergy}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Mental Health */}
+      {carePlan.mental_health && Object.keys(carePlan.mental_health).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Brain className="w-5 h-5 text-purple-600" />
+              Mental Health & Communication
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-4">
+            {carePlan.mental_health.cognitive_function && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Cognitive Function</p>
+                <p className="text-gray-700">{carePlan.mental_health.cognitive_function}</p>
+              </div>
+            )}
+
+            {carePlan.mental_health.communication_needs && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Communication Needs</p>
+                <p className="text-gray-700">{carePlan.mental_health.communication_needs}</p>
+              </div>
+            )}
+
+            {carePlan.mental_health.behaviour_support_needs && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Behaviour Support Needs</p>
+                <p className="text-gray-700">{carePlan.mental_health.behaviour_support_needs}</p>
+              </div>
+            )}
+
+            {carePlan.mental_health.mental_health_conditions?.length > 0 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Mental Health Conditions</p>
+                <div className="flex flex-wrap gap-2">
+                  {carePlan.mental_health.mental_health_conditions.map((condition, idx) => (
+                    <Badge key={idx} variant="outline" className="bg-purple-50 text-purple-700 border-purple-200">
+                      {condition}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
+
+      {/* Consent Information */}
+      {carePlan.consent && Object.keys(carePlan.consent).length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="w-5 h-5 text-indigo-600" />
+              Consent & Capacity
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="grid grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-gray-500">Capacity to Consent</p>
+                <p className="font-medium">{carePlan.consent.capacity_to_consent ? 'Yes' : 'No'}</p>
+              </div>
+              {carePlan.consent.consent_given_by && (
+                <div>
+                  <p className="text-sm text-gray-500">Consent Given By</p>
+                  <p className="font-medium">{carePlan.consent.consent_given_by}</p>
+                </div>
+              )}
+              {carePlan.consent.relationship && (
+                <div>
+                  <p className="text-sm text-gray-500">Relationship</p>
+                  <p className="font-medium">{carePlan.consent.relationship}</p>
+                </div>
+              )}
+            </div>
+            {carePlan.consent.restrictions && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Restrictions</p>
+                <p className="text-gray-700">{carePlan.consent.restrictions}</p>
+              </div>
+            )}
+          </CardContent>
+        </Card>
+      )}
 
       {/* Care Objectives */}
       {carePlan.care_objectives?.length > 0 && (
@@ -457,6 +725,7 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
           </CardContent>
         </Card>
       )}
+      </div>
     </div>
   );
 }
