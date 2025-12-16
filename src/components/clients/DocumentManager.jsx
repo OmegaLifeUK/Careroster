@@ -139,7 +139,7 @@ export default function DocumentManager({ client }) {
     try {
       toast.info("Generating care plan", "AI is analyzing uploaded documents...");
 
-      const { AssessmentToCarePlanWorkflow } = await import('./AssessmentToCarePlanWorkflow');
+      const { AssessmentToCarePlanWorkflow } = await import('../workflow/AssessmentToCarePlanWorkflow');
 
       const assessment = {
         type: 'uploaded_documents',
