@@ -150,14 +150,17 @@ ${dataContext}
 User question: "${queryText}"
 
 INSTRUCTIONS:
-- Provide specific answers using the actual data provided above
-- Include names, dates, numbers from the real data
-- If asking about a specific client, search the data for that client
-- Format your response clearly with bullet points or lists
-- Keep it concise but informative
-- If the data doesn't contain what they're asking for, say so clearly
+- Extract and return ACTUAL data from the JSON above
+- Include specific names, dates, counts from the data
+- List out individual items (clients, tasks, incidents, etc.) with details
+- Use the "answer" field for your main response with specific details
+- Use the "specific_data" array to highlight key data points as label/value pairs
+- DO NOT suggest where to navigate - SHOW THE ACTUAL DATA
+- If there's no data, say "No items found" with that specific wording
 
-DO NOT just tell them where to look - give them the actual information from the data.`;
+Example for "outstanding tasks":
+answer: "There are 3 outstanding tasks: 1) Task name for Client X due on date, 2) Task name for Client Y due on date..."
+specific_data: [{"label": "Task 1", "value": "Details..."}, {"label": "Task 2", "value": "Details..."}]`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -165,8 +168,16 @@ DO NOT just tell them where to look - give them the actual information from the 
           type: "object",
           properties: {
             answer: { type: "string" },
-            action_items: { type: "array", items: { type: "string" } },
-            relevant_sections: { type: "array", items: { type: "string" } }
+            specific_data: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  label: { type: "string" },
+                  value: { type: "string" }
+                }
+              }
+            }
           }
         }
       });
@@ -174,8 +185,7 @@ DO NOT just tell them where to look - give them the actual information from the 
       const assistantMessage = {
         role: "assistant",
         content: response.answer,
-        actionItems: response.action_items || [],
-        relevantSections: response.relevant_sections || [],
+        specificData: response.specific_data || [],
         timestamp: new Date()
       };
 
@@ -250,27 +260,14 @@ DO NOT just tell them where to look - give them the actual information from the 
                     <p className="text-sm">{msg.content}</p>
                   </div>
                   
-                  {msg.actionItems?.length > 0 && (
-                    <div className="mt-2 space-y-1">
-                      <p className="text-xs font-medium text-gray-600">Action Items:</p>
-                      {msg.actionItems.map((item, i) => (
-                        <Badge key={i} variant="outline" className="text-xs mr-1">
-                          {item}
-                        </Badge>
+                  {msg.specificData?.length > 0 && (
+                    <div className="mt-3 space-y-2 bg-gray-50 p-3 rounded-lg">
+                      {msg.specificData.map((item, i) => (
+                        <div key={i} className="flex justify-between items-start gap-3 text-xs">
+                          <span className="font-medium text-gray-700">{item.label}:</span>
+                          <span className="text-gray-600 text-right">{item.value}</span>
+                        </div>
                       ))}
-                    </div>
-                  )}
-                  
-                  {msg.relevantSections?.length > 0 && (
-                    <div className="mt-2">
-                      <p className="text-xs font-medium text-gray-600 mb-1">Relevant Sections:</p>
-                      <div className="flex flex-wrap gap-1">
-                        {msg.relevantSections.map((section, i) => (
-                          <Badge key={i} className="bg-purple-100 text-purple-700 text-xs">
-                            {section}
-                          </Badge>
-                        ))}
-                      </div>
                     </div>
                   )}
                   
