@@ -77,6 +77,14 @@ export default function StaffTaskManager() {
     }
   });
 
+  const { data: auditTemplates = [] } = useQuery({
+    queryKey: ['audit-templates'],
+    queryFn: async () => {
+      const data = await base44.entities.AuditTemplate.filter({ is_active: true });
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
   const allStaff = [...staff, ...carers];
 
   const getStaffName = (id) => {
@@ -217,6 +225,12 @@ export default function StaffTaskManager() {
                               Form Required
                             </Badge>
                           )}
+                          {task.audit_template_id && (
+                            <Badge variant="outline" className="text-xs bg-purple-50 text-purple-700">
+                              <FileText className="w-3 h-3 mr-1" />
+                              Audit Required
+                            </Badge>
+                          )}
                         </div>
                         <div className="flex items-center gap-3 text-sm text-gray-600 mt-1">
                           <span className="flex items-center gap-1">
@@ -282,18 +296,20 @@ export default function StaffTaskManager() {
           onClose={() => setShowCreateDialog(false)}
           allStaff={allStaff}
           formTemplates={formTemplates}
+          auditTemplates={auditTemplates}
         />
       )}
     </div>
   );
 }
 
-function CreateStaffTaskDialog({ onClose, allStaff, formTemplates }) {
+function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplates }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
     task_type: "supervision",
     form_template_id: "",
+    audit_template_id: "",
     assigned_to_staff_id: "",
     subject_staff_id: "",
     priority: "medium",
@@ -426,26 +442,48 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates }) {
             </div>
           )}
 
-          <div>
-            <label className="text-sm font-medium">Form Template (optional)</label>
-            <Select 
-              value={formData.form_template_id} 
-              onValueChange={(v) => setFormData({ ...formData, form_template_id: v })}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Select form to complete" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value={null}>No form required</SelectItem>
-                {formTemplates.map(t => (
-                  <SelectItem key={t.id} value={t.id}>{t.form_name}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-            <p className="text-xs text-gray-500 mt-1">
-              The form will open when the task is started
-            </p>
-          </div>
+          {formData.task_type === "audit" ? (
+            <div>
+              <label className="text-sm font-medium">Audit Template *</label>
+              <Select 
+                value={formData.audit_template_id} 
+                onValueChange={(v) => setFormData({ ...formData, audit_template_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select audit template" />
+                </SelectTrigger>
+                <SelectContent>
+                  {auditTemplates.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.template_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                The audit will open when the task is started
+              </p>
+            </div>
+          ) : (
+            <div>
+              <label className="text-sm font-medium">Form Template (optional)</label>
+              <Select 
+                value={formData.form_template_id} 
+                onValueChange={(v) => setFormData({ ...formData, form_template_id: v })}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select form to complete" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value={null}>No form required</SelectItem>
+                  {formTemplates.map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.form_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              <p className="text-xs text-gray-500 mt-1">
+                The form will open when the task is started
+              </p>
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-4">
             <div>
