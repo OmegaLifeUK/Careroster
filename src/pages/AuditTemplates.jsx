@@ -40,6 +40,10 @@ export default function AuditTemplates() {
       setEditingTemplate(null);
       toast.success("Success", "Template saved successfully");
     },
+    onError: (error) => {
+      console.error("Save error:", error);
+      toast.error("Save Failed", error.message || "Failed to save template");
+    },
   });
 
   const deleteMutation = useMutation({
@@ -114,9 +118,9 @@ export default function AuditTemplates() {
         {showAIGenerator && (
           <AIAuditTemplateGenerator
             onTemplateGenerated={(template) => {
-              // Auto-save the AI-generated template
-              saveMutation.mutate(template);
               setShowAIGenerator(false);
+              setEditingTemplate(template);
+              setShowDialog(true);
             }}
             onClose={() => setShowAIGenerator(false)}
           />
