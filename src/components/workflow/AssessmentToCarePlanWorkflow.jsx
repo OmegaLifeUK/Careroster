@@ -1,0 +1,435 @@
+import { base44 } from "@/api/base44Client";
+
+/**
+ * Automated workflow: Initial Assessment → AI Care Plan → Related Records
+ * Based on CQC/Ofsted/CI requirements for care planning
+ */
+
+/**
+ * Monitors for completed assessments and triggers care plan generation
+ */
+export const checkForNewAssessments = async () => {
+  try {
+    // Check visits with completed assessment documents
+    const visits = await base44.entities.Visit.filter({ 
+      visit_type: 'assessment',
+      status: 'completed'
+    });
+    
+    const shifts = await base44.entities.Shift.list();
+    const assessmentShifts = shifts.filter(s => 
+      s.shift_type === 'assessment' && s.status === 'completed'
+    );
+
+    const allAssessments = [];
+
+    // Process visits
+    for (const visit of visits) {
+      if (visit.assessment_documents?.length > 0 && !visit.linked_care_plan_id) {
+        allAssessments.push({
+          type: 'visit',
+          id: visit.id,
+          client_id: visit.client_id,
+          documents: visit.assessment_documents,
+          date: visit.actual_end || visit.scheduled_start
+        });
+      }
+    }
+
+    // Process shifts
+    for (const shift of assessmentShifts) {
+      if (shift.assessment_documents?.length > 0 && !shift.linked_care_plan_id) {
+        allAssessments.push({
+          type: 'shift',
+          id: shift.id,
+          client_id: shift.client_id,
+          documents: shift.assessment_documents,
+          date: shift.actual_end_time || shift.date
+        });
+      }
+    }
+
+    return allAssessments;
+  } catch (error) {
+    console.error("Error checking for assessments:", error);
+    return [];
+  }
+};
+
+/**
+ * Generate care plan from assessment using AI
+ */
+export const generateCarePlanFromAssessment = async (assessment, clientId) => {
+  try {
+    const client = await base44.entities.Client.get(clientId);
+    
+    // Collect all assessment document URLs
+    const documentUrls = assessment.documents
+      .filter(doc => doc.document_url)
+      .map(doc => doc.document_url);
+
+    if (documentUrls.length === 0) {
+      return { success: false, error: "No documents to analyze" };
+    }
+
+    // Use AI to extract structured care plan data from documents
+    const prompt = `You are a care planning expert. Analyze the provided assessment documents and generate a comprehensive care plan.
+
+Client: ${client.full_name}
+
+Extract and structure the following information:
+
+1. PHYSICAL HEALTH:
+- Mobility level
+- Continence status
+- Nutrition needs
+- Medical conditions
+- Allergies
+
+2. MENTAL HEALTH:
+- Cognitive function
+- Communication needs
+- Behavioral support needs
+
+3. CARE OBJECTIVES (at least 3-5):
+For each objective include:
+- Clear, measurable objective
+- Outcome measures
+- Target date (3-6 months from now)
+
+4. CARE TASKS (at least 5-10):
+For each task include:
+- Task name
+- Category (personal_care, nutrition, medication, mobility, social, etc.)
+- Description
+- Frequency (daily, twice_daily, weekly, etc.)
+- Preferred time
+- Duration in minutes
+- Special instructions
+
+5. MEDICATIONS:
+For each medication include:
+- Name
+- Dose
+- Frequency
+- Route (oral, topical, etc.)
+- Time of day (array)
+- Purpose
+- Special instructions
+- Whether it's PRN (as needed)
+
+6. RISK FACTORS:
+For each risk include:
+- Risk description
+- Likelihood (low, medium, high)
+- Impact (low, medium, high)
+- Control measures
+
+7. DAILY ROUTINE:
+- Morning routine
+- Afternoon routine
+- Evening routine
+- Night routine
+
+8. PREFERENCES:
+- Likes (array)
+- Dislikes (array)
+- Hobbies (array)
+- Food preferences
+- Communication preferences
+- Personal care preferences
+
+Return ONLY valid JSON matching this structure.`;
+
+    const aiResponse = await base44.integrations.Core.InvokeLLM({
+      prompt: prompt,
+      file_urls: documentUrls,
+      response_json_schema: {
+        type: "object",
+        properties: {
+          physical_health: {
+            type: "object",
+            properties: {
+              mobility: { type: "string" },
+              continence: { type: "string" },
+              nutrition: { type: "string" },
+              medical_conditions: { type: "array", items: { type: "string" } },
+              allergies: { type: "array", items: { type: "string" } }
+            }
+          },
+          mental_health: {
+            type: "object",
+            properties: {
+              cognitive_function: { type: "string" },
+              communication_needs: { type: "string" },
+              behaviour_support_needs: { type: "string" }
+            }
+          },
+          care_objectives: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                objective: { type: "string" },
+                outcome_measures: { type: "string" },
+                target_date: { type: "string" },
+                status: { type: "string" }
+              }
+            }
+          },
+          care_tasks: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                task_name: { type: "string" },
+                category: { type: "string" },
+                description: { type: "string" },
+                frequency: { type: "string" },
+                preferred_time: { type: "string" },
+                duration_minutes: { type: "number" },
+                special_instructions: { type: "string" }
+              }
+            }
+          },
+          medications: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                name: { type: "string" },
+                dose: { type: "string" },
+                frequency: { type: "string" },
+                route: { type: "string" },
+                time_of_day: { type: "array", items: { type: "string" } },
+                purpose: { type: "string" },
+                special_instructions: { type: "string" },
+                is_prn: { type: "boolean" }
+              }
+            }
+          },
+          risk_factors: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                risk: { type: "string" },
+                likelihood: { type: "string" },
+                impact: { type: "string" },
+                control_measures: { type: "string" }
+              }
+            }
+          },
+          daily_routine: {
+            type: "object",
+            properties: {
+              morning: { type: "string" },
+              afternoon: { type: "string" },
+              evening: { type: "string" },
+              night: { type: "string" }
+            }
+          },
+          preferences: {
+            type: "object",
+            properties: {
+              likes: { type: "array", items: { type: "string" } },
+              dislikes: { type: "array", items: { type: "string" } },
+              hobbies: { type: "array", items: { type: "string" } },
+              food_preferences: { type: "string" },
+              communication_preferences: { type: "string" },
+              personal_care_preferences: { type: "string" }
+            }
+          }
+        }
+      }
+    });
+
+    return { success: true, carePlanData: aiResponse };
+  } catch (error) {
+    console.error("Error generating care plan:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Create draft care plan from AI-generated data
+ */
+export const createDraftCarePlan = async (carePlanData, clientId, assessmentSource) => {
+  try {
+    const currentUser = await base44.auth.me();
+    
+    // Add task IDs and default values
+    const enrichedTasks = (carePlanData.care_tasks || []).map((task, idx) => ({
+      task_id: `task_${Date.now()}_${idx}`,
+      task_name: task.task_name,
+      category: task.category || 'other',
+      description: task.description || '',
+      frequency: task.frequency || 'daily',
+      preferred_time: task.preferred_time || '',
+      duration_minutes: task.duration_minutes || 30,
+      special_instructions: task.special_instructions || '',
+      requires_two_carers: false,
+      is_active: true,
+      linked_shift_types: []
+    }));
+
+    const carePlan = await base44.entities.CarePlan.create({
+      client_id: clientId,
+      care_setting: assessmentSource.type === 'visit' ? 'domiciliary' : 'residential',
+      plan_type: 'initial',
+      assessment_date: new Date().toISOString().split('T')[0],
+      review_date: calculateReviewDate(90), // 3 months
+      assessed_by: currentUser?.full_name || 'System',
+      status: 'draft', // Draft for review/editing
+      physical_health: carePlanData.physical_health || {},
+      mental_health: carePlanData.mental_health || {},
+      care_objectives: carePlanData.care_objectives || [],
+      care_tasks: enrichedTasks,
+      medication_management: {
+        medications: carePlanData.medications || [],
+        self_administers: false,
+        administration_support: 'assistance',
+        pharmacy_details: '',
+        gp_details: '',
+        allergies_sensitivities: carePlanData.physical_health?.allergies?.join(', ') || ''
+      },
+      daily_routine: carePlanData.daily_routine || {},
+      preferences: carePlanData.preferences || {},
+      risk_factors: carePlanData.risk_factors || [],
+      emergency_info: {},
+      version: 1,
+      generated_from_assessment: true,
+      source_assessment_type: assessmentSource.type,
+      source_assessment_id: assessmentSource.id
+    });
+
+    // Link back to source assessment
+    if (assessmentSource.type === 'visit') {
+      await base44.entities.Visit.update(assessmentSource.id, {
+        linked_care_plan_id: carePlan.id
+      });
+    } else if (assessmentSource.type === 'shift') {
+      await base44.entities.Shift.update(assessmentSource.id, {
+        linked_care_plan_id: carePlan.id
+      });
+    }
+
+    // Create notification for staff to review
+    await base44.entities.Notification.create({
+      user_email: currentUser?.email || 'admin',
+      title: 'New Care Plan Ready for Review',
+      message: `AI-generated care plan created from assessment. Please review and approve.`,
+      type: 'care_plan',
+      priority: 'high',
+      action_url: `/clients?client=${clientId}&tab=care_plan`,
+      is_read: false
+    });
+
+    return { success: true, carePlan };
+  } catch (error) {
+    console.error("Error creating draft care plan:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+/**
+ * Approve and finalize care plan - this creates all related records
+ */
+export const approveCarePlan = async (carePlanId) => {
+  try {
+    const carePlan = await base44.entities.CarePlan.get(carePlanId);
+    
+    // Update status to active
+    await base44.entities.CarePlan.update(carePlanId, { status: 'active' });
+
+    const results = {
+      tasks: [],
+      medications: [],
+      risks: []
+    };
+
+    // 1. Create care tasks
+    for (const task of carePlan.care_tasks || []) {
+      const created = await base44.entities.CareTask.create({
+        client_id: carePlan.client_id,
+        care_plan_id: carePlanId,
+        task_name: task.task_name,
+        description: task.description,
+        category: task.category,
+        frequency: task.frequency,
+        preferred_time: task.preferred_time,
+        duration_minutes: task.duration_minutes,
+        special_instructions: task.special_instructions,
+        requires_two_carers: task.requires_two_carers,
+        is_active: task.is_active !== false,
+        status: 'pending'
+      });
+      results.tasks.push(created);
+    }
+
+    // 2. Create MAR sheets
+    for (const med of carePlan.medication_management?.medications || []) {
+      const created = await base44.entities.MARSheet.create({
+        client_id: carePlan.client_id,
+        medication_name: med.name,
+        dose: med.dose,
+        frequency: med.frequency,
+        route: med.route || 'oral',
+        time_of_day: med.time_of_day || [],
+        reason_for_medication: med.purpose,
+        special_instructions: med.special_instructions,
+        as_required: med.is_prn || false,
+        prn_protocol: med.prn_instructions || '',
+        month_year: new Date().toISOString().substring(0, 7),
+        status: 'active'
+      });
+      results.medications.push(created);
+    }
+
+    // 3. Create risk assessments
+    for (const risk of carePlan.risk_factors || []) {
+      const created = await base44.entities.RiskAssessment.create({
+        client_id: carePlan.client_id,
+        risk_type: categorizeRisk(risk.risk),
+        risk_description: risk.risk,
+        likelihood: risk.likelihood,
+        impact: risk.impact,
+        control_measures: risk.control_measures,
+        status: 'active',
+        assessment_date: new Date().toISOString().split('T')[0],
+        review_date: calculateReviewDate(90)
+      });
+      results.risks.push(created);
+    }
+
+    return { success: true, results };
+  } catch (error) {
+    console.error("Error approving care plan:", error);
+    return { success: false, error: error.message };
+  }
+};
+
+// Helper functions
+function calculateReviewDate(days) {
+  const date = new Date();
+  date.setDate(date.getDate() + days);
+  return date.toISOString().split('T')[0];
+}
+
+function categorizeRisk(riskDescription) {
+  const lower = riskDescription.toLowerCase();
+  if (lower.includes('fall')) return 'falls';
+  if (lower.includes('medication') || lower.includes('medicine')) return 'medication';
+  if (lower.includes('safeguard') || lower.includes('abuse')) return 'safeguarding';
+  if (lower.includes('nutrition') || lower.includes('food') || lower.includes('eating')) return 'nutrition';
+  if (lower.includes('pressure') || lower.includes('skin')) return 'pressure_sores';
+  if (lower.includes('infection')) return 'infection';
+  return 'other';
+}
+
+export const AssessmentToCarePlanWorkflow = {
+  checkForNewAssessments,
+  generateCarePlanFromAssessment,
+  createDraftCarePlan,
+  approveCarePlan
+};

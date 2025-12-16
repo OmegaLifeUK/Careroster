@@ -26,6 +26,7 @@ import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
 import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
+import { AssessmentToCarePlanWorkflow } from "@/components/workflow/AssessmentToCarePlanWorkflow";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
@@ -106,6 +107,24 @@ export default function CarePlanManager({ client }) {
   const handleDelete = (id) => {
     if (confirm("Are you sure you want to delete this care plan?")) {
       deleteMutation.mutate(id);
+    }
+  };
+
+  const handleApproveCarePlan = async (planId) => {
+    if (confirm("Approve this care plan? This will create all medication, task, and risk records.")) {
+      const result = await AssessmentToCarePlanWorkflow.approveCarePlan(planId);
+      if (result.success) {
+        queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+        queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+        queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
+        queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
+        toast.success(
+          'Care plan approved',
+          `Created ${result.results.tasks.length} tasks, ${result.results.medications.length} medications, ${result.results.risks.length} risks`
+        );
+      } else {
+        toast.error('Approval failed', result.error);
+      }
     }
   };
 
@@ -276,6 +295,12 @@ export default function CarePlanManager({ client }) {
                         <Heart className="w-5 h-5 text-blue-600" />
                         <h3 className="font-semibold capitalize">{plan.plan_type} Care Plan</h3>
                         <Badge className={statusColors[plan.status]}>{plan.status}</Badge>
+                        {plan.generated_from_assessment && (
+                          <Badge className="bg-purple-100 text-purple-700">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            AI Generated
+                          </Badge>
+                        )}
                         {reviewStatus && (
                           <Badge className={reviewStatus.color}>{reviewStatus.label}</Badge>
                         )}
@@ -307,6 +332,15 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
+                      {plan.status === 'draft' && plan.generated_from_assessment && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveCarePlan(plan.id)}
+                          className="bg-green-600 hover:bg-green-700"
+                        >
+                          Approve & Create Records
+                        </Button>
+                      )}
                       <Button variant="outline" size="sm" onClick={() => setSelectedPlan(plan)}>
                         <Eye className="w-4 h-4" />
                       </Button>

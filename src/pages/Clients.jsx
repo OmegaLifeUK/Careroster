@@ -29,6 +29,7 @@ import TaskManager from "../components/tasks/TaskManager";
 import AIDocumentImporter from "../components/clients/AIDocumentImporter";
 import AINewClientImporter from "../components/clients/AINewClientImporter";
 import ClientProgressReport from "../components/clients/ClientProgressReport";
+import AssessmentMonitor from "../components/workflow/AssessmentMonitor";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -200,6 +201,8 @@ export default function Clients() {
           </div>
 
           <AlertBanner clientId={selectedClient.id} section={activeTab} compact={true} />
+          
+          <AssessmentMonitor clientId={selectedClient.id} />
 
           <div className="bg-white rounded-lg shadow-sm mb-6 p-2 flex gap-2 overflow-x-auto">
             <Button
