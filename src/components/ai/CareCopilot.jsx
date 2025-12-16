@@ -36,53 +36,128 @@ export default function CareCopilot({ open, onClose }) {
 
     try {
       // Gather context data
-      const clients = await base44.entities.Client.list();
-      const carePlans = await base44.entities.CarePlan.list();
-      const tasks = await base44.entities.CareTask.list();
-      const incidents = await base44.entities.Incident.list();
-      const staff = await base44.entities.Staff.list();
-      const visits = await base44.entities.Visit.list();
-      const dols = await base44.entities.DoLS.list();
-      const dnacpr = await base44.entities.DNACPR.list();
-      const shifts = await base44.entities.Shift.list();
+      const [clients, carePlans, tasks, incidents, staff, visits, dols, dnacpr, shifts, dailyLogs] = await Promise.all([
+        base44.entities.Client.list(),
+        base44.entities.CarePlan.list(),
+        base44.entities.CareTask.list(),
+        base44.entities.Incident.list(),
+        base44.entities.Staff.list(),
+        base44.entities.Visit.list('-scheduled_start'),
+        base44.entities.DoLS.list(),
+        base44.entities.DNACPR.list(),
+        base44.entities.Shift.list('-date'),
+        base44.entities.DailyLog.list('-log_date').catch(() => [])
+      ]);
 
-      const contextData = {
-        total_clients: clients.length,
-        active_clients: clients.filter(c => c.status === 'active').length,
-        total_care_plans: carePlans.length,
-        pending_tasks: tasks.filter(t => t.status === 'pending').length,
-        recent_incidents: incidents.filter(i => {
-          const date = new Date(i.created_date);
-          const sevenDaysAgo = new Date();
-          sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
-          return date >= sevenDaysAgo;
-        }).length,
-        staff_count: staff.length,
-        todays_visits: visits.filter(v => {
-          if (!v.scheduled_start) return false;
-          const visitDate = new Date(v.scheduled_start);
-          const today = new Date();
-          return visitDate.toDateString() === today.toDateString();
-        }).length,
-        active_dols: dols.filter(d => d.dols_status === 'standard_authorisation_granted' || d.dols_status === 'urgent_authorisation_granted').length,
-        active_dnacpr: dnacpr.filter(d => d.status === 'active').length
-      };
+      // Filter relevant data based on query
+      const today = new Date();
+      const todayStr = today.toDateString();
+      
+      const todayVisits = visits.filter(v => {
+        if (!v.scheduled_start) return false;
+        const visitDate = new Date(v.scheduled_start);
+        return visitDate.toDateString() === todayStr;
+      });
 
-      const prompt = `You are a care management AI assistant helping care providers get quick insights from their data.
+      const todayShifts = shifts.filter(s => {
+        if (!s.date) return false;
+        const shiftDate = new Date(s.date);
+        return shiftDate.toDateString() === todayStr;
+      });
 
-Current system data summary:
-- Total clients: ${contextData.total_clients} (${contextData.active_clients} active)
-- Care plans: ${contextData.total_care_plans}
-- Pending tasks: ${contextData.pending_tasks}
-- Recent incidents (last 7 days): ${contextData.recent_incidents}
-- Staff members: ${contextData.staff_count}
-- Today's visits: ${contextData.todays_visits}
-- Active DoLS: ${contextData.active_dols}
-- Active DNACPR: ${contextData.active_dnacpr}
+      const overdueTasks = tasks.filter(t => {
+        if (t.status !== 'pending') return false;
+        const dueDate = new Date(t.due_date);
+        return dueDate < today;
+      });
+
+      const overdueReviews = carePlans.filter(cp => {
+        if (cp.status !== 'active' || !cp.review_date) return false;
+        const reviewDate = new Date(cp.review_date);
+        return reviewDate < today;
+      });
+
+      const expiringDols = dols.filter(d => {
+        if (!d.authorisation_end_date) return false;
+        const expiryDate = new Date(d.authorisation_end_date);
+        const daysUntil = Math.floor((expiryDate - today) / (1000 * 60 * 60 * 24));
+        return daysUntil > 0 && daysUntil <= 30;
+      });
+
+      const recentIncidents = incidents.filter(i => {
+        const incidentDate = new Date(i.created_date);
+        const daysAgo = Math.floor((today - incidentDate) / (1000 * 60 * 60 * 24));
+        return daysAgo <= 7;
+      }).slice(0, 10);
+
+      // Build comprehensive data context
+      const dataContext = JSON.stringify({
+        clients: clients.map(c => ({ 
+          id: c.id, 
+          name: c.full_name, 
+          status: c.status,
+          care_needs: c.care_needs,
+          mobility: c.mobility
+        })),
+        today_visits: todayVisits.map(v => ({
+          client_id: v.client_id,
+          staff_id: v.assigned_staff_id,
+          time: v.scheduled_start,
+          status: v.status,
+          notes: v.completion_notes
+        })),
+        today_shifts: todayShifts.map(s => ({
+          carer_id: s.carer_id,
+          client_id: s.client_id,
+          time: s.start_time,
+          status: s.status
+        })),
+        overdue_tasks: overdueTasks.map(t => ({
+          task_name: t.task_name,
+          client_id: t.client_id,
+          due_date: t.due_date,
+          category: t.category
+        })),
+        overdue_reviews: overdueReviews.map(r => ({
+          client_id: r.client_id,
+          review_date: r.review_date,
+          plan_type: r.plan_type
+        })),
+        expiring_dols: expiringDols.map(d => ({
+          client_id: d.client_id,
+          expiry_date: d.authorisation_end_date,
+          status: d.dols_status
+        })),
+        recent_incidents: recentIncidents.map(i => ({
+          type: i.incident_type,
+          severity: i.severity,
+          date: i.created_date,
+          client_id: i.client_id,
+          description: i.description?.substring(0, 100)
+        })),
+        recent_logs: dailyLogs.slice(0, 20).map(l => ({
+          client_id: l.client_id,
+          date: l.log_date,
+          summary: l.summary?.substring(0, 150)
+        }))
+      }, null, 2);
+
+      const prompt = `You are a care management AI assistant. Analyze the data and provide specific, actionable answers.
+
+ACTUAL SYSTEM DATA:
+${dataContext}
 
 User question: "${queryText}"
 
-Provide a helpful, concise response based on the data summary above. If specific data isn't available in the summary, provide general guidance on where to find it in the system. Be professional but friendly. Keep response under 150 words.`;
+INSTRUCTIONS:
+- Provide specific answers using the actual data provided above
+- Include names, dates, numbers from the real data
+- If asking about a specific client, search the data for that client
+- Format your response clearly with bullet points or lists
+- Keep it concise but informative
+- If the data doesn't contain what they're asking for, say so clearly
+
+DO NOT just tell them where to look - give them the actual information from the data.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,
