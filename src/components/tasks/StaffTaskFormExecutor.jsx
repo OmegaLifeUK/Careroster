@@ -18,6 +18,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 import FormPreview from "@/components/formbuilder/FormPreview";
+import AuditExecutor from "@/components/audit/AuditExecutor";
 
 export default function StaffTaskFormExecutor({ task, onClose, onComplete, allStaff }) {
   const [completionNotes, setCompletionNotes] = useState("");
@@ -35,6 +36,16 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
       return templates?.[0] || null;
     },
     enabled: !!task.form_template_id
+  });
+
+  // Fetch the audit template if one is linked
+  const { data: auditTemplate, isLoading: loadingAuditTemplate } = useQuery({
+    queryKey: ['audit-template', task.audit_template_id],
+    queryFn: async () => {
+      const templates = await base44.entities.AuditTemplate.filter({ id: task.audit_template_id });
+      return templates?.[0] || null;
+    },
+    enabled: !!task.audit_template_id
   });
 
   // Fetch client details if subject_client_id exists
@@ -196,6 +207,31 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
     const person = allStaff?.find(s => s.id === id);
     return person?.full_name || "Unknown";
   };
+
+  // If this is an audit task with a template, show the audit executor
+  if (task.audit_template_id && auditTemplate) {
+    return (
+      <AuditExecutor
+        task={task}
+        auditTemplate={auditTemplate}
+        onClose={onClose}
+        onComplete={onComplete}
+      />
+    );
+  }
+
+  if (task.audit_template_id && loadingAuditTemplate) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <Card className="w-96">
+          <CardContent className="p-8 text-center">
+            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
+            <p className="text-gray-500">Loading audit template...</p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gray-50">
