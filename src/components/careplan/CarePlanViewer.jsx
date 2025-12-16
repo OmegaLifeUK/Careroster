@@ -697,6 +697,165 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
         </Card>
       )}
 
+      {/* DoLS Information - CQC Requirement */}
+      {carePlan.dols_info?.applicable && (
+        <Card className="border-amber-300 border-2">
+          <CardHeader className="bg-amber-50">
+            <CardTitle className="flex items-center gap-2 text-lg text-amber-900">
+              <Shield className="w-5 h-5" />
+              DoLS - Deprivation of Liberty Safeguards
+            </CardTitle>
+            <p className="text-sm text-amber-700 mt-1">CQC Regulatory Requirement</p>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            <div className="p-3 bg-amber-100 border border-amber-300 rounded-lg">
+              <p className="text-sm font-semibold text-amber-900">⚠️ DoLS Authorisation in Place</p>
+              <p className="text-sm text-amber-800 mt-1">
+                This person is subject to Deprivation of Liberty Safeguards. All staff must be aware of the restrictions and conditions.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {carePlan.dols_info.status && (
+                <div>
+                  <p className="text-sm text-gray-500">Status</p>
+                  <p className="font-medium">{carePlan.dols_info.status}</p>
+                </div>
+              )}
+              {carePlan.dols_info.case_reference && (
+                <div>
+                  <p className="text-sm text-gray-500">Case Reference</p>
+                  <p className="font-medium">{carePlan.dols_info.case_reference}</p>
+                </div>
+              )}
+              {carePlan.dols_info.supervisory_body && (
+                <div>
+                  <p className="text-sm text-gray-500">Supervisory Body</p>
+                  <p className="font-medium">{carePlan.dols_info.supervisory_body}</p>
+                </div>
+              )}
+              {carePlan.dols_info.authorisation_start && (
+                <div>
+                  <p className="text-sm text-gray-500">Authorisation Start</p>
+                  <p className="font-medium">{format(parseISO(carePlan.dols_info.authorisation_start), 'PPP')}</p>
+                </div>
+              )}
+              {carePlan.dols_info.authorisation_end && (
+                <div>
+                  <p className="text-sm text-gray-500">Authorisation End</p>
+                  <p className="font-medium">{format(parseISO(carePlan.dols_info.authorisation_end), 'PPP')}</p>
+                </div>
+              )}
+            </div>
+
+            {carePlan.dols_info.reason && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Reason for DoLS</p>
+                <p className="text-gray-700">{carePlan.dols_info.reason}</p>
+              </div>
+            )}
+
+            {carePlan.dols_info.restrictions?.length > 0 && (
+              <div>
+                <p className="text-sm text-gray-500 mb-2">Restrictions in Place</p>
+                <div className="space-y-2">
+                  {carePlan.dols_info.restrictions.map((restriction, idx) => (
+                    <div key={idx} className="p-2 bg-amber-50 border border-amber-200 rounded">
+                      <p className="text-sm text-amber-900">• {restriction}</p>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs font-medium text-blue-800">Staff Responsibilities</p>
+              <p className="text-xs text-blue-700 mt-1">
+                • Ensure restrictions are applied consistently<br/>
+                • Monitor for changes in capacity<br/>
+                • Report concerns to DoLS lead<br/>
+                • Review conditions regularly
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
+      {/* DNACPR Information - CQC Requirement */}
+      {carePlan.dnacpr_info?.in_place && (
+        <Card className="border-red-300 border-2">
+          <CardHeader className="bg-red-50">
+            <CardTitle className="flex items-center gap-2 text-lg text-red-900">
+              <AlertTriangle className="w-5 h-5" />
+              DNACPR - Do Not Attempt Cardiopulmonary Resuscitation
+            </CardTitle>
+            <p className="text-sm text-red-700 mt-1">CQC Regulatory Requirement - Emergency Services Must Be Informed</p>
+          </CardHeader>
+          <CardContent className="pt-4 space-y-4">
+            <div className="p-3 bg-red-100 border border-red-300 rounded-lg">
+              <p className="text-sm font-semibold text-red-900">🚨 DNACPR Order in Place</p>
+              <p className="text-sm text-red-800 mt-1">
+                In the event of cardiac or respiratory arrest, CPR should NOT be attempted. Emergency services must be informed immediately.
+              </p>
+            </div>
+
+            <div className="grid grid-cols-2 gap-4">
+              {carePlan.dnacpr_info.decision_date && (
+                <div>
+                  <p className="text-sm text-gray-500">Decision Date</p>
+                  <p className="font-medium">{format(parseISO(carePlan.dnacpr_info.decision_date), 'PPP')}</p>
+                </div>
+              )}
+              {carePlan.dnacpr_info.decision_maker && (
+                <div>
+                  <p className="text-sm text-gray-500">Decision Made By</p>
+                  <p className="font-medium">{carePlan.dnacpr_info.decision_maker}</p>
+                  {carePlan.dnacpr_info.decision_maker_role && (
+                    <p className="text-xs text-gray-500">{carePlan.dnacpr_info.decision_maker_role}</p>
+                  )}
+                </div>
+              )}
+              {carePlan.dnacpr_info.mental_capacity && (
+                <div>
+                  <p className="text-sm text-gray-500">Mental Capacity</p>
+                  <p className="font-medium capitalize">{carePlan.dnacpr_info.mental_capacity.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+              {carePlan.dnacpr_info.patient_involvement && (
+                <div>
+                  <p className="text-sm text-gray-500">Patient Involvement</p>
+                  <p className="font-medium capitalize">{carePlan.dnacpr_info.patient_involvement.replace(/_/g, ' ')}</p>
+                </div>
+              )}
+            </div>
+
+            {carePlan.dnacpr_info.clinical_reasons && (
+              <div>
+                <p className="text-sm text-gray-500 mb-1">Clinical Reasons</p>
+                <p className="text-gray-700">{carePlan.dnacpr_info.clinical_reasons}</p>
+              </div>
+            )}
+
+            {carePlan.dnacpr_info.family_involved && (
+              <div className="p-2 bg-purple-50 border border-purple-200 rounded">
+                <p className="text-sm text-purple-800">✓ Family involved in decision-making process</p>
+              </div>
+            )}
+
+            <div className="p-3 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-xs font-medium text-blue-800">Emergency Procedures</p>
+              <p className="text-xs text-blue-700 mt-1">
+                • Call 999 and inform of DNACPR status immediately<br/>
+                • Provide comfort and dignity<br/>
+                • Follow agreed care pathway<br/>
+                • Contact family as per wishes<br/>
+                • Location of signed DNACPR form: [Check DoLS/DNACPR tab for document location]
+              </p>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {/* Emergency Info */}
       {carePlan.emergency_info && (carePlan.emergency_info.hospital_preference || carePlan.emergency_info.emergency_protocol) && (
         <Card className="border-red-200">
@@ -714,7 +873,7 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
               </div>
             )}
             {carePlan.emergency_info.dnacpr_in_place && (
-              <Badge className="bg-red-100 text-red-800">DNACPR in Place</Badge>
+              <Badge className="bg-red-100 text-red-800">DNACPR in Place - See DNACPR Section Above</Badge>
             )}
             {carePlan.emergency_info.emergency_protocol && (
               <div>

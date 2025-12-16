@@ -23,6 +23,8 @@ import PEEPManager from "../components/clients/PEEPManager";
 import RepositioningChartManager from "../components/clients/RepositioningChartManager";
 import BehaviorChartManager from "../components/clients/BehaviorChartManager";
 import MentalCapacityManager from "../components/clients/MentalCapacityManager";
+import DoLSManager from "../components/clients/DoLSManager";
+import DNACPRManager from "../components/clients/DNACPRManager";
 import SafeguardingManager from "../components/clients/SafeguardingManager";
 import OnboardingTracker from "../components/onboarding/OnboardingTracker";
 import TaskManager from "../components/tasks/TaskManager";
@@ -283,6 +285,20 @@ export default function Clients() {
               Mental Capacity
             </Button>
             <Button
+              variant={activeTab === "dols" ? "default" : "ghost"}
+              onClick={() => setActiveTab("dols")}
+              className="flex-shrink-0 bg-amber-50 hover:bg-amber-100"
+            >
+              DoLS
+            </Button>
+            <Button
+              variant={activeTab === "dnacpr" ? "default" : "ghost"}
+              onClick={() => setActiveTab("dnacpr")}
+              className="flex-shrink-0 bg-red-50 hover:bg-red-100"
+            >
+              DNACPR
+            </Button>
+            <Button
               variant={activeTab === "safeguarding" ? "default" : "ghost"}
               onClick={() => setActiveTab("safeguarding")}
               className="flex-shrink-0"
@@ -426,6 +442,14 @@ export default function Clients() {
 
           {activeTab === "mental_capacity" && (
             <MentalCapacityManager client={selectedClient} />
+          )}
+
+          {activeTab === "dols" && (
+            <DoLSManager client={selectedClient} />
+          )}
+
+          {activeTab === "dnacpr" && (
+            <DNACPRManager client={selectedClient} />
           )}
 
           {activeTab === "safeguarding" && (

@@ -206,12 +206,37 @@ Please generate a detailed care plan in JSON format with the following structure
       "control_measures": "how to manage this risk"
     }
   ],
+  "dols": {
+    "applicable": boolean,
+    "status": "string describing current status if applicable",
+    "restrictions": ["array of restrictions in place"],
+    "authorisation_start": "YYYY-MM-DD or empty",
+    "authorisation_end": "YYYY-MM-DD or empty",
+    "supervisory_body": "string",
+    "case_reference": "string",
+    "reason": "why DoLS is required"
+  },
+  "dnacpr": {
+    "in_place": boolean,
+    "decision_date": "YYYY-MM-DD or empty",
+    "decision_maker": "name of clinician",
+    "decision_maker_role": "role e.g. GP, Consultant",
+    "clinical_reasons": "clinical justification",
+    "mental_capacity": "has_capacity|lacks_capacity_for_this_decision|fluctuating_capacity",
+    "patient_involvement": "patient_has_capacity_and_agrees|patient_has_capacity_and_disagrees|patient_lacks_capacity|patient_not_informed_clinical_reasons",
+    "family_involved": boolean
+  },
   "emergency_info": {
     "hospital_preference": "string",
     "dnacpr_in_place": boolean,
     "emergency_protocol": "what to do in emergency"
   }
 }
+
+CRITICAL - DoLS & DNACPR:
+- If documents mention DoLS, Deprivation of Liberty Safeguards, or restrictions on liberty, extract all details
+- If documents mention DNACPR, Do Not Resuscitate, or end-of-life decisions, extract all details
+- These are CQC requirements and must be accurately captured
 
 Be thorough but realistic. Include specific, actionable care tasks based on the assessment findings. Identify risks from the assessments. Set achievable objectives.`;
 
@@ -230,6 +255,8 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
             daily_routine: { type: "object" },
             preferences: { type: "object" },
             risk_factors: { type: "array" },
+            dols: { type: "object" },
+            dnacpr: { type: "object" },
             emergency_info: { type: "object" }
           }
         }
