@@ -266,7 +266,20 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
       setStep("review");
     } catch (error) {
       console.error("Error generating care plan:", error);
-      toast.error("Generation Failed", "Failed to generate care plan. Please try again.");
+      
+      // Provide more specific error message
+      let errorMessage = "Failed to generate care plan. ";
+      if (error?.message?.includes('file') || error?.message?.includes('document')) {
+        errorMessage += "Unable to read the uploaded documents. Please ensure files are valid PDFs or images.";
+      } else if (error?.message?.includes('quota') || error?.message?.includes('limit')) {
+        errorMessage += "AI service limit reached. Please try again later.";
+      } else if (error?.message?.includes('timeout')) {
+        errorMessage += "Request took too long. Try with fewer documents or smaller files.";
+      } else {
+        errorMessage += "Please check your documents and try again.";
+      }
+      
+      toast.error("Generation Failed", errorMessage);
       setStep("select");
     } finally {
       setIsGenerating(false);
