@@ -119,8 +119,8 @@ export default function AuditTemplates() {
           <AIAuditTemplateGenerator
             onTemplateGenerated={(template) => {
               setShowAIGenerator(false);
-              setEditingTemplate(template);
-              setShowDialog(true);
+              // Save AI-generated template directly (no ID, so it's a create)
+              saveMutation.mutate(template);
             }}
             onClose={() => setShowAIGenerator(false)}
           />
