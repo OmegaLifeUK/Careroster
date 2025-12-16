@@ -139,6 +139,22 @@ For each risk include:
 - Communication preferences
 - Personal care preferences
 
+9. DOLS (Deprivation of Liberty Safeguards):
+- Is DoLS applicable? (yes/no)
+- Current status (if mentioned)
+- Restrictions in place
+- Authorisation dates
+- Supervisory body
+- Case reference
+
+10. DNACPR (Do Not Attempt CPR):
+- Is DNACPR in place? (yes/no)
+- Decision date
+- Decision maker and their role
+- Clinical reasons
+- Patient involvement/mental capacity
+- Family involvement
+
 Return ONLY valid JSON matching this structure.`;
 
     const aiResponse = await base44.integrations.Core.InvokeLLM({
@@ -239,6 +255,32 @@ Return ONLY valid JSON matching this structure.`;
               communication_preferences: { type: "string" },
               personal_care_preferences: { type: "string" }
             }
+          },
+          dols: {
+            type: "object",
+            properties: {
+              applicable: { type: "boolean" },
+              status: { type: "string" },
+              restrictions: { type: "array", items: { type: "string" } },
+              authorisation_start: { type: "string" },
+              authorisation_end: { type: "string" },
+              supervisory_body: { type: "string" },
+              case_reference: { type: "string" },
+              reason: { type: "string" }
+            }
+          },
+          dnacpr: {
+            type: "object",
+            properties: {
+              in_place: { type: "boolean" },
+              decision_date: { type: "string" },
+              decision_maker: { type: "string" },
+              decision_maker_role: { type: "string" },
+              clinical_reasons: { type: "string" },
+              mental_capacity: { type: "string" },
+              patient_involvement: { type: "string" },
+              family_involved: { type: "boolean" }
+            }
           }
         }
       }
@@ -300,7 +342,9 @@ export const createDraftCarePlan = async (carePlanData, clientId, assessmentSour
       version: 1,
       generated_from_assessment: true,
       source_assessment_type: assessmentSource.type,
-      source_assessment_id: assessmentSource.id
+      source_assessment_id: assessmentSource.id,
+      dols_info: carePlanData.dols || null,
+      dnacpr_info: carePlanData.dnacpr || null
     });
 
     // Link back to source assessment
@@ -416,6 +460,42 @@ export const approveCarePlan = async (carePlanId) => {
       results.risks.push(created);
     }
 
+    // 4. Create DoLS record if applicable
+    if (carePlan.dols_info?.applicable) {
+      const dolsRecord = await base44.entities.DoLS.create({
+        client_id: carePlan.client_id,
+        dols_status: mapDoLSStatus(carePlan.dols_info.status),
+        authorisation_type: 'standard',
+        authorisation_start_date: carePlan.dols_info.authorisation_start || null,
+        authorisation_end_date: carePlan.dols_info.authorisation_end || null,
+        supervisory_body: carePlan.dols_info.supervisory_body || '',
+        case_reference: carePlan.dols_info.case_reference || '',
+        reason_for_dols: carePlan.dols_info.reason || '',
+        restrictions_in_place: carePlan.dols_info.restrictions || [],
+        care_plan_updated: true,
+        capacity_assessment_completed: true
+      });
+      results.dols = dolsRecord;
+    }
+
+    // 5. Create DNACPR record if in place
+    if (carePlan.dnacpr_info?.in_place) {
+      const dnacprRecord = await base44.entities.DNACPR.create({
+        client_id: carePlan.client_id,
+        status: 'active',
+        decision_date: carePlan.dnacpr_info.decision_date || new Date().toISOString().split('T')[0],
+        review_date: calculateReviewDate(365), // Annual review
+        decision_made_by: carePlan.dnacpr_info.decision_maker || '',
+        decision_maker_role: carePlan.dnacpr_info.decision_maker_role || '',
+        clinical_reasons: carePlan.dnacpr_info.clinical_reasons || '',
+        mental_capacity: carePlan.dnacpr_info.mental_capacity || 'has_capacity',
+        patient_involvement: carePlan.dnacpr_info.patient_involvement || 'patient_has_capacity_and_agrees',
+        family_involved: carePlan.dnacpr_info.family_involved || false,
+        care_plan_updated: true
+      });
+      results.dnacpr = dnacprRecord;
+    }
+
     return { success: true, results };
   } catch (error) {
     console.error("Error approving care plan:", error);
@@ -439,6 +519,18 @@ function categorizeRisk(riskDescription) {
   if (lower.includes('pressure') || lower.includes('skin')) return 'pressure_sores';
   if (lower.includes('infection')) return 'infection';
   return 'other';
+}
+
+function mapDoLSStatus(status) {
+  if (!status) return 'screening_required';
+  const lower = status.toLowerCase();
+  if (lower.includes('granted') || lower.includes('authorised') || lower.includes('active')) return 'standard_authorisation_granted';
+  if (lower.includes('urgent')) return 'urgent_authorisation_granted';
+  if (lower.includes('submitted') || lower.includes('pending')) return 'application_submitted';
+  if (lower.includes('expired')) return 'expired';
+  if (lower.includes('review')) return 'under_review';
+  if (lower.includes('not authorised') || lower.includes('rejected')) return 'not_authorised';
+  return 'screening_required';
 }
 
 export const AssessmentToCarePlanWorkflow = {
