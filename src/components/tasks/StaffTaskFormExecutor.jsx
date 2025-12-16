@@ -158,6 +158,86 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
         });
       }
 
+      // If this is an audit task, create audit record and action plan if needed
+      if (task.task_type === 'audit' && submissionId) {
+        try {
+          // Get the form submission data
+          const submissions = await base44.entities.FormSubmission.filter({ id: submissionId });
+          const submission = submissions?.[0];
+          
+          if (submission?.submission_data) {
+            // Analyze submission for non-compliances
+            const nonCompliances = [];
+            const responses = [];
+            
+            Object.entries(submission.submission_data).forEach(([key, value]) => {
+              // Check for failed/non-compliant responses
+              if (value === 'no' || value === 'fail' || value === 'non_compliant') {
+                nonCompliances.push({
+                  item: key,
+                  severity: 'medium',
+                  description: `Non-compliance identified: ${key}`
+                });
+              }
+              responses.push({
+                section: 'Main',
+                item: key,
+                response: value,
+                is_compliant: value === 'yes' || value === 'pass' || value === 'compliant'
+              });
+            });
+
+            // Create audit record
+            const auditRecord = await base44.entities.AuditRecord.create({
+              template_id: task.form_template_id,
+              audit_date: task.scheduled_date || format(new Date(), 'yyyy-MM-dd'),
+              auditor_staff_id: task.assigned_to_staff_id,
+              area_audited: submission.submission_data.area_audited || 'Not specified',
+              responses,
+              overall_score: responses.filter(r => r.is_compliant).length,
+              percentage_score: responses.length > 0 ? (responses.filter(r => r.is_compliant).length / responses.length) * 100 : 0,
+              outcome: nonCompliances.length === 0 ? 'pass' : nonCompliances.length > 3 ? 'fail' : 'requires_improvement',
+              findings: completionNotes,
+              non_compliances: nonCompliances,
+              status: 'submitted'
+            });
+
+            // Create action plan if there are non-compliances
+            if (nonCompliances.length > 0) {
+              const actionPlan = await base44.entities.ActionPlan.create({
+                title: `Action Plan - ${formTemplate?.form_name || 'Audit'} (${submission.submission_data.area_audited || 'Area'})`,
+                description: `Action plan from audit on ${format(new Date(), 'dd/MM/yyyy')}. ${nonCompliances.length} issue(s) identified.`,
+                category: 'compliance',
+                priority: 'high',
+                status: 'active',
+                assigned_to_staff_ids: [task.assigned_to_staff_id],
+                target_completion_date: format(new Date(Date.now() + 30 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                related_entity_type: 'audit',
+                related_entity_id: auditRecord.id,
+                actions: nonCompliances.map(nc => ({
+                  action: `Address: ${nc.item}`,
+                  responsible_person: task.assigned_to_staff_id,
+                  target_date: format(new Date(Date.now() + 14 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+                  status: 'pending',
+                  notes: nc.description
+                })),
+                progress_percentage: 0
+              });
+
+              // Link action plan to audit
+              await base44.entities.AuditRecord.update(auditRecord.id, {
+                action_plan_id: actionPlan.id,
+                status: 'action_required'
+              });
+
+              toast.success("Audit Complete", `Action plan created with ${nonCompliances.length} action(s)`);
+            }
+          }
+        } catch (error) {
+          console.log("Could not create audit record:", error);
+        }
+      }
+
       // If this is an assessment/audit task for a client, attach to client documents
       if (task.subject_client_id && submissionId) {
         try {
@@ -208,30 +288,8 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
     return person?.full_name || "Unknown";
   };
 
-  // If this is an audit task with a template, show the audit executor
-  if (task.audit_template_id && auditTemplate) {
-    return (
-      <AuditExecutor
-        task={task}
-        auditTemplate={auditTemplate}
-        onClose={onClose}
-        onComplete={onComplete}
-      />
-    );
-  }
-
-  if (task.audit_template_id && loadingAuditTemplate) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <Card className="w-96">
-          <CardContent className="p-8 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-2" />
-            <p className="text-gray-500">Loading audit template...</p>
-          </CardContent>
-        </Card>
-      </div>
-    );
-  }
+  // Audit tasks now use form templates with built-in logic/triggers
+  // No need for separate audit executor
 
   return (
     <div className="min-h-screen bg-gray-50">

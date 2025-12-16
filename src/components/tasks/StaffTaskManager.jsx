@@ -444,22 +444,25 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
 
           {formData.task_type === "audit" ? (
             <div>
-              <label className="text-sm font-medium">Audit Template *</label>
+              <label className="text-sm font-medium">Audit Form *</label>
               <Select 
-                value={formData.audit_template_id} 
-                onValueChange={(v) => setFormData({ ...formData, audit_template_id: v })}
+                value={formData.form_template_id} 
+                onValueChange={(v) => setFormData({ ...formData, form_template_id: v })}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select audit template" />
+                  <SelectValue placeholder="Select audit form" />
                 </SelectTrigger>
                 <SelectContent>
-                  {auditTemplates.map(t => (
-                    <SelectItem key={t.id} value={t.id}>{t.template_name}</SelectItem>
+                  {formTemplates.filter(t => t.category === 'audit' || t.form_name.toLowerCase().includes('audit')).map(t => (
+                    <SelectItem key={t.id} value={t.id}>{t.form_name}</SelectItem>
                   ))}
+                  {formTemplates.filter(t => t.category === 'audit' || t.form_name.toLowerCase().includes('audit')).length === 0 && (
+                    <SelectItem value={null} disabled>No audit forms available - create one in Form Builder</SelectItem>
+                  )}
                 </SelectContent>
               </Select>
               <p className="text-xs text-gray-500 mt-1">
-                The audit will open when the task is started
+                Audit forms are built in Form Builder with logic and triggers
               </p>
             </div>
           ) : (
