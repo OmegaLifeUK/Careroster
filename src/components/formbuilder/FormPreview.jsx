@@ -19,63 +19,89 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Pre-fill form values on mount
+  // Load existing draft if task has a submission
   React.useEffect(() => {
-    if (template && !initialized) {
-      const initialValues = {};
+    const loadDraft = async () => {
+      if (contextData?.staff_task_id && !initialized) {
+        try {
+          const submissions = await base44.entities.FormSubmission.filter({
+            staff_task_id: contextData.staff_task_id,
+            status: 'draft'
+          });
+          if (submissions && submissions.length > 0) {
+            const draft = submissions[0];
+            setFormValues(draft.form_data || {});
+            setExistingSubmissionId(draft.id);
+            toast.info("Draft Loaded", "Continuing from where you left off");
+            setInitialized(true);
+            return;
+          }
+        } catch (error) {
+          console.log("No draft found");
+        }
+      }
       
-      // Go through all fields and try to match with prefillData
-      template.sections?.forEach(section => {
-        section.fields?.forEach(field => {
-          const fieldId = field.field_id;
-          const fieldLabel = field.field_label?.toLowerCase() || '';
-          
-          // Try to match common field patterns
-          if (prefillData.full_name && (fieldLabel.includes('name') && !fieldLabel.includes('supervisor'))) {
-            initialValues[fieldId] = prefillData.full_name;
-          }
-          if (prefillData.staff_name && fieldLabel.includes('staff') && fieldLabel.includes('name')) {
-            initialValues[fieldId] = prefillData.staff_name;
-          }
-          if (prefillData.supervisor_name && fieldLabel.includes('supervisor')) {
-            initialValues[fieldId] = prefillData.supervisor_name;
-          }
-          if (prefillData.client_name && fieldLabel.includes('client')) {
-            initialValues[fieldId] = prefillData.client_name;
-          }
-          if (prefillData.date_of_birth && (fieldLabel.includes('dob') || fieldLabel.includes('date of birth'))) {
-            initialValues[fieldId] = prefillData.date_of_birth;
-          }
-          if (prefillData.date && fieldLabel.includes('date') && !fieldLabel.includes('birth')) {
-            initialValues[fieldId] = prefillData.date;
-          }
-          if (prefillData.email && fieldLabel.includes('email')) {
-            initialValues[fieldId] = prefillData.email;
-          }
-          if (prefillData.phone && fieldLabel.includes('phone')) {
-            initialValues[fieldId] = prefillData.phone;
-          }
-          if (prefillData.address && fieldLabel.includes('address')) {
-            initialValues[fieldId] = prefillData.address;
-          }
-          if (prefillData.nhs_number && fieldLabel.includes('nhs')) {
-            initialValues[fieldId] = prefillData.nhs_number;
-          }
-          
-          // Direct field_id match from prefillData
-          if (prefillData[fieldId]) {
-            initialValues[fieldId] = prefillData[fieldId];
-          }
+      // Pre-fill form values if no draft
+      if (template && !initialized) {
+        const initialValues = {};
+        
+        template.sections?.forEach(section => {
+          section.fields?.forEach(field => {
+            const fieldId = field.field_id;
+            const fieldLabel = field.field_label?.toLowerCase() || '';
+            
+            if (prefillData.full_name && (fieldLabel.includes('name') && !fieldLabel.includes('supervisor'))) {
+              initialValues[fieldId] = prefillData.full_name;
+            }
+            if (prefillData.staff_name && fieldLabel.includes('staff') && fieldLabel.includes('name')) {
+              initialValues[fieldId] = prefillData.staff_name;
+            }
+            if (prefillData.supervisor_name && fieldLabel.includes('supervisor')) {
+              initialValues[fieldId] = prefillData.supervisor_name;
+            }
+            if (prefillData.client_name && fieldLabel.includes('client')) {
+              initialValues[fieldId] = prefillData.client_name;
+            }
+            if (prefillData.date_of_birth && (fieldLabel.includes('dob') || fieldLabel.includes('date of birth'))) {
+              initialValues[fieldId] = prefillData.date_of_birth;
+            }
+            if (prefillData.date && fieldLabel.includes('date') && !fieldLabel.includes('birth')) {
+              initialValues[fieldId] = prefillData.date;
+            }
+            if (prefillData.email && fieldLabel.includes('email')) {
+              initialValues[fieldId] = prefillData.email;
+            }
+            if (prefillData.phone && fieldLabel.includes('phone')) {
+              initialValues[fieldId] = prefillData.phone;
+            }
+            if (prefillData.address && fieldLabel.includes('address')) {
+              initialValues[fieldId] = prefillData.address;
+            }
+            if (prefillData.nhs_number && fieldLabel.includes('nhs')) {
+              initialValues[fieldId] = prefillData.nhs_number;
+            }
+            
+            if (prefillData[fieldId]) {
+              initialValues[fieldId] = prefillData[fieldId];
+            }
+          });
         });
-      });
-      
-      setFormValues(initialValues);
-      setInitialized(true);
-    }
-  }, [template, prefillData, initialized]);
+        
+        setFormValues(initialValues);
+        setInitialized(true);
+      }
+    };
+    
+    loadDraft();
+  }, [template, prefillData, initialized, contextData]);
+
+  const [existingSubmissionId, setExistingSubmissionId] = React.useState(null);
 
   const submitMutation = useMutation({
     mutationFn: async (data) => {
+      if (existingSubmissionId) {
+        return base44.entities.FormSubmission.update(existingSubmissionId, data);
+      }
       return base44.entities.FormSubmission.create(data);
     },
     onSuccess: (result) => {
@@ -91,8 +117,51 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
     }
   });
 
+  const saveDraftMutation = useMutation({
+    mutationFn: async (data) => {
+      if (existingSubmissionId) {
+        return base44.entities.FormSubmission.update(existingSubmissionId, data);
+      }
+      return base44.entities.FormSubmission.create(data);
+    },
+    onSuccess: (result) => {
+      setExistingSubmissionId(result.id);
+      queryClient.invalidateQueries({ queryKey: ['form-submissions'] });
+      toast.success("Draft Saved", "Your progress has been saved");
+    },
+    onError: (error) => {
+      console.error("Draft save error:", error);
+      toast.error("Save Failed", "Could not save draft");
+    }
+  });
+
+  const calculateProgress = () => {
+    const allFields = template.sections.flatMap(s => s.fields || []);
+    const filledFields = allFields.filter(f => 
+      formValues[f.field_id] !== undefined && 
+      formValues[f.field_id] !== "" && 
+      formValues[f.field_id] !== null
+    );
+    return allFields.length > 0 ? Math.round((filledFields.length / allFields.length) * 100) : 0;
+  };
+
+  const handleSaveDraft = () => {
+    const submission = {
+      form_template_id: template.id,
+      form_name: template.form_name,
+      submitted_date: new Date().toISOString(),
+      client_id: clientId || contextData?.subject_client_id || null,
+      staff_id: contextData?.subject_staff_id || null,
+      staff_task_id: contextData?.staff_task_id || null,
+      form_data: formValues,
+      status: "draft",
+      progress_percentage: calculateProgress()
+    };
+
+    saveDraftMutation.mutate(submission);
+  };
+
   const handleSubmit = async () => {
-    // Validate required fields
     const allFields = template.sections.flatMap(s => s.fields || []);
     const missingRequired = allFields.filter(f => 
       f.required && !formValues[f.field_id] && formValues[f.field_id] !== false
@@ -111,7 +180,8 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
       staff_id: contextData?.subject_staff_id || null,
       staff_task_id: contextData?.staff_task_id || null,
       form_data: formValues,
-      status: template.requires_approval ? "submitted" : "approved"
+      status: template.requires_approval ? "submitted" : "approved",
+      progress_percentage: 100
     };
 
     submitMutation.mutate(submission);
@@ -415,6 +485,20 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
           </div>
         )}
 
+        {/* Progress Bar */}
+        <div className="mb-6 p-4 bg-blue-50 rounded-lg">
+          <div className="flex items-center justify-between mb-2">
+            <span className="text-sm font-medium text-blue-900">Form Progress</span>
+            <span className="text-sm font-bold text-blue-900">{calculateProgress()}%</span>
+          </div>
+          <Progress value={calculateProgress()} className="h-2" />
+          <p className="text-xs text-blue-700 mt-2">
+            {template.sections.flatMap(s => s.fields).filter(f => 
+              formValues[f.field_id] !== undefined && formValues[f.field_id] !== "" && formValues[f.field_id] !== null
+            ).length} of {template.sections.flatMap(s => s.fields).length} questions answered
+          </p>
+        </div>
+
         {/* Active Section Fields */}
         <div className="space-y-6">
           <h3 className="text-xl font-semibold mb-4">
@@ -438,13 +522,29 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
 
         {/* Navigation */}
         <div className="flex justify-between mt-8 pt-6 border-t">
-          <Button
-            variant="outline"
-            onClick={() => setActiveSection(Math.max(0, activeSection - 1))}
-            disabled={activeSection === 0}
-          >
-            Previous
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => setActiveSection(Math.max(0, activeSection - 1))}
+              disabled={activeSection === 0}
+            >
+              Previous
+            </Button>
+            <Button
+              variant="outline"
+              onClick={handleSaveDraft}
+              disabled={saveDraftMutation.isPending || submitted}
+            >
+              {saveDraftMutation.isPending ? (
+                <>
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  Saving...
+                </>
+              ) : (
+                "Save Draft"
+              )}
+            </Button>
+          </div>
           {activeSection < template.sections.length - 1 ? (
             <Button onClick={() => setActiveSection(activeSection + 1)}>
               Next Section

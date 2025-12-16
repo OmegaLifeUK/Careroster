@@ -24,6 +24,7 @@ import {
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 import StaffTaskFormExecutor from "./StaffTaskFormExecutor";
+import TaskProgressBar from "./TaskProgressBar";
 
 const TASK_TYPE_CONFIG = {
   supervision: { label: "Supervision", icon: Users, color: "bg-blue-100 text-blue-700" },
@@ -250,6 +251,11 @@ export default function StaffTaskManager() {
                             </span>
                           )}
                         </div>
+                        {task.form_submission_id && task.status === 'in_progress' && (
+                          <div className="mt-2">
+                            <TaskProgressBar taskId={task.id} />
+                          </div>
+                        )}
                         <div className="flex items-center gap-2 mt-2">
                           <Badge className={typeConfig.color}>{typeConfig.label}</Badge>
                           <Badge className={PRIORITY_COLORS[task.priority]}>{task.priority}</Badge>
