@@ -13,7 +13,8 @@ import {
   CheckCircle,
   XCircle,
   Settings,
-  Download
+  Download,
+  Sparkles
 } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -30,6 +31,8 @@ import SmartSuggestionsWidget from "../components/dashboard/SmartSuggestionsWidg
 import AlertBanner from "../components/alerts/AlertBanner";
 import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
 import AutoScheduleHelper from "../components/schedule/AutoScheduleHelper";
+import CareCopilot from "../components/ai/CareCopilot";
+import IntelligentFeed from "../components/ai/IntelligentFeed";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const DEFAULT_PREFERENCES = {
@@ -38,13 +41,15 @@ const DEFAULT_PREFERENCES = {
   quickActions: true,
   recentActivity: true,
   smartSuggestions: true,
+  intelligentFeed: true,
 };
 
-const DEFAULT_WIDGET_ORDER = ['smartSuggestions', 'statsCards', 'todayShifts', 'quickActions', 'recentActivity'];
+const DEFAULT_WIDGET_ORDER = ['intelligentFeed', 'smartSuggestions', 'statsCards', 'todayShifts', 'quickActions', 'recentActivity'];
 
 export default function Dashboard() {
   const [user, setUser] = useState(null);
   const [showCustomizer, setShowCustomizer] = useState(false);
+  const [showCopilot, setShowCopilot] = useState(false);
   const [modulePreferences, setModulePreferences] = useState(DEFAULT_PREFERENCES);
   const [widgetOrder, setWidgetOrder] = useState(DEFAULT_WIDGET_ORDER);
 
@@ -171,27 +176,35 @@ export default function Dashboard() {
       />
 
       <div className="max-w-7xl mx-auto">
-        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-6 gap-3">
+        <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4">
           <div>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Dashboard</h1>
-            <p className="text-sm text-gray-500">Overview of your care management system</p>
+            <h1 className="text-3xl font-bold text-gray-900 mb-2">Dashboard</h1>
+            <p className="text-gray-500">Overview of your care management system</p>
           </div>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => setShowCustomizer(true)}
-            className="h-8 text-xs"
-          >
-            <Settings className="w-3 h-3 mr-1.5" />
-            Customize
-          </Button>
+          <div className="flex gap-2">
+            <Button
+              onClick={() => setShowCopilot(true)}
+              className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+            >
+              <Sparkles className="w-4 h-4 mr-2" />
+              Ask Copilot
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setShowCustomizer(true)}
+            >
+              <Settings className="w-4 h-4 mr-2" />
+              Customize
+            </Button>
+          </div>
         </div>
 
         {/* Alert Banner */}
         <AlertBanner alerts={alerts} />
         
         {/* Automation Helper */}
-        <div className="mb-4">
+        <div className="mb-6">
           <AutoScheduleHelper />
         </div>
 
@@ -209,8 +222,12 @@ export default function Dashboard() {
                       >
                         <div 
                           {...provided.dragHandleProps}
-                          className={`cursor-grab active:cursor-grabbing mb-4 ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                          className={`cursor-grab active:cursor-grabbing mb-8 ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
                         >
+                          {widgetId === 'intelligentFeed' && (
+                            <IntelligentFeed limit={10} />
+                          )}
+
                           {widgetId === 'smartSuggestions' && (
                             <SmartSuggestionsWidget
                               shifts={shifts}
@@ -221,7 +238,7 @@ export default function Dashboard() {
                           )}
 
                           {widgetId === 'statsCards' && (
-                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+                            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
                               <StatsCard
                                 title="Active Carers"
                                 value={activeCarers}
@@ -294,6 +311,13 @@ export default function Dashboard() {
             currentPreferences={modulePreferences}
             onSave={handleSavePreferences}
             onClose={() => setShowCustomizer(false)}
+          />
+        )}
+
+        {showCopilot && (
+          <CareCopilot 
+            open={showCopilot} 
+            onClose={() => setShowCopilot(false)} 
           />
         )}
       </div>
