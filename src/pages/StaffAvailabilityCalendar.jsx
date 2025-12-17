@@ -2,6 +2,8 @@ import React, { useState, useMemo } from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { 
@@ -18,6 +20,7 @@ import {
 import { format, startOfWeek, addDays, addWeeks, subWeeks, isSameDay, parseISO } from "date-fns";
 import WorkingHoursSetup from "../components/availability/WorkingHoursSetup";
 import UnavailabilityDialog from "../components/availability/UnavailabilityDialog";
+import { useToast } from "@/components/ui/toast";
 
 const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
 
@@ -28,6 +31,8 @@ export default function StaffAvailabilityCalendar() {
   const [showWorkingHoursSetup, setShowWorkingHoursSetup] = useState(false);
   const [showUnavailabilityDialog, setShowUnavailabilityDialog] = useState(false);
   const [editingAvailability, setEditingAvailability] = useState(null);
+  const [selectedDate, setSelectedDate] = useState(null);
+  const [showQuickAddDialog, setShowQuickAddDialog] = useState(false);
 
   const queryClient = useQueryClient();
 
@@ -165,8 +170,16 @@ export default function StaffAvailabilityCalendar() {
     const isToday = isSameDay(day, new Date());
     const hasConflict = visits.length > 0 && unavailability.length > 0;
 
+    const handleCellClick = () => {
+      setSelectedDate(day);
+      setShowQuickAddDialog(true);
+    };
+
     return (
-      <div className={`min-h-[150px] border-r border-b p-2 ${isToday ? 'bg-blue-50' : 'bg-white'} ${hasConflict ? 'ring-2 ring-red-500' : ''}`}>
+      <div 
+        onClick={handleCellClick}
+        className={`min-h-[150px] border-r border-b p-2 cursor-pointer hover:bg-gray-50 transition-colors ${isToday ? 'bg-blue-50' : 'bg-white'} ${hasConflict ? 'ring-2 ring-red-500' : ''}`}
+      >
         <div className="flex items-center justify-between mb-2">
           <span className={`text-sm font-semibold ${isToday ? 'text-blue-600' : 'text-gray-700'}`}>
             {format(day, 'd')}
@@ -435,7 +448,129 @@ export default function StaffAvailabilityCalendar() {
             }}
           />
         )}
+
+        {showQuickAddDialog && currentStaffMember && selectedDate && (
+          <QuickAddAvailabilityDialog
+            staffId={currentStaffMember.id}
+            date={selectedDate}
+            onClose={() => {
+              setShowQuickAddDialog(false);
+              setSelectedDate(null);
+            }}
+          />
+        )}
       </div>
+    </div>
+  );
+}
+
+function QuickAddAvailabilityDialog({ staffId, date, onClose }) {
+  const [type, setType] = useState('working');
+  const [startTime, setStartTime] = useState('09:00');
+  const [endTime, setEndTime] = useState('17:00');
+  const [reason, setReason] = useState('');
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
+
+  const createMutation = useMutation({
+    mutationFn: (data) => base44.entities.CarerAvailability.create(data),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff-availability'] });
+      toast.success('Availability added');
+      onClose();
+    },
+  });
+
+  const handleSave = () => {
+    const data = {
+      carer_id: staffId,
+      availability_type: type === 'working' ? 'working_hours' : 'unavailable',
+      specific_date: format(date, 'yyyy-MM-dd'),
+      is_recurring: false,
+    };
+
+    if (type === 'working') {
+      data.start_time = startTime;
+      data.end_time = endTime;
+    } else {
+      data.reason = reason || 'Unavailable';
+    }
+
+    createMutation.mutate(data);
+  };
+
+  return (
+    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
+      <Card className="w-full max-w-md">
+        <CardHeader className="border-b">
+          <div className="flex items-center justify-between">
+            <CardTitle>Add Availability - {format(date, 'MMM d, yyyy')}</CardTitle>
+            <Button variant="ghost" size="icon" onClick={onClose}>
+              <X className="w-4 h-4" />
+            </Button>
+          </div>
+        </CardHeader>
+        <CardContent className="p-6 space-y-4">
+          <div>
+            <Label>Type</Label>
+            <div className="flex gap-2 mt-2">
+              <Button
+                variant={type === 'working' ? 'default' : 'outline'}
+                onClick={() => setType('working')}
+                className="flex-1"
+              >
+                Working
+              </Button>
+              <Button
+                variant={type === 'unavailable' ? 'default' : 'outline'}
+                onClick={() => setType('unavailable')}
+                className="flex-1"
+              >
+                Unavailable
+              </Button>
+            </div>
+          </div>
+
+          {type === 'working' ? (
+            <div className="space-y-3">
+              <div>
+                <Label>Start Time</Label>
+                <Input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                />
+              </div>
+              <div>
+                <Label>End Time</Label>
+                <Input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                />
+              </div>
+            </div>
+          ) : (
+            <div>
+              <Label>Reason</Label>
+              <Input
+                placeholder="Reason for unavailability"
+                value={reason}
+                onChange={(e) => setReason(e.target.value)}
+              />
+            </div>
+          )}
+
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button variant="outline" onClick={onClose}>
+              Cancel
+            </Button>
+            <Button onClick={handleSave}>
+              Add
+            </Button>
+          </div>
+        </CardContent>
+      </Card>
     </div>
   );
 }

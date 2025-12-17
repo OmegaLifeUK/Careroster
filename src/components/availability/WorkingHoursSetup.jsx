@@ -31,6 +31,7 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
     },
   });
 
+  const [schedulePattern, setSchedulePattern] = useState('weekly');
   const [workingDays, setWorkingDays] = useState(() => {
     const days = {};
     DAYS.forEach(day => {
@@ -90,26 +91,62 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
     try {
       const promises = [];
 
-      for (const day of DAYS) {
-        const dayData = workingDays[day.value];
-        
-        if (dayData.enabled) {
-          const data = {
-            carer_id: staffId,
-            availability_type: 'working_hours',
-            day_of_week: day.value,
-            start_time: dayData.startTime,
-            end_time: dayData.endTime,
-            is_recurring: true,
-          };
+      if (schedulePattern === 'alternate_weeks') {
+        // Create entries for both week 1 and week 2
+        for (const day of DAYS) {
+          const dayData = workingDays[day.value];
+          
+          if (dayData.enabled) {
+            // Week 1
+            const week1Data = {
+              carer_id: staffId,
+              availability_type: 'working_hours',
+              day_of_week: day.value,
+              start_time: dayData.startTime,
+              end_time: dayData.endTime,
+              is_recurring: true,
+              schedule_pattern: 'alternate_week_1',
+            };
 
-          if (dayData.id) {
-            promises.push(updateMutation.mutateAsync({ id: dayData.id, data }));
-          } else {
-            promises.push(createMutation.mutateAsync(data));
+            // Week 2
+            const week2Data = {
+              carer_id: staffId,
+              availability_type: 'working_hours',
+              day_of_week: day.value,
+              start_time: dayData.startTime,
+              end_time: dayData.endTime,
+              is_recurring: true,
+              schedule_pattern: 'alternate_week_2',
+            };
+
+            promises.push(createMutation.mutateAsync(week1Data));
+            promises.push(createMutation.mutateAsync(week2Data));
           }
-        } else if (dayData.id) {
-          promises.push(deleteMutation.mutateAsync(dayData.id));
+        }
+      } else {
+        // Standard weekly pattern
+        for (const day of DAYS) {
+          const dayData = workingDays[day.value];
+          
+          if (dayData.enabled) {
+            const data = {
+              carer_id: staffId,
+              availability_type: 'working_hours',
+              day_of_week: day.value,
+              start_time: dayData.startTime,
+              end_time: dayData.endTime,
+              is_recurring: true,
+              schedule_pattern: 'weekly',
+            };
+
+            if (dayData.id) {
+              promises.push(updateMutation.mutateAsync({ id: dayData.id, data }));
+            } else {
+              promises.push(createMutation.mutateAsync(data));
+            }
+          } else if (dayData.id) {
+            promises.push(deleteMutation.mutateAsync(dayData.id));
+          }
         }
       }
 
@@ -151,6 +188,32 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
+          {/* Schedule Pattern Selection */}
+          <div className="space-y-2">
+            <Label className="font-semibold">Schedule Pattern</Label>
+            <div className="flex gap-2">
+              <Button
+                variant={schedulePattern === 'weekly' ? 'default' : 'outline'}
+                onClick={() => setSchedulePattern('weekly')}
+                className="flex-1"
+              >
+                Every Week
+              </Button>
+              <Button
+                variant={schedulePattern === 'alternate_weeks' ? 'default' : 'outline'}
+                onClick={() => setSchedulePattern('alternate_weeks')}
+                className="flex-1"
+              >
+                Alternate Weeks
+              </Button>
+            </div>
+            {schedulePattern === 'alternate_weeks' && (
+              <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
+                This will apply the same hours to both weeks. You can edit specific weeks later.
+              </p>
+            )}
+          </div>
+
           {/* Apply to All Days */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
