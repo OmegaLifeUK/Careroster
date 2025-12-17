@@ -43,14 +43,9 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
 
     // Check if on leave
     const onLeave = approvedLeave.some(leave => {
-      if (!leave.start_date || !leave.end_date) return false;
-      try {
-        const start = parseISO(leave.start_date);
-        const end = parseISO(leave.end_date);
-        return isWithinInterval(date, { start, end });
-      } catch {
-        return false;
-      }
+      const start = parseISO(leave.start_date);
+      const end = parseISO(leave.end_date);
+      return isWithinInterval(date, { start, end });
     });
     if (onLeave) return { status: 'leave', label: 'On Leave', color: 'bg-purple-500' };
 
@@ -58,25 +53,35 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
     const isUnavailable = unavailability.some(u => {
       if (u.specific_date === dateStr) return true;
       if (u.date_range_start && u.date_range_end) {
-        try {
-          const start = parseISO(u.date_range_start);
-          const end = parseISO(u.date_range_end);
-          return isWithinInterval(date, { start, end });
-        } catch {
-          return false;
-        }
+        const start = parseISO(u.date_range_start);
+        const end = parseISO(u.date_range_end);
+        return isWithinInterval(date, { start, end });
       }
       return false;
     });
     if (isUnavailable) return { status: 'unavailable', label: 'Unavailable', color: 'bg-orange-500' };
 
-    // Check working hours - handle alternate weeks
+    // Check working hours - handle all patterns
     const hasAlternateWeeks = workingHours.some(w => 
       w.schedule_pattern === 'alternate_week_1' || w.schedule_pattern === 'alternate_week_2'
     );
     
+    const hasSpecificDates = workingHours.some(w => w.schedule_pattern === 'specific_date');
+    
     let hours = null;
-    if (hasAlternateWeeks) {
+    
+    // Check specific dates first
+    if (hasSpecificDates) {
+      const specificDateMatch = workingHours.find(w => 
+        w.schedule_pattern === 'specific_date' && w.specific_date === dateStr
+      );
+      if (specificDateMatch) {
+        hours = specificDateMatch;
+      }
+    }
+    
+    // If no specific date match, check recurring patterns
+    if (!hours && hasAlternateWeeks) {
       // Determine which week pattern this date falls into
       const weekNumber = getWeek(date, { weekStartsOn: 1 });
       const isWeek1 = weekNumber % 2 === 1;
@@ -85,9 +90,11 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
       hours = workingHours.find(w => 
         w.day_of_week === dayOfWeek && w.schedule_pattern === targetPattern
       );
-    } else {
-      // Standard weekly pattern or specific dates
-      hours = workingHours.find(w => w.day_of_week === dayOfWeek);
+    } else if (!hours) {
+      // Standard weekly pattern
+      hours = workingHours.find(w => 
+        w.day_of_week === dayOfWeek && w.schedule_pattern === 'weekly'
+      );
     }
     
     if (hours) {

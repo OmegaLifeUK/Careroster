@@ -279,7 +279,8 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const getNextMonthDates = () => {
     const dates = [];
     const today = new Date();
-    for (let i = 0; i < 30; i++) {
+    // Show next 60 days for better coverage
+    for (let i = 0; i < 60; i++) {
       const date = addDays(today, i);
       dates.push({
         date: format(date, 'yyyy-MM-dd'),
@@ -358,7 +359,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                 <SelectContent>
                   <SelectItem value="weekly">Standard Weekly Pattern</SelectItem>
                   <SelectItem value="alternate_weeks">Alternate Weeks</SelectItem>
-                  <SelectItem value="specific_dates">Choose Specific Dates (30 days)</SelectItem>
+                  <SelectItem value="specific_dates">Choose Specific Dates (next 60 days)</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -399,13 +400,13 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
           <div>
             <div className="mb-4">
               <p className="text-sm text-gray-600 mb-3">
-                Select the specific dates over the next 30 days when this carer is available to work:
+                Select the specific dates over the next 60 days when this carer is available to work:
               </p>
               <Badge variant="outline" className="text-blue-600">
                 {specificDates.length} dates selected
               </Badge>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-2 max-h-96 overflow-y-auto p-2">
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-2">
               {getNextMonthDates().map(({ date, dayOfWeek, label }) => {
                 const isSelected = specificDates.includes(date);
                 const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
