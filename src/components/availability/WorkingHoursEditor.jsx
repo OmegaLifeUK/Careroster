@@ -25,17 +25,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
-  if (!carerId) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          No carer selected
-        </CardContent>
-      </Card>
-    );
-  }
-
-  const workingHours = availability.filter(a => a.availability_type === 'working_hours');
+  const workingHours = Array.isArray(availability) ? availability.filter(a => a?.availability_type === 'working_hours') : [];
   
   const [scheduleType, setScheduleType] = useState('weekly');
   const [selectedWeek, setSelectedWeek] = useState('week1');
@@ -47,7 +37,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     const defaults = {};
     DAYS_OF_WEEK.forEach(day => {
       const existing = workingHours.find(w => 
-        w.day_of_week === day.value && 
+        w?.day_of_week === day.value && 
         (!pattern || w.schedule_pattern === pattern)
       );
       defaults[day.value] = existing ? {
@@ -67,6 +57,16 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
 
   const [hours, setHours] = useState(() => getDefaultHours());
   const [hasChanges, setHasChanges] = useState(false);
+
+  if (!carerId) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No carer selected
+        </CardContent>
+      </Card>
+    );
+  }
 
   useEffect(() => {
     const hasWeek1 = workingHours.some(w => w.schedule_pattern === 'alternate_week_1');
