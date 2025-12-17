@@ -302,8 +302,13 @@ export default function IntelligentFeed({ limit = 10 }) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
+                          console.log('Button clicked, action:', item.action);
                           if (item.action.clientId) {
                             // Navigate to client detail page with specific tab
+                            console.log('Navigating with state:', { 
+                              selectedClientId: item.action.clientId, 
+                              activeTab: item.action.tab 
+                            });
                             navigate(createPageUrl('Clients'), { 
                               state: { 
                                 selectedClientId: item.action.clientId, 
