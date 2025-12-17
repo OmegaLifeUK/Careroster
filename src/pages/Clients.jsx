@@ -68,14 +68,16 @@ export default function Clients() {
 
   // Handle navigation from Intelligent Feed
   React.useEffect(() => {
-    if (location.state?.selectedClientId && clients.length > 0) {
-      const client = clients.find(c => c.id === location.state.selectedClientId);
-      if (client) {
-        setSelectedClient(client);
-        setActiveTab(location.state.activeTab || 'care_plan');
+    if (location.state?.selectedClientId) {
+      if (clients.length > 0) {
+        const client = clients.find(c => c.id === location.state.selectedClientId);
+        if (client) {
+          setSelectedClient(client);
+          setActiveTab(location.state.activeTab || 'care_plan');
+        }
       }
     }
-  }, [location.key, clients]);
+  }, [location.state?.selectedClientId, location.state?.activeTab, clients]);
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
