@@ -25,6 +25,16 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  if (!carerId) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No carer selected
+        </CardContent>
+      </Card>
+    );
+  }
+
   const workingHours = Array.isArray(availability) ? availability.filter(a => a?.availability_type === 'working_hours') : [];
   
   const [scheduleType, setScheduleType] = useState('weekly');
@@ -59,7 +69,6 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
-    if (!carerId) return;
     
     const hasWeek1 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_1');
     const hasWeek2 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_2');
@@ -86,7 +95,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     }
     
     setHasChanges(false);
-  }, [carerId, availability]);
+  }, [availability]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
@@ -298,16 +307,6 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     );
     setHasChanges(true);
   };
-
-  if (!carerId) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          No carer selected
-        </CardContent>
-      </Card>
-    );
-  }
 
   return (
     <Card>

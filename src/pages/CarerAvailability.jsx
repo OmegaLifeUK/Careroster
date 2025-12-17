@@ -178,6 +178,12 @@ export default function CarerAvailability() {
                   <p className="text-sm">Choose a carer from the list to manage their availability</p>
                 </div>
               </Card>
+            ) : !selectedCarer ? (
+              <Card>
+                <CardContent className="p-8 text-center text-gray-500">
+                  <p>Loading carer data...</p>
+                </CardContent>
+              </Card>
             ) : (
               <div className="space-y-6">
                 {/* Carer Header */}
