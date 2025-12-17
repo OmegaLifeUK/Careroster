@@ -33,8 +33,10 @@ import AINewClientImporter from "../components/clients/AINewClientImporter";
 import ClientProgressReport from "../components/clients/ClientProgressReport";
 import AssessmentMonitor from "../components/workflow/AssessmentMonitor";
 import AIClientAnalyzer from "../components/ai/AIClientAnalyzer";
+import { useLocation } from "react-router-dom";
 
 export default function Clients() {
+  const location = useLocation();
   const [searchQuery, setSearchQuery] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
   const [showDialog, setShowDialog] = useState(false);
@@ -63,6 +65,19 @@ export default function Clients() {
       return Array.isArray(data) ? data : [];
     },
   });
+
+  // Handle navigation from Intelligent Feed
+  React.useEffect(() => {
+    if (location.state?.selectedClientId && clients.length > 0) {
+      const client = clients.find(c => c.id === location.state.selectedClientId);
+      if (client) {
+        setSelectedClient(client);
+        if (location.state.activeTab) {
+          setActiveTab(location.state.activeTab);
+        }
+      }
+    }
+  }, [location.state, clients]);
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
