@@ -47,7 +47,7 @@ export default function IntelligentFeed({ limit = 10 }) {
       const today = new Date();
 
       // Fetch all necessary data
-      const [carePlans, dols, dnacpr, tasks, incidents, training, shifts, visits] = await Promise.all([
+      const [carePlans, dols, dnacpr, tasks, incidents, training, shifts, visits, clients] = await Promise.all([
         base44.entities.CarePlan.list(),
         base44.entities.DoLS.list(),
         base44.entities.DNACPR.list(),
@@ -55,7 +55,8 @@ export default function IntelligentFeed({ limit = 10 }) {
         base44.entities.Incident.list(),
         base44.entities.TrainingAssignment.list(),
         base44.entities.Shift.list(),
-        base44.entities.Visit.list()
+        base44.entities.Visit.list(),
+        base44.entities.Client.list()
       ]);
 
       // Critical: DoLS expiring within 30 days
@@ -64,15 +65,17 @@ export default function IntelligentFeed({ limit = 10 }) {
           const expiryDate = parseISO(d.authorisation_end_date);
           const daysUntil = differenceInDays(expiryDate, today);
           if (daysUntil <= 30 && daysUntil >= 0) {
+            const client = clients.find(c => c.id === d.client_id);
             items.push({
               id: `dols-${d.id}`,
               priority: daysUntil <= 7 ? 'critical' : 'high',
               type: 'dols_expiry',
               title: `DoLS Authorisation Expiring Soon`,
-              description: `DoLS for client expires in ${daysUntil} days (${format(expiryDate, 'MMM d, yyyy')})`,
+              description: `DoLS for ${client?.full_name || 'client'} expires in ${daysUntil} days (${format(expiryDate, 'MMM d, yyyy')})`,
               daysUntil,
               icon: Shield,
-              action: { label: 'Review DoLS', url: `/clients?tab=dols` },
+              clientId: d.client_id,
+              action: { label: 'Review DoLS', clientId: d.client_id, tab: 'dols' },
               timestamp: expiryDate
             });
           }
@@ -85,15 +88,17 @@ export default function IntelligentFeed({ limit = 10 }) {
           const reviewDate = parseISO(d.review_date);
           const daysUntil = differenceInDays(reviewDate, today);
           if (daysUntil <= 14 && daysUntil >= -7) {
+            const client = clients.find(c => c.id === d.client_id);
             items.push({
               id: `dnacpr-${d.id}`,
               priority: daysUntil <= 0 ? 'critical' : 'high',
               type: 'dnacpr_review',
               title: daysUntil <= 0 ? 'DNACPR Review Overdue' : 'DNACPR Review Due Soon',
-              description: `DNACPR review ${daysUntil <= 0 ? 'overdue by ' + Math.abs(daysUntil) : 'due in ' + daysUntil} days`,
+              description: `${client?.full_name || 'Client'} DNACPR review ${daysUntil <= 0 ? 'overdue by ' + Math.abs(daysUntil) : 'due in ' + daysUntil} days`,
               daysUntil,
               icon: AlertTriangle,
-              action: { label: 'Review DNACPR', url: `/clients?tab=dnacpr` },
+              clientId: d.client_id,
+              action: { label: 'Review DNACPR', clientId: d.client_id, tab: 'dnacpr' },
               timestamp: reviewDate
             });
           }
@@ -106,15 +111,17 @@ export default function IntelligentFeed({ limit = 10 }) {
           const reviewDate = parseISO(cp.review_date);
           const daysOverdue = differenceInDays(today, reviewDate);
           if (daysOverdue > 0) {
+            const client = clients.find(c => c.id === cp.client_id);
             items.push({
               id: `careplan-${cp.id}`,
               priority: daysOverdue > 30 ? 'high' : 'medium',
               type: 'careplan_review',
               title: 'Care Plan Review Overdue',
-              description: `Care plan review overdue by ${daysOverdue} days`,
+              description: `${client?.full_name || 'Client'} care plan review overdue by ${daysOverdue} days`,
               daysOverdue,
               icon: FileText,
-              action: { label: 'Review Plan', url: `/clients?tab=care_plan` },
+              clientId: cp.client_id,
+              action: { label: 'Review Plan', clientId: cp.client_id, tab: 'care_plan' },
               timestamp: reviewDate
             });
           }
@@ -127,15 +134,17 @@ export default function IntelligentFeed({ limit = 10 }) {
           const shiftDate = parseISO(s.date);
           const hoursUntil = differenceInDays(shiftDate, today) * 24;
           if (hoursUntil <= 48 && hoursUntil >= 0) {
+            const client = clients.find(c => c.id === s.client_id);
             items.push({
               id: `shift-${s.id}`,
               priority: hoursUntil <= 24 ? 'high' : 'medium',
               type: 'unassigned_shift',
               title: 'Unassigned Shift',
-              description: `Shift in ${Math.floor(hoursUntil)} hours needs assignment`,
+              description: `${client?.full_name || 'Client'} shift in ${Math.floor(hoursUntil)} hours needs assignment`,
               hoursUntil,
               icon: Calendar,
-              action: { label: 'Assign Staff', url: createPageUrl('Schedule') },
+              shiftId: s.id,
+              action: { label: 'Assign Staff', url: createPageUrl('Schedule'), shiftId: s.id },
               timestamp: shiftDate
             });
           }
@@ -292,7 +301,19 @@ export default function IntelligentFeed({ limit = 10 }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => navigate(item.action.url)}
+                        onClick={() => {
+                          if (item.action.clientId) {
+                            // Navigate to client detail page with specific tab
+                            navigate(createPageUrl('Clients'), { 
+                              state: { 
+                                selectedClientId: item.action.clientId, 
+                                activeTab: item.action.tab 
+                              } 
+                            });
+                          } else {
+                            navigate(item.action.url);
+                          }
+                        }}
                         className="text-xs h-7"
                       >
                         {item.action.label}
