@@ -72,16 +72,16 @@ export default function Clients() {
     if (navState?.selectedClientId && navState?.fromIntelligentFeed && clients.length > 0) {
       const client = clients.find(c => c.id === navState.selectedClientId);
       if (client) {
-        console.log("Navigating to client from Intelligent Feed:", client.full_name, "tab:", navState.activeTab);
+        console.log("[Clients Page] Setting client from Intelligent Feed:", client.full_name, "tab:", navState.activeTab);
         setSelectedClient(client);
         setActiveTab(navState.activeTab || 'care_plan');
         // Clear the navigation state to prevent re-triggering
         window.history.replaceState({}, document.title);
       } else {
-        console.error("Client not found:", navState.selectedClientId);
+        console.error("[Clients Page] Client not found:", navState.selectedClientId);
       }
     }
-  }, [location.key, clients]);
+  }, [location.state?.selectedClientId, location.state?.fromIntelligentFeed, location.state?.activeTab, clients]);
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),

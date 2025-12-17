@@ -59,6 +59,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const [hasChanges, setHasChanges] = useState(false);
 
   useEffect(() => {
+    if (!carerId) return;
     
     const hasWeek1 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_1');
     const hasWeek2 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_2');
@@ -85,7 +86,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     }
     
     setHasChanges(false);
-  }, [availability]);
+  }, [carerId, availability]);
 
   const saveMutation = useMutation({
     mutationFn: async () => {
