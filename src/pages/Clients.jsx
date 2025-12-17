@@ -68,19 +68,20 @@ export default function Clients() {
 
   // Handle navigation from Intelligent Feed
   React.useEffect(() => {
-    if (location.state?.selectedClientId && location.state?.fromIntelligentFeed) {
-      if (clients.length > 0) {
-        const client = clients.find(c => c.id === location.state.selectedClientId);
-        if (client) {
-          console.log("Navigating to client from Intelligent Feed:", client.full_name, "tab:", location.state.activeTab);
-          setSelectedClient(client);
-          setActiveTab(location.state.activeTab || 'care_plan');
-        } else {
-          console.error("Client not found:", location.state.selectedClientId);
-        }
+    const navState = location.state;
+    if (navState?.selectedClientId && navState?.fromIntelligentFeed && clients.length > 0) {
+      const client = clients.find(c => c.id === navState.selectedClientId);
+      if (client) {
+        console.log("Navigating to client from Intelligent Feed:", client.full_name, "tab:", navState.activeTab);
+        setSelectedClient(client);
+        setActiveTab(navState.activeTab || 'care_plan');
+        // Clear the navigation state to prevent re-triggering
+        window.history.replaceState({}, document.title);
+      } else {
+        console.error("Client not found:", navState.selectedClientId);
       }
     }
-  }, [location.state, clients]);
+  }, [location.key, clients]);
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
