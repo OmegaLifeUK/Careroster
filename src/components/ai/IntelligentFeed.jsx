@@ -304,12 +304,12 @@ export default function IntelligentFeed({ limit = 10 }) {
                         onClick={() => {
                           if (item.action.clientId) {
                             // Navigate to client detail page with specific tab
-                            // Force replace to trigger state change even if already on Clients page
                             navigate(createPageUrl('Clients'), { 
                               state: { 
                                 selectedClientId: item.action.clientId, 
                                 activeTab: item.action.tab,
-                                timestamp: Date.now() // Force state change
+                                fromIntelligentFeed: true,
+                                timestamp: Date.now()
                               },
                               replace: false
                             });
