@@ -25,6 +25,16 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
+  if (!carerId) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No carer selected
+        </CardContent>
+      </Card>
+    );
+  }
+
   const workingHours = availability.filter(a => a.availability_type === 'working_hours');
   
   const [scheduleType, setScheduleType] = useState('weekly');
