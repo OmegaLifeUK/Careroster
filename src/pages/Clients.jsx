@@ -32,6 +32,7 @@ import AIDocumentImporter from "../components/clients/AIDocumentImporter";
 import AINewClientImporter from "../components/clients/AINewClientImporter";
 import ClientProgressReport from "../components/clients/ClientProgressReport";
 import AssessmentMonitor from "../components/workflow/AssessmentMonitor";
+import AIClientAnalyzer from "../components/ai/AIClientAnalyzer";
 
 export default function Clients() {
   const [searchQuery, setSearchQuery] = useState("");
@@ -236,6 +237,13 @@ export default function Clients() {
               Alerts
             </Button>
             <Button
+              variant={activeTab === "ai_insights" ? "default" : "ghost"}
+              onClick={() => setActiveTab("ai_insights")}
+              className="flex-shrink-0 bg-purple-50 hover:bg-purple-100"
+            >
+              AI Insights
+            </Button>
+            <Button
               variant={activeTab === "care_plan" ? "default" : "ghost"}
               onClick={() => setActiveTab("care_plan")}
               className="flex-shrink-0"
@@ -414,6 +422,10 @@ export default function Clients() {
 
           {activeTab === "alerts" && (
             <ClientAlertManager client={selectedClient} />
+          )}
+
+          {activeTab === "ai_insights" && (
+            <AIClientAnalyzer client={selectedClient} />
           )}
 
           {activeTab === "care_plan" && (
