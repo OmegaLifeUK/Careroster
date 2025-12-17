@@ -58,16 +58,6 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const [hours, setHours] = useState(() => getDefaultHours());
   const [hasChanges, setHasChanges] = useState(false);
 
-  if (!carerId) {
-    return (
-      <Card>
-        <CardContent className="p-8 text-center text-gray-500">
-          No carer selected
-        </CardContent>
-      </Card>
-    );
-  }
-
   useEffect(() => {
     if (!carerId) return;
     
@@ -308,6 +298,16 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     );
     setHasChanges(true);
   };
+
+  if (!carerId) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No carer selected
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>

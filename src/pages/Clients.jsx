@@ -68,7 +68,7 @@ export default function Clients() {
 
   // Handle navigation from Intelligent Feed
   React.useEffect(() => {
-    if (location.state?.selectedClientId && location.state?.timestamp) {
+    if (location.state?.selectedClientId && location.state?.timestamp && location.state?.fromIntelligentFeed) {
       if (clients.length > 0) {
         const client = clients.find(c => c.id === location.state.selectedClientId);
         if (client) {
