@@ -12,18 +12,30 @@ export default function CarerAvailabilitySummary({ availability = [], leaveReque
   const today = new Date();
   const nextWeek = addDays(today, 7);
 
-  // Count working days
-  const workingDays = workingHours.length;
-
-  // Calculate weekly hours
-  const weeklyHours = workingHours.reduce((total, wh) => {
-    if (wh.start_time && wh.end_time) {
-      const [startH, startM] = wh.start_time.split(':').map(Number);
-      const [endH, endM] = wh.end_time.split(':').map(Number);
-      return total + ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+  // Count unique working days (handle alternate weeks)
+  const hasAlternateWeeks = workingHours.some(wh => 
+    wh.schedule_pattern === 'alternate_week_1' || wh.schedule_pattern === 'alternate_week_2'
+  );
+  
+  const uniqueDays = new Set();
+  workingHours.forEach(wh => {
+    if (wh.day_of_week !== null && wh.day_of_week !== undefined) {
+      uniqueDays.add(wh.day_of_week);
     }
-    return total;
-  }, 0);
+  });
+  const workingDays = uniqueDays.size;
+
+  // Calculate weekly hours (for weekly pattern, or average for alternate weeks)
+  const weeklyHours = workingHours
+    .filter(wh => !hasAlternateWeeks || wh.schedule_pattern === 'weekly' || wh.schedule_pattern === 'alternate_week_1')
+    .reduce((total, wh) => {
+      if (wh.start_time && wh.end_time) {
+        const [startH, startM] = wh.start_time.split(':').map(Number);
+        const [endH, endM] = wh.end_time.split(':').map(Number);
+        return total + ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+      }
+      return total;
+    }, 0);
 
   // Count upcoming unavailability
   const upcomingUnavailable = unavailability.filter(u => {
