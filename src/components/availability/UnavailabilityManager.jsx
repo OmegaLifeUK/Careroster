@@ -32,11 +32,21 @@ export default function UnavailabilityManager({ carerId, availability = [], leav
     reason: ''
   });
 
-  const unavailability = availability.filter(a => 
-    a.availability_type === 'unavailable' || a.availability_type === 'day_off'
-  );
+  if (!carerId) {
+    return (
+      <Card>
+        <CardContent className="p-8 text-center text-gray-500">
+          No carer selected
+        </CardContent>
+      </Card>
+    );
+  }
 
-  const approvedLeave = leaveRequests.filter(l => l.status === 'approved');
+  const unavailability = Array.isArray(availability) ? availability.filter(a => 
+    a?.availability_type === 'unavailable' || a?.availability_type === 'day_off'
+  ) : [];
+
+  const approvedLeave = Array.isArray(leaveRequests) ? leaveRequests.filter(l => l?.status === 'approved') : [];
 
   const createMutation = useMutation({
     mutationFn: async (data) => {

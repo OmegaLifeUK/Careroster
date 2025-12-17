@@ -69,9 +69,11 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   }
 
   useEffect(() => {
-    const hasWeek1 = workingHours.some(w => w.schedule_pattern === 'alternate_week_1');
-    const hasWeek2 = workingHours.some(w => w.schedule_pattern === 'alternate_week_2');
-    const hasSpecific = workingHours.some(w => w.schedule_pattern === 'specific_date');
+    if (!carerId) return;
+    
+    const hasWeek1 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_1');
+    const hasWeek2 = workingHours.some(w => w?.schedule_pattern === 'alternate_week_2');
+    const hasSpecific = workingHours.some(w => w?.schedule_pattern === 'specific_date');
     
     if (hasWeek1 || hasWeek2) {
       setScheduleType('alternate_weeks');
@@ -85,7 +87,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
     } else if (hasSpecific) {
       setScheduleType('specific_dates');
       const dates = workingHours
-        .filter(w => w.schedule_pattern === 'specific_date' && w.specific_date)
+        .filter(w => w?.schedule_pattern === 'specific_date' && w?.specific_date)
         .map(w => w.specific_date);
       setSpecificDates(dates);
     } else {
