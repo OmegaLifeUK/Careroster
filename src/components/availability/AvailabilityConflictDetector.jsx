@@ -12,24 +12,27 @@ export default function AvailabilityConflictDetector({
   visits = []
 }) {
   const conflicts = useMemo(() => {
+    if (!carerId) return [];
+    
     const detected = [];
     
     // Combine shifts and visits
     const allShifts = [...shifts, ...visits].filter(s => 
-      (s.carer_id === carerId || s.staff_id === carerId || s.assigned_staff_id === carerId) &&
+      s && (s.carer_id === carerId || s.staff_id === carerId || s.assigned_staff_id === carerId) &&
       s.status !== 'cancelled'
     );
 
     // Check for shifts scheduled during leave
     leaveRequests
-      .filter(lr => lr.carer_id === carerId && lr.status === 'approved')
+      .filter(lr => lr && lr.carer_id === carerId && lr.status === 'approved')
       .forEach(leave => {
-        const leaveStart = parseISO(leave.start_date);
-        const leaveEnd = parseISO(leave.end_date);
-        
-        allShifts.forEach(shift => {
-          const shiftDate = parseISO(shift.date || shift.scheduled_start);
-          if (isWithinInterval(shiftDate, { start: leaveStart, end: leaveEnd })) {
+        try {
+          const leaveStart = parseISO(leave.start_date);
+          const leaveEnd = parseISO(leave.end_date);
+          
+          allShifts.forEach(shift => {
+            const shiftDate = parseISO(shift.date || shift.scheduled_start);
+            if (isWithinInterval(shiftDate, { start: leaveStart, end: leaveEnd })) {
             detected.push({
               type: 'shift_during_leave',
               severity: 'high',
@@ -38,20 +41,24 @@ export default function AvailabilityConflictDetector({
               leaveId: leave.id,
               date: format(shiftDate, 'MMM d, yyyy'),
               details: `${leave.leave_type} leave from ${format(leaveStart, 'MMM d')} to ${format(leaveEnd, 'MMM d')}`
-            });
-          }
-        });
+              });
+            }
+          });
+        } catch (err) {
+          console.error('Error checking leave conflicts:', err);
+        }
       });
 
     // Check for unavailability conflicts
     availability
-      .filter(a => a.carer_id === carerId && a.availability_type === 'unavailable')
+      .filter(a => a && a.carer_id === carerId && a.availability_type === 'unavailable')
       .forEach(unavail => {
-        if (unavail.specific_date) {
-          const unavailDate = unavail.specific_date;
-          allShifts.forEach(shift => {
-            const shiftDateStr = format(parseISO(shift.date || shift.scheduled_start), 'yyyy-MM-dd');
-            if (shiftDateStr === unavailDate) {
+        try {
+          if (unavail.specific_date) {
+            const unavailDate = unavail.specific_date;
+            allShifts.forEach(shift => {
+              const shiftDateStr = format(parseISO(shift.date || shift.scheduled_start), 'yyyy-MM-dd');
+              if (shiftDateStr === unavailDate) {
               detected.push({
                 type: 'shift_during_unavailability',
                 severity: 'medium',
@@ -59,27 +66,33 @@ export default function AvailabilityConflictDetector({
                 shiftId: shift.id,
                 date: format(parseISO(unavailDate), 'MMM d, yyyy'),
                 details: unavail.reason || 'Marked as unavailable'
-              });
-            }
-          });
+                });
+              }
+            });
+          }
+        } catch (err) {
+          console.error('Error checking unavailability conflicts:', err);
         }
       });
 
     // Check for working hours violations
     const workingHours = availability.filter(a => 
-      a.carer_id === carerId && a.availability_type === 'working_hours'
+      a && a.carer_id === carerId && a.availability_type === 'working_hours'
     );
     
     allShifts.forEach(shift => {
-      const shiftStart = shift.scheduled_start || shift.start_time;
-      const shiftDate = new Date(shiftStart);
-      const dayOfWeek = shiftDate.getDay();
-      const shiftTime = format(shiftDate, 'HH:mm');
-      
-      const dayWorkingHours = workingHours.find(wh => wh.day_of_week === dayOfWeek);
-      
-      if (dayWorkingHours) {
-        if (shiftTime < dayWorkingHours.start_time || shiftTime > dayWorkingHours.end_time) {
+      try {
+        const shiftStart = shift.scheduled_start || shift.start_time;
+        if (!shiftStart) return;
+        
+        const shiftDate = new Date(shiftStart);
+        const dayOfWeek = shiftDate.getDay();
+        const shiftTime = format(shiftDate, 'HH:mm');
+        
+        const dayWorkingHours = workingHours.find(wh => wh && wh.day_of_week === dayOfWeek);
+        
+        if (dayWorkingHours && dayWorkingHours.start_time && dayWorkingHours.end_time) {
+          if (shiftTime < dayWorkingHours.start_time || shiftTime > dayWorkingHours.end_time) {
           detected.push({
             type: 'outside_working_hours',
             severity: 'low',
@@ -87,8 +100,11 @@ export default function AvailabilityConflictDetector({
             shiftId: shift.id,
             date: format(shiftDate, 'MMM d, yyyy'),
             details: `Preferred hours: ${dayWorkingHours.start_time} - ${dayWorkingHours.end_time}, Shift: ${shiftTime}`
-          });
+            });
+          }
         }
+      } catch (err) {
+        console.error('Error checking working hours:', err);
       }
     });
 
