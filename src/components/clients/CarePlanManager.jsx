@@ -220,7 +220,18 @@ export default function CarePlanManager({ client }) {
                   Assessed {format(parseISO(activePlan.assessment_date), 'MMM d, yyyy')}
                 </span>
               </div>
-              <Button variant="outline" size="sm" onClick={() => setSelectedPlan(activePlan)}>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => {
+                  if (!activePlan || !activePlan.id) {
+                    console.error("Invalid active plan", activePlan);
+                    toast.error("Error", "Cannot view plan");
+                    return;
+                  }
+                  setSelectedPlan(activePlan);
+                }}
+              >
                 View Full Plan <ChevronRight className="w-4 h-4 ml-1" />
               </Button>
             </div>
@@ -341,7 +352,18 @@ export default function CarePlanManager({ client }) {
                           Approve & Create Records
                         </Button>
                       )}
-                      <Button variant="outline" size="sm" onClick={() => setSelectedPlan(plan)}>
+                      <Button 
+                        variant="outline" 
+                        size="sm" 
+                        onClick={() => {
+                          if (!plan || !plan.id) {
+                            console.error("Invalid plan", plan);
+                            toast.error("Error", "Cannot view plan");
+                            return;
+                          }
+                          setSelectedPlan(plan);
+                        }}
+                      >
                         <Eye className="w-4 h-4" />
                       </Button>
                       <Button variant="outline" size="sm" onClick={() => handleEdit(plan)}>
