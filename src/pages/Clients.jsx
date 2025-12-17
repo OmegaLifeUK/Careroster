@@ -75,7 +75,7 @@ export default function Clients() {
         setActiveTab(location.state.activeTab || 'care_plan');
       }
     }
-  }, [location.state?.selectedClientId, clients]);
+  }, [location.key, clients]);
 
   const deleteClientMutation = useMutation({
     mutationFn: (id) => base44.entities.Client.delete(id),
