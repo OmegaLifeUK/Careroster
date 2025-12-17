@@ -29,7 +29,7 @@ import AvailabilityConflictDetector from "@/components/availability/Availability
 export default function CarerAvailability() {
   const [selectedCarerId, setSelectedCarerId] = useState(null);
   const [searchQuery, setSearchQuery] = useState("");
-  const [activeTab, setActiveTab] = useState("overview");
+  const [activeTab, setActiveTab] = useState("working-hours");
   const { toast } = useToast();
   const queryClient = useQueryClient();
 
