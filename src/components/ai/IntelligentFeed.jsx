@@ -302,18 +302,16 @@ export default function IntelligentFeed({ limit = 10 }) {
                         size="sm"
                         variant="outline"
                         onClick={() => {
-                          console.log('Button clicked, action:', item.action);
                           if (item.action.clientId) {
                             // Navigate to client detail page with specific tab
-                            console.log('Navigating with state:', { 
-                              selectedClientId: item.action.clientId, 
-                              activeTab: item.action.tab 
-                            });
+                            // Force replace to trigger state change even if already on Clients page
                             navigate(createPageUrl('Clients'), { 
                               state: { 
                                 selectedClientId: item.action.clientId, 
-                                activeTab: item.action.tab 
-                              } 
+                                activeTab: item.action.tab,
+                                timestamp: Date.now() // Force state change
+                              },
+                              replace: false
                             });
                           } else {
                             navigate(item.action.url);

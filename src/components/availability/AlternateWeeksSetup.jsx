@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Checkbox } from "@/components/ui/checkbox";
-import { X, Clock, Save, Trash2 } from "lucide-react";
+import { X, Clock, Save } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 const DAYS = [
@@ -19,23 +19,45 @@ const DAYS = [
   { value: 0, label: 'Sunday' },
 ];
 
-export default function WorkingHoursSetup({ staffId, onClose }) {
+export default function AlternateWeeksSetup({ staffId, onClose }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  const [activeWeek, setActiveWeek] = useState('week1');
 
   const { data: existingAvailability = [] } = useQuery({
     queryKey: ['staff-availability', staffId],
     queryFn: async () => {
       const all = await base44.entities.CarerAvailability.list();
-      return all.filter(a => a.carer_id === staffId && a.availability_type === 'working_hours');
+      return all.filter(a => 
+        a.carer_id === staffId && 
+        a.availability_type === 'working_hours' &&
+        (a.schedule_pattern === 'alternate_week_1' || a.schedule_pattern === 'alternate_week_2')
+      );
     },
   });
 
-  const [schedulePattern, setSchedulePattern] = useState('weekly');
-  const [workingDays, setWorkingDays] = useState(() => {
+  const [week1Days, setWeek1Days] = useState(() => {
     const days = {};
     DAYS.forEach(day => {
-      const existing = existingAvailability.find(a => a.day_of_week === day.value);
+      const existing = existingAvailability.find(a => 
+        a.day_of_week === day.value && a.schedule_pattern === 'alternate_week_1'
+      );
+      days[day.value] = {
+        enabled: !!existing,
+        startTime: existing?.start_time || '09:00',
+        endTime: existing?.end_time || '17:00',
+        id: existing?.id,
+      };
+    });
+    return days;
+  });
+
+  const [week2Days, setWeek2Days] = useState(() => {
+    const days = {};
+    DAYS.forEach(day => {
+      const existing = existingAvailability.find(a => 
+        a.day_of_week === day.value && a.schedule_pattern === 'alternate_week_2'
+      );
       days[day.value] = {
         enabled: !!existing,
         startTime: existing?.start_time || '09:00',
@@ -67,8 +89,11 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
     },
   });
 
+  const currentDays = activeWeek === 'week1' ? week1Days : week2Days;
+  const setCurrentDays = activeWeek === 'week1' ? setWeek1Days : setWeek2Days;
+
   const handleDayToggle = (dayValue) => {
-    setWorkingDays(prev => ({
+    setCurrentDays(prev => ({
       ...prev,
       [dayValue]: {
         ...prev[dayValue],
@@ -78,7 +103,7 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
   };
 
   const handleTimeChange = (dayValue, field, value) => {
-    setWorkingDays(prev => ({
+    setCurrentDays(prev => ({
       ...prev,
       [dayValue]: {
         ...prev[dayValue],
@@ -88,20 +113,12 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
   };
 
   const handleSave = async () => {
-    if (schedulePattern === 'alternate_weeks') {
-      // Redirect to alternate weeks setup
-      onClose();
-      // The parent component should handle opening AlternateWeeksSetup
-      return;
-    }
-
     try {
       const promises = [];
-
-      // Standard weekly pattern
+      
+      // Save Week 1
       for (const day of DAYS) {
-        const dayData = workingDays[day.value];
-        
+        const dayData = week1Days[day.value];
         if (dayData.enabled) {
           const data = {
             carer_id: staffId,
@@ -110,9 +127,31 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
             start_time: dayData.startTime,
             end_time: dayData.endTime,
             is_recurring: true,
-            schedule_pattern: 'weekly',
+            schedule_pattern: 'alternate_week_1',
           };
+          if (dayData.id) {
+            promises.push(updateMutation.mutateAsync({ id: dayData.id, data }));
+          } else {
+            promises.push(createMutation.mutateAsync(data));
+          }
+        } else if (dayData.id) {
+          promises.push(deleteMutation.mutateAsync(dayData.id));
+        }
+      }
 
+      // Save Week 2
+      for (const day of DAYS) {
+        const dayData = week2Days[day.value];
+        if (dayData.enabled) {
+          const data = {
+            carer_id: staffId,
+            availability_type: 'working_hours',
+            day_of_week: day.value,
+            start_time: dayData.startTime,
+            end_time: dayData.endTime,
+            is_recurring: true,
+            schedule_pattern: 'alternate_week_2',
+          };
           if (dayData.id) {
             promises.push(updateMutation.mutateAsync({ id: dayData.id, data }));
           } else {
@@ -124,25 +163,21 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
       }
 
       await Promise.all(promises);
-      toast.success('Working hours updated');
+      toast.success('Alternate weeks schedule updated');
       onClose();
     } catch (error) {
-      toast.error('Failed to update working hours');
+      toast.error('Failed to update schedule');
     }
   };
 
-  const handleApplyToAll = () => {
-    const monday = workingDays[1];
-    const newDays = {};
-    DAYS.forEach(day => {
-      newDays[day.value] = {
-        ...workingDays[day.value],
-        startTime: monday.startTime,
-        endTime: monday.endTime,
-        enabled: monday.enabled,
-      };
-    });
-    setWorkingDays(newDays);
+  const handleCopyWeek = () => {
+    if (activeWeek === 'week1') {
+      setWeek2Days({ ...week1Days });
+      toast.success('Week 1 copied to Week 2');
+    } else {
+      setWeek1Days({ ...week2Days });
+      toast.success('Week 2 copied to Week 1');
+    }
   };
 
   return (
@@ -152,7 +187,7 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
               <Clock className="w-5 h-5 text-blue-600" />
-              Set Working Hours
+              Alternate Weeks Schedule
             </CardTitle>
             <Button variant="ghost" size="icon" onClick={onClose}>
               <X className="w-4 h-4" />
@@ -161,49 +196,49 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
         </CardHeader>
 
         <CardContent className="p-6 space-y-6">
-          {/* Schedule Pattern Selection */}
+          {/* Week Selector */}
           <div className="space-y-2">
-            <Label className="font-semibold">Schedule Pattern</Label>
+            <Label className="font-semibold">Select Week to Edit</Label>
             <div className="flex gap-2">
               <Button
-                variant={schedulePattern === 'weekly' ? 'default' : 'outline'}
-                onClick={() => setSchedulePattern('weekly')}
+                variant={activeWeek === 'week1' ? 'default' : 'outline'}
+                onClick={() => setActiveWeek('week1')}
                 className="flex-1"
               >
-                Every Week
+                Week 1
               </Button>
               <Button
-                variant={schedulePattern === 'alternate_weeks' ? 'default' : 'outline'}
-                onClick={() => setSchedulePattern('alternate_weeks')}
+                variant={activeWeek === 'week2' ? 'default' : 'outline'}
+                onClick={() => setActiveWeek('week2')}
                 className="flex-1"
               >
-                Alternate Weeks
+                Week 2
               </Button>
             </div>
-            {schedulePattern === 'alternate_weeks' && (
-              <p className="text-xs text-amber-700 bg-amber-50 p-2 rounded border border-amber-200">
-                This will apply the same hours to both weeks. You can edit specific weeks later.
-              </p>
-            )}
           </div>
 
-          {/* Apply to All Days */}
+          {/* Copy Week Button */}
           <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
             <div className="flex items-center justify-between">
               <div>
-                <h4 className="font-semibold text-sm text-blue-900">Quick Setup</h4>
-                <p className="text-xs text-blue-700 mt-1">Apply Monday's hours to all days</p>
+                <h4 className="font-semibold text-sm text-blue-900">Copy Hours</h4>
+                <p className="text-xs text-blue-700 mt-1">
+                  Copy {activeWeek === 'week1' ? 'Week 1' : 'Week 2'} to {activeWeek === 'week1' ? 'Week 2' : 'Week 1'}
+                </p>
               </div>
-              <Button variant="outline" size="sm" onClick={handleApplyToAll}>
-                Apply to All
+              <Button variant="outline" size="sm" onClick={handleCopyWeek}>
+                Copy to Other Week
               </Button>
             </div>
           </div>
 
           {/* Days Configuration */}
           <div className="space-y-4">
+            <h3 className="font-semibold text-lg">
+              {activeWeek === 'week1' ? 'Week 1' : 'Week 2'} Working Hours
+            </h3>
             {DAYS.map(day => {
-              const dayData = workingDays[day.value];
+              const dayData = currentDays[day.value];
               return (
                 <div key={day.value} className="border rounded-lg p-4">
                   <div className="flex items-center gap-4">
@@ -256,7 +291,7 @@ export default function WorkingHoursSetup({ staffId, onClose }) {
             </Button>
             <Button onClick={handleSave} className="bg-blue-600 hover:bg-blue-700">
               <Save className="w-4 h-4 mr-2" />
-              Save Working Hours
+              Save Alternate Weeks
             </Button>
           </div>
         </CardContent>
