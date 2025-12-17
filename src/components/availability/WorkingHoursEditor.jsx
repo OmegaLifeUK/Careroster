@@ -32,6 +32,7 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   const [hoursWeek1, setHoursWeek1] = useState({});
   const [hoursWeek2, setHoursWeek2] = useState({});
   const [specificDates, setSpecificDates] = useState([]);
+  const [specificDateHours, setSpecificDateHours] = useState({});
 
   const getDefaultHours = (pattern = null) => {
     const defaults = {};
@@ -76,10 +77,17 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
       setHours(currentWeek === 'week2' ? week2Hours : week1Hours);
     } else if (hasSpecific) {
       setScheduleType('specific_dates');
-      const dates = workingHours
+      const dateHours = {};
+      workingHours
         .filter(w => w?.schedule_pattern === 'specific_date' && w?.specific_date)
-        .map(w => w.specific_date);
-      setSpecificDates(dates);
+        .forEach(w => {
+          dateHours[w.specific_date] = {
+            start_time: w.start_time || '09:00',
+            end_time: w.end_time || '17:00'
+          };
+        });
+      setSpecificDates(Object.keys(dateHours));
+      setSpecificDateHours(dateHours);
     } else {
       setScheduleType('weekly');
       setHours(getDefaultHours('weekly'));
@@ -100,16 +108,17 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
       promises.length = 0;
 
       if (scheduleType === 'specific_dates') {
-        // Save specific dates
+        // Save specific dates with their hours
         for (const dateStr of specificDates) {
+          const hours = specificDateHours[dateStr] || { start_time: '09:00', end_time: '17:00' };
           const data = {
             carer_id: carerId,
             availability_type: 'working_hours',
             schedule_pattern: 'specific_date',
             specific_date: dateStr,
             is_recurring: false,
-            start_time: '09:00',
-            end_time: '17:00'
+            start_time: hours.start_time,
+            end_time: hours.end_time
           };
           promises.push(base44.entities.CarerAvailability.create(data));
         }
@@ -292,11 +301,33 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
   };
 
   const toggleSpecificDate = (dateStr) => {
-    setSpecificDates(prev => 
-      prev.includes(dateStr) 
-        ? prev.filter(d => d !== dateStr)
-        : [...prev, dateStr]
-    );
+    setSpecificDates(prev => {
+      if (prev.includes(dateStr)) {
+        // Remove date and its hours
+        const newHours = { ...specificDateHours };
+        delete newHours[dateStr];
+        setSpecificDateHours(newHours);
+        return prev.filter(d => d !== dateStr);
+      } else {
+        // Add date with default hours
+        setSpecificDateHours(prev => ({
+          ...prev,
+          [dateStr]: { start_time: '09:00', end_time: '17:00' }
+        }));
+        return [...prev, dateStr];
+      }
+    });
+    setHasChanges(true);
+  };
+
+  const updateSpecificDateHours = (dateStr, field, value) => {
+    setSpecificDateHours(prev => ({
+      ...prev,
+      [dateStr]: {
+        ...prev[dateStr],
+        [field]: value
+      }
+    }));
     setHasChanges(true);
   };
 
@@ -406,30 +437,74 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
                 {specificDates.length} dates selected
               </Badge>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-96 overflow-y-auto p-2">
-              {getNextMonthDates().map(({ date, dayOfWeek, label }) => {
-                const isSelected = specificDates.includes(date);
-                const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
-                
-                return (
-                  <button
-                    key={date}
-                    onClick={() => toggleSpecificDate(date)}
-                    className={`p-3 rounded-lg border-2 text-left transition-all ${
-                      isSelected
-                        ? 'bg-green-100 border-green-500 text-green-900'
-                        : 'bg-gray-50 border-gray-200 hover:border-gray-300'
-                    }`}
-                  >
-                    <div className="font-medium text-sm">{label}</div>
-                    {isWeekend && (
-                      <Badge className="mt-1 text-xs bg-purple-100 text-purple-700">Weekend</Badge>
-                    )}
-                  </button>
-                );
-              })}
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-2 max-h-64 overflow-y-auto p-2 bg-gray-50 rounded-lg">
+                {getNextMonthDates().map(({ date, dayOfWeek, label }) => {
+                  const isSelected = specificDates.includes(date);
+                  const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
+
+                  return (
+                    <button
+                      key={date}
+                      onClick={() => toggleSpecificDate(date)}
+                      className={`p-3 rounded-lg border-2 text-left transition-all ${
+                        isSelected
+                          ? 'bg-green-100 border-green-500 text-green-900'
+                          : 'bg-white border-gray-200 hover:border-gray-300'
+                      }`}
+                    >
+                      <div className="font-medium text-sm">{label}</div>
+                      {isWeekend && (
+                        <Badge className="mt-1 text-xs bg-purple-100 text-purple-700">Weekend</Badge>
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+
+              {specificDates.length > 0 && (
+                <div className="border-t pt-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Clock className="w-4 h-4" />
+                    Set Hours for Selected Dates
+                  </h4>
+                  <div className="space-y-2 max-h-64 overflow-y-auto">
+                    {specificDates.sort().map(dateStr => {
+                      const hours = specificDateHours[dateStr] || { start_time: '09:00', end_time: '17:00' };
+                      const dateLabel = format(new Date(dateStr), 'EEE, MMM d, yyyy');
+
+                      return (
+                        <div key={dateStr} className="flex items-center gap-3 p-3 bg-green-50 rounded-lg border border-green-200">
+                          <span className="font-medium text-sm min-w-32">{dateLabel}</span>
+                          <Input
+                            type="time"
+                            value={hours.start_time}
+                            onChange={(e) => updateSpecificDateHours(dateStr, 'start_time', e.target.value)}
+                            className="w-32"
+                          />
+                          <span className="text-gray-500">to</span>
+                          <Input
+                            type="time"
+                            value={hours.end_time}
+                            onChange={(e) => updateSpecificDateHours(dateStr, 'end_time', e.target.value)}
+                            className="w-32"
+                          />
+                          <Badge className="bg-green-600 text-white">
+                            {(() => {
+                              const [startH, startM] = hours.start_time.split(':').map(Number);
+                              const [endH, endM] = hours.end_time.split(':').map(Number);
+                              const hrs = ((endH * 60 + endM) - (startH * 60 + startM)) / 60;
+                              return `${hrs.toFixed(1)} hrs`;
+                            })()}
+                          </Badge>
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
             </div>
-          </div>
+            </div>
         ) : (
           <div className="space-y-3">
             {scheduleType === 'alternate_weeks' && (
