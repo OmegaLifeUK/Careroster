@@ -251,6 +251,8 @@ export default function EnhancedDomCareRoster({
   };
 
   const handleDragEnd = (result) => {
+    console.log('[DRAG END] Triggered', result);
+    
     if (!result.destination) return;
 
     const visitId = result.draggableId;
@@ -264,6 +266,9 @@ export default function EnhancedDomCareRoster({
     // GEOGRAPHIC VALIDATION - Block postcode mismatches
     const staffMember = staff.find(s => s.id === staffId);
     const client = clients.find(c => c.id === visit.client_id);
+    
+    console.log('[DRAG END] Staff:', staffMember?.full_name, staffMember?.address?.postcode);
+    console.log('[DRAG END] Client:', client?.full_name, client?.address?.postcode);
     
     if (staffMember?.address?.postcode && client?.address?.postcode) {
       const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
