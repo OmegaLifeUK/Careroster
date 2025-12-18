@@ -260,15 +260,15 @@ export default function SimpleDomCareRoster({
       
       if (distance >= 100) {
         console.log('[SimpleDomCareRoster] ❌❌❌ BLOCKING ASSIGNMENT - Different regions');
+        console.log('[SimpleDomCareRoster] RETURNING EARLY - NO UPDATE SHOULD HAPPEN');
         console.log('═══════════════════════════════════════════════');
-        alert(
-          `🚫 BLOCKED: Geographic Mismatch\n\n` +
-          `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
-          `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
-          `These postcodes are in completely different regions (100+ miles apart).\n` +
-          `Please assign local staff only.`
+        
+        toast.error(
+          "🚫 Geographic Mismatch - Assignment Blocked",
+          `${staffMember.full_name} (${staffMember.address.postcode}) cannot be assigned to ${client.full_name} (${client.address.postcode}) - different regions`
         );
-        return;
+        
+        return; // BLOCK THE ASSIGNMENT
       }
       
       console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
