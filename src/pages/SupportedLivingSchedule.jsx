@@ -82,7 +82,61 @@ export default function SupportedLivingSchedule() {
   });
 
   const updateShiftMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SupportedLivingShift.update(id, data),
+    mutationFn: ({ id, data }) => {
+      // GEOGRAPHIC VALIDATION
+      const shift = shifts.find(s => s.id === id);
+      const newStaffId = data.staff_id;
+      
+      if (shift && newStaffId) {
+        const staffMember = staff.find(s => s.id === newStaffId);
+        const property = properties.find(p => p.id === shift.property_id);
+        
+        if (staffMember?.address?.postcode && property?.address?.postcode) {
+          const extractArea = (postcode) => {
+            const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+            return match ? match[1] : '';
+          };
+          
+          const staffArea = extractArea(staffMember.address.postcode);
+          const propertyArea = extractArea(property.address.postcode);
+          
+          if (staffArea !== propertyArea) {
+            const proximityGroups = [
+              ['M', 'SK', 'OL', 'BL', 'WN'],
+              ['BN', 'RH', 'TN'],
+              ['L', 'CH', 'WA'],
+              ['B', 'WS', 'WV', 'DY'],
+              ['LS', 'BD', 'HX', 'WF'],
+              ['S', 'DN', 'HD'],
+              ['NE', 'SR', 'DH'],
+              ['GL', 'SN', 'BA'],
+              ['NG', 'DE', 'LE'],
+              ['CV', 'LE', 'NN'],
+            ];
+            
+            let sameRegion = false;
+            for (const group of proximityGroups) {
+              if (group.includes(staffArea) && group.includes(propertyArea)) {
+                sameRegion = true;
+                break;
+              }
+            }
+            
+            if (!sameRegion) {
+              alert(
+                `🚫 BLOCKED: Different Regions\n\n` +
+                `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
+                `Property: ${property.property_name} (${property.address.postcode})\n\n` +
+                `Cannot assign staff from different geographic regions.`
+              );
+              throw new Error('Geographic validation failed');
+            }
+          }
+        }
+      }
+      
+      return base44.entities.SupportedLivingShift.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supported-living-shifts'] });
       setShowShiftDialog(false);

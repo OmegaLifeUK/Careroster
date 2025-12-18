@@ -121,12 +121,122 @@ export default function Schedule() {
   });
 
   const updateShiftMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Shift.update(id, data),
+    mutationFn: ({ id, data }) => {
+      // GEOGRAPHIC VALIDATION
+      const shift = shifts.find(s => s.id === id);
+      const newCarerId = data.carer_id;
+      
+      if (shift && newCarerId) {
+        const carer = carers.find(c => c.id === newCarerId);
+        
+        // For client-based shifts
+        if (shift.client_id) {
+          const client = clients.find(c => c.id === shift.client_id);
+          
+          if (carer?.address?.postcode && client?.address?.postcode) {
+            const extractArea = (postcode) => {
+              const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+              return match ? match[1] : '';
+            };
+            
+            const carerArea = extractArea(carer.address.postcode);
+            const clientArea = extractArea(client.address.postcode);
+            
+            if (carerArea !== clientArea) {
+              const proximityGroups = [
+                ['M', 'SK', 'OL', 'BL', 'WN'],
+                ['BN', 'RH', 'TN'],
+                ['L', 'CH', 'WA'],
+                ['B', 'WS', 'WV', 'DY'],
+                ['LS', 'BD', 'HX', 'WF'],
+                ['S', 'DN', 'HD'],
+                ['NE', 'SR', 'DH'],
+                ['GL', 'SN', 'BA'],
+                ['NG', 'DE', 'LE'],
+                ['CV', 'LE', 'NN'],
+              ];
+              
+              let sameRegion = false;
+              for (const group of proximityGroups) {
+                if (group.includes(carerArea) && group.includes(clientArea)) {
+                  sameRegion = true;
+                  break;
+                }
+              }
+              
+              if (!sameRegion) {
+                alert(
+                  `🚫 BLOCKED: Different Regions\n\n` +
+                  `Carer: ${carer.full_name} (${carer.address.postcode})\n` +
+                  `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+                  `Cannot assign carers from different geographic regions.`
+                );
+                throw new Error('Geographic validation failed');
+              }
+            }
+          }
+        }
+        
+        // For property-based shifts
+        if (shift.property_id) {
+          const property = properties.find(p => p.id === shift.property_id);
+          
+          if (carer?.address?.postcode && property?.address?.postcode) {
+            const extractArea = (postcode) => {
+              const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+              return match ? match[1] : '';
+            };
+            
+            const carerArea = extractArea(carer.address.postcode);
+            const propertyArea = extractArea(property.address.postcode);
+            
+            if (carerArea !== propertyArea) {
+              const proximityGroups = [
+                ['M', 'SK', 'OL', 'BL', 'WN'],
+                ['BN', 'RH', 'TN'],
+                ['L', 'CH', 'WA'],
+                ['B', 'WS', 'WV', 'DY'],
+                ['LS', 'BD', 'HX', 'WF'],
+                ['S', 'DN', 'HD'],
+                ['NE', 'SR', 'DH'],
+                ['GL', 'SN', 'BA'],
+                ['NG', 'DE', 'LE'],
+                ['CV', 'LE', 'NN'],
+              ];
+              
+              let sameRegion = false;
+              for (const group of proximityGroups) {
+                if (group.includes(carerArea) && group.includes(propertyArea)) {
+                  sameRegion = true;
+                  break;
+                }
+              }
+              
+              if (!sameRegion) {
+                alert(
+                  `🚫 BLOCKED: Different Regions\n\n` +
+                  `Carer: ${carer.full_name} (${carer.address.postcode})\n` +
+                  `Property: ${property.property_name} (${property.address.postcode})\n\n` +
+                  `Cannot assign carers from different geographic regions.`
+                );
+                throw new Error('Geographic validation failed');
+              }
+            }
+          }
+        }
+      }
+      
+      return base44.entities.Shift.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['shifts'] });
       toast.success("Success", "Shift updated successfully");
     },
     onError: (error) => {
+      if (error.message === 'Geographic validation failed') {
+        // Already shown alert, don't show another error
+        return;
+      }
       toast.error("Error", "Failed to update shift");
       console.error("Update error:", error);
     },
