@@ -5,6 +5,40 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
 
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const extractArea = (postcode) => {
+    const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+    return match ? match[1] : '';
+  };
+  
+  const area1 = extractArea(postcode1);
+  const area2 = extractArea(postcode2);
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
+
 const HOURS = Array.from({ length: 24 }, (_, i) => `${i.toString().padStart(2, '0')}:00`);
 
 const SHIFT_COLORS = {
@@ -52,6 +86,60 @@ export default function SplitScreenScheduler({
   const handleDrop = (e, carerId, date, hour) => {
     e.preventDefault();
     if (draggedShift && onShiftUpdate) {
+      // GEOGRAPHIC VALIDATION - Block distant assignments
+      const carer = carers.find(c => c.id === carerId);
+      const client = clients.find(c => c.id === draggedShift.client_id);
+      
+      console.log('═══════════════════════════════════════════════');
+      console.log('[SplitScreenScheduler] DRAG DROP TRIGGERED');
+      console.log('[SplitScreenScheduler] Carer:', {
+        id: carer?.id,
+        name: carer?.full_name,
+        postcode: carer?.address?.postcode
+      });
+      console.log('[SplitScreenScheduler] Client:', {
+        id: client?.id,
+        name: client?.full_name,
+        postcode: client?.address?.postcode
+      });
+      
+      // REQUIRE postcodes for validation
+      if (!carer?.address?.postcode || !client?.address?.postcode) {
+        console.log('[SplitScreenScheduler] ❌ BLOCKING - Missing postcode data');
+        console.log('═══════════════════════════════════════════════');
+        alert(
+          `⚠️ BLOCKED: Missing Postcode Data\n\n` +
+          `Cannot assign shift - postcode information is required for both carer and client.\n\n` +
+          `${!carer?.address?.postcode ? `Carer ${carer?.full_name || 'Unknown'} needs a postcode.\n` : ''}` +
+          `${!client?.address?.postcode ? `Client ${client?.full_name || 'Unknown'} needs a postcode.\n` : ''}\n` +
+          `Please update the missing information before assigning.`
+        );
+        setDraggedShift(null);
+        setHoveredSlot(null);
+        return;
+      }
+      
+      const distance = getPostcodeDistance(carer.address.postcode, client.address.postcode);
+      console.log('[SplitScreenScheduler] Distance calculated:', distance);
+      
+      if (distance >= 100) {
+        console.log('[SplitScreenScheduler] ❌❌❌ BLOCKING ASSIGNMENT - Different regions');
+        console.log('═══════════════════════════════════════════════');
+        alert(
+          `🚫 BLOCKED: Geographic Mismatch\n\n` +
+          `Carer: ${carer.full_name}\nLocation: ${carer.address.postcode}\n\n` +
+          `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
+          `These postcodes are in completely different regions (100+ miles apart).\n` +
+          `Please assign local carers only.`
+        );
+        setDraggedShift(null);
+        setHoveredSlot(null);
+        return;
+      }
+      
+      console.log('[SplitScreenScheduler] ✅ Allowing assignment - distance OK');
+      console.log('═══════════════════════════════════════════════');
+
       const dateStr = format(date, "yyyy-MM-dd");
       const startTime = hour;
       const [startHour] = hour.split(':').map(Number);
