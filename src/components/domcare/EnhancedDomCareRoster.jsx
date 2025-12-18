@@ -4,6 +4,35 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'], // Greater Manchester
+    ['BN', 'RH', 'TN'], // Brighton/Sussex
+    ['L', 'CH', 'WA'], // Liverpool/Merseyside
+    ['B', 'WS', 'WV', 'DY'], // Birmingham/West Midlands
+    ['LS', 'BD', 'HX', 'WF'], // Leeds/West Yorkshire
+    ['S', 'DN', 'HD'], // Sheffield/South Yorkshire
+    ['NE', 'SR', 'DH'], // Newcastle/Tyne and Wear
+    ['GL', 'SN', 'BA'], // Gloucestershire/Wiltshire
+    ['NG', 'DE', 'LE'], // Nottingham/Derby/Leicester
+    ['CV', 'LE', 'NN'], // Coventry/Warwickshire
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
 import { 
   Search, 
   MapPin, 
@@ -140,18 +169,19 @@ export default function EnhancedDomCareRoster({
       }
     }
 
-    // Proximity
+    // Proximity - CRITICAL for domiciliary care
     if (client.address?.postcode && staffMember.address?.postcode) {
-      const clientPrefix = client.address.postcode.split(' ')[0];
-      const staffPrefix = staffMember.address.postcode.split(' ')[0];
-      if (clientPrefix === staffPrefix) {
-        score += 20;
-        reasons.push("Same area");
-      } else if (clientPrefix.substring(0, 2) === staffPrefix.substring(0, 2)) {
-        score += 10;
-        reasons.push("Nearby");
-      } else {
-        score -= 5;
+      const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
+      
+      if (distance === 0) {
+        score += 60; // Same postcode area = huge bonus
+        reasons.push("Same postcode area");
+      } else if (distance <= 15) {
+        score += 30; // Same region = good
+        reasons.push("Same region");
+      } else if (distance >= 100) {
+        score -= 150; // Different regions = massive penalty
+        warnings.push("Very far from client");
       }
     }
 
@@ -202,6 +232,26 @@ export default function EnhancedDomCareRoster({
 
     const visit = visits.find(v => v.id === visitId);
     if (!visit) return;
+
+    // GEOGRAPHIC VALIDATION - Check postcode distance
+    const staffMember = staff.find(s => s.id === staffId);
+    const client = clients.find(c => c.id === visit.client_id);
+    
+    if (staffMember?.address?.postcode && client?.address?.postcode) {
+      const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
+      
+      if (distance >= 100) {
+        const proceed = window.confirm(
+          `⚠️ GEOGRAPHIC MISMATCH WARNING!\n\n` +
+          `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
+          `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+          `These locations are in different regions and may be hours apart.\n` +
+          `This assignment is not recommended for efficient rostering.\n\n` +
+          `Do you still want to proceed?`
+        );
+        if (!proceed) return;
+      }
+    }
 
     onVisitUpdate?.(visitId, {
       staff_id: staffId,
