@@ -72,6 +72,7 @@ export default function SimpleDomCareRoster({
   onVisitUpdate,
   onAddVisit,
 }) {
+  console.log('🟢🟢🟢 SimpleDomCareRoster RENDERED', new Date().toISOString());
   const [currentWeekStart, setCurrentWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [searchQuery, setSearchQuery] = useState("");
   const { toast } = useToast();
