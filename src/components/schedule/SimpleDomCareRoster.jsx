@@ -208,6 +208,17 @@ export default function SimpleDomCareRoster({
     if (newStaffId) {
       const staffMember = staff.find(s => s.id === newStaffId);
       const client = clients.find(c => c.id === visit.client_id);
+
+      console.log('[SimpleDomCareRoster] Staff entity check:', { 
+        staffMember,
+        hasAddress: !!staffMember?.address,
+        postcode: staffMember?.address?.postcode
+      });
+      console.log('[SimpleDomCareRoster] Client entity check:', { 
+        client,
+        hasAddress: !!client?.address,
+        postcode: client?.address?.postcode
+      });
       
       console.log('');
       console.log('[GEOGRAPHIC VALIDATION STARTING]');
