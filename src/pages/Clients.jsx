@@ -640,7 +640,11 @@ export default function Clients() {
             ) : [];
 
             return (
-              <Card key={client.id} className="hover:shadow-lg transition-all">
+              <Card 
+                key={client.id} 
+                className="hover:shadow-lg transition-all cursor-pointer card-interactive"
+                onClick={() => handleViewDetails(client)}
+              >
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex items-center gap-3">

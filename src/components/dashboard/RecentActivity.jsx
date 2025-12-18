@@ -4,8 +4,12 @@ import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { format, parseISO } from "date-fns";
 import { Calendar, ClipboardList, Clock } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function RecentActivity({ shifts = [], leaveRequests = [], carers = [], clients = [], isLoading }) {
+  const navigate = useNavigate();
+  
   if (isLoading) {
     return (
       <Card>
@@ -46,6 +50,8 @@ export default function RecentActivity({ shifts = [], leaveRequests = [], carers
       description: `${getCarerName(shift.carer_id)} → ${getClientName(shift.client_id)}`,
       status: shift.status,
       icon: Calendar,
+      data: shift,
+      onClick: () => navigate(createPageUrl('Schedule'), { state: { selectedShiftId: shift.id } })
     })),
     ...leaveRequestsArray.map(request => ({
       type: 'leave',
@@ -54,6 +60,8 @@ export default function RecentActivity({ shifts = [], leaveRequests = [], carers
       description: getCarerName(request.carer_id),
       status: request.status,
       icon: ClipboardList,
+      data: request,
+      onClick: () => navigate(createPageUrl('LeaveRequests'))
     })),
   ]
     .sort((a, b) => {
@@ -94,7 +102,8 @@ export default function RecentActivity({ shifts = [], leaveRequests = [], carers
               return (
                 <div 
                   key={idx}
-                  className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-colors"
+                  onClick={activity.onClick}
+                  className="flex items-start gap-4 p-4 border rounded-lg hover:bg-gray-50 transition-all cursor-pointer card-interactive"
                 >
                   <div className={`p-2 rounded-lg ${
                     activity.type === 'shift' 

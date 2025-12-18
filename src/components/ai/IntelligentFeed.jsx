@@ -285,7 +285,23 @@ export default function IntelligentFeed({ limit = 10 }) {
             return (
               <div
                 key={item.id}
-                className={`p-4 rounded-lg border-l-4 ${PRIORITY_COLORS[item.priority]}`}
+                onClick={() => {
+                  if (item.action) {
+                    if (item.action.clientId) {
+                      navigate(createPageUrl('Clients'), { 
+                        state: { 
+                          selectedClientId: item.action.clientId, 
+                          activeTab: item.action.tab,
+                          fromIntelligentFeed: true,
+                          timestamp: Date.now()
+                        }
+                      });
+                    } else if (item.action.url) {
+                      navigate(item.action.url);
+                    }
+                  }
+                }}
+                className={`p-4 rounded-lg border-l-4 cursor-pointer hover:shadow-md transition-all ${PRIORITY_COLORS[item.priority]}`}
               >
                 <div className="flex items-start gap-3">
                   <Icon className="w-5 h-5 mt-0.5 flex-shrink-0" />
@@ -301,17 +317,16 @@ export default function IntelligentFeed({ limit = 10 }) {
                       <Button
                         size="sm"
                         variant="outline"
-                        onClick={() => {
+                        onClick={(e) => {
+                          e.stopPropagation();
                           if (item.action.clientId) {
-                            // Navigate to client detail page with specific tab
                             navigate(createPageUrl('Clients'), { 
                               state: { 
                                 selectedClientId: item.action.clientId, 
                                 activeTab: item.action.tab,
                                 fromIntelligentFeed: true,
                                 timestamp: Date.now()
-                              },
-                              replace: false
+                              }
                             });
                           } else {
                             navigate(item.action.url);
