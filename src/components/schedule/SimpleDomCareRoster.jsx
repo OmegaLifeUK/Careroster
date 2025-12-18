@@ -262,21 +262,21 @@ export default function SimpleDomCareRoster({
       console.log('');
       
       if (distance >= 100) {
-        console.log('[SimpleDomCareRoster] ❌❌❌ BLOCKING ASSIGNMENT - Different regions');
-        console.log('[SimpleDomCareRoster] RETURNING EARLY - NO UPDATE SHOULD HAPPEN');
+        console.error('🚨🚨🚨 BLOCKING NOW - SHOULD STOP HERE 🚨🚨🚨');
+        console.error('[SimpleDomCareRoster] ❌❌❌ BLOCKING ASSIGNMENT - Different regions');
+        console.error(`Distance: ${distance}, Staff: ${staffMember.address.postcode}, Client: ${client.address.postcode}`);
+
+        alert(`🚫 BLOCKED!\n\nStaff: ${staffMember.full_name} (${staffMember.address.postcode})\nClient: ${client.full_name} (${client.address.postcode})\n\nDifferent regions - Assignment not allowed.`);
+
+        console.error('🛑 RETURNING NOW - CODE BELOW SHOULD NOT RUN');
         console.log('═══════════════════════════════════════════════');
-        
-        toast.error(
-          "🚫 Geographic Mismatch - Assignment Blocked",
-          `${staffMember.full_name} (${staffMember.address.postcode}) cannot be assigned to ${client.full_name} (${client.address.postcode}) - different regions`
-        );
-        
         return; // BLOCK THE ASSIGNMENT
       }
-      
+
       console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
-    }
-    console.log('═══════════════════════════════════════════════');
+      }
+      console.log('🎯 [SimpleDomCareRoster] Geographic validation complete - proceeding');
+      console.log('═══════════════════════════════════════════════');
 
     console.log('[SimpleDomCareRoster] ⚠️ This code should ONLY run if validation passed');
     console.log('[SimpleDomCareRoster] If you see this after a BLOCKING message, there is a bug!');
