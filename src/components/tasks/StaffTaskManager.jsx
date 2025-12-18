@@ -210,7 +210,11 @@ export default function StaffTaskManager() {
             const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'pending';
 
             return (
-              <Card key={task.id} className={`hover:shadow-md transition-shadow ${isOverdue ? 'border-red-300 bg-red-50' : ''}`}>
+              <Card 
+                key={task.id} 
+                onClick={() => handleStartTask(task)}
+                className={`hover:shadow-lg transition-all cursor-pointer card-interactive ${isOverdue ? 'border-red-300 bg-red-50' : ''}`}
+              >
                 <CardContent className="p-4">
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-4">
@@ -266,7 +270,10 @@ export default function StaffTaskManager() {
                     <div className="flex items-center gap-2">
                       {task.status === 'pending' && (
                         <Button
-                          onClick={() => handleStartTask(task)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartTask(task);
+                          }}
                           className="bg-green-600 hover:bg-green-700"
                         >
                           <Play className="w-4 h-4 mr-2" />
@@ -275,7 +282,10 @@ export default function StaffTaskManager() {
                       )}
                       {task.status === 'in_progress' && (
                         <Button
-                          onClick={() => handleStartTask(task)}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleStartTask(task);
+                          }}
                           variant="outline"
                         >
                           <Play className="w-4 h-4 mr-2" />

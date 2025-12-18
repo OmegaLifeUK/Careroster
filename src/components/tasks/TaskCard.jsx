@@ -28,8 +28,18 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
     q && task.required_qualifications?.includes(q.id)
   ) : [];
 
+  const handleCardClick = (e) => {
+    // Don't trigger card click if clicking a button
+    if (e.target.closest('button')) return;
+    onEdit();
+  };
+
   return (
-    <Card className="hover:shadow-md transition-shadow border-l-4" style={{ borderLeftColor: task.priority === 'critical' ? '#EF4444' : task.priority === 'high' ? '#F97316' : '#3B82F6' }}>
+    <Card 
+      className="hover:shadow-lg transition-all cursor-pointer card-interactive border-l-4" 
+      style={{ borderLeftColor: task.priority === 'critical' ? '#EF4444' : task.priority === 'high' ? '#F97316' : '#3B82F6' }}
+      onClick={handleCardClick}
+    >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
@@ -104,7 +114,10 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
           <Button
             variant="outline"
             size="sm"
-            onClick={onEdit}
+            onClick={(e) => {
+              e.stopPropagation();
+              onEdit();
+            }}
             className="flex-1"
           >
             <Edit className="w-3 h-3 mr-1" />
@@ -113,7 +126,10 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
           <Button
             variant="outline"
             size="sm"
-            onClick={onDelete}
+            onClick={(e) => {
+              e.stopPropagation();
+              onDelete();
+            }}
             className="text-red-600 hover:text-red-700 hover:bg-red-50"
           >
             <Trash2 className="w-3 h-3" />
