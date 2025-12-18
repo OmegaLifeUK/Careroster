@@ -275,6 +275,9 @@ export default function SimpleDomCareRoster({
     }
     console.log('═══════════════════════════════════════════════');
 
+    console.log('[SimpleDomCareRoster] ⚠️ This code should ONLY run if validation passed');
+    console.log('[SimpleDomCareRoster] If you see this after a BLOCKING message, there is a bug!');
+
     const updates = {
       staff_id: newStaffId,
       assigned_staff_id: newStaffId,
