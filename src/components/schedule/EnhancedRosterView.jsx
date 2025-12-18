@@ -3,6 +3,35 @@ import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'], // Greater Manchester
+    ['BN', 'RH', 'TN'], // Brighton/Sussex
+    ['L', 'CH', 'WA'], // Liverpool/Merseyside
+    ['B', 'WS', 'WV', 'DY'], // Birmingham/West Midlands
+    ['LS', 'BD', 'HX', 'WF'], // Leeds/West Yorkshire
+    ['S', 'DN', 'HD'], // Sheffield/South Yorkshire
+    ['NE', 'SR', 'DH'], // Newcastle/Tyne and Wear
+    ['GL', 'SN', 'BA'], // Gloucestershire/Wiltshire
+    ['NG', 'DE', 'LE'], // Nottingham/Derby/Leicester
+    ['CV', 'LE', 'NN'], // Coventry/Warwickshire
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
 import { 
   ChevronLeft, 
   ChevronRight, 
@@ -234,6 +263,26 @@ export default function EnhancedRosterView({
     
     // Check for time conflicts if assigning to a carer
     if (newCarerId) {
+      const carer = activeCarers.find(c => c.id === newCarerId);
+      const client = clients.find(c => c.id === shift.client_id);
+      
+      // GEOGRAPHIC VALIDATION - Check postcode distance
+      if (client?.address?.postcode && carer?.address?.postcode) {
+        const distance = getPostcodeDistance(carer.address.postcode, client.address.postcode);
+        
+        if (distance >= 100) {
+          const proceed = window.confirm(
+            `⚠️ GEOGRAPHIC MISMATCH WARNING!\n\n` +
+            `Carer: ${carer.full_name} (${carer.address.postcode})\n` +
+            `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+            `These locations are in different regions and may be hours apart.\n` +
+            `This assignment is not recommended for efficient rostering.\n\n` +
+            `Do you still want to proceed?`
+          );
+          if (!proceed) return;
+        }
+      }
+      
       const conflicts = checkForConflicts(newCarerId, targetDate, shift);
       if (conflicts) {
         const carerName = activeCarers.find(c => c.id === newCarerId)?.full_name || 'This carer';
