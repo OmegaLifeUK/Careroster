@@ -3,6 +3,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { ChevronLeft, ChevronRight, Calendar } from "lucide-react";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 import { 
   format, 
   startOfMonth, 
@@ -18,7 +20,8 @@ import {
   getWeek
 } from "date-fns";
 
-export default function AvailabilityCalendarView({ carerId, availability = [], leaveRequests = [] }) {
+export default function AvailabilityCalendarView({ carerId, availability = [], leaveRequests = [], shifts = [] }) {
+  const navigate = useNavigate();
   const [currentMonth, setCurrentMonth] = useState(new Date());
 
   const workingHours = availability.filter(a => a.availability_type === 'working_hours');
@@ -34,6 +37,22 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
   // Pad start of month
   const startDay = getDay(monthStart);
   const paddedDays = [...Array(startDay).fill(null), ...days];
+
+  const handleDayClick = (date) => {
+    if (!date) return;
+    const dateStr = format(date, 'yyyy-MM-dd');
+    
+    // Find shifts for this carer on this date
+    const dayShifts = shifts.filter(s => 
+      s && (s.carer_id === carerId || s.staff_id === carerId || s.assigned_staff_id === carerId) && 
+      s.date === dateStr
+    );
+    
+    if (dayShifts.length > 0) {
+      // Navigate to schedule with the date pre-selected
+      navigate(createPageUrl('Schedule'), { state: { selectedDate: dateStr, selectedCarer: carerId } });
+    }
+  };
 
   const getDayStatus = (date) => {
     if (!date) return null;
@@ -165,20 +184,28 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
 
             const status = getDayStatus(date);
             const today = isToday(date);
+            const dateStr = format(date, 'yyyy-MM-dd');
+            const hasShifts = shifts.some(s => 
+              s && (s.carer_id === carerId || s.staff_id === carerId || s.assigned_staff_id === carerId) && 
+              s.date === dateStr
+            );
 
             return (
               <div
                 key={date.toISOString()}
-                className={`h-24 p-2 border rounded-lg transition-all ${
+                onClick={() => handleDayClick(date)}
+                className={`h-24 p-2 border rounded-lg transition-all cursor-pointer hover:shadow-md hover:scale-105 ${
                   today ? 'ring-2 ring-blue-500' : ''
                 } ${
                   isSameMonth(date, currentMonth) ? 'bg-white' : 'bg-gray-50'
                 } ${
-                  status?.status === 'working' ? 'bg-green-50 border-green-200' : ''
+                  status?.status === 'working' ? 'bg-green-50 border-green-200 hover:bg-green-100' : ''
                 } ${
-                  status?.status === 'leave' ? 'bg-purple-50 border-purple-200' : ''
+                  status?.status === 'leave' ? 'bg-purple-50 border-purple-200 hover:bg-purple-100' : ''
                 } ${
-                  status?.status === 'unavailable' ? 'bg-orange-50 border-orange-200' : ''
+                  status?.status === 'unavailable' ? 'bg-orange-50 border-orange-200 hover:bg-orange-100' : ''
+                } ${
+                  hasShifts ? 'ring-1 ring-blue-400' : ''
                 }`}
               >
                 <div className="flex flex-col h-full">

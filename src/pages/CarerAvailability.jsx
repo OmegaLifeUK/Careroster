@@ -241,6 +241,7 @@ export default function CarerAvailability() {
                         carerId={selectedCarerId}
                         availability={carerAvailability}
                         leaveRequests={carerLeave}
+                        shifts={shifts}
                       />
                     </div>
                   </TabsContent>
