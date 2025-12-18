@@ -122,16 +122,31 @@ export default function EnhancedDomCareRoster({
         .map((v, idx, arr) => {
           const client = clients.find(c => c.id === v.client_id);
           let travelToNext = 0;
+          let travelFromHome = 0;
+          let gapTime = 0;
           
-          if (idx < arr.length - 1 && client?.address && s.address) {
+          // Calculate travel from staff home to first visit
+          if (idx === 0 && client?.address && s.address) {
+            const travel = calculateTravelTime(s.address, client.address, s.vehicle_type);
+            travelFromHome = travel.time;
+          }
+          
+          // Calculate travel to next visit
+          if (idx < arr.length - 1 && client?.address) {
             const nextClient = clients.find(c => c.id === arr[idx + 1].client_id);
             if (nextClient?.address) {
               const travel = calculateTravelTime(client.address, nextClient.address, s.vehicle_type);
               travelToNext = travel.time;
+              
+              // Calculate gap time (time between end of this visit and start of next, minus travel)
+              const visitEnd = new Date(v.scheduled_end);
+              const nextVisitStart = new Date(arr[idx + 1].scheduled_start);
+              const totalGapMinutes = (nextVisitStart - visitEnd) / 60000;
+              gapTime = Math.max(0, totalGapMinutes - travelToNext);
             }
           }
           
-          return { ...v, client, travelToNext };
+          return { ...v, client, travelToNext, travelFromHome, gapTime };
         });
 
       const totalHours = dayVisits.reduce((sum, v) => sum + (v.duration_minutes || 60) / 60, 0);
@@ -521,6 +536,15 @@ export default function EnhancedDomCareRoster({
                 <div className="flex flex-wrap gap-2">
                   {dayVisits.map((visit, idx) => (
                     <React.Fragment key={visit.id}>
+                      {/* Travel from home to first visit */}
+                      {idx === 0 && visit.travelFromHome > 0 && (
+                        <div className="inline-flex items-center gap-0.5 px-1.5 py-0.5 bg-purple-50 border border-purple-200 rounded">
+                          <span className="text-[9px] text-purple-600 font-medium">🏠</span>
+                          <Navigation className="w-2.5 h-2.5 text-purple-600" />
+                          <span className="text-[10px] font-bold text-purple-700">{visit.travelFromHome}m</span>
+                        </div>
+                      )}
+
                       <div
                         onClick={() => onVisitClick?.(visit)}
                         className="inline-flex items-center gap-1 bg-gradient-to-br from-teal-50 to-teal-100 border border-teal-300 rounded px-2 py-1 cursor-pointer hover:shadow-md hover:border-teal-400 transition-all"
@@ -549,6 +573,14 @@ export default function EnhancedDomCareRoster({
                           <Navigation className="w-2.5 h-2.5 text-blue-600" />
                           <span className="text-[10px] font-bold text-blue-700">{visit.travelToNext}m</span>
                           <div className="w-6 h-0.5 bg-blue-400" />
+                          {visit.gapTime > 0 && (
+                            <>
+                              <span className="text-[10px] text-amber-600 font-medium ml-0.5">⏱️{Math.round(visit.gapTime)}m</span>
+                            </>
+                          )}
+                          {visit.gapTime < 0 && (
+                            <span className="text-[10px] text-red-600 font-bold ml-0.5">⚠️{Math.abs(Math.round(visit.gapTime))}m</span>
+                          )}
                         </div>
                       )}
                     </React.Fragment>
