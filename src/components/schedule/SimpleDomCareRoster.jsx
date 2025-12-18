@@ -200,26 +200,36 @@ export default function SimpleDomCareRoster({
         clientPostcode: client?.address?.postcode
       });
       
-      if (staffMember?.address?.postcode && client?.address?.postcode) {
-        const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
-        
-        console.log('[SimpleDomCareRoster] Distance:', distance);
-        
-        if (distance >= 100) {
-          console.log('[SimpleDomCareRoster] ❌ BLOCKING ASSIGNMENT');
-          alert(
-            `🚫 BLOCKED: Geographic Mismatch\n\n` +
-            `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
-            `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
-            `These postcodes are in completely different regions.\nPlease assign local staff only.`
-          );
-          return; // Block the assignment
-        } else {
-          console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
-        }
-      } else {
-        console.log('[SimpleDomCareRoster] ⚠️ Missing postcode data - cannot validate');
+      // REQUIRE postcodes for validation
+      if (!staffMember?.address?.postcode || !client?.address?.postcode) {
+        console.log('[SimpleDomCareRoster] ❌ BLOCKING - Missing postcode data');
+        alert(
+          `⚠️ BLOCKED: Missing Postcode Data\n\n` +
+          `Cannot assign visit - postcode information is required for both staff and client.\n\n` +
+          `${!staffMember?.address?.postcode ? `Staff ${staffMember?.full_name || 'Unknown'} needs a postcode.\n` : ''}` +
+          `${!client?.address?.postcode ? `Client ${client?.full_name || 'Unknown'} needs a postcode.\n` : ''}\n` +
+          `Please update the missing information before assigning.`
+        );
+        return;
       }
+      
+      const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
+      
+      console.log('[SimpleDomCareRoster] Distance:', distance);
+      
+      if (distance >= 100) {
+        console.log('[SimpleDomCareRoster] ❌ BLOCKING ASSIGNMENT - Different regions');
+        alert(
+          `🚫 BLOCKED: Geographic Mismatch\n\n` +
+          `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
+          `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
+          `These postcodes are in completely different regions (100+ miles apart).\n` +
+          `Please assign local staff only.`
+        );
+        return;
+      }
+      
+      console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
     }
 
     const updates = {
