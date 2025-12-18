@@ -175,6 +175,8 @@ export default function SimpleDomCareRoster({
   };
 
   const handleDragEnd = (result) => {
+    console.log('[SimpleDomCareRoster] DRAG END triggered', result);
+    
     if (!result.destination) return;
     
     const { draggableId, destination } = result;
@@ -184,25 +186,39 @@ export default function SimpleDomCareRoster({
     const [targetStaffId, targetDate] = destination.droppableId.split('_');
     const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
 
+    console.log('[SimpleDomCareRoster] Target:', { targetStaffId, newStaffId });
+
     // GEOGRAPHIC VALIDATION - Block distant assignments
     if (newStaffId) {
       const staffMember = staff.find(s => s.id === newStaffId);
       const client = clients.find(c => c.id === visit.client_id);
       
+      console.log('[SimpleDomCareRoster] Validating:', {
+        staff: staffMember?.full_name,
+        staffPostcode: staffMember?.address?.postcode,
+        client: client?.full_name,
+        clientPostcode: client?.address?.postcode
+      });
+      
       if (staffMember?.address?.postcode && client?.address?.postcode) {
         const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
         
+        console.log('[SimpleDomCareRoster] Distance:', distance);
+        
         if (distance >= 100) {
+          console.log('[SimpleDomCareRoster] ❌ BLOCKING ASSIGNMENT');
           alert(
-            `❌ GEOGRAPHIC MISMATCH - ASSIGNMENT BLOCKED\n\n` +
-            `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
-            `Client: ${client.full_name} (${client.address.postcode})\n\n` +
-            `These locations are in different regions (likely 100+ miles apart).\n` +
-            `This assignment has been blocked to prevent impractical rostering.\n\n` +
-            `Please assign local staff to this visit.`
+            `🚫 BLOCKED: Geographic Mismatch\n\n` +
+            `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
+            `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
+            `These postcodes are in completely different regions.\nPlease assign local staff only.`
           );
           return; // Block the assignment
+        } else {
+          console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
         }
+      } else {
+        console.log('[SimpleDomCareRoster] ⚠️ Missing postcode data - cannot validate');
       }
     }
 
@@ -212,6 +228,7 @@ export default function SimpleDomCareRoster({
       status: newStaffId ? 'published' : 'draft'
     };
 
+    console.log('[SimpleDomCareRoster] Applying updates:', updates);
     onVisitUpdate(draggableId, updates);
     
     if (newStaffId) {

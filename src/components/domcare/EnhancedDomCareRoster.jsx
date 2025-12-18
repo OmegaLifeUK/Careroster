@@ -278,17 +278,22 @@ export default function EnhancedDomCareRoster({
     if (staffMember?.address?.postcode && client?.address?.postcode) {
       const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
       
+      console.log('[BLOCKING CHECK] Distance:', distance, 'Staff:', staffMember.address.postcode, 'Client:', client.address.postcode);
+      
       if (distance >= 100) {
+        console.log('[BLOCKING] Assignment BLOCKED - different regions');
         alert(
-          `❌ GEOGRAPHIC MISMATCH BLOCKED\n\n` +
-          `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
-          `Client: ${client.full_name} (${client.address.postcode})\n\n` +
-          `These locations are in different regions (likely hours apart).\n` +
-          `This assignment has been blocked for efficient rostering.\n\n` +
-          `Please assign local staff to this visit.`
+          `🚫 BLOCKED: Geographic Mismatch\n\n` +
+          `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
+          `Client: ${client.full_name}\nLocation: ${client.address.postcode}\n\n` +
+          `These postcodes are in completely different regions.\nPlease assign local staff only.`
         );
-        return; // Block the assignment
+        return;
+      } else {
+        console.log('[ALLOWING] Assignment allowed - same area or region');
       }
+    } else {
+      console.log('[WARNING] Missing postcode data - staff:', staffMember?.address?.postcode, 'client:', client?.address?.postcode);
     }
 
     onVisitUpdate?.(visitId, {
