@@ -234,6 +234,7 @@ export default function Carers() {
                 key={carer.id}
                 carer={carer}
                 qualifications={qualifications}
+                onEdit={handleEdit}
                 onDelete={() => handleDelete(carer.id)}
               />
             );
