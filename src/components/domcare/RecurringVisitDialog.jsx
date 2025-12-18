@@ -7,9 +7,38 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
-import { X, Calendar, Repeat, Clock } from "lucide-react";
+import { X, Calendar, Repeat, Clock, AlertTriangle } from "lucide-react";
 import { format, addDays, addWeeks, parseISO } from "date-fns";
 import { useToast } from "@/components/ui/toast";
+
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
 
 export default function RecurringVisitDialog({ clients, staff, onClose }) {
   const [formData, setFormData] = useState({
@@ -110,6 +139,28 @@ export default function RecurringVisitDialog({ clients, staff, onClose }) {
     if (visits.length > 100) {
       toast.error("Too Many Visits", "Please reduce the number of occurrences (max 100)");
       return;
+    }
+
+    // Geographic validation if staff assigned
+    if (formData.assigned_staff_id && formData.client_id) {
+      const client = clients.find(c => c.id === formData.client_id);
+      const staffMember = staff.find(s => s.id === formData.assigned_staff_id);
+      const clientPostcode = client?.address?.postcode;
+      const staffPostcode = staffMember?.address?.postcode;
+      const distance = getPostcodeDistance(clientPostcode, staffPostcode);
+      
+      if (distance >= 100) {
+        if (!confirm(
+          `⚠️ GEOGRAPHIC MISMATCH WARNING!\n\n` +
+          `Client: ${client?.full_name} (${clientPostcode || 'Unknown'})\n` +
+          `Staff: ${staffMember?.full_name} (${staffPostcode || 'Unknown'})\n\n` +
+          `These locations are in different regions and may be hours apart.\n` +
+          `This assignment is not recommended for efficient rostering.\n\n` +
+          `Do you still want to proceed?`
+        )) {
+          return;
+        }
+      }
     }
 
     createVisitsMutation.mutate(visits);

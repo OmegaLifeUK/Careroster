@@ -8,9 +8,38 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { X, Clock, MapPin, User, AlertCircle, FileText, Upload, Trash2, Search, Filter } from "lucide-react";
+import { X, Clock, MapPin, User, AlertCircle, FileText, Upload, Trash2, Search, Filter, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/toast";
+
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
 
 export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
   // Check if this is an existing visit (has id) or new with pre-filled data
@@ -77,6 +106,28 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    
+    // Geographic validation if staff assigned
+    if (formData.assigned_staff_id && formData.client_id) {
+      const client = clients.find(c => c.id === formData.client_id);
+      const staffMember = staff.find(s => s.id === formData.assigned_staff_id);
+      const clientPostcode = client?.address?.postcode;
+      const staffPostcode = staffMember?.address?.postcode;
+      const distance = getPostcodeDistance(clientPostcode, staffPostcode);
+      
+      if (distance >= 100) {
+        if (!confirm(
+          `⚠️ GEOGRAPHIC MISMATCH WARNING!\n\n` +
+          `Client: ${client?.full_name} (${clientPostcode || 'Unknown'})\n` +
+          `Staff: ${staffMember?.full_name} (${staffPostcode || 'Unknown'})\n\n` +
+          `These locations are in different regions and may be hours apart.\n` +
+          `This assignment is not recommended for efficient rostering.\n\n` +
+          `Do you still want to proceed?`
+        )) {
+          return;
+        }
+      }
+    }
     
     const visitData = {
       client_id: formData.client_id,
@@ -379,6 +430,25 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                   <User className="w-4 h-4 text-green-600" />
                   Assigned Staff
                 </Label>
+                {formData.assigned_staff_id && formData.client_id && (() => {
+                  const client = clients.find(c => c.id === formData.client_id);
+                  const staffMember = staff.find(s => s.id === formData.assigned_staff_id);
+                  const distance = getPostcodeDistance(client?.address?.postcode, staffMember?.address?.postcode);
+                  
+                  if (distance >= 100) {
+                    return (
+                      <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                        <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                        <div className="text-xs text-red-800">
+                          <p className="font-semibold">Geographic Mismatch Warning</p>
+                          <p className="mt-1">Client: {client?.address?.postcode || 'Unknown'} • Staff: {staffMember?.address?.postcode || 'Unknown'}</p>
+                          <p className="mt-1">These locations are very far apart. Consider assigning local staff.</p>
+                        </div>
+                      </div>
+                    );
+                  }
+                  return null;
+                })()}
                 <div className="space-y-2">
                   <div className="relative">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
@@ -399,11 +469,23 @@ export default function VisitDialog({ visit, staff, clients, runs, onClose }) {
                     <SelectContent>
                       <SelectItem value="__unassigned__">Unassigned</SelectItem>
                       {activeStaff.length > 0 ? (
-                        activeStaff.map(member => (
-                          <SelectItem key={member.id} value={member.id}>
-                            {member.full_name}
-                          </SelectItem>
-                        ))
+                        activeStaff.map(member => {
+                          const client = clients.find(c => c.id === formData.client_id);
+                          const distance = getPostcodeDistance(client?.address?.postcode, member?.address?.postcode);
+                          const isFar = distance >= 100;
+                          
+                          return (
+                            <SelectItem key={member.id} value={member.id}>
+                              <div className="flex items-center gap-2">
+                                {member.full_name}
+                                {member.address?.postcode && (
+                                  <span className="text-xs text-gray-500">({member.address.postcode})</span>
+                                )}
+                                {isFar && <span className="text-xs text-red-600 font-semibold">⚠️ Far</span>}
+                              </div>
+                            </SelectItem>
+                          );
+                        })
                       ) : staffSearch ? (
                         <div className="p-2 text-sm text-gray-500 text-center">No staff found</div>
                       ) : null}
