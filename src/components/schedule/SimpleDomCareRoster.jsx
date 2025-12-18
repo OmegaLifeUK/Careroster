@@ -281,7 +281,7 @@ export default function SimpleDomCareRoster({
       status: newStaffId ? 'published' : 'draft'
     };
 
-    console.log('[SimpleDomCareRoster] Applying updates:', updates);
+    console.log('✅✅✅ [SimpleDomCareRoster] PASSED VALIDATION - Applying updates:', updates);
     onVisitUpdate(draggableId, updates);
     
     if (newStaffId) {
