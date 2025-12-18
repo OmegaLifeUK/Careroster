@@ -206,8 +206,11 @@ export default function SimpleDomCareRoster({
       targetDate
     });
 
+    console.log('🔍 [SimpleDomCareRoster] newStaffId check:', { newStaffId, willValidate: !!newStaffId });
+
     // GEOGRAPHIC VALIDATION - Block distant assignments
     if (newStaffId) {
+      console.log('✋ [SimpleDomCareRoster] ENTERING GEOGRAPHIC VALIDATION BLOCK');
       const staffMember = staff.find(s => s.id === newStaffId);
       const client = clients.find(c => c.id === visit.client_id);
 
