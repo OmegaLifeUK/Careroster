@@ -9,9 +9,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const getPostcodeDistance = (postcode1, postcode2) => {
   if (!postcode1 || !postcode2) return 999;
   
-  // Extract area code (just letters, no numbers)
-  const area1 = postcode1.trim().toUpperCase().replace(/[0-9 ]/g, '');
-  const area2 = postcode2.trim().toUpperCase().replace(/[0-9 ]/g, '');
+  // Extract area code (letters at the START only, before any digit)
+  const extractArea = (postcode) => {
+    const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+    return match ? match[1] : '';
+  };
+  
+  const area1 = extractArea(postcode1);
+  const area2 = extractArea(postcode2);
   
   console.log('[Geographic Check]', { postcode1, postcode2, area1, area2 });
   
