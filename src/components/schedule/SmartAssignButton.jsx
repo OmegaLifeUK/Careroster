@@ -29,10 +29,11 @@ export default function SmartAssignButton({ shift, carers, clients, shifts, leav
       const prompt = `Analyze and recommend the best carer for this shift:
 
 **Shift Details:**
-- Client: ${client?.full_name}
+- Client: ${client?.full_name} (Postcode: ${client?.address?.postcode || 'Unknown'})
 - Date: ${shift.date}
 - Time: ${shift.start_time} - ${shift.end_time}
 - Type: ${shift.shift_type}
+- Care Type: ${shift.care_type || 'residential_care'}
 - Tasks: ${shift.tasks?.join(', ') || 'General care'}
 
 **Client Information:**
@@ -41,17 +42,20 @@ export default function SmartAssignButton({ shift, carers, clients, shifts, leav
 - Medical Notes: ${client?.medical_notes || 'None'}
 
 **Available Carers:**
-${activeCarers.map(c => `- ${c.full_name}: ${c.employment_type}, Qualifications: ${c.qualifications?.join(', ') || 'None'}`).join('\n')}
+${activeCarers.map(c => `- ${c.full_name}: ${c.employment_type}, Postcode: ${c.address?.postcode || 'Unknown'}, Qualifications: ${c.qualifications?.join(', ') || 'None'}`).join('\n')}
 
-**Instructions:**
+**CRITICAL INSTRUCTIONS:**
 Analyze each carer considering:
-1. Qualifications matching client care needs
-2. Preferred carer relationships
-3. Availability (check if they have conflicting shifts)
-4. Workload balance
-5. Continuity of care (previous shifts with this client)
+1. **GEOGRAPHIC PROXIMITY (HIGHEST PRIORITY)**: For domiciliary care especially, carers MUST be in the same postcode area or nearby region. Carers from different regions (e.g., Manchester M vs Brighton BN) should be HEAVILY penalized or excluded.
+2. Qualifications matching client care needs
+3. Preferred carer relationships
+4. Availability (check if they have conflicting shifts)
+5. Workload balance
+6. Continuity of care (previous shifts with this client)
 
-Recommend the top 3 carers with detailed reasoning and confidence scores.`;
+**IMPORTANT**: If a carer's postcode is in a completely different region from the client (e.g., M vs BN, L vs BN), mark this as a MAJOR concern in the cons and significantly reduce the confidence score.
+
+Recommend the top 3 LOCAL carers with detailed reasoning and confidence scores.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt,

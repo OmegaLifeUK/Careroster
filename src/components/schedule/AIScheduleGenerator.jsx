@@ -1,13 +1,41 @@
-
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, Sparkles, Calendar, Users, Clock, AlertCircle, CheckCircle, Loader2 } from "lucide-react";
+import { X, Sparkles, Calendar, Users, Clock, AlertCircle, CheckCircle, Loader2, MapPin } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addDays, parseISO } from "date-fns";
+
+// Helper to estimate distance based on postcode area
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
 
 export default function AIScheduleGenerator({ onClose, shifts = [], carers = [], clients = [] }) {
   const [isGenerating, setIsGenerating] = useState(false);
@@ -82,9 +110,19 @@ export default function AIScheduleGenerator({ onClose, shifts = [], carers = [],
           return true;
         });
 
-        // Score carers based on preferences and qualifications
+        // Score carers based on preferences, qualifications, and geography
         const scoredCarers = availableCarers.map(carer => {
           let score = 0;
+
+          // Geographic proximity - CRITICAL
+          const distance = getPostcodeDistance(carer.address?.postcode, client.address?.postcode);
+          if (distance === 0) {
+            score += 80; // Same area = huge bonus
+          } else if (distance <= 15) {
+            score += 40; // Same region = good
+          } else if (distance >= 100) {
+            score -= 200; // Far away = massive penalty
+          }
 
           // Preferred carer bonus
           if (Array.isArray(client.preferred_carers) && client.preferred_carers.includes(carer.id)) {
@@ -98,36 +136,51 @@ export default function AIScheduleGenerator({ onClose, shifts = [], carers = [],
 
           // Previous experience with client
           const pastShifts = shifts.filter(s => 
-            s && s.carer_id === carer.id && // Ensure shift object is not null/undefined
+            s && s.carer_id === carer.id &&
             s.client_id === shift.client_id &&
             s.status === 'completed'
           );
           score += Math.min(pastShifts.length * 5, 20);
 
           // Workload balance (prefer carers with fewer shifts)
-          const carerShiftCount = shifts.filter(s => s && s.carer_id === carer.id).length; // Ensure shift object is not null/undefined
+          const carerShiftCount = shifts.filter(s => s && s.carer_id === carer.id).length;
           score += Math.max(0, 20 - carerShiftCount);
 
-          return { carer, score };
+          return { carer, score, distance };
         });
 
         scoredCarers.sort((a, b) => (b?.score || 0) - (a?.score || 0)); // Add null/undefined checks for a and b scores
 
         if (scoredCarers.length > 0) {
           const bestMatch = scoredCarers[0];
-          newSuggestions.push({
-            type: 'assignment',
-            shift,
-            carer: bestMatch.carer,
-            client,
-            score: bestMatch.score,
-            reasons: [
+          
+          // Skip suggestions with poor geographic matches
+          if (bestMatch.distance >= 100) {
+            newSuggestions.push({
+              type: 'warning',
+              shift,
+              client,
+              message: `No local staff available - best match is ${bestMatch.carer.full_name} (${bestMatch.carer.address?.postcode || 'Unknown'}) but client is in ${client.address?.postcode || 'Unknown'} - different regions`
+            });
+          } else {
+            const reasons = [
+              bestMatch.distance === 0 && "Same postcode area",
+              bestMatch.distance <= 15 && bestMatch.distance > 0 && "Same region",
               Array.isArray(client.preferred_carers) && client.preferred_carers.includes(bestMatch.carer.id) && "Preferred carer",
               shift.required_qualification && Array.isArray(bestMatch.carer.qualifications) && bestMatch.carer.qualifications.includes(shift.required_qualification) && "Has required qualification",
               "Available and no conflicts",
               bestMatch.score > 50 && "High compatibility score"
-            ].filter(Boolean)
-          });
+            ].filter(Boolean);
+            
+            newSuggestions.push({
+              type: 'assignment',
+              shift,
+              carer: bestMatch.carer,
+              client,
+              score: bestMatch.score,
+              reasons
+            });
+          }
         } else {
           newSuggestions.push({
             type: 'warning',

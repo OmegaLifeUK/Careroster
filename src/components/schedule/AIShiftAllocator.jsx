@@ -246,11 +246,35 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
   // Calculate distance score based on postcodes
   const calculateProximityScore = (staffPostcode, clientPostcode) => {
     if (!staffPostcode || !clientPostcode) return 50;
-    const staffPrefix = staffPostcode.split(' ')[0]?.toUpperCase();
-    const clientPrefix = clientPostcode.split(' ')[0]?.toUpperCase();
-    if (staffPrefix === clientPrefix) return 100;
-    if (staffPrefix?.substring(0, 2) === clientPrefix?.substring(0, 2)) return 75;
-    return 25;
+    
+    const staffArea = staffPostcode.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+    const clientArea = clientPostcode.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+    
+    // Same postcode area = perfect match
+    if (staffArea === clientArea) return 100;
+    
+    // Check proximity groups (same region)
+    const proximityGroups = [
+      ['M', 'SK', 'OL', 'BL', 'WN'], // Greater Manchester
+      ['BN', 'RH', 'TN'], // Brighton/Sussex
+      ['L', 'CH', 'WA'], // Liverpool/Merseyside
+      ['B', 'WS', 'WV', 'DY'], // Birmingham/West Midlands
+      ['LS', 'BD', 'HX', 'WF'], // Leeds/West Yorkshire
+      ['S', 'DN', 'HD'], // Sheffield/South Yorkshire
+      ['NE', 'SR', 'DH'], // Newcastle/Tyne and Wear
+      ['GL', 'SN', 'BA'], // Gloucestershire/Wiltshire
+      ['NG', 'DE', 'LE'], // Nottingham/Derby/Leicester
+      ['CV', 'LE', 'NN'], // Coventry/Warwickshire
+    ];
+    
+    for (const group of proximityGroups) {
+      if (group.includes(staffArea) && group.includes(clientArea)) {
+        return 65; // Same region = good match
+      }
+    }
+    
+    // Different regions = poor match (should be heavily penalized)
+    return 10;
   };
 
   // Check qualification match
@@ -385,34 +409,60 @@ export default function AIShiftAllocator({ onClose, onAllocationsApplied }) {
             reasons.push("Preferred by client");
           }
 
-          // Proximity score for domiciliary care (+25 max)
-          if (shift.care_type === 'domiciliary_care' && client?.address?.postcode) {
+          // Proximity score - CRITICAL for domiciliary care
+          if (client?.address?.postcode) {
             const proximityScore = calculateProximityScore(
               carer.address?.postcode,
               client.address.postcode
             );
-            score += (proximityScore / 100) * 25;
-            if (proximityScore >= 75) reasons.push("Near client");
-
-            // Check preferred areas from availability settings
-            const carerPrefs = carerAvailability.find(a => 
-              a.carer_id === carer.id && 
-              a.preferred_areas && 
-              a.preferred_areas.length > 0
-            );
-            if (carerPrefs?.preferred_areas) {
-              const clientPostcodePrefix = client.address.postcode?.split(' ')[0]?.toUpperCase();
-              const isInPreferredArea = carerPrefs.preferred_areas.some(area => 
-                clientPostcodePrefix?.startsWith(area.toUpperCase()) ||
-                area.toUpperCase() === clientPostcodePrefix
-              );
-              if (isInPreferredArea) {
-                score += 15;
-                reasons.push("In preferred area");
-              } else {
-                score -= 10;
-                warnings.push("Outside preferred area");
+            
+            // For domiciliary care, geography is critical
+            if (shift.care_type === 'domiciliary_care') {
+              if (proximityScore >= 100) {
+                score += 60; // Same postcode area = major bonus
+                reasons.push("Same postcode area");
+              } else if (proximityScore >= 65) {
+                score += 35; // Same region = good
+                reasons.push("Same region");
+              } else if (proximityScore <= 10) {
+                score -= 150; // Different regions = massive penalty
+                warnings.push("Very far from client");
               }
+            } else {
+              // For residential/supported living, proximity still matters but less critical
+              score += (proximityScore / 100) * 25;
+              if (proximityScore >= 75) reasons.push("Near client");
+
+              // Check preferred areas from availability settings
+              const carerPrefs = carerAvailability.find(a => 
+                a.carer_id === carer.id && 
+                a.preferred_areas && 
+                a.preferred_areas.length > 0
+              );
+              if (carerPrefs?.preferred_areas) {
+                const clientPostcodePrefix = client.address.postcode?.split(' ')[0]?.toUpperCase();
+                const isInPreferredArea = carerPrefs.preferred_areas.some(area => 
+                  clientPostcodePrefix?.startsWith(area.toUpperCase()) ||
+                  area.toUpperCase() === clientPostcodePrefix
+                );
+                if (isInPreferredArea) {
+                  score += 15;
+                  reasons.push("In preferred area");
+                } else {
+                  score -= 10;
+                  warnings.push("Outside preferred area");
+                }
+              }
+            }
+          } else if (client?.address?.postcode) {
+            // Non-domiciliary care still needs proximity check
+            const proximityScore = calculateProximityScore(
+              carer.address?.postcode,
+              client.address.postcode
+            );
+            if (proximityScore <= 10) {
+              score -= 50;
+              warnings.push("Far from client location");
             }
           }
 
