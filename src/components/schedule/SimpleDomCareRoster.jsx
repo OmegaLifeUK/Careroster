@@ -175,34 +175,61 @@ export default function SimpleDomCareRoster({
   };
 
   const handleDragEnd = (result) => {
-    console.log('[SimpleDomCareRoster] DRAG END triggered', result);
+    console.log('═══════════════════════════════════════════════');
+    console.log('[SimpleDomCareRoster] DRAG END TRIGGERED');
+    console.log('[SimpleDomCareRoster] Result:', result);
     
-    if (!result.destination) return;
+    if (!result.destination) {
+      console.log('[SimpleDomCareRoster] No destination - aborting');
+      return;
+    }
     
     const { draggableId, destination } = result;
     const visit = visits.find(v => v.id === draggableId);
-    if (!visit || !onVisitUpdate) return;
+    
+    console.log('[SimpleDomCareRoster] Visit found:', visit?.id, visit?.client_id);
+    
+    if (!visit || !onVisitUpdate) {
+      console.log('[SimpleDomCareRoster] No visit or update handler - aborting');
+      return;
+    }
 
     const [targetStaffId, targetDate] = destination.droppableId.split('_');
     const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
 
-    console.log('[SimpleDomCareRoster] Target:', { targetStaffId, newStaffId });
+    console.log('[SimpleDomCareRoster] Destination:', {
+      droppableId: destination.droppableId,
+      targetStaffId,
+      newStaffId,
+      targetDate
+    });
 
     // GEOGRAPHIC VALIDATION - Block distant assignments
     if (newStaffId) {
       const staffMember = staff.find(s => s.id === newStaffId);
       const client = clients.find(c => c.id === visit.client_id);
       
-      console.log('[SimpleDomCareRoster] Validating:', {
-        staff: staffMember?.full_name,
-        staffPostcode: staffMember?.address?.postcode,
-        client: client?.full_name,
-        clientPostcode: client?.address?.postcode
+      console.log('');
+      console.log('[GEOGRAPHIC VALIDATION STARTING]');
+      console.log('[SimpleDomCareRoster] Staff Member:', {
+        id: staffMember?.id,
+        name: staffMember?.full_name,
+        hasAddress: !!staffMember?.address,
+        postcode: staffMember?.address?.postcode,
+        fullAddress: staffMember?.address
+      });
+      console.log('[SimpleDomCareRoster] Client:', {
+        id: client?.id,
+        name: client?.full_name,
+        hasAddress: !!client?.address,
+        postcode: client?.address?.postcode,
+        fullAddress: client?.address
       });
       
       // REQUIRE postcodes for validation
       if (!staffMember?.address?.postcode || !client?.address?.postcode) {
         console.log('[SimpleDomCareRoster] ❌ BLOCKING - Missing postcode data');
+        console.log('═══════════════════════════════════════════════');
         alert(
           `⚠️ BLOCKED: Missing Postcode Data\n\n` +
           `Cannot assign visit - postcode information is required for both staff and client.\n\n` +
@@ -215,10 +242,12 @@ export default function SimpleDomCareRoster({
       
       const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
       
-      console.log('[SimpleDomCareRoster] Distance:', distance);
+      console.log('[SimpleDomCareRoster] Distance calculated:', distance);
+      console.log('');
       
       if (distance >= 100) {
-        console.log('[SimpleDomCareRoster] ❌ BLOCKING ASSIGNMENT - Different regions');
+        console.log('[SimpleDomCareRoster] ❌❌❌ BLOCKING ASSIGNMENT - Different regions');
+        console.log('═══════════════════════════════════════════════');
         alert(
           `🚫 BLOCKED: Geographic Mismatch\n\n` +
           `Staff: ${staffMember.full_name}\nLocation: ${staffMember.address.postcode}\n\n` +
@@ -231,6 +260,7 @@ export default function SimpleDomCareRoster({
       
       console.log('[SimpleDomCareRoster] ✅ Allowing assignment - distance OK');
     }
+    console.log('═══════════════════════════════════════════════');
 
     const updates = {
       staff_id: newStaffId,
