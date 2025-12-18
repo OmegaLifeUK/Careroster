@@ -177,9 +177,10 @@ export default function SimpleDomCareRoster({
   };
 
   const handleDragEnd = (result) => {
-    console.log('═══════════════════════════════════════════════');
-    console.log('[SimpleDomCareRoster] DRAG END TRIGGERED');
-    console.log('[SimpleDomCareRoster] Result:', result);
+    console.error('🎯🎯🎯 SIMPLE DOM CARE ROSTER - DRAG END CALLED 🎯🎯🎯');
+    console.error('═══════════════════════════════════════════════');
+    console.error('[SimpleDomCareRoster] DRAG END TRIGGERED');
+    console.error('[SimpleDomCareRoster] Result:', result);
     
     if (!result.destination) {
       console.log('[SimpleDomCareRoster] No destination - aborting');
