@@ -3,7 +3,7 @@ import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Clock, User, MapPin, Calendar } from "lucide-react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
 
 const statusColors = {
@@ -13,7 +13,9 @@ const statusColors = {
   unfilled: "bg-orange-100 text-orange-800",
 };
 
-export default function TodayShifts({ shifts = [], carers = [], clients = [], isLoading }) {
+export default function TodayShifts({ shifts = [], carers = [], clients = [], isLoading, onShiftClick }) {
+  const navigate = useNavigate();
+  
   if (isLoading) {
     return (
       <Card>
@@ -76,7 +78,14 @@ export default function TodayShifts({ shifts = [], carers = [], clients = [], is
               return (
                 <div 
                   key={shift.id}
-                  className="p-4 border rounded-lg hover:shadow-md transition-shadow bg-white"
+                  onClick={() => {
+                    if (onShiftClick) {
+                      onShiftClick(shift);
+                    } else {
+                      navigate(createPageUrl('Schedule'), { state: { selectedShiftId: shift.id } });
+                    }
+                  }}
+                  className="p-4 border rounded-lg hover:shadow-lg transition-all bg-white cursor-pointer card-interactive"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-center gap-2">

@@ -1,6 +1,7 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,7 +16,15 @@ const statusColors = {
 };
 
 export default function CarerCard({ carer, qualifications = [], onEdit, onDelete }) {
+  const navigate = useNavigate();
+  
   if (!carer) return null;
+
+  const handleCardClick = (e) => {
+    // Don't trigger card click if clicking a button
+    if (e.target.closest('button')) return;
+    navigate(createPageUrl('CarerDetail') + `?id=${carer.id}`);
+  };
 
   const carerQualifications = Array.isArray(qualifications) ? qualifications.filter(q => 
     q && carer.qualifications?.includes(q.id)
@@ -49,7 +58,10 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
   const supervisionStatus = getSupervisionStatus();
 
   return (
-    <Card className="hover:shadow-lg transition-all">
+    <Card 
+      className="hover:shadow-lg transition-all cursor-pointer card-interactive"
+      onClick={handleCardClick}
+    >
       <CardContent className="p-6">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-3">
@@ -126,12 +138,12 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             size="sm" 
             onClick={(e) => {
               e.stopPropagation();
-              window.location.href = createPageUrl('CarerDetail') + `?id=${carer.id}`;
+              if (onEdit) onEdit(carer);
             }}
             className="flex-1"
           >
-            <Eye className="w-4 h-4 mr-2" />
-            View Details
+            <Edit className="w-4 h-4 mr-2" />
+            Edit
           </Button>
           <Button 
             variant="outline" 

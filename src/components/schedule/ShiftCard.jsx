@@ -63,8 +63,17 @@ export default function ShiftCard({ shift, carers = [], clients = [], properties
   const assignment = getAssignmentDisplay();
   const AssignmentIcon = assignment.icon;
 
+  const handleCardClick = (e) => {
+    // Don't trigger card click if clicking a button
+    if (e.target.closest('button')) return;
+    onEdit(shift);
+  };
+
   return (
-    <Card className="hover:shadow-lg transition-shadow">
+    <Card 
+      className="hover:shadow-lg transition-all cursor-pointer card-interactive"
+      onClick={handleCardClick}
+    >
       <CardHeader className="pb-3">
         <div className="flex items-start justify-between">
           <div className="flex-1">
@@ -160,7 +169,10 @@ export default function ShiftCard({ shift, carers = [], clients = [], properties
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onEdit(shift)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onEdit(shift);
+              }}
               className="flex-1"
             >
               <Edit className="w-4 h-4 mr-1" />
@@ -169,7 +181,10 @@ export default function ShiftCard({ shift, carers = [], clients = [], properties
             <Button
               variant="outline"
               size="sm"
-              onClick={() => onDelete(shift.id)}
+              onClick={(e) => {
+                e.stopPropagation();
+                onDelete(shift.id);
+              }}
               className="text-red-600 hover:text-red-700 hover:bg-red-50"
             >
               <Trash2 className="w-4 h-4" />
@@ -178,7 +193,10 @@ export default function ShiftCard({ shift, carers = [], clients = [], properties
               <Button
                 variant="outline"
                 size="sm"
-                onClick={() => onSendRequest(shift)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  onSendRequest(shift);
+                }}
                 className="flex-1"
               >
                 <Send className="w-4 h-4 mr-1" />
