@@ -239,6 +239,25 @@ export default function RecurringVisitDialog({ clients, staff, onClose }) {
 
             <div>
               <Label className="mb-2 block">Assigned Staff</Label>
+              {formData.assigned_staff_id && formData.client_id && (() => {
+                const client = clients.find(c => c.id === formData.client_id);
+                const staffMember = staff.find(s => s.id === formData.assigned_staff_id);
+                const distance = getPostcodeDistance(client?.address?.postcode, staffMember?.address?.postcode);
+                
+                if (distance >= 100) {
+                  return (
+                    <div className="mb-2 p-3 bg-red-50 border border-red-200 rounded-lg flex items-start gap-2">
+                      <AlertTriangle className="w-4 h-4 text-red-600 mt-0.5 flex-shrink-0" />
+                      <div className="text-xs text-red-800">
+                        <p className="font-semibold">Geographic Mismatch Warning</p>
+                        <p className="mt-1">Client: {client?.address?.postcode || 'Unknown'} • Staff: {staffMember?.address?.postcode || 'Unknown'}</p>
+                        <p className="mt-1">These locations are very far apart. Consider assigning local staff.</p>
+                      </div>
+                    </div>
+                  );
+                }
+                return null;
+              })()}
               <Select
                 value={formData.assigned_staff_id || ""}
                 onValueChange={(value) => setFormData({ ...formData, assigned_staff_id: value === "__unassigned__" ? "" : value })}
@@ -248,11 +267,23 @@ export default function RecurringVisitDialog({ clients, staff, onClose }) {
                 </SelectTrigger>
                 <SelectContent>
                   <SelectItem value="__unassigned__">Leave Unassigned</SelectItem>
-                  {staff.filter(s => s.is_active).map(member => (
-                    <SelectItem key={member.id} value={member.id}>
-                      {member.full_name}
-                    </SelectItem>
-                  ))}
+                  {staff.filter(s => s.is_active).map(member => {
+                    const client = clients.find(c => c.id === formData.client_id);
+                    const distance = getPostcodeDistance(client?.address?.postcode, member?.address?.postcode);
+                    const isFar = distance >= 100;
+                    
+                    return (
+                      <SelectItem key={member.id} value={member.id}>
+                        <div className="flex items-center gap-2">
+                          {member.full_name}
+                          {member.address?.postcode && (
+                            <span className="text-xs text-gray-500">({member.address.postcode})</span>
+                          )}
+                          {isFar && <span className="text-xs text-red-600 font-semibold">⚠️ Far</span>}
+                        </div>
+                      </SelectItem>
+                    );
+                  })}
                 </SelectContent>
               </Select>
             </div>
