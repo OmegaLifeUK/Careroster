@@ -200,6 +200,62 @@ export default function DomCareSchedule() {
   };
 
   const handleVisitUpdate = (visitId, updatedData) => {
+    console.error('🚨 PARENT handleVisitUpdate called!', { visitId, updatedData });
+    console.error('🚨 This means drag succeeded and bypassed validation!');
+    
+    // BLOCK GEOGRAPHIC MISMATCHES HERE
+    const visit = visits.find(v => v.id === visitId);
+    const newStaffId = updatedData.staff_id || updatedData.assigned_staff_id;
+    
+    if (visit && newStaffId) {
+      const staffMember = staff.find(s => s.id === newStaffId);
+      const client = clients.find(c => c.id === visit.client_id);
+      
+      if (staffMember?.address?.postcode && client?.address?.postcode) {
+        const extractArea = (postcode) => {
+          const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+          return match ? match[1] : '';
+        };
+        
+        const staffArea = extractArea(staffMember.address.postcode);
+        const clientArea = extractArea(client.address.postcode);
+        
+        // Check if different regions
+        if (staffArea !== clientArea) {
+          const proximityGroups = [
+            ['M', 'SK', 'OL', 'BL', 'WN'],
+            ['BN', 'RH', 'TN'],
+            ['L', 'CH', 'WA'],
+            ['B', 'WS', 'WV', 'DY'],
+            ['LS', 'BD', 'HX', 'WF'],
+            ['S', 'DN', 'HD'],
+            ['NE', 'SR', 'DH'],
+            ['GL', 'SN', 'BA'],
+            ['NG', 'DE', 'LE'],
+            ['CV', 'LE', 'NN'],
+          ];
+          
+          let sameRegion = false;
+          for (const group of proximityGroups) {
+            if (group.includes(staffArea) && group.includes(clientArea)) {
+              sameRegion = true;
+              break;
+            }
+          }
+          
+          if (!sameRegion) {
+            alert(
+              `🚫 BLOCKED: Different Regions\n\n` +
+              `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
+              `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+              `Cannot assign staff from different geographic regions.`
+            );
+            return; // BLOCK the update
+          }
+        }
+      }
+    }
+    
     updateVisitMutation.mutate({ id: visitId, data: updatedData });
   };
 
