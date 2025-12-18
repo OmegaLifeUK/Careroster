@@ -21,6 +21,40 @@ import { format, addDays, startOfWeek, isToday, parseISO, addWeeks, subWeeks } f
 import { useToast } from "@/components/ui/toast";
 import { calculateTravelTime } from "./TravelTimeCalculator";
 
+// Helper to extract postcode area and check distance
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const extractArea = (postcode) => {
+    const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+    return match ? match[1] : '';
+  };
+  
+  const area1 = extractArea(postcode1);
+  const area2 = extractArea(postcode2);
+  
+  if (area1 === area2) return 0;
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15;
+  }
+  
+  return 100;
+};
+
 const STATUS_COLORS = {
   draft: { bg: "bg-gray-100", border: "border-gray-300", text: "text-gray-700" },
   published: { bg: "bg-blue-50", border: "border-blue-300", text: "text-blue-700" },
@@ -149,6 +183,28 @@ export default function SimpleDomCareRoster({
 
     const [targetStaffId, targetDate] = destination.droppableId.split('_');
     const newStaffId = targetStaffId === 'unassigned' ? null : targetStaffId;
+
+    // GEOGRAPHIC VALIDATION - Block distant assignments
+    if (newStaffId) {
+      const staffMember = staff.find(s => s.id === newStaffId);
+      const client = clients.find(c => c.id === visit.client_id);
+      
+      if (staffMember?.address?.postcode && client?.address?.postcode) {
+        const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
+        
+        if (distance >= 100) {
+          alert(
+            `❌ GEOGRAPHIC MISMATCH - ASSIGNMENT BLOCKED\n\n` +
+            `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
+            `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+            `These locations are in different regions (likely 100+ miles apart).\n` +
+            `This assignment has been blocked to prevent impractical rostering.\n\n` +
+            `Please assign local staff to this visit.`
+          );
+          return; // Block the assignment
+        }
+      }
+    }
 
     const updates = {
       staff_id: newStaffId,

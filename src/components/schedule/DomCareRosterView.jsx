@@ -40,6 +40,40 @@ import { TravelTimeBadge, calculateTravelTime } from "./TravelTimeCalculator";
 import { WorkingTimeComplianceIndicator, WTRStatusBadge, checkWorkingTimeCompliance } from "./WorkingTimeRegulations";
 import RouteOptimizer from "./RouteOptimizer";
 
+// Helper to extract postcode area and check distance
+const getPostcodeDistance = (postcode1, postcode2) => {
+  if (!postcode1 || !postcode2) return 999;
+  
+  const extractArea = (postcode) => {
+    const match = postcode.trim().toUpperCase().match(/^([A-Z]+)/);
+    return match ? match[1] : '';
+  };
+  
+  const area1 = extractArea(postcode1);
+  const area2 = extractArea(postcode2);
+  
+  if (area1 === area2) return 0; // Same area
+  
+  const proximityGroups = [
+    ['M', 'SK', 'OL', 'BL', 'WN'],
+    ['BN', 'RH', 'TN'],
+    ['L', 'CH', 'WA'],
+    ['B', 'WS', 'WV', 'DY'],
+    ['LS', 'BD', 'HX', 'WF'],
+    ['S', 'DN', 'HD'],
+    ['NE', 'SR', 'DH'],
+    ['GL', 'SN', 'BA'],
+    ['NG', 'DE', 'LE'],
+    ['CV', 'LE', 'NN'],
+  ];
+  
+  for (const group of proximityGroups) {
+    if (group.includes(area1) && group.includes(area2)) return 15; // Same region
+  }
+  
+  return 100; // Different regions
+};
+
 const VISIT_COLORS = {
   scheduled: { bg: "bg-sky-100", border: "border-sky-300", text: "text-sky-800", dot: "bg-sky-500" },
   in_progress: { bg: "bg-emerald-100", border: "border-emerald-300", text: "text-emerald-800", dot: "bg-emerald-500" },
@@ -339,6 +373,28 @@ export default function DomCareRosterView({
       // Dropped on a staff row
       newStaffId = parts[0];
       targetDate = parts[1];
+    }
+    
+    // GEOGRAPHIC VALIDATION - Block distant assignments
+    if (newStaffId && parts[0] !== 'client') {
+      const staffMember = staff.find(s => s.id === newStaffId);
+      const client = clients.find(c => c.id === visit.client_id);
+      
+      if (staffMember?.address?.postcode && client?.address?.postcode) {
+        const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
+        
+        if (distance >= 100) {
+          alert(
+            `❌ GEOGRAPHIC MISMATCH - ASSIGNMENT BLOCKED\n\n` +
+            `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
+            `Client: ${client.full_name} (${client.address.postcode})\n\n` +
+            `These locations are in different regions (likely 100+ miles apart).\n` +
+            `This assignment has been blocked to prevent impractical rostering.\n\n` +
+            `Please assign local staff to this visit.`
+          );
+          return; // Block the assignment
+        }
+      }
     }
     
     // Check for conflicts
