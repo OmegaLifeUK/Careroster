@@ -256,7 +256,8 @@ export default function EnhancedDomCareRoster({
   };
 
   const handleDragEnd = (result) => {
-    console.log('[DRAG END] Triggered', result);
+    console.error('🔥🔥🔥 ENHANCED DOM CARE ROSTER - DRAG END CALLED 🔥🔥🔥');
+    console.error('[DRAG END] Triggered', result);
     
     if (!result.destination) return;
 
