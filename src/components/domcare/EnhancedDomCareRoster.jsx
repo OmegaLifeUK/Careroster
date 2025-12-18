@@ -9,11 +9,19 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 const getPostcodeDistance = (postcode1, postcode2) => {
   if (!postcode1 || !postcode2) return 999;
   
-  const area1 = postcode1.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
-  const area2 = postcode2.trim().split(' ')[0].replace(/\d/g, '').toUpperCase();
+  // Extract area code (just letters, no numbers)
+  const area1 = postcode1.trim().toUpperCase().replace(/[0-9 ]/g, '');
+  const area2 = postcode2.trim().toUpperCase().replace(/[0-9 ]/g, '');
   
-  if (area1 === area2) return 0;
+  console.log('[Geographic Check]', { postcode1, postcode2, area1, area2 });
   
+  // Exact same area
+  if (area1 === area2) {
+    console.log('[Geographic Check] Same area - allowed');
+    return 0;
+  }
+  
+  // Adjacent/nearby areas
   const proximityGroups = [
     ['M', 'SK', 'OL', 'BL', 'WN'], // Greater Manchester
     ['BN', 'RH', 'TN'], // Brighton/Sussex
@@ -28,9 +36,14 @@ const getPostcodeDistance = (postcode1, postcode2) => {
   ];
   
   for (const group of proximityGroups) {
-    if (group.includes(area1) && group.includes(area2)) return 15;
+    if (group.includes(area1) && group.includes(area2)) {
+      console.log('[Geographic Check] Same region - allowed');
+      return 15;
+    }
   }
   
+  // Different regions - BLOCK
+  console.log('[Geographic Check] DIFFERENT REGIONS - BLOCKED');
   return 100;
 };
 import { 
