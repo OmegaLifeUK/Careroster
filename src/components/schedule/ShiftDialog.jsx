@@ -217,7 +217,103 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
   const isAssessmentShift = ['supervision', 'shadowing'].includes(formData.shift_type) || 
     formData.notes?.toLowerCase().includes('assessment');
 
+  // Fetch carer availability
+  const { data: carerAvailability = [] } = useQuery({
+    queryKey: ['carer-availability'],
+    queryFn: async () => {
+      const data = await base44.entities.CarerAvailability.list();
+      return Array.isArray(data) ? data : [];
+    }
+  });
+
+  const checkAvailabilityConflict = (carerIdToCheck, dateToCheck, startTime, endTime) => {
+    if (!carerIdToCheck || !dateToCheck) return null;
+    
+    const shiftDate = new Date(dateToCheck);
+    const dayOfWeek = shiftDate.getDay();
+    const weekNumber = Math.floor((shiftDate - new Date(shiftDate.getFullYear(), 0, 1)) / (7 * 24 * 60 * 60 * 1000));
+    
+    const carerAvail = carerAvailability.filter(a => a.carer_id === carerIdToCheck);
+    const workingHours = carerAvail.filter(a => a.availability_type === 'working_hours');
+    
+    // Check for specific date match
+    const dateStr = format(shiftDate, 'yyyy-MM-dd');
+    const specificDateHours = workingHours.find(w => 
+      w.schedule_pattern === 'specific_date' && w.specific_date === dateStr
+    );
+    
+    if (specificDateHours) {
+      if (startTime < specificDateHours.start_time || endTime > specificDateHours.end_time) {
+        return {
+          type: 'outside_hours',
+          message: `Shift (${startTime}-${endTime}) is outside carer's available hours (${specificDateHours.start_time}-${specificDateHours.end_time}) for this date.`
+        };
+      }
+      return null;
+    }
+    
+    // Check alternate weeks
+    const hasAlternateWeeks = workingHours.some(w => 
+      w.schedule_pattern === 'alternate_week_1' || w.schedule_pattern === 'alternate_week_2'
+    );
+    
+    if (hasAlternateWeeks) {
+      const isWeek1 = weekNumber % 2 === 1;
+      const targetPattern = isWeek1 ? 'alternate_week_1' : 'alternate_week_2';
+      const dayHours = workingHours.find(w => 
+        w.day_of_week === dayOfWeek && w.schedule_pattern === targetPattern
+      );
+      
+      if (!dayHours) {
+        return {
+          type: 'not_working',
+          message: `Carer is not scheduled to work on this day (${format(shiftDate, 'EEEE')}, ${targetPattern}).`
+        };
+      }
+      
+      if (startTime < dayHours.start_time || endTime > dayHours.end_time) {
+        return {
+          type: 'outside_hours',
+          message: `Shift (${startTime}-${endTime}) is outside carer's available hours (${dayHours.start_time}-${dayHours.end_time}).`
+        };
+      }
+      return null;
+    }
+    
+    // Check weekly pattern
+    const dayHours = workingHours.find(w => 
+      w.day_of_week === dayOfWeek && w.schedule_pattern === 'weekly'
+    );
+    
+    if (!dayHours) {
+      return {
+        type: 'not_working',
+        message: `Carer is not scheduled to work on ${format(shiftDate, 'EEEE')}s.`
+      };
+    }
+    
+    if (startTime < dayHours.start_time || endTime > dayHours.end_time) {
+      return {
+        type: 'outside_hours',
+        message: `Shift (${startTime}-${endTime}) is outside carer's available hours (${dayHours.start_time}-${dayHours.end_time}).`
+      };
+    }
+    
+    return null;
+  };
+
   const handleSelectCarer = (carerId) => {
+    // Check availability before assigning
+    const availConflict = checkAvailabilityConflict(carerId, formData.date, formData.start_time, formData.end_time);
+    
+    if (availConflict) {
+      const carerName = carers.find(c => c?.id === carerId)?.full_name || 'This carer';
+      const proceed = window.confirm(
+        `⚠️ Availability Conflict!\n\n${carerName} ${availConflict.message}\n\nAre you sure you want to assign this shift anyway?`
+      );
+      if (!proceed) return;
+    }
+    
     setFormData(prev => ({ 
       ...prev, 
       carer_id: carerId,
@@ -279,6 +375,16 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
         const conflictTimes = conflicts.map(c => `${c.start_time}-${c.end_time}`).join(', ');
         const proceed = window.confirm(
           `⚠️ Scheduling Conflict Detected!\n\n${carerName} already has shift(s) at ${conflictTimes} on this date.\n\nThis will create overlapping shifts. Are you sure you want to continue?`
+        );
+        if (!proceed) return;
+      }
+      
+      // Check availability conflicts
+      const availConflict = checkAvailabilityConflict(formData.carer_id, formData.date, formData.start_time, formData.end_time);
+      if (availConflict) {
+        const carerName = carers.find(c => c?.id === formData.carer_id)?.full_name || 'This carer';
+        const proceed = window.confirm(
+          `⚠️ Availability Conflict!\n\n${carerName} ${availConflict.message}\n\nAre you sure you want to schedule this shift anyway?`
         );
         if (!proceed) return;
       }

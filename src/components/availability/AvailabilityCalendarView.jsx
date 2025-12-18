@@ -160,7 +160,7 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
           
           {paddedDays.map((date, idx) => {
             if (!date) {
-              return <div key={`empty-${idx}`} className="h-20"></div>;
+              return <div key={`empty-${idx}`} className="h-24"></div>;
             }
 
             const status = getDayStatus(date);
@@ -169,30 +169,52 @@ export default function AvailabilityCalendarView({ carerId, availability = [], l
             return (
               <div
                 key={date.toISOString()}
-                className={`h-20 p-1 border rounded-lg ${
+                className={`h-24 p-2 border rounded-lg transition-all ${
                   today ? 'ring-2 ring-blue-500' : ''
                 } ${
                   isSameMonth(date, currentMonth) ? 'bg-white' : 'bg-gray-50'
+                } ${
+                  status?.status === 'working' ? 'bg-green-50 border-green-200' : ''
+                } ${
+                  status?.status === 'leave' ? 'bg-purple-50 border-purple-200' : ''
+                } ${
+                  status?.status === 'unavailable' ? 'bg-orange-50 border-orange-200' : ''
                 }`}
               >
                 <div className="flex flex-col h-full">
-                  <span className={`text-sm font-medium ${
+                  <span className={`text-sm font-semibold mb-1 ${
                     today ? 'text-blue-600' : 'text-gray-700'
                   }`}>
                     {format(date, 'd')}
                   </span>
-                  {status && (
-                    <div className="flex-1 flex items-center justify-center">
-                      <div 
-                        className={`w-full h-2 rounded ${status.color}`}
-                        title={status.label}
-                      ></div>
+                  {status && status.status === 'working' && (
+                    <div className="flex-1 flex flex-col items-center justify-center">
+                      <Badge className="bg-green-600 text-white text-xs px-1 py-0.5 mb-1">
+                        Working
+                      </Badge>
+                      <span className="text-xs font-semibold text-green-700 text-center leading-tight">
+                        {status.label}
+                      </span>
                     </div>
                   )}
-                  {status && status.status === 'working' && (
-                    <span className="text-xs text-gray-500 truncate">
-                      {status.label}
-                    </span>
+                  {status && status.status === 'leave' && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <Badge className="bg-purple-600 text-white text-xs">
+                        On Leave
+                      </Badge>
+                    </div>
+                  )}
+                  {status && status.status === 'unavailable' && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <Badge className="bg-orange-600 text-white text-xs">
+                        Unavailable
+                      </Badge>
+                    </div>
+                  )}
+                  {status && status.status === 'off' && (
+                    <div className="flex-1 flex items-center justify-center">
+                      <span className="text-xs text-gray-400">Day Off</span>
+                    </div>
                   )}
                 </div>
               </div>
