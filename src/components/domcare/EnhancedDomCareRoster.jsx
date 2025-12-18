@@ -233,7 +233,7 @@ export default function EnhancedDomCareRoster({
     const visit = visits.find(v => v.id === visitId);
     if (!visit) return;
 
-    // GEOGRAPHIC VALIDATION - Check postcode distance
+    // GEOGRAPHIC VALIDATION - Block postcode mismatches
     const staffMember = staff.find(s => s.id === staffId);
     const client = clients.find(c => c.id === visit.client_id);
     
@@ -241,15 +241,15 @@ export default function EnhancedDomCareRoster({
       const distance = getPostcodeDistance(staffMember.address.postcode, client.address.postcode);
       
       if (distance >= 100) {
-        const proceed = window.confirm(
-          `⚠️ GEOGRAPHIC MISMATCH WARNING!\n\n` +
+        alert(
+          `❌ GEOGRAPHIC MISMATCH BLOCKED\n\n` +
           `Staff: ${staffMember.full_name} (${staffMember.address.postcode})\n` +
           `Client: ${client.full_name} (${client.address.postcode})\n\n` +
-          `These locations are in different regions and may be hours apart.\n` +
-          `This assignment is not recommended for efficient rostering.\n\n` +
-          `Do you still want to proceed?`
+          `These locations are in different regions (likely hours apart).\n` +
+          `This assignment has been blocked for efficient rostering.\n\n` +
+          `Please assign local staff to this visit.`
         );
-        if (!proceed) return;
+        return; // Block the assignment
       }
     }
 
