@@ -78,6 +78,8 @@ export default function DomCareSchedule() {
       queryClient.invalidateQueries({ queryKey: ['visits'] });
       queryClient.invalidateQueries({ queryKey: ['runs'] });
       
+      console.error('⚠️⚠️⚠️ UPDATE MUTATION ONSUCCESS - THIS IS WHERE NOTIFICATIONS HAPPEN');
+      
       // Send notifications for key changes
       const visit = visits.find(v => v.id === variables.id);
       if (!visit) return;
@@ -85,6 +87,12 @@ export default function DomCareSchedule() {
       const staffId = variables.data.staff_id || variables.data.assigned_staff_id;
       const staffMember = staff.find(s => s.id === staffId);
       const client = clients.find(c => c.id === visit.client_id);
+      
+      console.error('[DomCareSchedule] Notification check:', { 
+        staffMember: staffMember?.full_name, 
+        client: client?.full_name,
+        willNotify: !!(staffMember && client)
+      });
       
       if (!staffMember || !client) return;
       
