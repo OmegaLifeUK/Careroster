@@ -208,16 +208,18 @@ Ensure the plan promotes independence, dignity, choice, and person-centered care
         .filter(task => task.is_critical || task.frequency === 'daily' || task.frequency === 'twice_daily')
         .map(task => ({
           client_id: client.id,
-          care_plan_id: createdCarePlan.id,
           task_name: task.task_name,
-          category: task.category,
-          frequency: task.frequency,
-          preferred_time: task.preferred_time,
-          duration_minutes: task.duration_minutes || 30,
-          special_instructions: task.special_instructions || '',
-          requires_two_carers: task.requires_two_carers || false,
-          is_critical: task.is_critical || false,
-          status: 'active'
+          category: task.category === 'healthcare' ? 'medical' : task.category,
+          frequency: task.frequency === 'twice_daily' ? 'daily' : task.frequency,
+          priority: task.is_critical ? 'critical' : 'medium',
+          estimated_duration_minutes: task.duration_minutes || 30,
+          instructions: task.special_instructions || '',
+          requires_two_staff: task.requires_two_carers || false,
+          alerts_if_missed: task.is_critical || false,
+          is_active: true,
+          start_date: today,
+          related_care_plan_id: createdCarePlan.id,
+          source: 'ai_generated'
         }));
 
       if (careTasksToCreate.length > 0) {
@@ -225,79 +227,34 @@ Ensure the plan promotes independence, dignity, choice, and person-centered care
       }
 
       // 3. CREATE COMPLIANCE TASKS (regulatory requirements)
-      const complianceTasks = [];
+      const complianceTasksToCreate = [];
       
-      // Review task
-      complianceTasks.push({
-        task_name: `${client.full_name} - Care Plan Review`,
-        task_type: 'review',
-        category: 'care_plan_review',
-        due_date: format(addMonths(new Date(), 3), 'yyyy-MM-dd'),
-        priority: 'medium',
+      // Review task - assign to admin or current user
+      complianceTasksToCreate.push({
+        title: `Care Plan Review - ${client.full_name}`,
         description: 'Scheduled care plan review as per regulatory requirements',
-        requires_completion: true,
-        linked_client_id: client.id,
-        linked_care_plan_id: createdCarePlan.id
+        source_type: 'manual',
+        assigned_to_staff_id: user.email,
+        priority: 'medium',
+        status: 'pending',
+        due_date: format(addMonths(new Date(), 3), 'yyyy-MM-dd')
       });
 
-      // Risk assessment review
       if (generatedPlan.risk_factors && generatedPlan.risk_factors.length > 0) {
-        complianceTasks.push({
-          task_name: `${client.full_name} - Risk Assessment Review`,
-          task_type: 'risk_assessment',
-          category: 'risk_management',
-          due_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
-          priority: 'high',
+        complianceTasksToCreate.push({
+          title: `Risk Assessment Review - ${client.full_name}`,
           description: 'Review and update risk assessments',
-          requires_completion: true,
-          linked_client_id: client.id
+          source_type: 'manual',
+          assigned_to_staff_id: user.email,
+          priority: 'high',
+          status: 'pending',
+          due_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd')
         });
       }
 
-      // Monthly care plan audit
-      complianceTasks.push({
-        task_name: `${client.full_name} - Monthly Care Delivery Audit`,
-        task_type: 'audit',
-        category: 'quality_assurance',
-        due_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
-        priority: 'medium',
-        description: 'Audit care delivery against care plan objectives',
-        requires_completion: true,
-        linked_client_id: client.id,
-        linked_care_plan_id: createdCarePlan.id
-      });
+      await base44.entities.ComplianceTask.bulkCreate(complianceTasksToCreate);
 
-      await base44.entities.ComplianceTask.bulkCreate(complianceTasks);
-
-      // 4. CREATE AUTOMATED WORKFLOW
-      await base44.entities.AutomatedWorkflow.create({
-        workflow_name: `Care Plan Monitoring - ${client.full_name}`,
-        trigger_type: 'scheduled',
-        trigger_schedule: 'weekly',
-        workflow_type: 'care_plan_monitoring',
-        is_active: true,
-        linked_client_id: client.id,
-        linked_care_plan_id: createdCarePlan.id,
-        actions: [
-          {
-            action_type: 'check_task_completion',
-            action_data: { check_critical_tasks: true }
-          },
-          {
-            action_type: 'generate_alert',
-            action_data: { 
-              condition: 'incomplete_critical_tasks',
-              alert_level: 'high'
-            }
-          },
-          {
-            action_type: 'check_objectives_progress',
-            action_data: { alert_if_stalled: true }
-          }
-        ]
-      });
-
-      // 5. SAVE DOCUMENT VERSION
+      // 4. SAVE DOCUMENT VERSION
       const planText = `PERSON-CENTERED CARE PLAN
 Client: ${client.full_name}
 Generated: ${format(new Date(), 'PPP')}
@@ -359,13 +316,12 @@ CQC Well-Led: ${(generatedPlan.compliance_checklist?.well_led || []).join(', ')}
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
       queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
-      queryClient.invalidateQueries({ queryKey: ['automated-workflows'] });
 
-      toast.success("Success", "Care plan created with actionable tasks, objectives, and monitoring workflows!");
+      toast.success("Success", "Care plan created with actionable tasks and objectives!");
       onClose();
     } catch (error) {
       console.error("Error saving care plan:", error);
-      toast.error("Error", "Failed to save care plan");
+      toast.error("Error", error.message || "Failed to save care plan");
     } finally {
       setIsSaving(false);
     }
