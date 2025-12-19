@@ -154,44 +154,100 @@ export default function ClientProgressReport({ clientId, client }) {
   const generateAIReport = async () => {
     setIsGeneratingAI(true);
     try {
-      // Gather context from recent data
-      const recentBehaviour = behaviourCharts.slice(0, 10);
-      const recentNotes = dailyNotes.slice(0, 20);
+      // Gather comprehensive context from multiple data sources
+      const recentBehaviour = behaviourCharts.slice(0, 15);
+      const recentNotes = dailyNotes.slice(0, 30);
       const activePlan = carePlans[0];
+      const recentProgress = progressRecords.slice(0, 3);
       
-      const prompt = `Based on the following care data for ${client?.full_name || 'this client'}, generate a comprehensive progress report.
+      // Analyze trends from historical progress records
+      const historicalTrends = recentProgress.map((r, idx) => ({
+        date: r.record_date,
+        ratings: {
+          behaviour: r.behaviour?.overall_rating || 0,
+          education: r.education_schooling?.overall_rating || 0,
+          social: r.social_emotional?.overall_rating || 0,
+          health: r.health_wellbeing?.overall_rating || 0,
+          independence: r.independence_skills?.overall_rating || 0,
+          activities: r.activities_engagement?.overall_rating || 0,
+        },
+        concerns: r.concerns || [],
+        achievements: r.key_achievements || []
+      }));
+      
+      const prompt = `You are an expert care professional analyzing progress data for ${client?.full_name || 'this client'}. 
 
-Recent Behaviour Charts (last ${recentBehaviour.length} records):
-${recentBehaviour.map(b => `- Date: ${b.chart_date}, Behavior: ${b.behavior_being_monitored}, Incidents: ${b.total_incidents || 0}, Summary: ${b.daily_summary || 'N/A'}`).join('\n')}
+TASK: Generate a comprehensive progress report that:
+1. Summarizes key events and patterns from recent data
+2. Identifies trends in behaviour, health, and wellbeing (improving, stable, or declining)
+3. Analyzes progress against care plan objectives
+4. Recommends specific interventions or care plan adjustments
 
-Recent Daily Care Notes (last ${recentNotes.length} records):
-${recentNotes.map(n => `- Date: ${n.date}, Shift: ${n.shift_time}, Mood: ${n.mood_behaviour?.mood || 'N/A'}, Wellbeing: ${n.overall_wellbeing || 'N/A'}, Activities: ${n.mobility_activities?.activities_participated?.join(', ') || 'None'}`).join('\n')}
+RECENT BEHAVIOR DATA (last ${recentBehaviour.length} records):
+${recentBehaviour.map(b => `- ${b.chart_date}: ${b.behavior_being_monitored}, Incidents: ${b.total_incidents || 0}, Triggers: ${b.triggers?.join(', ') || 'None'}, Interventions: ${b.interventions_used?.join(', ') || 'None'}, Summary: ${b.daily_summary || 'N/A'}`).join('\n')}
 
-Active Care Plan Goals:
-${activePlan?.care_objectives?.map(o => `- ${o.objective} (Status: ${o.status})`).join('\n') || 'No active goals'}
+RECENT DAILY CARE NOTES (last ${recentNotes.length} days):
+${recentNotes.map(n => `- ${n.date} (${n.shift_time}): Mood: ${n.mood_behaviour?.mood || 'N/A'}, Engagement: ${n.mood_behaviour?.engagement_level || 'N/A'}, Sleep: ${n.health_observations?.sleep_quality || 'N/A'}, Appetite: ${n.health_observations?.appetite || 'N/A'}, Activities: ${n.mobility_activities?.activities_participated?.join(', ') || 'None'}, Notes: ${n.general_notes || 'None'}`).join('\n')}
 
-Generate a progress assessment with ratings (1-10) and trends for each area. Be objective and balanced.`;
+HISTORICAL PROGRESS TRENDS (last ${recentProgress.length} assessments):
+${historicalTrends.map(t => `- ${t.date}: Behaviour ${t.ratings.behaviour}/10, Education ${t.ratings.education}/10, Social ${t.ratings.social}/10, Health ${t.ratings.health}/10, Independence ${t.ratings.independence}/10, Activities ${t.ratings.activities}/10`).join('\n')}
+Previous Concerns: ${historicalTrends.flatMap(t => t.concerns).join('; ') || 'None'}
+Previous Achievements: ${historicalTrends.flatMap(t => t.achievements).join('; ') || 'None'}
+
+ACTIVE CARE PLAN OBJECTIVES:
+${activePlan?.care_objectives?.map(o => `- ${o.objective} (Status: ${o.status || 'not_started'}, Target: ${o.target_date || 'N/A'})`).join('\n') || 'No active care plan objectives'}
+
+CARE TASKS:
+${activePlan?.care_tasks?.filter(t => t.is_active).map(t => `- ${t.task_name} (${t.frequency})`).join('\n') || 'No active tasks'}
+
+CLIENT PROFILE:
+- Care Needs: ${client.care_needs?.join(', ') || 'Not specified'}
+- Mobility: ${client.mobility || 'Not specified'}
+- Medical Notes: ${client.medical_notes || 'None'}
+
+INSTRUCTIONS:
+1. Analyze patterns and trends across all data sources
+2. Provide objective ratings (1-10) based on evidence from the data
+3. Identify specific achievements and concerning patterns
+4. Suggest actionable recommendations that are specific, measurable, and achievable
+5. Consider whether care plan adjustments are needed based on progress
+6. Be balanced - highlight both positives and areas needing attention`;
+
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
         response_json_schema: {
           type: "object",
           properties: {
+            summary: {
+              type: "object",
+              properties: {
+                key_events: { type: "array", items: { type: "string" }, description: "Significant events from the period" },
+                patterns_identified: { type: "array", items: { type: "string" }, description: "Recurring patterns observed" },
+                overall_assessment: { type: "string", description: "Brief overall assessment of progress" }
+              }
+            },
             behaviour: {
               type: "object",
               properties: {
-                overall_rating: { type: "number" },
-                trend: { type: "string" },
+                overall_rating: { type: "number", description: "1-10 rating" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
                 positive_behaviours: { type: "array", items: { type: "string" } },
                 challenging_behaviours: { type: "array", items: { type: "string" } },
-                notes: { type: "string" }
+                incidents_count: { type: "number", description: "Number of incidents in period" },
+                notes: { type: "string", description: "Detailed analysis with evidence from data" }
               }
             },
             education_schooling: {
               type: "object",
               properties: {
                 overall_rating: { type: "number" },
-                trend: { type: "string" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
+                attendance_percentage: { type: "number" },
+                academic_progress: { type: "string", enum: ["above_expected", "at_expected", "below_expected", "significantly_below"] },
+                engagement_level: { type: "string", enum: ["fully_engaged", "mostly_engaged", "sometimes_engaged", "rarely_engaged"] },
+                subjects_excelling: { type: "array", items: { type: "string" } },
+                subjects_struggling: { type: "array", items: { type: "string" } },
                 notes: { type: "string" }
               }
             },
@@ -199,7 +255,11 @@ Generate a progress assessment with ratings (1-10) and trends for each area. Be 
               type: "object",
               properties: {
                 overall_rating: { type: "number" },
-                trend: { type: "string" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
+                peer_relationships: { type: "string", enum: ["excellent", "good", "fair", "poor"] },
+                emotional_regulation: { type: "string", enum: ["excellent", "good", "developing", "needs_support"] },
+                self_esteem: { type: "string", enum: ["high", "healthy", "low", "very_low"] },
+                communication_skills: { type: "string", enum: ["excellent", "good", "developing", "needs_support"] },
                 notes: { type: "string" }
               }
             },
@@ -207,7 +267,12 @@ Generate a progress assessment with ratings (1-10) and trends for each area. Be 
               type: "object",
               properties: {
                 overall_rating: { type: "number" },
-                trend: { type: "string" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
+                physical_health: { type: "string", enum: ["excellent", "good", "fair", "poor"] },
+                mental_health: { type: "string", enum: ["excellent", "good", "fair", "poor", "requires_attention"] },
+                sleep_quality: { type: "string", enum: ["good", "fair", "poor"] },
+                appetite: { type: "string", enum: ["good", "fair", "poor", "variable"] },
+                medication_compliance: { type: "string", enum: ["full", "mostly", "partial", "poor", "n_a"] },
                 notes: { type: "string" }
               }
             },
@@ -215,8 +280,13 @@ Generate a progress assessment with ratings (1-10) and trends for each area. Be 
               type: "object",
               properties: {
                 overall_rating: { type: "number" },
-                trend: { type: "string" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
+                personal_care: { type: "string", enum: ["independent", "minimal_support", "moderate_support", "full_support"] },
+                domestic_skills: { type: "string", enum: ["independent", "minimal_support", "moderate_support", "full_support"] },
+                money_management: { type: "string", enum: ["independent", "minimal_support", "moderate_support", "full_support", "n_a"] },
+                travel_independence: { type: "string", enum: ["fully_independent", "mostly_independent", "needs_support", "supervised_only"] },
                 skills_developed: { type: "array", items: { type: "string" } },
+                goals_achieved: { type: "array", items: { type: "string" } },
                 notes: { type: "string" }
               }
             },
@@ -224,14 +294,62 @@ Generate a progress assessment with ratings (1-10) and trends for each area. Be 
               type: "object",
               properties: {
                 overall_rating: { type: "number" },
-                trend: { type: "string" },
+                trend: { type: "string", enum: ["improving", "stable", "declining"] },
+                activities_participated: { type: "array", items: { type: "string" } },
+                hobbies_interests: { type: "array", items: { type: "string" } },
+                community_involvement: { type: "string", enum: ["active", "some", "minimal", "none"] },
                 notes: { type: "string" }
               }
             },
-            key_achievements: { type: "array", items: { type: "string" } },
-            concerns: { type: "array", items: { type: "string" } },
-            recommendations: { type: "array", items: { type: "string" } },
-            overall_progress: { type: "string" },
+            care_plan_goals: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  goal: { type: "string" },
+                  progress: { type: "string", enum: ["achieved", "on_track", "partial", "not_started", "stalled"] },
+                  notes: { type: "string" }
+                }
+              },
+              description: "Progress against each care plan objective"
+            },
+            key_achievements: { 
+              type: "array", 
+              items: { type: "string" },
+              description: "Specific, evidence-based achievements from the period"
+            },
+            concerns: { 
+              type: "array", 
+              items: { type: "string" },
+              description: "Specific concerns with evidence and context"
+            },
+            recommendations: { 
+              type: "array", 
+              items: { 
+                type: "object",
+                properties: {
+                  recommendation: { type: "string", description: "Specific, actionable recommendation" },
+                  priority: { type: "string", enum: ["high", "medium", "low"] },
+                  rationale: { type: "string", description: "Why this is needed" },
+                  expected_outcome: { type: "string", description: "What improvement is expected" }
+                }
+              },
+              description: "Actionable recommendations for care plan adjustments"
+            },
+            interventions_needed: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  area: { type: "string", description: "Area requiring intervention" },
+                  intervention_type: { type: "string", description: "Type of intervention needed" },
+                  urgency: { type: "string", enum: ["immediate", "short_term", "long_term"] },
+                  details: { type: "string" }
+                }
+              },
+              description: "Specific interventions to implement"
+            },
+            overall_progress: { type: "string", enum: ["significant_improvement", "improvement", "stable", "slight_decline", "significant_decline"] },
             overall_rating: { type: "number" }
           }
         }
@@ -245,7 +363,16 @@ Generate a progress assessment with ratings (1-10) and trends for each area. Be 
         record_type: 'weekly',
       }));
       setShowCreateDialog(true);
-      toast.success("AI Report Generated", "Review and adjust the generated report before saving.");
+      
+      // Show detailed summary toast
+      const summaryMessage = result.summary?.overall_assessment || 'AI analysis complete';
+      const interventionsCount = result.interventions_needed?.length || 0;
+      const recommendationsCount = result.recommendations?.length || 0;
+      
+      toast.success(
+        "AI Report Generated", 
+        `${summaryMessage}. ${interventionsCount} interventions and ${recommendationsCount} recommendations identified. Review before saving.`
+      );
     } catch (error) {
       console.error("AI generation error:", error);
       toast.error("Error", "Failed to generate AI report");
@@ -965,26 +1092,66 @@ function ProgressRecordDialog({ isOpen, onClose, formData, setFormData, onSave, 
 
           {/* Concerns */}
           <div>
-            <Label>Concerns</Label>
-            <div className="flex gap-2 mt-1">
-              <Input 
-                value={newConcern}
-                onChange={(e) => setNewConcern(e.target.value)}
-                placeholder="Add concern..."
-                onKeyPress={(e) => e.key === 'Enter' && addToArray('concerns', newConcern, setNewConcern)}
-              />
-              <Button type="button" onClick={() => addToArray('concerns', newConcern, setNewConcern)}>
-                <Plus className="w-4 h-4" />
-              </Button>
-            </div>
-            <div className="flex flex-wrap gap-2 mt-2">
-              {formData.concerns?.map((c, i) => (
-                <Badge key={i} variant="outline" className="bg-amber-50">
-                  {c}
-                  <button onClick={() => removeFromArray('concerns', i)} className="ml-1 text-red-500">×</button>
-                </Badge>
-              ))}
-            </div>
+           <Label>Concerns</Label>
+           <div className="flex gap-2 mt-1">
+             <Input 
+               value={newConcern}
+               onChange={(e) => setNewConcern(e.target.value)}
+               placeholder="Add concern..."
+               onKeyPress={(e) => e.key === 'Enter' && addToArray('concerns', newConcern, setNewConcern)}
+             />
+             <Button type="button" onClick={() => addToArray('concerns', newConcern, setNewConcern)}>
+               <Plus className="w-4 h-4" />
+             </Button>
+           </div>
+           <div className="flex flex-wrap gap-2 mt-2">
+             {formData.concerns?.map((c, i) => (
+               <Badge key={i} variant="outline" className="bg-amber-50">
+                 {c}
+                 <button onClick={() => removeFromArray('concerns', i)} className="ml-1 text-red-500">×</button>
+               </Badge>
+             ))}
+           </div>
+          </div>
+
+          {/* Recommendations */}
+          <div>
+           <Label>Recommendations & Care Plan Adjustments</Label>
+           <div className="flex gap-2 mt-1">
+             <Input 
+               value={newRecommendation}
+               onChange={(e) => setNewRecommendation(e.target.value)}
+               placeholder="Add recommendation..."
+               onKeyPress={(e) => e.key === 'Enter' && addToArray('recommendations', newRecommendation, setNewRecommendation)}
+             />
+             <Button type="button" onClick={() => addToArray('recommendations', newRecommendation, setNewRecommendation)}>
+               <Plus className="w-4 h-4" />
+             </Button>
+           </div>
+           <div className="space-y-2 mt-2">
+             {formData.recommendations?.map((r, i) => (
+               <div key={i} className="p-2 border rounded bg-blue-50 flex items-start justify-between">
+                 <div className="flex-1">
+                   {typeof r === 'object' ? (
+                     <>
+                       <p className="text-sm font-medium">{r.recommendation}</p>
+                       <div className="flex gap-2 mt-1">
+                         <Badge className={
+                           r.priority === 'high' ? 'bg-red-100 text-red-800' :
+                           r.priority === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                           'bg-green-100 text-green-800'
+                         }>{r.priority}</Badge>
+                         {r.rationale && <span className="text-xs text-gray-600">{r.rationale}</span>}
+                       </div>
+                     </>
+                   ) : (
+                     <p className="text-sm">{r}</p>
+                   )}
+                 </div>
+                 <button onClick={() => removeFromArray('recommendations', i)} className="text-red-500 ml-2">×</button>
+               </div>
+             ))}
+           </div>
           </div>
 
           {/* Overall */}
