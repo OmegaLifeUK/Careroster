@@ -5,7 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Plus, Search, Edit, Phone, MapPin, Home, Target, Trash2, Mail, Eye, Sparkles } from "lucide-react";
+import { Plus, Search, Edit, Phone, MapPin, Home, Target, Trash2, Mail, Eye, Sparkles, ExternalLink } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 import MedicationManagement from "../components/clients/MedicationManagement";
 import ConsentManagement from "../components/clients/ConsentManagement";
@@ -602,17 +604,25 @@ export default function SupportedLivingClients() {
                   )}
 
                   <div className="flex gap-2">
+                    <Link to={`${createPageUrl('SupportedLivingClientProfile')}?id=${client.id}`} className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Profile
+                      </Button>
+                    </Link>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleViewDetails(client);
                       }}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                      <Eye className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 

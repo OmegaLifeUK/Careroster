@@ -17,8 +17,11 @@ import {
   Activity,
   Bus,
   Eye,
-  Sparkles
+  Sparkles,
+  ExternalLink
 } from "lucide-react";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 import MedicationManagement from "../components/clients/MedicationManagement";
 import ConsentManagement from "../components/clients/ConsentManagement";
@@ -626,17 +629,25 @@ export default function DayCentreClients() {
                   )}
 
                   <div className="flex gap-2">
+                    <Link to={`${createPageUrl('DayCentreClientProfile')}?id=${client.id}`} className="flex-1">
+                      <Button
+                        variant="outline"
+                        size="sm"
+                        className="w-full"
+                      >
+                        <ExternalLink className="w-4 h-4 mr-2" />
+                        Profile
+                      </Button>
+                    </Link>
                     <Button
                       variant="outline"
                       size="sm"
-                      className="flex-1"
                       onClick={(e) => {
                         e.stopPropagation();
                         handleViewDetails(client);
                       }}
                     >
-                      <Eye className="w-4 h-4 mr-2" />
-                      View Details
+                      <Eye className="w-4 h-4" />
                     </Button>
                     <Button 
                       variant="outline" 
