@@ -43,6 +43,7 @@ export default function DayCentreRosterView({
   activities = [],
   clients = [],
   staff = [],
+  staffAvailabilityData = [],
   onSessionClick,
   onSessionUpdate,
   onAddSession,
@@ -54,6 +55,7 @@ export default function DayCentreRosterView({
   const [viewMode, setViewMode] = useState("week");
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [activePanel, setActivePanel] = useState("activities");
+  const [staffAvailability, setStaffAvailability] = useState([]);
   const { toast } = useToast();
 
   const weekDays = useMemo(() => 
@@ -70,6 +72,16 @@ export default function DayCentreRosterView({
     }
     return filtered.sort((a, b) => (a.activity_name || '').localeCompare(b.activity_name || ''));
   }, [activities, searchQuery]);
+
+  const activeStaff = useMemo(() => {
+    let filtered = staff.filter(s => s && s.is_active !== false);
+    if (searchQuery) {
+      filtered = filtered.filter(s => 
+        s.full_name?.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+    }
+    return filtered.sort((a, b) => (a.full_name || '').localeCompare(b.full_name || ''));
+  }, [staff, searchQuery]);
 
   const activeClients = useMemo(() => {
     return clients.filter(c => c && c.status === 'active')
@@ -111,6 +123,23 @@ export default function DayCentreRosterView({
     return sessions
       .filter(s => s?.session_date === dayStr && s.registered_clients?.includes(clientId))
       .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+  };
+
+  const getStaffDaySessions = (staffId, day) => {
+    const dayStr = format(day, 'yyyy-MM-dd');
+    return sessions
+      .filter(s => s?.session_date === dayStr && s.facilitator_staff_ids?.includes(staffId))
+      .sort((a, b) => (a.start_time || '').localeCompare(b.start_time || ''));
+  };
+
+  const isStaffAvailable = (staffId, day) => {
+    const dayOfWeek = day.getDay();
+    const dayAvailability = staffAvailabilityData.filter(a => 
+      a.carer_id === staffId && 
+      a.availability_type === 'working_hours' &&
+      a.day_of_week === dayOfWeek
+    );
+    return dayAvailability.length > 0;
   };
 
   const getActivityColor = (activityId) => {
@@ -554,6 +583,15 @@ export default function DayCentreRosterView({
               Activities
             </button>
             <button
+              onClick={() => setActivePanel("staff")}
+              className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
+                activePanel === "staff" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
+              }`}
+            >
+              <Users className="w-3 h-3" />
+              Staff
+            </button>
+            <button
               onClick={() => setActivePanel("clients")}
               className={`px-2 py-1 text-xs rounded flex items-center gap-1 transition-all ${
                 activePanel === "clients" ? "bg-amber-500 text-white" : "text-gray-600 hover:bg-gray-100"
@@ -643,6 +681,58 @@ export default function DayCentreRosterView({
             </div>
           )}
 
+          {(activePanel === "staff" || activePanel === "both") && activeStaff.length > 0 && (
+            <div className={activePanel === "both" ? "border-b" : ""}>
+              <div className="flex items-center gap-2 px-4 py-2 bg-teal-50 border-b">
+                <Users className="w-4 h-4 text-teal-600" />
+                <span className="font-semibold text-teal-900">Staff</span>
+                <Badge className="bg-teal-100 text-teal-700 text-xs">{activeStaff.length}</Badge>
+              </div>
+              <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[280px]" : "max-h-[500px]"}`}>
+                {activeStaff.map(staffMember => {
+                  const daySessions = getStaffDaySessions(staffMember.id, selectedDate);
+                  const isAvailable = isStaffAvailable(staffMember.id, selectedDate);
+                  
+                  return (
+                    <div key={staffMember.id} className="flex border-b hover:bg-gray-50 transition-colors">
+                      <div className="w-56 p-2 border-r flex-shrink-0 flex items-center gap-2">
+                        <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                          {staffMember.full_name?.charAt(0)}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
+                          <div className="flex items-center gap-1">
+                            <p className="text-xs text-gray-500">{daySessions.length} sessions</p>
+                            {!isAvailable && (
+                              <Badge className="bg-orange-100 text-orange-700 text-[10px] px-1 py-0">
+                                No availability
+                              </Badge>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                      <div className="flex-1 relative h-14 bg-white timeline-container">
+                        <div className="absolute inset-0 flex pointer-events-none">
+                          {TIMELINE_HOURS.map(hour => (
+                            <div key={hour} className="flex-1 border-r border-gray-200">
+                              <div className="h-full flex flex-col">
+                                <div className="flex-1 border-b border-gray-100" />
+                                <div className="flex-1" />
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                        {daySessions.map(session => (
+                          <TimelineSession key={session.id} session={session} />
+                        ))}
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          )}
+
           {(activePanel === "clients" || activePanel === "both") && activeClients.length > 0 && (
             <div>
               <div className="flex items-center gap-2 px-4 py-2 bg-orange-50 border-b">
@@ -693,7 +783,12 @@ export default function DayCentreRosterView({
           <div className="flex flex-col">
             <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-gray-50 sticky top-0 z-10">
               <div className="p-3 border-r flex items-center gap-2">
-                {activePanel === "clients" ? (
+                {activePanel === "staff" ? (
+                  <>
+                    <Users className="w-4 h-4 text-gray-500" />
+                    <span className="font-medium text-sm text-gray-700">Staff</span>
+                  </>
+                ) : activePanel === "clients" ? (
                   <>
                     <User className="w-4 h-4 text-gray-500" />
                     <span className="font-medium text-sm text-gray-700">Attendees</span>
@@ -804,6 +899,64 @@ export default function DayCentreRosterView({
                             </div>
                           )}
                         </Droppable>
+                      );
+                    })}
+                  </div>
+                );
+              })}
+            </div>
+            )}
+
+            {/* Staff Rows */}
+            {(activePanel === "staff" || activePanel === "both") && (
+            <div className={`overflow-y-auto ${activePanel === "both" ? "max-h-[250px]" : "max-h-[500px]"}`}>
+              {activePanel === "both" && (
+                <div className="grid grid-cols-[220px_repeat(7,1fr)] border-b bg-teal-50">
+                  <div className="p-2 border-r flex items-center gap-2">
+                    <Users className="w-4 h-4 text-teal-600" />
+                    <span className="text-sm font-medium text-teal-700">Staff</span>
+                  </div>
+                  {weekDays.map((day, idx) => (
+                    <div key={idx} className="border-r" />
+                  ))}
+                </div>
+              )}
+              {activeStaff.map((staffMember) => {
+                return (
+                  <div key={staffMember.id} className="grid grid-cols-[220px_repeat(7,1fr)] border-b hover:bg-gray-50/50 transition-colors">
+                    <div className="p-2 border-r flex items-center gap-2">
+                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-teal-400 to-teal-600 flex items-center justify-center text-white text-sm font-medium flex-shrink-0">
+                        {staffMember.full_name?.charAt(0)}
+                      </div>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-medium text-sm truncate">{staffMember.full_name}</p>
+                      </div>
+                    </div>
+
+                    {weekDays.map((day) => {
+                      const dayStr = format(day, 'yyyy-MM-dd');
+                      const daySessions = getStaffDaySessions(staffMember.id, day);
+                      const isTodayDate = isToday(day);
+                      const isAvailable = isStaffAvailable(staffMember.id, day);
+
+                      return (
+                        <div
+                          key={dayStr}
+                          className={`p-1 min-h-[60px] border-r transition-colors relative ${
+                            isTodayDate ? 'bg-amber-50/30' : ''
+                          } ${!isAvailable ? 'bg-gray-100' : ''}`}
+                        >
+                          {!isAvailable && (
+                            <div className="absolute inset-0 flex items-center justify-center pointer-events-none">
+                              <span className="text-[10px] text-gray-400 font-medium">Not available</span>
+                            </div>
+                          )}
+                          <div className="space-y-1">
+                            {daySessions.map((session) => (
+                              <SessionPill key={session.id} session={session} showEdit={true} />
+                            ))}
+                          </div>
+                        </div>
                       );
                     })}
                   </div>

@@ -409,6 +409,7 @@ export default function DayCentreSessions() {
             activities={activities}
             clients={clients}
             staff={staff}
+            staffAvailabilityData={staffAvailability}
             onSessionClick={(session) => setSelectedSession(session)}
             onSessionUpdate={async (sessionId, updatedData) => {
               try {
