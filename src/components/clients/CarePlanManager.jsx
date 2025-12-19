@@ -84,6 +84,32 @@ export default function CarePlanManager({ client }) {
     },
   });
 
+  // Fetch actual care tasks for accurate counts
+  const { data: careTasks = [] } = useQuery({
+    queryKey: ['care-tasks-for-plans', client.id],
+    queryFn: async () => {
+      try {
+        const tasks = await base44.entities.CareTask.filter({ client_id: client.id });
+        return Array.isArray(tasks) ? tasks : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
+  // Fetch MAR sheets for accurate medication counts
+  const { data: marSheets = [] } = useQuery({
+    queryKey: ['mar-sheets-for-plans', client.id],
+    queryFn: async () => {
+      try {
+        const sheets = await base44.entities.MARSheet.filter({ client_id: client.id });
+        return Array.isArray(sheets) ? sheets : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
   const deleteMutation = useMutation({
     mutationFn: (id) => base44.entities.CarePlan.delete(id),
     onSuccess: () => {
@@ -249,14 +275,16 @@ export default function CarePlanManager({ client }) {
                 <ListChecks className="w-4 h-4 text-purple-600" />
                 <div>
                   <p className="text-xs text-gray-500">Tasks</p>
-                  <p className="font-semibold">{activePlan.care_tasks?.filter(t => t.is_active).length || 0}</p>
+                  <p className="font-semibold">
+                    {careTasks.filter(t => t.related_care_plan_id === activePlan.id && t.is_active).length}
+                  </p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
                 <Pill className="w-4 h-4 text-pink-600" />
                 <div>
                   <p className="text-xs text-gray-500">Medications</p>
-                  <p className="font-semibold">{activePlan.medication_management?.medications?.length || 0}</p>
+                  <p className="font-semibold">{marSheets.length}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2">
@@ -333,11 +361,11 @@ export default function CarePlanManager({ client }) {
                         </span>
                         <span className="flex items-center gap-1">
                           <ListChecks className="w-3 h-3" />
-                          {plan.care_tasks?.filter(t => t.is_active).length || 0} tasks
+                          {careTasks.filter(t => t.related_care_plan_id === plan.id && t.is_active).length} tasks
                         </span>
                         <span className="flex items-center gap-1">
                           <Pill className="w-3 h-3" />
-                          {plan.medication_management?.medications?.length || 0} medications
+                          {marSheets.length} medications
                         </span>
                       </div>
                     </div>
