@@ -1,40 +1,67 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
-import { Sparkles, X, Loader2, CheckCircle, AlertCircle } from "lucide-react";
+import { Sparkles, X, Loader2, CheckCircle, AlertCircle, Target, Calendar, TrendingUp } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { format, addMonths, addWeeks } from "date-fns";
 
 export default function AICareplanGenerator({ client, onClose }) {
   const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const queryClient = useQueryClient();
 
   const generateCarePlan = async () => {
     setIsGenerating(true);
     try {
-      const prompt = `Generate a comprehensive care plan for the following client:
+      const careSettingContext = client.property_id ? 'Supported Living' :
+                                 client.attendance_days ? 'Day Centre' :
+                                 'Domiciliary Care';
 
+      const prompt = `You are an expert care planning AI assistant for ${careSettingContext}. Generate a comprehensive, person-centered care plan following CQC, Ofsted, and CI regulatory guidelines, incorporating best practices from systems like OneTouch, Access Group, Birdie, PASS, Nourish, and PCS.
+
+CLIENT PROFILE:
 Name: ${client.full_name || 'Not provided'}
 Date of Birth: ${client.date_of_birth || 'Not provided'}
 Mobility: ${client.mobility || 'Not specified'}
 Care Needs: ${client.care_needs?.join(', ') || 'Not specified'}
+Support Needs: ${client.support_needs?.join(', ') || 'Not specified'}
 Medical Notes: ${client.medical_notes || 'None provided'}
 Funding Type: ${client.funding_type || 'Not specified'}
+Care Setting: ${careSettingContext}
 Additional Context: ${additionalNotes || 'None'}
 
-Please provide a detailed care plan with the following sections:
-1. Assessment Summary
-2. Care Goals (short-term and long-term)
-3. Daily Care Routine
-4. Risk Assessment
-5. Support Requirements
-6. Review Schedule
+REQUIREMENTS:
+Generate a care plan that creates ACTIONABLE, MEASURABLE workflows. Each component must be tangible and trackable.
 
-Format the response as JSON with these sections.`;
+1. CARE OBJECTIVES - SMART Goals (Specific, Measurable, Achievable, Relevant, Time-bound)
+   - Create 3-5 short-term objectives (1-3 months)
+   - Create 2-3 long-term objectives (6-12 months)
+   - Each objective must have: goal description, outcome measures, target date, assigned category (physical_health, mental_wellbeing, social_engagement, independence, safety)
+
+2. CARE TASKS - Daily/Regular Activities
+   - Break down care into discrete, trackable tasks
+   - Each task must have: task name, category (personal_care, medication, nutrition, mobility, social, emotional, healthcare, domestic), frequency (daily, twice_daily, weekly, as_needed), preferred_time, duration_minutes, special_instructions, requires_two_carers (boolean), is_critical (boolean)
+   - Tasks should align with regulatory requirements (dignity, choice, independence, safety)
+
+3. RISK FACTORS - Person-Centered Risk Management
+   - Identify risks with: risk description, likelihood (low/medium/high), impact (low/medium/high), control_measures (specific actions)
+   - Include dignity risks, safeguarding considerations, health risks
+
+4. REVIEW & MONITORING PLAN
+   - Specify review_frequency, key_performance_indicators (measurable metrics), escalation_triggers (when to alert management)
+
+5. REGULATORY COMPLIANCE CHECKS
+   - CQC domains: safe, effective, caring, responsive, well_led
+   - Specific compliance_requirements for this care setting
+
+Ensure the plan promotes independence, dignity, choice, and person-centered care.`;
 
       const response = await base44.integrations.Core.InvokeLLM({
         prompt: prompt,
@@ -43,17 +70,65 @@ Format the response as JSON with these sections.`;
           type: "object",
           properties: {
             assessment_summary: { type: "string" },
-            care_goals: {
-              type: "object",
-              properties: {
-                short_term: { type: "array", items: { type: "string" } },
-                long_term: { type: "array", items: { type: "string" } }
+            care_objectives: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  objective: { type: "string" },
+                  outcome_measures: { type: "string" },
+                  target_date: { type: "string" },
+                  category: { type: "string" },
+                  timeframe: { type: "string" }
+                }
               }
             },
-            daily_routine: { type: "array", items: { type: "string" } },
-            risk_assessment: { type: "array", items: { type: "string" } },
-            support_requirements: { type: "array", items: { type: "string" } },
-            review_schedule: { type: "string" }
+            care_tasks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  task_name: { type: "string" },
+                  category: { type: "string" },
+                  frequency: { type: "string" },
+                  preferred_time: { type: "string" },
+                  duration_minutes: { type: "number" },
+                  special_instructions: { type: "string" },
+                  requires_two_carers: { type: "boolean" },
+                  is_critical: { type: "boolean" }
+                }
+              }
+            },
+            risk_factors: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  risk: { type: "string" },
+                  likelihood: { type: "string" },
+                  impact: { type: "string" },
+                  control_measures: { type: "string" }
+                }
+              }
+            },
+            review_plan: {
+              type: "object",
+              properties: {
+                review_frequency: { type: "string" },
+                key_performance_indicators: { type: "array", items: { type: "string" } },
+                escalation_triggers: { type: "array", items: { type: "string" } }
+              }
+            },
+            compliance_checklist: {
+              type: "object",
+              properties: {
+                safe: { type: "array", items: { type: "string" } },
+                effective: { type: "array", items: { type: "string" } },
+                caring: { type: "array", items: { type: "string" } },
+                responsive: { type: "array", items: { type: "string" } },
+                well_led: { type: "array", items: { type: "string" } }
+              }
+            }
           }
         }
       });
@@ -68,64 +143,231 @@ Format the response as JSON with these sections.`;
     }
   };
 
-  const saveToDocs = async () => {
+  const saveToDatabase = async () => {
     if (!generatedPlan) return;
     
+    setIsSaving(true);
     try {
-      const shortTermGoals = generatedPlan.care_goals?.short_term || [];
-      const longTermGoals = generatedPlan.care_goals?.long_term || [];
-      const dailyRoutine = generatedPlan.daily_routine || [];
-      const riskAssessment = generatedPlan.risk_assessment || [];
-      const supportRequirements = generatedPlan.support_requirements || [];
+      const user = await base44.auth.me();
+      const today = format(new Date(), 'yyyy-MM-dd');
+      
+      // Determine care setting
+      const careSettings = {
+        property_id: 'supported_living',
+        attendance_days: 'day_centre',
+        standard_visit_duration: 'domiciliary'
+      };
+      
+      let careSetting = 'residential_care';
+      for (const [key, value] of Object.entries(careSettings)) {
+        if (client[key]) {
+          careSetting = value;
+          break;
+        }
+      }
 
-      const planText = `
-CARE PLAN FOR ${client.full_name}
-Generated: ${new Date().toLocaleDateString()}
+      // 1. CREATE CARE PLAN RECORD
+      const carePlanData = {
+        client_id: client.id,
+        care_setting: careSetting,
+        plan_type: 'initial',
+        assessment_date: today,
+        review_date: format(addMonths(new Date(), 3), 'yyyy-MM-dd'),
+        assessed_by: user.full_name || user.email,
+        status: 'active',
+        
+        // Store care objectives
+        care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
+          objective: obj.objective,
+          outcome_measures: obj.outcome_measures,
+          target_date: obj.target_date,
+          status: 'not_started'
+        })),
+        
+        // Store care tasks
+        care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
+          task_id: `task_${idx + 1}`,
+          task_name: task.task_name,
+          category: task.category,
+          frequency: task.frequency,
+          preferred_time: task.preferred_time,
+          duration_minutes: task.duration_minutes || 30,
+          special_instructions: task.special_instructions || '',
+          requires_two_carers: task.requires_two_carers || false,
+          is_active: true
+        })),
+        
+        // Store risk factors
+        risk_factors: generatedPlan.risk_factors || []
+      };
 
-ASSESSMENT SUMMARY
-${generatedPlan.assessment_summary || 'N/A'}
+      const createdCarePlan = await base44.entities.CarePlan.create(carePlanData);
 
-CARE GOALS
-Short-term:
-${shortTermGoals.map(g => `- ${g}`).join('\n')}
+      // 2. CREATE ACTIONABLE CARE TASKS (for daily tracking)
+      const careTasksToCreate = (generatedPlan.care_tasks || [])
+        .filter(task => task.is_critical || task.frequency === 'daily' || task.frequency === 'twice_daily')
+        .map(task => ({
+          client_id: client.id,
+          care_plan_id: createdCarePlan.id,
+          task_name: task.task_name,
+          category: task.category,
+          frequency: task.frequency,
+          preferred_time: task.preferred_time,
+          duration_minutes: task.duration_minutes || 30,
+          special_instructions: task.special_instructions || '',
+          requires_two_carers: task.requires_two_carers || false,
+          is_critical: task.is_critical || false,
+          status: 'active'
+        }));
 
-Long-term:
-${longTermGoals.map(g => `- ${g}`).join('\n')}
+      if (careTasksToCreate.length > 0) {
+        await base44.entities.CareTask.bulkCreate(careTasksToCreate);
+      }
 
-DAILY CARE ROUTINE
-${dailyRoutine.map(r => `- ${r}`).join('\n')}
+      // 3. CREATE COMPLIANCE TASKS (regulatory requirements)
+      const complianceTasks = [];
+      
+      // Review task
+      complianceTasks.push({
+        task_name: `${client.full_name} - Care Plan Review`,
+        task_type: 'review',
+        category: 'care_plan_review',
+        due_date: format(addMonths(new Date(), 3), 'yyyy-MM-dd'),
+        priority: 'medium',
+        description: 'Scheduled care plan review as per regulatory requirements',
+        requires_completion: true,
+        linked_client_id: client.id,
+        linked_care_plan_id: createdCarePlan.id
+      });
 
-RISK ASSESSMENT
-${riskAssessment.map(r => `- ${r}`).join('\n')}
+      // Risk assessment review
+      if (generatedPlan.risk_factors && generatedPlan.risk_factors.length > 0) {
+        complianceTasks.push({
+          task_name: `${client.full_name} - Risk Assessment Review`,
+          task_type: 'risk_assessment',
+          category: 'risk_management',
+          due_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
+          priority: 'high',
+          description: 'Review and update risk assessments',
+          requires_completion: true,
+          linked_client_id: client.id
+        });
+      }
 
-SUPPORT REQUIREMENTS
-${supportRequirements.map(r => `- ${r}`).join('\n')}
+      // Monthly care plan audit
+      complianceTasks.push({
+        task_name: `${client.full_name} - Monthly Care Delivery Audit`,
+        task_type: 'audit',
+        category: 'quality_assurance',
+        due_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd'),
+        priority: 'medium',
+        description: 'Audit care delivery against care plan objectives',
+        requires_completion: true,
+        linked_client_id: client.id,
+        linked_care_plan_id: createdCarePlan.id
+      });
 
-REVIEW SCHEDULE
-${generatedPlan.review_schedule || 'N/A'}
-`;
+      await base44.entities.ComplianceTask.bulkCreate(complianceTasks);
+
+      // 4. CREATE AUTOMATED WORKFLOW
+      await base44.entities.AutomatedWorkflow.create({
+        workflow_name: `Care Plan Monitoring - ${client.full_name}`,
+        trigger_type: 'scheduled',
+        trigger_schedule: 'weekly',
+        workflow_type: 'care_plan_monitoring',
+        is_active: true,
+        linked_client_id: client.id,
+        linked_care_plan_id: createdCarePlan.id,
+        actions: [
+          {
+            action_type: 'check_task_completion',
+            action_data: { check_critical_tasks: true }
+          },
+          {
+            action_type: 'generate_alert',
+            action_data: { 
+              condition: 'incomplete_critical_tasks',
+              alert_level: 'high'
+            }
+          },
+          {
+            action_type: 'check_objectives_progress',
+            action_data: { alert_if_stalled: true }
+          }
+        ]
+      });
+
+      // 5. SAVE DOCUMENT VERSION
+      const planText = `PERSON-CENTERED CARE PLAN
+Client: ${client.full_name}
+Generated: ${format(new Date(), 'PPP')}
+Care Setting: ${careSetting}
+
+${generatedPlan.assessment_summary || ''}
+
+CARE OBJECTIVES (${generatedPlan.care_objectives?.length || 0}):
+${(generatedPlan.care_objectives || []).map((obj, idx) => 
+  `${idx + 1}. ${obj.objective}
+   Outcome Measures: ${obj.outcome_measures}
+   Target: ${obj.target_date}
+   Category: ${obj.category}`
+).join('\n\n')}
+
+CARE TASKS (${generatedPlan.care_tasks?.length || 0}):
+${(generatedPlan.care_tasks || []).map((task, idx) =>
+  `${idx + 1}. ${task.task_name} (${task.category})
+   Frequency: ${task.frequency}
+   Duration: ${task.duration_minutes}min
+   ${task.is_critical ? '⚠️ CRITICAL TASK' : ''}
+   Instructions: ${task.special_instructions || 'None'}`
+).join('\n\n')}
+
+RISK MANAGEMENT (${generatedPlan.risk_factors?.length || 0} risks):
+${(generatedPlan.risk_factors || []).map((risk, idx) =>
+  `${idx + 1}. ${risk.risk}
+   Likelihood: ${risk.likelihood} | Impact: ${risk.impact}
+   Controls: ${risk.control_measures}`
+).join('\n\n')}
+
+REVIEW & MONITORING:
+Frequency: ${generatedPlan.review_plan?.review_frequency || 'Quarterly'}
+KPIs: ${(generatedPlan.review_plan?.key_performance_indicators || []).join(', ')}
+
+REGULATORY COMPLIANCE:
+CQC Safe: ${(generatedPlan.compliance_checklist?.safe || []).join(', ')}
+CQC Effective: ${(generatedPlan.compliance_checklist?.effective || []).join(', ')}
+CQC Caring: ${(generatedPlan.compliance_checklist?.caring || []).join(', ')}
+CQC Responsive: ${(generatedPlan.compliance_checklist?.responsive || []).join(', ')}
+CQC Well-Led: ${(generatedPlan.compliance_checklist?.well_led || []).join(', ')}`;
 
       const blob = new Blob([planText], { type: 'text/plain' });
       const file = new File([blob], `care-plan-${client.full_name}-${Date.now()}.txt`);
-
       const { file_url } = await base44.integrations.Core.UploadFile({ file });
 
       await base44.entities.ClientDocument.create({
         client_id: client.id,
         document_type: 'care_plan',
-        document_name: `AI Generated Care Plan - ${new Date().toLocaleDateString()}`,
+        document_name: `AI Care Plan - ${format(new Date(), 'dd/MM/yyyy')}`,
         file_url: file_url,
         file_type: 'text/plain',
         file_size: blob.size,
-        uploaded_by_staff_id: 'system',
-        notes: 'AI generated care plan'
+        uploaded_by_staff_id: user.email,
+        notes: 'AI-generated person-centered care plan with actionable tasks and objectives'
       });
 
-      toast.success("Saved", "Care plan saved to client documents");
+      // Invalidate queries
+      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+      queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['automated-workflows'] });
+
+      toast.success("Success", "Care plan created with actionable tasks, objectives, and monitoring workflows!");
       onClose();
     } catch (error) {
       console.error("Error saving care plan:", error);
       toast.error("Error", "Failed to save care plan");
+    } finally {
+      setIsSaving(false);
     }
   };
 
@@ -207,7 +449,7 @@ ${generatedPlan.review_schedule || 'N/A'}
             <div className="space-y-6">
               <div className="flex items-center gap-2 p-3 bg-green-50 rounded-lg border border-green-200">
                 <CheckCircle className="w-5 h-5 text-green-600" />
-                <span className="text-green-900 font-medium">Care plan generated successfully!</span>
+                <span className="text-green-900 font-medium">Care plan generated with actionable workflows!</span>
               </div>
 
               {generatedPlan.assessment_summary && (
@@ -219,107 +461,211 @@ ${generatedPlan.review_schedule || 'N/A'}
                 </div>
               )}
 
-              {generatedPlan.care_goals && (
+              {/* SMART Care Objectives */}
+              {generatedPlan.care_objectives && generatedPlan.care_objectives.length > 0 && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Care Goals</h3>
-                  <div className="grid md:grid-cols-2 gap-4">
-                    {generatedPlan.care_goals.short_term && generatedPlan.care_goals.short_term.length > 0 && (
-                      <div className="bg-blue-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-blue-900 mb-2">Short-term</h4>
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <Target className="w-5 h-5 text-purple-600" />
+                    SMART Care Objectives ({generatedPlan.care_objectives.length})
+                  </h3>
+                  <div className="space-y-3">
+                    {generatedPlan.care_objectives.map((obj, idx) => (
+                      <div key={idx} className="bg-gradient-to-r from-purple-50 to-blue-50 p-4 rounded-lg border border-purple-200">
+                        <div className="flex items-start justify-between mb-2">
+                          <h4 className="font-medium text-purple-900">{obj.objective}</h4>
+                          <Badge className="bg-purple-600 text-white">{obj.timeframe}</Badge>
+                        </div>
+                        <div className="text-sm space-y-1">
+                          <div className="flex items-center gap-2">
+                            <TrendingUp className="w-3 h-3 text-purple-600" />
+                            <span className="text-purple-800">
+                              <strong>Outcome Measures:</strong> {obj.outcome_measures}
+                            </span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Calendar className="w-3 h-3 text-purple-600" />
+                            <span className="text-purple-800">
+                              <strong>Target:</strong> {obj.target_date}
+                            </span>
+                          </div>
+                          <Badge variant="outline" className="bg-white">{obj.category}</Badge>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Actionable Care Tasks */}
+              {generatedPlan.care_tasks && generatedPlan.care_tasks.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-3 flex items-center gap-2">
+                    <CheckCircle className="w-5 h-5 text-green-600" />
+                    Actionable Care Tasks ({generatedPlan.care_tasks.length})
+                  </h3>
+                  <div className="space-y-2">
+                    {generatedPlan.care_tasks.map((task, idx) => (
+                      <div 
+                        key={idx} 
+                        className={`p-3 rounded-lg border ${
+                          task.is_critical 
+                            ? 'bg-red-50 border-red-300' 
+                            : 'bg-green-50 border-green-200'
+                        }`}
+                      >
+                        <div className="flex items-start justify-between mb-1">
+                          <div className="flex items-center gap-2">
+                            <span className="font-medium text-gray-900">{task.task_name}</span>
+                            {task.is_critical && (
+                              <Badge className="bg-red-500 text-white text-xs">CRITICAL</Badge>
+                            )}
+                          </div>
+                          <Badge variant="outline" className="text-xs">{task.frequency}</Badge>
+                        </div>
+                        <div className="text-xs text-gray-600 space-y-1">
+                          <div>Category: {task.category} | Duration: {task.duration_minutes}min</div>
+                          {task.preferred_time && <div>Preferred time: {task.preferred_time}</div>}
+                          {task.special_instructions && (
+                            <div className="text-gray-700 mt-1">{task.special_instructions}</div>
+                          )}
+                          {task.requires_two_carers && (
+                            <Badge className="bg-blue-100 text-blue-800 text-xs">Requires 2 carers</Badge>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Risk Management */}
+              {generatedPlan.risk_factors && generatedPlan.risk_factors.length > 0 && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Risk Management Plan</h3>
+                  <div className="space-y-2">
+                    {generatedPlan.risk_factors.map((risk, idx) => (
+                      <div key={idx} className="bg-orange-50 p-3 rounded-lg border border-orange-200">
+                        <div className="flex items-center justify-between mb-2">
+                          <span className="font-medium text-orange-900">{risk.risk}</span>
+                          <div className="flex gap-2">
+                            <Badge className={
+                              risk.likelihood === 'high' ? 'bg-red-500 text-white' :
+                              risk.likelihood === 'medium' ? 'bg-amber-500 text-white' :
+                              'bg-green-500 text-white'
+                            }>
+                              L: {risk.likelihood}
+                            </Badge>
+                            <Badge className={
+                              risk.impact === 'high' ? 'bg-red-500 text-white' :
+                              risk.impact === 'medium' ? 'bg-amber-500 text-white' :
+                              'bg-green-500 text-white'
+                            }>
+                              I: {risk.impact}
+                            </Badge>
+                          </div>
+                        </div>
+                        <p className="text-sm text-orange-800">
+                          <strong>Controls:</strong> {risk.control_measures}
+                        </p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Review & Monitoring */}
+              {generatedPlan.review_plan && (
+                <div>
+                  <h3 className="font-semibold text-gray-900 mb-2">Review & Monitoring Plan</h3>
+                  <div className="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                    <div className="mb-3">
+                      <span className="text-sm text-blue-700 font-medium">Review Frequency:</span>
+                      <span className="ml-2 text-blue-900">{generatedPlan.review_plan.review_frequency}</span>
+                    </div>
+                    {generatedPlan.review_plan.key_performance_indicators && (
+                      <div className="mb-3">
+                        <p className="text-sm text-blue-700 font-medium mb-1">KPIs to Track:</p>
+                        <div className="flex flex-wrap gap-1">
+                          {generatedPlan.review_plan.key_performance_indicators.map((kpi, idx) => (
+                            <Badge key={idx} variant="outline" className="bg-white text-xs">
+                              {kpi}
+                            </Badge>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                    {generatedPlan.review_plan.escalation_triggers && (
+                      <div>
+                        <p className="text-sm text-blue-700 font-medium mb-1">Escalation Triggers:</p>
                         <ul className="space-y-1">
-                          {generatedPlan.care_goals.short_term.map((goal, idx) => (
-                            <li key={idx} className="text-sm text-blue-800 flex items-start gap-2">
-                              <span className="text-blue-600 mt-0.5">•</span>
-                              <span>{goal}</span>
-                            </li>
+                          {generatedPlan.review_plan.escalation_triggers.map((trigger, idx) => (
+                            <li key={idx} className="text-sm text-blue-800">• {trigger}</li>
                           ))}
                         </ul>
                       </div>
                     )}
-                    {generatedPlan.care_goals.long_term && generatedPlan.care_goals.long_term.length > 0 && (
-                      <div className="bg-purple-50 p-4 rounded-lg">
-                        <h4 className="font-medium text-purple-900 mb-2">Long-term</h4>
-                        <ul className="space-y-1">
-                          {generatedPlan.care_goals.long_term.map((goal, idx) => (
-                            <li key={idx} className="text-sm text-purple-800 flex items-start gap-2">
-                              <span className="text-purple-600 mt-0.5">•</span>
-                              <span>{goal}</span>
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
                   </div>
                 </div>
               )}
 
-              {generatedPlan.daily_routine && generatedPlan.daily_routine.length > 0 && (
+              {/* CQC Compliance */}
+              {generatedPlan.compliance_checklist && (
                 <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Daily Care Routine</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <ul className="space-y-2">
-                      {generatedPlan.daily_routine.map((item, idx) => (
-                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                          <CheckCircle className="w-4 h-4 text-green-600 mt-0.5 flex-shrink-0" />
-                          <span>{item}</span>
-                        </li>
-                      ))}
-                    </ul>
+                  <h3 className="font-semibold text-gray-900 mb-2">CQC Compliance Checklist</h3>
+                  <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {Object.entries(generatedPlan.compliance_checklist).map(([domain, items]) => (
+                      items && items.length > 0 && (
+                        <div key={domain} className="bg-teal-50 p-3 rounded-lg border border-teal-200">
+                          <h4 className="font-medium text-teal-900 mb-2 capitalize">{domain}</h4>
+                          <ul className="space-y-1">
+                            {items.map((item, idx) => (
+                              <li key={idx} className="text-xs text-teal-800 flex items-start gap-1">
+                                <CheckCircle className="w-3 h-3 text-teal-600 mt-0.5 flex-shrink-0" />
+                                <span>{item}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      )
+                    ))}
                   </div>
                 </div>
               )}
 
-              {generatedPlan.risk_assessment && generatedPlan.risk_assessment.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Risk Assessment</h3>
-                  <div className="bg-orange-50 p-4 rounded-lg border border-orange-200">
-                    <ul className="space-y-2">
-                      {generatedPlan.risk_assessment.map((risk, idx) => (
-                        <li key={idx} className="text-sm text-orange-900 flex items-start gap-2">
-                          <AlertCircle className="w-4 h-4 text-orange-600 mt-0.5 flex-shrink-0" />
-                          <span>{risk}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {generatedPlan.support_requirements && generatedPlan.support_requirements.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Support Requirements</h3>
-                  <div className="bg-gray-50 p-4 rounded-lg">
-                    <ul className="space-y-2">
-                      {generatedPlan.support_requirements.map((req, idx) => (
-                        <li key={idx} className="text-sm text-gray-700 flex items-start gap-2">
-                          <span className="text-gray-600 mt-0.5">•</span>
-                          <span>{req}</span>
-                        </li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              )}
-
-              {generatedPlan.review_schedule && (
-                <div>
-                  <h3 className="font-semibold text-gray-900 mb-2">Review Schedule</h3>
-                  <p className="text-gray-700 bg-gray-50 p-4 rounded-lg">
-                    {generatedPlan.review_schedule}
-                  </p>
-                </div>
-              )}
+              <div className="bg-amber-50 border border-amber-200 rounded-lg p-4">
+                <h4 className="font-medium text-amber-900 mb-2">What happens when you save:</h4>
+                <ul className="text-sm text-amber-800 space-y-1">
+                  <li>✓ Care Plan record created in database</li>
+                  <li>✓ {(generatedPlan.care_tasks || []).filter(t => t.is_critical || t.frequency === 'daily').length} Daily tasks created for tracking</li>
+                  <li>✓ {(generatedPlan.care_objectives || []).length} SMART objectives tracked for progress reporting</li>
+                  <li>✓ Automated review tasks scheduled (3-month review, monthly audits)</li>
+                  <li>✓ Monitoring workflow activated for objective tracking</li>
+                  <li>✓ Document saved to client file</li>
+                </ul>
+              </div>
 
               <div className="flex gap-3 pt-4 border-t">
                 <Button
-                  onClick={saveToDocs}
-                  className="flex-1 bg-green-600 hover:bg-green-700"
+                  onClick={saveToDatabase}
+                  disabled={isSaving}
+                  className="flex-1 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-700 hover:to-teal-700"
                 >
-                  Save to Client Documents
+                  {isSaving ? (
+                    <>
+                      <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                      Creating Workflows...
+                    </>
+                  ) : (
+                    <>
+                      <Sparkles className="w-4 h-4 mr-2" />
+                      Activate Care Plan & Workflows
+                    </>
+                  )}
                 </Button>
                 <Button
                   onClick={() => setGeneratedPlan(null)}
                   variant="outline"
+                  disabled={isSaving}
                 >
                   Generate New
                 </Button>
