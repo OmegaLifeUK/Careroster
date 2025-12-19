@@ -254,7 +254,56 @@ Ensure the plan promotes independence, dignity, choice, and person-centered care
 
       await base44.entities.ComplianceTask.bulkCreate(complianceTasksToCreate);
 
-      // 4. SAVE DOCUMENT VERSION
+      // 4. CREATE INITIAL PROGRESS RECORD (for tracking objectives)
+      const progressRecordData = {
+        client_id: client.id,
+        record_date: today,
+        record_type: 'quarterly',
+        recorded_by: user.full_name || user.email,
+        
+        // Initialize care plan goals tracking from AI objectives
+        care_plan_goals: (generatedPlan.care_objectives || []).map(obj => ({
+          goal: obj.objective,
+          progress: 'not_started',
+          notes: `Target: ${obj.target_date}. Measures: ${obj.outcome_measures}`
+        })),
+        
+        // Set initial overall assessment
+        overall_progress: 'stable',
+        overall_rating: 5,
+        
+        // Initialize key tracking areas based on care plan
+        health_wellbeing: {
+          overall_rating: 5,
+          trend: 'stable',
+          physical_health: 'good',
+          mental_health: 'good',
+          notes: 'Baseline assessment at care plan creation'
+        },
+        
+        independence_skills: {
+          overall_rating: 5,
+          trend: 'stable',
+          notes: 'Baseline assessment at care plan creation',
+          goals_achieved: []
+        },
+        
+        activities_engagement: {
+          overall_rating: 5,
+          trend: 'stable',
+          activities_participated: [],
+          notes: 'Baseline assessment at care plan creation'
+        },
+        
+        key_achievements: ['Care plan created with clear objectives'],
+        concerns: [],
+        recommendations: ['Track progress against care objectives weekly', 'Review and update progress record monthly'],
+        next_review_date: format(addMonths(new Date(), 1), 'yyyy-MM-dd')
+      };
+
+      await base44.entities.ClientProgressRecord.create(progressRecordData);
+
+      // 5. SAVE DOCUMENT VERSION
       const planText = `PERSON-CENTERED CARE PLAN
 Client: ${client.full_name}
 Generated: ${format(new Date(), 'PPP')}
@@ -316,8 +365,9 @@ CQC Well-Led: ${(generatedPlan.compliance_checklist?.well_led || []).join(', ')}
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
       queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
       queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
+      queryClient.invalidateQueries({ queryKey: ['client-progress'] });
 
-      toast.success("Success", "Care plan created with actionable tasks and objectives!");
+      toast.success("Success", "Care plan, progress tracking, and compliance tasks created!");
       onClose();
     } catch (error) {
       console.error("Error saving care plan:", error);
@@ -594,8 +644,8 @@ CQC Well-Led: ${(generatedPlan.compliance_checklist?.well_led || []).join(', ')}
                   <li>✓ Care Plan record created in database</li>
                   <li>✓ {(generatedPlan.care_tasks || []).filter(t => t.is_critical || t.frequency === 'daily').length} Daily tasks created for tracking</li>
                   <li>✓ {(generatedPlan.care_objectives || []).length} SMART objectives tracked for progress reporting</li>
+                  <li>✓ Initial Progress Record created with baseline goals tracking</li>
                   <li>✓ Automated review tasks scheduled (3-month review, monthly audits)</li>
-                  <li>✓ Monitoring workflow activated for objective tracking</li>
                   <li>✓ Document saved to client file</li>
                 </ul>
               </div>
