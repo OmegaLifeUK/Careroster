@@ -66,6 +66,9 @@ import EnquiryDetail from './pages/EnquiryDetail';
 import CarerDetail from './pages/CarerDetail';
 import CarerPerformanceDashboard from './pages/CarerPerformanceDashboard';
 import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
+import DomCareClientProfile from './pages/DomCareClientProfile';
+import SupportedLivingClientProfile from './pages/SupportedLivingClientProfile';
+import DayCentreClientProfile from './pages/DayCentreClientProfile';
 import __Layout from './Layout.jsx';
 
 
@@ -138,6 +141,9 @@ export const PAGES = {
     "CarerDetail": CarerDetail,
     "CarerPerformanceDashboard": CarerPerformanceDashboard,
     "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
+    "DomCareClientProfile": DomCareClientProfile,
+    "SupportedLivingClientProfile": SupportedLivingClientProfile,
+    "DayCentreClientProfile": DayCentreClientProfile,
 }
 
 export const pagesConfig = {
