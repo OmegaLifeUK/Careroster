@@ -66,6 +66,18 @@ export default function Clients() {
     },
   });
 
+  const { data: marSheets = [] } = useQuery({
+    queryKey: ['mar-sheets'],
+    queryFn: async () => {
+      try {
+        const data = await base44.entities.MARSheet.list();
+        return Array.isArray(data) ? data : [];
+      } catch {
+        return [];
+      }
+    },
+  });
+
   // Handle navigation from Intelligent Feed
   React.useEffect(() => {
     const navState = location.state;
@@ -639,6 +651,8 @@ export default function Clients() {
               c && client.preferred_carers?.includes(c.id)
             ) : [];
 
+            const clientMedicationCount = marSheets.filter(m => m.client_id === client.id).length;
+
             return (
               <Card 
                 key={client.id} 
@@ -653,7 +667,9 @@ export default function Clients() {
                       </div>
                       <div>
                         <h3 className="font-semibold text-lg">{client.full_name}</h3>
-                        <p className="text-sm text-gray-500">{client.funding_type?.replace('_', ' ')}</p>
+                        <p className="text-sm text-gray-500">
+                          {client.funding_type?.replace('_', ' ')} • Medications: {clientMedicationCount}
+                        </p>
                       </div>
                     </div>
                     <Badge className={statusColors[client.status] || statusColors.inactive}>
