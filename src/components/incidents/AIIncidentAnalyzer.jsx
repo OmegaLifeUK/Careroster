@@ -4,19 +4,13 @@ import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Label } from "@/components/ui/label";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Sparkles, AlertCircle, Lightbulb, Shield, Users } from "lucide-react";
+import { Sparkles, AlertCircle, Lightbulb, Shield } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function AIIncidentAnalyzer({ incident }) {
   const [analysis, setAnalysis] = useState(null);
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [isGeneratingTasks, setIsGeneratingTasks] = useState(false);
-  const [showTaskAssignmentDialog, setShowTaskAssignmentDialog] = useState(false);
-  const [taskAssignments, setTaskAssignments] = useState({});
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -29,24 +23,31 @@ export default function AIIncidentAnalyzer({ incident }) {
     },
   });
 
-  const { data: carers = [] } = useQuery({
-    queryKey: ['carers'],
+  const { data: users = [] } = useQuery({
+    queryKey: ['users-for-assignment'],
     queryFn: async () => {
-      const data = await base44.entities.Carer.list();
+      const data = await base44.entities.User.list();
       return Array.isArray(data) ? data : [];
     },
   });
 
-  const allStaff = [...staff, ...carers];
-
   const analyzeIncident = async () => {
     setIsAnalyzing(true);
     try {
+      // Build staff context for AI assignment
+      const staffContext = staff.map(s => 
+        `- ${s.full_name}: ${s.email}, Qualifications: ${s.qualifications?.join(', ') || 'None'}`
+      ).join('\n');
+
+      const userRoles = users.map(u => 
+        `- ${u.full_name || u.email}: Role: ${u.role}`
+      ).join('\n');
+
       const prompt = `Analyze this incident report and provide:
 1. Potential root causes (immediate and underlying)
 2. Contributing factors
 3. Preventative measures to avoid similar incidents
-4. Immediate action recommendations
+4. Immediate action recommendations with specific staff assignments
 5. Long-term systemic improvements
 
 Incident Details:
@@ -59,7 +60,18 @@ ${incident.staff_involved ? `- Staff Involved: ${incident.staff_involved.join(',
 ${incident.witnesses ? `- Witnesses: ${incident.witnesses}` : ''}
 ${incident.immediate_actions ? `- Immediate Actions Taken: ${incident.immediate_actions}` : ''}
 
-Provide a comprehensive root cause analysis with actionable recommendations.`;
+Available Staff for Task Assignment:
+${staffContext || 'No staff data available'}
+
+Users by Role:
+${userRoles || 'No user data available'}
+
+IMPORTANT: For each preventative measure and immediate action, suggest the most appropriate person or group to assign the task to based on:
+- Their role (admin, manager, care staff)
+- Their qualifications
+- The nature of the task (e.g., training tasks to qualified trainers, policy reviews to managers, direct care actions to care staff)
+
+Provide a comprehensive root cause analysis with actionable recommendations and specific assignments.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -89,13 +101,21 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
                   measure: { type: "string" },
                   timeframe: { type: "string" },
                   responsibility: { type: "string" },
-                  suggested_role: { type: "string", description: "admin, manager, care_coordinator, staff_member, team_lead" }
+                  assign_to: { type: "string", description: "Email or name of person/group to assign this task to" },
+                  assignment_reason: { type: "string", description: "Why this person/group is most suitable" }
                 }
               }
             },
             immediate_actions: {
               type: "array",
-              items: { type: "string" }
+              items: {
+                type: "object",
+                properties: {
+                  action: { type: "string" },
+                  assign_to: { type: "string", description: "Email or name of person/group to assign this task to" },
+                  assignment_reason: { type: "string", description: "Why this person/group is most suitable" }
+                }
+              }
             },
             systemic_improvements: {
               type: "array",
@@ -113,37 +133,6 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
       });
 
       setAnalysis(result);
-      
-      // Initialize task assignments with suggested roles
-      const assignments = {};
-      let taskIndex = 0;
-      
-      result.immediate_actions?.forEach(action => {
-        assignments[`immediate_${taskIndex}`] = {
-          action,
-          type: 'immediate',
-          suggested_role: 'manager',
-          assignment_type: 'role',
-          assigned_role: 'admin',
-          assigned_staff_id: null
-        };
-        taskIndex++;
-      });
-      
-      result.preventative_measures?.forEach((measure, idx) => {
-        assignments[`preventative_${idx}`] = {
-          measure: measure.measure,
-          type: 'preventative',
-          timeframe: measure.timeframe,
-          responsibility: measure.responsibility,
-          suggested_role: measure.suggested_role || 'manager',
-          assignment_type: 'role',
-          assigned_role: measure.suggested_role || 'manager',
-          assigned_staff_id: null
-        };
-      });
-      
-      setTaskAssignments(assignments);
     } catch (error) {
       console.error("Analysis error:", error);
     } finally {
@@ -151,116 +140,101 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
     }
   };
 
-  const openTaskAssignmentDialog = () => {
-    setShowTaskAssignmentDialog(true);
-  };
-
   const generateTasks = async () => {
     if (!analysis) return;
     
     setIsGeneratingTasks(true);
     try {
-      const user = await base44.auth.me();
       const tasksToCreate = [];
 
-      Object.entries(taskAssignments).forEach(([key, assignment]) => {
-        if (assignment.type === 'immediate') {
-          // Get staff based on assignment
-          let assignedStaff = null;
-          if (assignment.assignment_type === 'staff' && assignment.assigned_staff_id) {
-            assignedStaff = assignment.assigned_staff_id;
-          } else if (assignment.assignment_type === 'role') {
-            // Find first staff member with matching role
-            assignedStaff = allStaff.find(s => 
-              s.role === assignment.assigned_role || 
-              s.staff_role === assignment.assigned_role
-            )?.id || user.email;
-          } else if (assignment.assignment_type === 'all_role') {
-            // Will create multiple tasks, one per matching staff member
-            const matchingStaff = allStaff.filter(s => 
-              s.role === assignment.assigned_role || 
-              s.staff_role === assignment.assigned_role
-            );
-            
-            matchingStaff.forEach(staffMember => {
-              tasksToCreate.push({
-                title: `Immediate Action: ${assignment.action.substring(0, 50)}`,
-                description: `${assignment.action}\n\nAssigned to all ${assignment.assigned_role} staff members.`,
-                source_type: 'incident_ai',
-                source_entity_id: incident.id,
-                priority: 'urgent',
-                status: 'pending',
-                due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                assigned_to_staff_id: staffMember.id,
-                assigned_by: 'AI Analysis'
-              });
-            });
-            return; // Skip the single task creation below
-          }
-
-          tasksToCreate.push({
-            title: `Immediate Action: ${assignment.action.substring(0, 50)}`,
-            description: assignment.action,
-            source_type: 'incident_ai',
-            source_entity_id: incident.id,
-            priority: 'urgent',
-            status: 'pending',
-            due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            assigned_to_staff_id: assignedStaff,
-            assigned_by: 'AI Analysis'
-          });
-        } else if (assignment.type === 'preventative') {
-          const daysToAdd = assignment.timeframe?.includes('immediate') ? 7 :
-                           assignment.timeframe?.includes('short') ? 14 : 30;
-          
-          let assignedStaff = null;
-          if (assignment.assignment_type === 'staff' && assignment.assigned_staff_id) {
-            assignedStaff = assignment.assigned_staff_id;
-          } else if (assignment.assignment_type === 'role') {
-            assignedStaff = allStaff.find(s => 
-              s.role === assignment.assigned_role || 
-              s.staff_role === assignment.assigned_role
-            )?.id || user.email;
-          } else if (assignment.assignment_type === 'all_role') {
-            const matchingStaff = allStaff.filter(s => 
-              s.role === assignment.assigned_role || 
-              s.staff_role === assignment.assigned_role
-            );
-            
-            matchingStaff.forEach(staffMember => {
-              tasksToCreate.push({
-                title: assignment.measure.substring(0, 100),
-                description: `${assignment.measure}\n\nTimeframe: ${assignment.timeframe}\nResponsibility: ${assignment.responsibility}\n\nAssigned to all ${assignment.assigned_role} staff members.`,
-                source_type: 'incident_ai',
-                source_entity_id: incident.id,
-                priority: 'high',
-                status: 'pending',
-                due_date: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-                assigned_to_staff_id: staffMember.id,
-                assigned_by: 'AI Analysis'
-              });
-            });
-            return;
-          }
-          
-          tasksToCreate.push({
-            title: assignment.measure.substring(0, 100),
-            description: `${assignment.measure}\n\nTimeframe: ${assignment.timeframe}\nResponsibility: ${assignment.responsibility}`,
-            source_type: 'incident_ai',
-            source_entity_id: incident.id,
-            priority: 'high',
-            status: 'pending',
-            due_date: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
-            assigned_to_staff_id: assignedStaff,
-            assigned_by: 'AI Analysis'
-          });
+      // Helper function to find staff member by email or name
+      const findStaffByIdentifier = (identifier) => {
+        if (!identifier) return null;
+        
+        const lowerIdentifier = identifier.toLowerCase();
+        
+        // Try to find by email first
+        const byEmail = staff.find(s => s.email?.toLowerCase() === lowerIdentifier);
+        if (byEmail) return byEmail;
+        
+        // Try to find by name
+        const byName = staff.find(s => s.full_name?.toLowerCase().includes(lowerIdentifier));
+        if (byName) return byName;
+        
+        // Try users
+        const userByEmail = users.find(u => u.email?.toLowerCase() === lowerIdentifier);
+        if (userByEmail) {
+          const staffByUserEmail = staff.find(s => s.email === userByEmail.email);
+          if (staffByUserEmail) return staffByUserEmail;
         }
+        
+        // If it's a role (admin, manager), find first user with that role
+        if (lowerIdentifier.includes('admin')) {
+          const admin = users.find(u => u.role === 'admin');
+          if (admin) {
+            const adminStaff = staff.find(s => s.email === admin.email);
+            if (adminStaff) return adminStaff;
+            return { id: admin.email, full_name: admin.full_name || admin.email };
+          }
+        }
+        
+        return null;
+      };
+
+      // Immediate actions
+      analysis.immediate_actions?.forEach(actionObj => {
+        const actionText = typeof actionObj === 'string' ? actionObj : actionObj.action;
+        const assignTo = typeof actionObj === 'object' ? actionObj.assign_to : null;
+        const assignmentReason = typeof actionObj === 'object' ? actionObj.assignment_reason : null;
+        
+        const assignedStaff = findStaffByIdentifier(assignTo) || staff[0];
+        
+        tasksToCreate.push({
+          title: `Immediate Action: ${actionText.substring(0, 50)}`,
+          description: `${actionText}\n\n${assignmentReason ? `Assignment Reason: ${assignmentReason}` : ''}`,
+          source_type: 'incident_ai',
+          source_entity_id: incident.id,
+          priority: 'urgent',
+          status: 'pending',
+          due_date: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: assignedStaff?.id || assignedStaff?.email,
+          assigned_by: 'AI Analysis'
+        });
+      });
+
+      // Preventative measures
+      analysis.preventative_measures?.forEach(measure => {
+        const daysToAdd = measure.timeframe?.includes('immediate') ? 7 :
+                         measure.timeframe?.includes('short') ? 14 : 30;
+        
+        const assignedStaff = findStaffByIdentifier(measure.assign_to) || staff[0];
+        
+        tasksToCreate.push({
+          title: measure.measure.substring(0, 100),
+          description: `${measure.measure}\n\nTimeframe: ${measure.timeframe}\nResponsibility: ${measure.responsibility}\n${measure.assignment_reason ? `\nAssignment Reason: ${measure.assignment_reason}` : ''}`,
+          source_type: 'incident_ai',
+          source_entity_id: incident.id,
+          priority: measure.timeframe?.includes('immediate') ? 'urgent' : 'high',
+          status: 'pending',
+          due_date: new Date(Date.now() + daysToAdd * 24 * 60 * 60 * 1000).toISOString().split('T')[0],
+          assigned_to_staff_id: assignedStaff?.id || assignedStaff?.email,
+          assigned_by: 'AI Analysis'
+        });
       });
 
       await base44.entities.ComplianceTask.bulkCreate(tasksToCreate);
       queryClient.invalidateQueries({ queryKey: ['compliance-tasks'] });
-      toast.success("Success", `Generated ${tasksToCreate.length} tasks from AI analysis`);
-      setShowTaskAssignmentDialog(false);
+      
+      // Show detailed success message
+      const uniqueAssignees = [...new Set(tasksToCreate.map(t => {
+        const assignedPerson = staff.find(s => s.id === t.assigned_to_staff_id || s.email === t.assigned_to_staff_id);
+        return assignedPerson?.full_name || t.assigned_to_staff_id;
+      }))];
+      
+      toast.success(
+        "Tasks Generated", 
+        `Created ${tasksToCreate.length} tasks assigned to ${uniqueAssignees.length} staff member(s): ${uniqueAssignees.slice(0, 3).join(', ')}${uniqueAssignees.length > 3 ? '...' : ''}`
+      );
     } catch (error) {
       console.error("Task generation error:", error);
       toast.error("Error", "Failed to generate tasks");
@@ -293,13 +267,12 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
             </Button>
             {analysis && (
               <Button 
-                onClick={openTaskAssignmentDialog}
+                onClick={generateTasks}
                 disabled={isGeneratingTasks}
                 variant="outline"
                 className="border-purple-600 text-purple-600"
               >
-                <Users className="w-4 h-4 mr-2" />
-                Assign & Generate Tasks
+                {isGeneratingTasks ? "Generating..." : "Generate Tasks"}
               </Button>
             )}
           </div>
@@ -356,11 +329,25 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
                   Immediate Actions Recommended
                 </h3>
                 <div className="space-y-2">
-                  {analysis.immediate_actions.map((action, idx) => (
-                    <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded">
-                      <p className="text-sm text-gray-800 font-medium">• {action}</p>
-                    </div>
-                  ))}
+                  {analysis.immediate_actions.map((actionObj, idx) => {
+                    const actionText = typeof actionObj === 'string' ? actionObj : actionObj.action;
+                    const assignTo = typeof actionObj === 'object' ? actionObj.assign_to : null;
+                    const assignmentReason = typeof actionObj === 'object' ? actionObj.assignment_reason : null;
+                    
+                    return (
+                      <div key={idx} className="p-3 bg-blue-50 border border-blue-200 rounded">
+                        <p className="text-sm text-gray-800 font-medium">• {actionText}</p>
+                        {assignTo && (
+                          <div className="mt-2 flex items-center gap-2">
+                            <Badge className="bg-blue-600 text-white">Assign to: {assignTo}</Badge>
+                            {assignmentReason && (
+                              <span className="text-xs text-blue-700">{assignmentReason}</span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -375,10 +362,16 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
                   {analysis.preventative_measures.map((measure, idx) => (
                     <div key={idx} className="p-4 bg-green-50 border border-green-200 rounded-lg">
                       <p className="text-sm text-gray-800 font-medium mb-2">{measure.measure}</p>
-                      <div className="flex gap-4 text-xs text-gray-600">
-                        <span>Timeframe: {measure.timeframe}</span>
-                        <span>Responsibility: {measure.responsibility}</span>
+                      <div className="flex flex-wrap gap-3 text-xs">
+                        <span className="text-gray-600">Timeframe: {measure.timeframe}</span>
+                        <span className="text-gray-600">Responsibility: {measure.responsibility}</span>
+                        {measure.assign_to && (
+                          <Badge className="bg-green-600 text-white">Assign to: {measure.assign_to}</Badge>
+                        )}
                       </div>
+                      {measure.assignment_reason && (
+                        <p className="text-xs text-green-700 mt-2 italic">{measure.assignment_reason}</p>
+                      )}
                     </div>
                   ))}
                 </div>
@@ -404,120 +397,6 @@ Provide a comprehensive root cause analysis with actionable recommendations.`;
           </div>
         )}
       </CardContent>
-
-      {/* Task Assignment Dialog */}
-      <Dialog open={showTaskAssignmentDialog} onOpenChange={setShowTaskAssignmentDialog}>
-        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <Users className="w-5 h-5" />
-              Assign Follow-up Tasks
-            </DialogTitle>
-            <p className="text-sm text-gray-500 mt-1">
-              Assign tasks to specific staff members or roles. Tasks assigned to roles will go to all members of that role.
-            </p>
-          </DialogHeader>
-
-          <div className="space-y-4 py-4">
-            {Object.entries(taskAssignments).map(([key, assignment]) => (
-              <Card key={key} className="border">
-                <CardContent className="p-4">
-                  <div className="space-y-3">
-                    <div>
-                      <Badge className={assignment.type === 'immediate' ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'}>
-                        {assignment.type === 'immediate' ? 'Immediate Action' : 'Preventative Measure'}
-                      </Badge>
-                      <p className="font-medium mt-2 text-sm">
-                        {assignment.action || assignment.measure}
-                      </p>
-                      {assignment.responsibility && (
-                        <p className="text-xs text-gray-600 mt-1">Suggested: {assignment.responsibility}</p>
-                      )}
-                    </div>
-
-                    <div className="grid grid-cols-3 gap-3">
-                      <div>
-                        <Label className="text-xs">Assignment Type</Label>
-                        <Select
-                          value={assignment.assignment_type}
-                          onValueChange={(v) => setTaskAssignments({
-                            ...taskAssignments,
-                            [key]: { ...assignment, assignment_type: v }
-                          })}
-                        >
-                          <SelectTrigger className="h-9">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="staff">Specific Staff</SelectItem>
-                            <SelectItem value="role">Single Role Member</SelectItem>
-                            <SelectItem value="all_role">All Role Members</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
-
-                      {assignment.assignment_type === 'staff' ? (
-                        <div className="col-span-2">
-                          <Label className="text-xs">Assign To</Label>
-                          <Select
-                            value={assignment.assigned_staff_id || ''}
-                            onValueChange={(v) => setTaskAssignments({
-                              ...taskAssignments,
-                              [key]: { ...assignment, assigned_staff_id: v }
-                            })}
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue placeholder="Select staff member" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {allStaff.map(s => (
-                                <SelectItem key={s.id} value={s.id}>
-                                  {s.full_name} {s.role ? `(${s.role})` : ''}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      ) : (
-                        <div className="col-span-2">
-                          <Label className="text-xs">Assign To Role</Label>
-                          <Select
-                            value={assignment.assigned_role}
-                            onValueChange={(v) => setTaskAssignments({
-                              ...taskAssignments,
-                              [key]: { ...assignment, assigned_role: v }
-                            })}
-                          >
-                            <SelectTrigger className="h-9">
-                              <SelectValue />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="admin">Admin</SelectItem>
-                              <SelectItem value="manager">Manager</SelectItem>
-                              <SelectItem value="care_coordinator">Care Coordinator</SelectItem>
-                              <SelectItem value="team_lead">Team Lead</SelectItem>
-                              <SelectItem value="staff_member">Staff Member</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-            ))}
-          </div>
-
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setShowTaskAssignmentDialog(false)}>
-              Cancel
-            </Button>
-            <Button onClick={generateTasks} disabled={isGeneratingTasks} className="bg-purple-600 hover:bg-purple-700">
-              {isGeneratingTasks ? "Generating..." : `Generate ${Object.keys(taskAssignments).length} Tasks`}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
     </Card>
   );
 }
