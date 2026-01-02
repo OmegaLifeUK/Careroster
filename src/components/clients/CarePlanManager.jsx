@@ -26,12 +26,15 @@ import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
 import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
+import AICarePlanAssistant from "@/components/careplan/AICarePlanAssistant";
 import { AssessmentToCarePlanWorkflow } from "@/components/workflow/AssessmentToCarePlanWorkflow";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [assistantMode, setAssistantMode] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -190,15 +193,24 @@ export default function CarePlanManager({ client }) {
           Care Plans
         </h2>
         <div className="flex gap-2">
-          {assessmentDocs.length > 0 && (
+          <Button 
+            size="sm" 
+            variant="outline"
+            className="border-purple-300 text-purple-700 hover:bg-purple-50"
+            onClick={() => { setAssistantMode('create'); setShowAIAssistant(true); }}
+          >
+            <Sparkles className="w-4 h-4 mr-2" />
+            AI Generate Care Plan
+          </Button>
+          {activePlan && (
             <Button 
               size="sm" 
               variant="outline"
-              className="border-purple-300 text-purple-700 hover:bg-purple-50"
-              onClick={() => setShowAIGenerator(true)}
+              className="border-blue-300 text-blue-700 hover:bg-blue-50"
+              onClick={() => { setAssistantMode('adjust'); setShowAIAssistant(true); }}
             >
               <Sparkles className="w-4 h-4 mr-2" />
-              AI Generate from Assessments
+              AI Suggest Adjustments
             </Button>
           )}
           <Button 
@@ -428,6 +440,19 @@ export default function CarePlanManager({ client }) {
           assessmentDocuments={assessmentDocs}
           onClose={() => setShowAIGenerator(false)}
           onSuccess={() => setShowAIGenerator(false)}
+        />
+      )}
+
+      {showAIAssistant && (
+        <AICarePlanAssistant
+          client={client}
+          existingCarePlan={assistantMode === 'adjust' ? activePlan : null}
+          onClose={() => { setShowAIAssistant(false); setAssistantMode(null); }}
+          onSuccess={() => {
+            setShowAIAssistant(false);
+            setAssistantMode(null);
+            queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+          }}
         />
       )}
     </div>
