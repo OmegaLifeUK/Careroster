@@ -1,756 +1,926 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Sparkles, Loader2, Brain, TrendingUp, AlertCircle, Target, X, CheckCircle } from "lucide-react";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
+import { 
+  Sparkles, 
+  Loader2, 
+  FileText, 
+  AlertTriangle, 
+  CheckCircle,
+  TrendingUp,
+  Shield,
+  Heart,
+  Activity,
+  Lightbulb,
+  Target,
+  ListChecks,
+  Pill,
+  Plus,
+  Edit
+} from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { format, subMonths } from "date-fns";
+import { format, addMonths, parseISO } from "date-fns";
 
-export default function AICarePlanAssistant({ client, existingCarePlan, onClose, onSuccess }) {
-  const [mode, setMode] = useState(existingCarePlan ? 'adjust' : 'create');
-  const [isGenerating, setIsGenerating] = useState(false);
-  const [generatedPlan, setGeneratedPlan] = useState(null);
-  const [adjustmentSuggestions, setAdjustmentSuggestions] = useState(null);
-  const { toast } = useToast();
+export default function AICarePlanAssistant({ client, existingCarePlan = null, onClose, onSuccess }) {
+  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysis, setAnalysis] = useState(null);
+  const [additionalNotes, setAdditionalNotes] = useState("");
+  const [step, setStep] = useState("configure");
+  
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
-  // Fetch all relevant data for AI analysis
+  // Fetch all relevant client data
   const { data: progressRecords = [] } = useQuery({
     queryKey: ['progress-records', client.id],
     queryFn: async () => {
       const records = await base44.entities.ClientProgressRecord.filter({ client_id: client.id });
-      return Array.isArray(records) ? records.sort((a, b) => new Date(b.record_date) - new Date(a.record_date)) : [];
-    },
-  });
-
-  const { data: incidents = [] } = useQuery({
-    queryKey: ['client-incidents', client.id],
-    queryFn: async () => {
-      const data = await base44.entities.Incident.filter({ client_id: client.id });
-      return Array.isArray(data) ? data.filter(i => 
-        new Date(i.incident_date) > subMonths(new Date(), 6)
+      return Array.isArray(records) ? records.sort((a, b) => 
+        new Date(b.record_date) - new Date(a.record_date)
       ) : [];
     },
   });
 
-  const { data: assessmentDocs = [] } = useQuery({
-    queryKey: ['client-assessments', client.id],
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['incidents-for-careplan', client.id],
     queryFn: async () => {
-      const docs = [];
-      try {
-        const visits = await base44.entities.Visit.filter({ client_id: client.id });
-        (visits || []).forEach(v => {
-          if (v.assessment_documents?.length) {
-            docs.push(...v.assessment_documents.map(d => ({ ...d, source: 'visit', date: v.scheduled_start })));
-          }
-        });
-      } catch (e) {}
-      
-      try {
-        const shifts = await base44.entities.Shift.filter({ client_id: client.id });
-        (shifts || []).forEach(s => {
-          if (s.assessment_documents?.length) {
-            docs.push(...s.assessment_documents.map(d => ({ ...d, source: 'shift', date: s.date })));
-          }
-        });
-      } catch (e) {}
-      
-      return docs.sort((a, b) => new Date(b.date) - new Date(a.date));
+      const allIncidents = await base44.entities.Incident.list('-incident_date');
+      return allIncidents.filter(i => i.client_id === client.id);
     },
   });
 
   const { data: riskAssessments = [] } = useQuery({
-    queryKey: ['risk-assessments', client.id],
+    queryKey: ['risk-assessments-careplan', client.id],
     queryFn: async () => {
-      const data = await base44.entities.RiskAssessment.filter({ client_id: client.id });
-      return Array.isArray(data) ? data : [];
+      const assessments = await base44.entities.RiskAssessment.filter({ client_id: client.id });
+      return Array.isArray(assessments) ? assessments : [];
     },
   });
 
-  const { data: medicationLogs = [] } = useQuery({
-    queryKey: ['medication-logs', client.id],
+  const { data: dailyLogs = [] } = useQuery({
+    queryKey: ['daily-logs-recent', client.id],
     queryFn: async () => {
-      const data = await base44.entities.MedicationLog.filter({ client_id: client.id });
-      return Array.isArray(data) ? data.slice(0, 50) : [];
+      const logs = await base44.entities.DailyLog.filter({ client_id: client.id });
+      return Array.isArray(logs) ? logs.slice(0, 10) : [];
     },
   });
 
   const { data: behaviorCharts = [] } = useQuery({
-    queryKey: ['behavior-charts', client.id],
+    queryKey: ['behavior-charts-careplan', client.id],
     queryFn: async () => {
-      const data = await base44.entities.BehaviorChart.filter({ client_id: client.id });
-      return Array.isArray(data) ? data : [];
+      const charts = await base44.entities.BehaviorChart.filter({ client_id: client.id });
+      return Array.isArray(charts) ? charts : [];
     },
   });
 
-  const generateInitialCarePlan = async () => {
-    setIsGenerating(true);
+  const { data: clientDocuments = [] } = useQuery({
+    queryKey: ['client-docs-medical', client.id],
+    queryFn: async () => {
+      const docs = await base44.entities.ClientDocument.filter({ client_id: client.id });
+      return Array.isArray(docs) ? docs.filter(d => 
+        d.document_type === 'medical_history' || d.document_type === 'assessment'
+      ) : [];
+    },
+  });
+
+  const analyzeAndGenerate = async () => {
+    setIsAnalyzing(true);
+    setStep("analyzing");
+
     try {
-      const careSettingContext = client.property_id ? 'Supported Living' :
-                                 client.attendance_days ? 'Day Centre' :
-                                 client.standard_visit_duration ? 'Domiciliary Care' :
-                                 'Residential Care';
+      const isNewPlan = !existingCarePlan;
+      const mode = isNewPlan ? "CREATE" : "ADJUST";
 
       // Build comprehensive context
-      const recentProgress = progressRecords.slice(0, 3);
-      const recentIncidents = incidents.slice(0, 5);
-      const latestRisks = riskAssessments.slice(0, 3);
-      const recentBehavior = behaviorCharts.slice(0, 3);
+      const progressSummary = progressRecords.slice(0, 3).map(r => ({
+        date: r.record_date,
+        overall_rating: r.overall_rating,
+        overall_progress: r.overall_progress,
+        key_achievements: r.key_achievements || [],
+        concerns: r.concerns || [],
+        recommendations: r.recommendations || [],
+        behavior_rating: r.behavior?.overall_rating,
+        health_rating: r.health_wellbeing?.overall_rating,
+        independence_rating: r.independence_skills?.overall_rating
+      }));
 
-      const prompt = `You are an expert care planning AI assistant. Generate a comprehensive, person-centered INITIAL care plan for this client.
+      const incidentSummary = incidents.slice(0, 5).map(i => ({
+        date: i.incident_date,
+        type: i.incident_type,
+        severity: i.severity,
+        description: i.description?.substring(0, 200),
+        is_safeguarding: i.is_safeguarding_concern
+      }));
 
-CLIENT PROFILE:
+      const riskSummary = riskAssessments.map(r => ({
+        type: r.assessment_type,
+        risk_level: r.risk_level,
+        identified_risks: r.identified_risks,
+        control_measures: r.control_measures
+      }));
+
+      const behaviorSummary = behaviorCharts.slice(0, 3).map(b => ({
+        date: b.chart_date,
+        behavior_being_monitored: b.behavior_being_monitored,
+        incidents_count: b.incidents?.length || 0
+      }));
+
+      const prompt = `You are an expert care planning AI assistant. ${mode === "CREATE" ? "Generate a comprehensive initial care plan" : "Analyze the existing care plan and suggest evidence-based adjustments"}.
+
+CLIENT INFORMATION:
 Name: ${client.full_name}
-DOB: ${client.date_of_birth || 'Not provided'}
-Care Setting: ${careSettingContext}
+Date of Birth: ${client.date_of_birth || 'Not provided'}
 Mobility: ${client.mobility || 'Not specified'}
+Existing Care Needs: ${(client.care_needs || []).join(', ') || 'Not specified'}
 Medical Notes: ${client.medical_notes || 'None'}
-Care Needs: ${client.care_needs?.join(', ') || 'Not specified'}
-Support Needs: ${client.support_needs?.join(', ') || 'Not specified'}
-Funding Type: ${client.funding_type || 'Not specified'}
+Support Needs: ${(client.support_needs || []).join(', ') || 'Not specified'}
 
-ASSESSMENT DATA:
-${assessmentDocs.length > 0 ? `Available Assessments: ${assessmentDocs.length} documents from recent visits/shifts` : 'No formal assessments available'}
+${existingCarePlan ? `
+EXISTING CARE PLAN SUMMARY:
+- Status: ${existingCarePlan.status}
+- Assessment Date: ${existingCarePlan.assessment_date}
+- Care Setting: ${existingCarePlan.care_setting}
+- Current Objectives: ${existingCarePlan.care_objectives?.length || 0}
+- Current Tasks: ${existingCarePlan.care_tasks?.length || 0}
+- Known Risk Factors: ${existingCarePlan.risk_factors?.length || 0}
 
-MEDICAL & MEDICATION HISTORY:
-${medicationLogs.length > 0 ? `Recent Medications: ${medicationLogs.length} administration records` : 'No medication records'}
+CARE OBJECTIVES (Current):
+${(existingCarePlan.care_objectives || []).map(o => 
+  `- ${o.objective} (Status: ${o.status || 'not_started'}, Target: ${o.target_date})`
+).join('\n')}
 
-IDENTIFIED RISKS:
-${latestRisks.length > 0 ? latestRisks.map(r => `- ${r.risk_category}: ${r.risk_level} level`).join('\n') : 'No risk assessments on file'}
+CARE TASKS (Current):
+${(existingCarePlan.care_tasks || []).slice(0, 10).map(t => 
+  `- ${t.task_name} (${t.category}, ${t.frequency})`
+).join('\n')}
+` : ''}
 
-BEHAVIORAL PATTERNS:
-${recentBehavior.length > 0 ? recentBehavior.map(b => `- ${b.behavior_monitored} on ${b.chart_date}`).join('\n') : 'No behavior monitoring data'}
+RECENT PROGRESS DATA (Last 3 Records):
+${JSON.stringify(progressSummary, null, 2)}
 
-RECENT PROGRESS (if any):
-${recentProgress.length > 0 ? recentProgress.map(p => 
-  `- ${p.record_date}: Overall rating ${p.overall_rating}/10, Status: ${p.overall_progress}`
-).join('\n') : 'No previous progress records'}
+INCIDENT HISTORY (Last 5 Incidents):
+${JSON.stringify(incidentSummary, null, 2)}
 
-RECENT INCIDENTS (if any):
-${recentIncidents.length > 0 ? recentIncidents.map(i => 
-  `- ${i.incident_type} (${i.severity}) on ${i.incident_date}`
-).join('\n') : 'No recent incidents'}
+RISK ASSESSMENTS:
+${JSON.stringify(riskSummary, null, 2)}
 
-GENERATE A COMPREHENSIVE CARE PLAN WITH:
+BEHAVIOR MONITORING (Recent):
+${JSON.stringify(behaviorSummary, null, 2)}
 
-1. CARE OBJECTIVES (SMART goals):
-   - 3-5 short-term objectives (1-3 months)
-   - 2-3 long-term objectives (6-12 months)
-   - Each with specific outcome measures and target dates
+DAILY LOG PATTERNS:
+${dailyLogs.slice(0, 5).map(l => 
+  `${l.log_date}: ${l.summary?.substring(0, 100) || 'No summary'}`
+).join('\n')}
 
-2. CARE TASKS (Daily/Regular Activities):
-   - Break down into specific, trackable tasks
-   - Include frequency, duration, special instructions
-   - Mark critical tasks (medication, safety)
-   - Consider two-carer requirements for manual handling
+ADDITIONAL STAFF NOTES:
+${additionalNotes || 'None provided'}
 
-3. MEDICATION MANAGEMENT:
-   - Based on medical notes and medication history
-   - Include administration requirements
-   - Highlight allergies and contraindications
+${mode === "CREATE" ? `
+TASK: Generate a comprehensive initial care plan with:
+1. Personal details (preferences, cultural needs, communication style)
+2. Physical health assessment (mobility, continence, nutrition, skin, pain, conditions, allergies)
+3. Mental health assessment (cognitive function, mental health conditions, communication needs, behavior support)
+4. 5-7 SMART care objectives (specific, measurable, achievable, relevant, time-bound)
+5. 15-25 care tasks across all categories (personal_care, nutrition, medication, mobility, social, emotional, healthcare, domestic)
+6. Medication management plan (based on medical notes if available)
+7. Daily routine (morning, afternoon, evening, night)
+8. Preferences (likes, dislikes, hobbies, food, personal care, communication)
+9. Risk factors identified from assessment data
+10. Emergency information
 
-4. RISK MANAGEMENT PLAN:
-   - Identify all potential risks (falls, choking, behavior, safeguarding)
-   - Assess likelihood and impact
-   - Define specific control measures
+CRITICAL: Base all recommendations on the evidence provided above. Reference specific incidents, progress trends, or risk assessments.
+` : `
+TASK: Analyze the existing care plan and suggest adjustments based on:
+1. Progress trends - Are objectives being met? Should they be revised?
+2. Incident patterns - Do new risks need to be addressed?
+3. Behavior changes - Are behavior support needs changing?
+4. Health status - Are there new health concerns?
+5. Task effectiveness - Should tasks be modified, added, or removed?
 
-5. PREFERENCES & PERSON-CENTERED APPROACH:
-   - Communication style and preferences
-   - Daily routine preferences
-   - Social and activity interests
-   - Cultural and religious considerations
+Provide specific, evidence-based recommendations with:
+- What to change and why (with supporting evidence from the data)
+- New objectives to add (if progress suggests new goals)
+- Tasks to modify/add/remove (based on effectiveness and changing needs)
+- Risk factors to add/update (based on recent incidents)
+- Medication or routine adjustments (if health status has changed)
 
-6. REVIEW SCHEDULE:
-   - Key performance indicators to track
-   - Review frequency
-   - Escalation triggers for concerns
+CRITICAL: Every recommendation must cite specific evidence (e.g., "Based on the 3 falls incidents in the last month..." or "Progress records show declining mobility scores...")
+`}`;
 
-Ensure all recommendations are evidence-based, regulatory-compliant (CQC), and truly person-centered.`;
-
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            assessment_summary: { type: "string" },
-            care_objectives: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  objective: { type: "string" },
-                  outcome_measures: { type: "string" },
-                  target_date: { type: "string" },
-                  category: { type: "string" },
-                  timeframe: { type: "string" }
-                }
-              }
-            },
-            care_tasks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  task_id: { type: "string" },
-                  task_name: { type: "string" },
-                  category: { type: "string" },
-                  frequency: { type: "string" },
-                  preferred_time: { type: "string" },
-                  duration_minutes: { type: "number" },
-                  special_instructions: { type: "string" },
-                  requires_two_carers: { type: "boolean" },
-                  is_critical: { type: "boolean" }
-                }
-              }
-            },
-            medication_management: {
+      const responseSchema = mode === "CREATE" ? {
+        type: "object",
+        properties: {
+          personal_details: { type: "object" },
+          physical_health: { type: "object" },
+          mental_health: { type: "object" },
+          care_objectives: { type: "array" },
+          care_tasks: { type: "array" },
+          medication_management: { type: "object" },
+          daily_routine: { type: "object" },
+          preferences: { type: "object" },
+          risk_factors: { type: "array" },
+          emergency_info: { type: "object" },
+          evidence_summary: { 
+            type: "string",
+            description: "Summary of key evidence used to inform this care plan"
+          }
+        }
+      } : {
+        type: "object",
+        properties: {
+          overall_assessment: {
+            type: "string",
+            description: "Overall assessment of current care plan effectiveness"
+          },
+          objectives_to_revise: {
+            type: "array",
+            items: {
               type: "object",
               properties: {
-                self_administers: { type: "boolean" },
-                administration_support: { type: "string" },
-                medications: {
-                  type: "array",
-                  items: {
-                    type: "object",
-                    properties: {
-                      name: { type: "string" },
-                      dose: { type: "string" },
-                      frequency: { type: "string" },
-                      route: { type: "string" },
-                      time_of_day: { type: "array", items: { type: "string" } },
-                      purpose: { type: "string" },
-                      special_instructions: { type: "string" },
-                      is_prn: { type: "boolean" }
-                    }
-                  }
-                },
-                allergies_sensitivities: { type: "string" }
+                current_objective: { type: "string" },
+                suggested_revision: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
               }
-            },
-            risk_factors: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  risk: { type: "string" },
-                  likelihood: { type: "string" },
-                  impact: { type: "string" },
-                  control_measures: { type: "string" }
-                }
-              }
-            },
-            preferences: {
+            }
+          },
+          objectives_to_add: {
+            type: "array",
+            items: {
               type: "object",
               properties: {
-                communication_preferences: { type: "string" },
-                daily_routine: { type: "string" },
-                likes: { type: "array", items: { type: "string" } },
-                dislikes: { type: "array", items: { type: "string" } },
-                hobbies: { type: "array", items: { type: "string" } },
-                cultural_needs: { type: "string" }
+                objective: { type: "string" },
+                outcome_measures: { type: "string" },
+                target_date: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
               }
-            },
-            review_plan: {
+            }
+          },
+          tasks_to_add: {
+            type: "array",
+            items: {
               type: "object",
               properties: {
-                review_frequency: { type: "string" },
-                key_performance_indicators: { type: "array", items: { type: "string" } },
-                escalation_triggers: { type: "array", items: { type: "string" } }
+                category: { type: "string" },
+                task_name: { type: "string" },
+                description: { type: "string" },
+                frequency: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
+              }
+            }
+          },
+          tasks_to_modify: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                current_task: { type: "string" },
+                suggested_change: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
+              }
+            }
+          },
+          tasks_to_remove: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                task_name: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
+              }
+            }
+          },
+          risks_to_add: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                risk: { type: "string" },
+                likelihood: { type: "string" },
+                impact: { type: "string" },
+                control_measures: { type: "string" },
+                supporting_evidence: { type: "string" }
+              }
+            }
+          },
+          medication_adjustments: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                adjustment: { type: "string" },
+                reason: { type: "string" },
+                supporting_evidence: { type: "string" }
+              }
+            }
+          },
+          routine_adjustments: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                time_of_day: { type: "string" },
+                adjustment: { type: "string" },
+                reason: { type: "string" }
+              }
+            }
+          },
+          priority_actions: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                action: { type: "string" },
+                urgency: { type: "string" },
+                reason: { type: "string" }
               }
             }
           }
         }
-      });
-
-      setGeneratedPlan(response);
-      toast.success("Success", "Care plan generated successfully!");
-    } catch (error) {
-      console.error("Generation error:", error);
-      toast.error("Error", "Failed to generate care plan");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const generateAdjustments = async () => {
-    setIsGenerating(true);
-    try {
-      const recentProgress = progressRecords.slice(0, 5);
-      const recentIncidents = incidents.slice(0, 10);
-
-      const prompt = `You are an expert care planning AI assistant. Analyze the existing care plan and recent client data to suggest ADJUSTMENTS and improvements.
-
-CURRENT CARE PLAN:
-Assessment Date: ${existingCarePlan.assessment_date}
-Current Status: ${existingCarePlan.status}
-Current Objectives: ${existingCarePlan.care_objectives?.length || 0}
-Current Tasks: ${existingCarePlan.care_tasks?.length || 0}
-Last Reviewed: ${existingCarePlan.last_reviewed_date || 'Never'}
-
-RECENT PROGRESS TRENDS:
-${recentProgress.length > 0 ? recentProgress.map(p => 
-  `- ${p.record_date}: Overall ${p.overall_rating}/10, ${p.overall_progress}
-   Behavior: ${p.behaviour?.overall_rating || 'N/A'}/10 (${p.behaviour?.trend || 'N/A'})
-   Health: ${p.health_wellbeing?.overall_rating || 'N/A'}/10 (${p.health_wellbeing?.trend || 'N/A'})
-   Independence: ${p.independence_skills?.overall_rating || 'N/A'}/10 (${p.independence_skills?.trend || 'N/A'})
-   Key Achievements: ${p.key_achievements?.join(', ') || 'None'}
-   Concerns: ${p.concerns?.join(', ') || 'None'}`
-).join('\n\n') : 'No recent progress data'}
-
-RECENT INCIDENTS (Past 6 Months):
-${recentIncidents.length > 0 ? recentIncidents.map(i => 
-  `- ${i.incident_date}: ${i.incident_type} (${i.severity})
-   Description: ${i.description?.substring(0, 100)}...
-   Actions Taken: ${i.immediate_action_taken?.substring(0, 100) || 'None'}`
-).join('\n\n') : 'No recent incidents'}
-
-CURRENT CARE OBJECTIVES:
-${existingCarePlan.care_objectives?.map((obj, idx) => 
-  `${idx + 1}. ${obj.objective} (Status: ${obj.status || 'not_started'})`
-).join('\n') || 'No objectives defined'}
-
-ANALYZE AND PROVIDE:
-
-1. OBJECTIVE ADJUSTMENTS:
-   - Which objectives are achieved and should be updated/replaced?
-   - Which objectives need modification based on progress?
-   - What new objectives should be added based on emerging needs?
-
-2. TASK MODIFICATIONS:
-   - Tasks to add based on progress trends and incidents
-   - Tasks to modify (frequency, instructions)
-   - Tasks to discontinue (no longer relevant)
-
-3. RISK UPDATES:
-   - New risks identified from incidents
-   - Risk level changes based on recent data
-   - Additional control measures needed
-
-4. CARE PLAN PRIORITIES:
-   - What should be the focus for the next review period?
-   - What interventions would have the most impact?
-
-5. SPECIFIC RECOMMENDATIONS:
-   - Evidence from progress data supporting each change
-   - Expected outcomes from implementing suggestions
-   - Timeline for implementation
-
-Be specific and evidence-based. Reference the actual data points that justify each suggestion.`;
-
-      const response = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        add_context_from_internet: false,
-        response_json_schema: {
-          type: "object",
-          properties: {
-            overall_assessment: { type: "string" },
-            progress_summary: {
-              type: "object",
-              properties: {
-                positive_trends: { type: "array", items: { type: "string" } },
-                areas_of_concern: { type: "array", items: { type: "string" } },
-                notable_achievements: { type: "array", items: { type: "string" } }
-              }
-            },
-            objective_adjustments: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  action: { type: "string" },
-                  objective: { type: "string" },
-                  rationale: { type: "string" },
-                  evidence: { type: "string" },
-                  priority: { type: "string" }
-                }
-              }
-            },
-            task_modifications: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  modification_type: { type: "string" },
-                  task_name: { type: "string" },
-                  current_state: { type: "string" },
-                  recommended_change: { type: "string" },
-                  rationale: { type: "string" }
-                }
-              }
-            },
-            risk_updates: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  risk: { type: "string" },
-                  change_type: { type: "string" },
-                  current_level: { type: "string" },
-                  recommended_level: { type: "string" },
-                  additional_controls: { type: "string" },
-                  evidence: { type: "string" }
-                }
-              }
-            },
-            priority_focus_areas: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  area: { type: "string" },
-                  intervention: { type: "string" },
-                  expected_outcome: { type: "string" },
-                  timeframe: { type: "string" }
-                }
-              }
-            },
-            implementation_plan: {
-              type: "object",
-              properties: {
-                immediate_actions: { type: "array", items: { type: "string" } },
-                short_term_changes: { type: "array", items: { type: "string" } },
-                long_term_adjustments: { type: "array", items: { type: "string" } }
-              }
-            }
-          }
-        }
-      });
-
-      setAdjustmentSuggestions(response);
-      toast.success("Success", "Adjustment suggestions generated!");
-    } catch (error) {
-      console.error("Adjustment generation error:", error);
-      toast.error("Error", "Failed to generate adjustments");
-    } finally {
-      setIsGenerating(false);
-    }
-  };
-
-  const saveCarePlan = async () => {
-    try {
-      const user = await base44.auth.me();
-      const today = format(new Date(), 'yyyy-MM-dd');
-      
-      const careSetting = client.property_id ? 'supported_living' :
-                         client.attendance_days ? 'day_centre' :
-                         client.standard_visit_duration ? 'domiciliary' :
-                         'residential_care';
-
-      const carePlanData = {
-        client_id: client.id,
-        care_setting: careSetting,
-        plan_type: 'initial',
-        assessment_date: today,
-        review_date: format(new Date().setMonth(new Date().getMonth() + 3), 'yyyy-MM-dd'),
-        assessed_by: user.full_name || user.email,
-        status: 'draft',
-        
-        care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
-          objective: obj.objective,
-          outcome_measures: obj.outcome_measures,
-          target_date: obj.target_date,
-          status: 'not_started'
-        })),
-        
-        care_tasks: (generatedPlan.care_tasks || []).map(task => ({
-          task_id: task.task_id,
-          task_name: task.task_name,
-          category: task.category,
-          frequency: task.frequency,
-          preferred_time: task.preferred_time,
-          duration_minutes: task.duration_minutes || 30,
-          special_instructions: task.special_instructions || '',
-          requires_two_carers: task.requires_two_carers || false,
-          is_active: true
-        })),
-        
-        medication_management: generatedPlan.medication_management,
-        risk_factors: generatedPlan.risk_factors || [],
-        preferences: generatedPlan.preferences || {},
-        
-        generated_from_ai: true,
-        ai_generation_date: new Date().toISOString()
       };
 
-      await base44.entities.CarePlan.create(carePlanData);
-      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Success", "Care plan created!");
-      onSuccess?.();
-      onClose?.();
+      const result = await base44.integrations.Core.InvokeLLM({
+        prompt,
+        response_json_schema: responseSchema
+      });
+
+      setAnalysis({ ...result, mode });
+      setStep("review");
     } catch (error) {
-      console.error("Save error:", error);
+      console.error("Analysis error:", error);
+      toast.error("Analysis Failed", "Failed to analyze client data. Please try again.");
+      setStep("configure");
+    } finally {
+      setIsAnalyzing(false);
+    }
+  };
+
+  const saveMutation = useMutation({
+    mutationFn: async () => {
+      if (analysis.mode === "CREATE") {
+        // Create new care plan
+        const carePlanData = {
+          client_id: client.id,
+          care_setting: existingCarePlan?.care_setting || "domiciliary",
+          plan_type: "initial",
+          assessment_date: format(new Date(), "yyyy-MM-dd"),
+          review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
+          assessed_by: "AI Generated (Requires Review)",
+          status: "draft",
+          ...analysis,
+          care_tasks: (analysis.care_tasks || []).map((task, idx) => ({
+            ...task,
+            task_id: `task_${Date.now()}_${idx}`,
+            is_active: true
+          })),
+          care_objectives: (analysis.care_objectives || []).map(obj => ({
+            ...obj,
+            status: obj.status || "not_started"
+          })),
+          generated_from_assessment: true,
+          ai_analysis_metadata: {
+            generated_at: new Date().toISOString(),
+            based_on_progress_records: progressRecords.length,
+            based_on_incidents: incidents.length,
+            based_on_risk_assessments: riskAssessments.length,
+            evidence_summary: analysis.evidence_summary
+          }
+        };
+
+        return base44.entities.CarePlan.create(carePlanData);
+      } else {
+        // Update existing care plan with adjustments
+        const updatedPlan = { ...existingCarePlan };
+        
+        // Add new objectives
+        if (analysis.objectives_to_add?.length > 0) {
+          updatedPlan.care_objectives = [
+            ...(updatedPlan.care_objectives || []),
+            ...analysis.objectives_to_add.map(obj => ({
+              ...obj,
+              status: "not_started",
+              added_by_ai: true,
+              added_date: format(new Date(), "yyyy-MM-dd")
+            }))
+          ];
+        }
+
+        // Add new tasks
+        if (analysis.tasks_to_add?.length > 0) {
+          updatedPlan.care_tasks = [
+            ...(updatedPlan.care_tasks || []),
+            ...analysis.tasks_to_add.map((task, idx) => ({
+              ...task,
+              task_id: `task_${Date.now()}_${idx}`,
+              is_active: true,
+              added_by_ai: true,
+              added_date: format(new Date(), "yyyy-MM-dd")
+            }))
+          ];
+        }
+
+        // Add new risks
+        if (analysis.risks_to_add?.length > 0) {
+          updatedPlan.risk_factors = [
+            ...(updatedPlan.risk_factors || []),
+            ...analysis.risks_to_add
+          ];
+        }
+
+        updatedPlan.status = "under_review";
+        updatedPlan.last_reviewed_date = format(new Date(), "yyyy-MM-dd");
+        updatedPlan.last_reviewed_by = "AI Analysis";
+        updatedPlan.ai_adjustment_metadata = {
+          adjusted_at: new Date().toISOString(),
+          based_on_progress_records: progressRecords.length,
+          based_on_incidents: incidents.length,
+          changes_summary: {
+            objectives_added: analysis.objectives_to_add?.length || 0,
+            tasks_added: analysis.tasks_to_add?.length || 0,
+            risks_added: analysis.risks_to_add?.length || 0
+          }
+        };
+
+        return base44.entities.CarePlan.update(existingCarePlan.id, updatedPlan);
+      }
+    },
+    onSuccess: (plan) => {
+      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+      if (analysis.mode === "CREATE") {
+        toast.success("Care Plan Created", "AI-generated care plan saved as draft");
+      } else {
+        toast.success("Adjustments Applied", "Care plan updated with AI recommendations");
+      }
+      onSuccess?.(plan);
+      onClose();
+    },
+    onError: () => {
       toast.error("Error", "Failed to save care plan");
     }
-  };
-
-  const applyAdjustments = async () => {
-    try {
-      const updatedObjectives = [...(existingCarePlan.care_objectives || [])];
-      
-      // Apply objective adjustments
-      adjustmentSuggestions.objective_adjustments?.forEach(adj => {
-        if (adj.action === 'add') {
-          updatedObjectives.push({
-            objective: adj.objective,
-            outcome_measures: adj.rationale,
-            status: 'not_started'
-          });
-        } else if (adj.action === 'modify') {
-          const idx = updatedObjectives.findIndex(o => 
-            o.objective.toLowerCase().includes(adj.objective.toLowerCase().substring(0, 20))
-          );
-          if (idx >= 0) {
-            updatedObjectives[idx].outcome_measures = adj.rationale;
-          }
-        } else if (adj.action === 'complete') {
-          const idx = updatedObjectives.findIndex(o => 
-            o.objective.toLowerCase().includes(adj.objective.toLowerCase().substring(0, 20))
-          );
-          if (idx >= 0) {
-            updatedObjectives[idx].status = 'achieved';
-          }
-        }
-      });
-
-      const updatedRisks = [...(existingCarePlan.risk_factors || [])];
-      
-      // Apply risk updates
-      adjustmentSuggestions.risk_updates?.forEach(risk => {
-        if (risk.change_type === 'add') {
-          updatedRisks.push({
-            risk: risk.risk,
-            likelihood: risk.recommended_level || 'medium',
-            impact: risk.recommended_level || 'medium',
-            control_measures: risk.additional_controls
-          });
-        } else if (risk.change_type === 'modify') {
-          const idx = updatedRisks.findIndex(r => 
-            r.risk.toLowerCase().includes(risk.risk.toLowerCase().substring(0, 15))
-          );
-          if (idx >= 0) {
-            updatedRisks[idx].likelihood = risk.recommended_level || updatedRisks[idx].likelihood;
-            updatedRisks[idx].control_measures = risk.additional_controls || updatedRisks[idx].control_measures;
-          }
-        }
-      });
-
-      await base44.entities.CarePlan.update(existingCarePlan.id, {
-        care_objectives: updatedObjectives,
-        risk_factors: updatedRisks,
-        last_reviewed_date: format(new Date(), 'yyyy-MM-dd'),
-        last_reviewed_by: (await base44.auth.me()).full_name,
-        review_notes: `AI-suggested adjustments applied based on progress data and incident analysis`
-      });
-
-      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Success", "Adjustments applied to care plan!");
-      onSuccess?.();
-      onClose?.();
-    } catch (error) {
-      console.error("Apply error:", error);
-      toast.error("Error", "Failed to apply adjustments");
-    }
-  };
+  });
 
   return (
-    <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
-      <Card className="w-full max-w-5xl max-h-[90vh] overflow-hidden flex flex-col">
-        <CardHeader className="border-b bg-gradient-to-r from-purple-50 to-blue-50">
-          <div className="flex items-center justify-between">
-            <CardTitle className="flex items-center gap-2">
-              <Brain className="w-5 h-5 text-purple-600" />
-              AI Care Plan Assistant
-            </CardTitle>
-            <Button variant="ghost" size="sm" onClick={onClose}>
-              <X className="w-4 h-4" />
-            </Button>
-          </div>
-        </CardHeader>
+    <Dialog open onOpenChange={onClose}>
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <Sparkles className="w-5 h-5 text-purple-600" />
+            {existingCarePlan ? "AI Care Plan Adjustment Assistant" : "AI Care Plan Generator"}
+          </DialogTitle>
+        </DialogHeader>
 
-        <CardContent className="p-6 overflow-y-auto flex-1">
-          <Tabs value={mode} onValueChange={setMode} className="w-full">
-            <TabsList className="grid w-full grid-cols-2">
-              <TabsTrigger value="create" disabled={!existingCarePlan}>
+        {step === "configure" && (
+          <div className="space-y-6">
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800 mb-2">
+                {existingCarePlan 
+                  ? `Analyzing ${client.full_name}'s progress, incidents, and care data to suggest evidence-based adjustments.`
+                  : `Generating a comprehensive care plan for ${client.full_name} based on all available assessment data.`
+                }
+              </p>
+              <p className="text-xs text-blue-600">
+                AI will analyze: {progressRecords.length} progress records, {incidents.length} incidents, 
+                {riskAssessments.length} risk assessments, {dailyLogs.length} daily logs
+              </p>
+            </div>
+
+            {/* Data Summary */}
+            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <TrendingUp className="w-6 h-6 mx-auto mb-1 text-green-600" />
+                  <p className="text-2xl font-bold">{progressRecords.length}</p>
+                  <p className="text-xs text-gray-600">Progress Records</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <Shield className="w-6 h-6 mx-auto mb-1 text-red-600" />
+                  <p className="text-2xl font-bold">{incidents.length}</p>
+                  <p className="text-xs text-gray-600">Incidents</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <AlertTriangle className="w-6 h-6 mx-auto mb-1 text-orange-600" />
+                  <p className="text-2xl font-bold">{riskAssessments.length}</p>
+                  <p className="text-xs text-gray-600">Risk Assessments</p>
+                </CardContent>
+              </Card>
+              <Card>
+                <CardContent className="p-3 text-center">
+                  <Activity className="w-6 h-6 mx-auto mb-1 text-blue-600" />
+                  <p className="text-2xl font-bold">{behaviorCharts.length}</p>
+                  <p className="text-xs text-gray-600">Behavior Charts</p>
+                </CardContent>
+              </Card>
+            </div>
+
+            <div>
+              <Label className="mb-2 block">Additional Context (Optional)</Label>
+              <Textarea
+                value={additionalNotes}
+                onChange={(e) => setAdditionalNotes(e.target.value)}
+                placeholder="Add any additional information or specific concerns to guide the AI analysis..."
+                rows={4}
+              />
+            </div>
+
+            <DialogFooter>
+              <Button variant="outline" onClick={onClose}>Cancel</Button>
+              <Button 
+                onClick={analyzeAndGenerate}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Generate New Plan
-              </TabsTrigger>
-              <TabsTrigger value="adjust" disabled={!existingCarePlan}>
-                <TrendingUp className="w-4 h-4 mr-2" />
-                Suggest Adjustments
-              </TabsTrigger>
-            </TabsList>
+                {existingCarePlan ? "Analyze & Suggest Adjustments" : "Generate Care Plan"}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
 
-            <TabsContent value="create" className="space-y-4">
-              <div className="p-4 bg-blue-50 rounded-lg">
-                <h3 className="font-semibold text-blue-900 mb-2">Data Sources for AI Analysis:</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div className="flex items-center gap-2">
-                    <CheckCircle className="w-4 h-4 text-blue-600" />
-                    <span>Client Profile & Medical History</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {assessmentDocs.length > 0 ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertCircle className="w-4 h-4 text-gray-400" />}
-                    <span>{assessmentDocs.length} Assessment Documents</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {progressRecords.length > 0 ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertCircle className="w-4 h-4 text-gray-400" />}
-                    <span>{progressRecords.length} Progress Records</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {incidents.length > 0 ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertCircle className="w-4 h-4 text-gray-400" />}
-                    <span>{incidents.length} Recent Incidents</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {riskAssessments.length > 0 ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertCircle className="w-4 h-4 text-gray-400" />}
-                    <span>{riskAssessments.length} Risk Assessments</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    {behaviorCharts.length > 0 ? <CheckCircle className="w-4 h-4 text-green-600" /> : <AlertCircle className="w-4 h-4 text-gray-400" />}
-                    <span>{behaviorCharts.length} Behavior Charts</span>
-                  </div>
-                </div>
+        {step === "analyzing" && (
+          <div className="py-12 text-center">
+            <Loader2 className="w-16 h-16 mx-auto mb-4 text-purple-600 animate-spin" />
+            <h3 className="text-lg font-semibold mb-2">Analyzing Client Data...</h3>
+            <p className="text-gray-600 mb-2">
+              AI is reviewing progress records, incidents, risk assessments, and care data
+            </p>
+            <p className="text-sm text-gray-500">This may take 30-60 seconds</p>
+          </div>
+        )}
+
+        {step === "review" && analysis && (
+          <div className="space-y-6">
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
+              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+              <div>
+                <p className="font-medium text-green-800">Analysis Complete</p>
+                <p className="text-sm text-green-700">
+                  {analysis.mode === "CREATE" 
+                    ? "Comprehensive care plan generated from client data"
+                    : "Evidence-based adjustments ready for review"
+                  }
+                </p>
               </div>
+            </div>
 
-              {!generatedPlan ? (
-                <div className="text-center py-12">
-                  <Brain className="w-16 h-16 mx-auto text-purple-300 mb-4" />
-                  <p className="text-gray-600 mb-4">
-                    AI will analyze all available client data to generate a comprehensive care plan
-                  </p>
-                  <Button onClick={generateInitialCarePlan} disabled={isGenerating} className="bg-purple-600">
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing data...
-                      </>
-                    ) : (
-                      <>
-                        <Sparkles className="w-4 h-4 mr-2" />
-                        Generate Care Plan
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-4">
-                  {/* ... rest of existing generated plan display ... */}
-                  <div className="flex gap-3 pt-4 border-t">
-                    <Button onClick={saveCarePlan} className="flex-1 bg-green-600">
-                      Save Care Plan
-                    </Button>
-                    <Button onClick={() => setGeneratedPlan(null)} variant="outline">
-                      Regenerate
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-
-            <TabsContent value="adjust" className="space-y-4">
-              <div className="p-4 bg-amber-50 rounded-lg">
-                <h3 className="font-semibold text-amber-900 mb-2">Analysis Context:</h3>
-                <div className="grid grid-cols-2 gap-2 text-sm">
-                  <div>Progress Records: {progressRecords.length}</div>
-                  <div>Recent Incidents: {incidents.length}</div>
-                  <div>Current Objectives: {existingCarePlan?.care_objectives?.length || 0}</div>
-                  <div>Current Tasks: {existingCarePlan?.care_tasks?.length || 0}</div>
-                </div>
-              </div>
-
-              {!adjustmentSuggestions ? (
-                <div className="text-center py-12">
-                  <TrendingUp className="w-16 h-16 mx-auto text-blue-300 mb-4" />
-                  <p className="text-gray-600 mb-4">
-                    AI will analyze progress trends and incidents to suggest care plan improvements
-                  </p>
-                  <Button onClick={generateAdjustments} disabled={isGenerating} className="bg-blue-600">
-                    {isGenerating ? (
-                      <>
-                        <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                        Analyzing trends...
-                      </>
-                    ) : (
-                      <>
-                        <Brain className="w-4 h-4 mr-2" />
-                        Generate Adjustment Suggestions
-                      </>
-                    )}
-                  </Button>
-                </div>
-              ) : (
-                <div className="space-y-6">
-                  <div className="p-4 bg-blue-50 rounded-lg">
-                    <h3 className="font-semibold mb-2">Overall Assessment</h3>
-                    <p className="text-sm text-gray-700">{adjustmentSuggestions.overall_assessment}</p>
+            {analysis.mode === "CREATE" ? (
+              // New Care Plan Summary
+              <Card>
+                <CardContent className="p-4">
+                  <h4 className="font-semibold mb-3 flex items-center gap-2">
+                    <Heart className="w-4 h-4 text-blue-600" />
+                    Generated Care Plan Summary
+                  </h4>
+                  <div className="grid grid-cols-4 gap-4 mb-4">
+                    <div className="text-center p-3 bg-blue-50 rounded">
+                      <p className="text-2xl font-bold text-blue-700">
+                        {analysis.care_objectives?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Objectives</p>
+                    </div>
+                    <div className="text-center p-3 bg-purple-50 rounded">
+                      <p className="text-2xl font-bold text-purple-700">
+                        {analysis.care_tasks?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Care Tasks</p>
+                    </div>
+                    <div className="text-center p-3 bg-pink-50 rounded">
+                      <p className="text-2xl font-bold text-pink-700">
+                        {analysis.medication_management?.medications?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Medications</p>
+                    </div>
+                    <div className="text-center p-3 bg-orange-50 rounded">
+                      <p className="text-2xl font-bold text-orange-700">
+                        {analysis.risk_factors?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Risks</p>
+                    </div>
                   </div>
 
-                  {adjustmentSuggestions.progress_summary && (
-                    <div className="grid md:grid-cols-2 gap-4">
-                      <div className="p-3 bg-green-50 rounded border border-green-200">
-                        <h4 className="font-medium text-green-900 mb-2">Positive Trends</h4>
-                        <ul className="text-sm space-y-1">
-                          {adjustmentSuggestions.progress_summary.positive_trends?.map((trend, idx) => (
-                            <li key={idx} className="text-green-800">✓ {trend}</li>
-                          ))}
-                        </ul>
-                      </div>
-                      <div className="p-3 bg-orange-50 rounded border border-orange-200">
-                        <h4 className="font-medium text-orange-900 mb-2">Areas of Concern</h4>
-                        <ul className="text-sm space-y-1">
-                          {adjustmentSuggestions.progress_summary.areas_of_concern?.map((concern, idx) => (
-                            <li key={idx} className="text-orange-800">⚠ {concern}</li>
-                          ))}
-                        </ul>
-                      </div>
+                  {analysis.evidence_summary && (
+                    <div className="p-3 bg-blue-50 rounded border border-blue-200">
+                      <p className="text-xs font-medium text-blue-900 mb-1">Evidence Summary:</p>
+                      <p className="text-sm text-blue-800">{analysis.evidence_summary}</p>
                     </div>
                   )}
+                </CardContent>
+              </Card>
+            ) : (
+              // Adjustments Summary
+              <Tabs defaultValue="overview">
+                <TabsList className="grid grid-cols-5 w-full">
+                  <TabsTrigger value="overview">Overview</TabsTrigger>
+                  <TabsTrigger value="objectives">Objectives</TabsTrigger>
+                  <TabsTrigger value="tasks">Tasks</TabsTrigger>
+                  <TabsTrigger value="risks">Risks</TabsTrigger>
+                  <TabsTrigger value="other">Other</TabsTrigger>
+                </TabsList>
 
-                  {adjustmentSuggestions.objective_adjustments?.length > 0 && (
-                    <div>
-                      <h3 className="font-semibold mb-3 flex items-center gap-2">
-                        <Target className="w-5 h-5 text-purple-600" />
-                        Objective Adjustments ({adjustmentSuggestions.objective_adjustments.length})
-                      </h3>
-                      <div className="space-y-2">
-                        {adjustmentSuggestions.objective_adjustments.map((adj, idx) => (
-                          <Card key={idx} className="p-3 bg-purple-50 border-purple-200">
-                            <div className="flex items-start justify-between mb-2">
-                              <Badge className={
-                                adj.action === 'add' ? 'bg-green-600' :
-                                adj.action === 'modify' ? 'bg-blue-600' :
-                                'bg-gray-600'
-                              }>
-                                {adj.action}
-                              </Badge>
-                              <Badge variant="outline">{adj.priority}</Badge>
+                <TabsContent value="overview" className="space-y-4">
+                  {analysis.overall_assessment && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-2 flex items-center gap-2">
+                          <Lightbulb className="w-4 h-4 text-blue-600" />
+                          Overall Assessment
+                        </h4>
+                        <p className="text-sm text-gray-700">{analysis.overall_assessment}</p>
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <Card>
+                      <CardContent className="p-3 text-center">
+                        <Target className="w-6 h-6 mx-auto mb-1 text-blue-600" />
+                        <p className="text-2xl font-bold">
+                          {(analysis.objectives_to_add?.length || 0) + (analysis.objectives_to_revise?.length || 0)}
+                        </p>
+                        <p className="text-xs text-gray-600">Objective Changes</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3 text-center">
+                        <ListChecks className="w-6 h-6 mx-auto mb-1 text-purple-600" />
+                        <p className="text-2xl font-bold">
+                          {(analysis.tasks_to_add?.length || 0) + (analysis.tasks_to_modify?.length || 0) + (analysis.tasks_to_remove?.length || 0)}
+                        </p>
+                        <p className="text-xs text-gray-600">Task Changes</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3 text-center">
+                        <AlertTriangle className="w-6 h-6 mx-auto mb-1 text-orange-600" />
+                        <p className="text-2xl font-bold">{analysis.risks_to_add?.length || 0}</p>
+                        <p className="text-xs text-gray-600">New Risks</p>
+                      </CardContent>
+                    </Card>
+                    <Card>
+                      <CardContent className="p-3 text-center">
+                        <Shield className="w-6 h-6 mx-auto mb-1 text-red-600" />
+                        <p className="text-2xl font-bold">{analysis.priority_actions?.length || 0}</p>
+                        <p className="text-xs text-gray-600">Priority Actions</p>
+                      </CardContent>
+                    </Card>
+                  </div>
+
+                  {analysis.priority_actions?.length > 0 && (
+                    <Card className="border-red-200 bg-red-50">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-2 text-red-900 flex items-center gap-2">
+                          <AlertTriangle className="w-4 h-4" />
+                          Priority Actions Required
+                        </h4>
+                        <div className="space-y-2">
+                          {analysis.priority_actions.map((action, idx) => (
+                            <div key={idx} className="p-3 bg-white rounded border border-red-200">
+                              <div className="flex items-start justify-between mb-1">
+                                <p className="font-medium text-sm">{action.action}</p>
+                                <Badge className={
+                                  action.urgency === 'urgent' ? 'bg-red-600' :
+                                  action.urgency === 'high' ? 'bg-orange-600' : 'bg-yellow-600'
+                                }>
+                                  {action.urgency}
+                                </Badge>
+                              </div>
+                              <p className="text-xs text-gray-600">{action.reason}</p>
                             </div>
-                            <p className="font-medium text-sm mb-1">{adj.objective}</p>
-                            <p className="text-xs text-gray-700 mb-1"><strong>Rationale:</strong> {adj.rationale}</p>
-                            <p className="text-xs text-gray-600"><strong>Evidence:</strong> {adj.evidence}</p>
-                          </Card>
+                          ))}
+                        </div>
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="objectives" className="space-y-3">
+                  {analysis.objectives_to_add?.length > 0 && (
+                    <Card className="border-green-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-green-900">
+                          <Plus className="w-4 h-4" />
+                          New Objectives to Add ({analysis.objectives_to_add.length})
+                        </h4>
+                        {analysis.objectives_to_add.map((obj, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-green-50 rounded border border-green-200">
+                            <p className="font-medium text-sm mb-1">{obj.objective}</p>
+                            <p className="text-xs text-gray-600 mb-2">Target: {obj.target_date}</p>
+                            <div className="text-xs">
+                              <p className="text-gray-700 mb-1"><strong>Reason:</strong> {obj.reason}</p>
+                              <p className="text-blue-700"><strong>Evidence:</strong> {obj.supporting_evidence}</p>
+                            </div>
+                          </div>
                         ))}
-                      </div>
-                    </div>
+                      </CardContent>
+                    </Card>
                   )}
 
-                  <div className="flex gap-3 pt-4 border-t">
-                    <Button onClick={applyAdjustments} className="flex-1 bg-blue-600">
-                      Apply Adjustments to Care Plan
-                    </Button>
-                    <Button onClick={() => setAdjustmentSuggestions(null)} variant="outline">
-                      Regenerate
-                    </Button>
-                  </div>
-                </div>
-              )}
-            </TabsContent>
-          </Tabs>
-        </CardContent>
-      </Card>
-    </div>
+                  {analysis.objectives_to_revise?.length > 0 && (
+                    <Card className="border-amber-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-900">
+                          <Edit className="w-4 h-4" />
+                          Objectives to Revise ({analysis.objectives_to_revise.length})
+                        </h4>
+                        {analysis.objectives_to_revise.map((obj, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-amber-50 rounded border border-amber-200">
+                            <p className="text-xs text-gray-500 mb-1">Current: {obj.current_objective}</p>
+                            <p className="font-medium text-sm mb-2">→ Suggested: {obj.suggested_revision}</p>
+                            <div className="text-xs">
+                              <p className="text-gray-700 mb-1"><strong>Reason:</strong> {obj.reason}</p>
+                              <p className="text-blue-700"><strong>Evidence:</strong> {obj.supporting_evidence}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="tasks" className="space-y-3">
+                  {analysis.tasks_to_add?.length > 0 && (
+                    <Card className="border-green-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-green-900">
+                          <Plus className="w-4 h-4" />
+                          Tasks to Add ({analysis.tasks_to_add.length})
+                        </h4>
+                        {analysis.tasks_to_add.map((task, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-green-50 rounded border border-green-200">
+                            <div className="flex items-start justify-between mb-2">
+                              <p className="font-medium text-sm">{task.task_name}</p>
+                              <Badge variant="outline">{task.frequency}</Badge>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2">{task.description}</p>
+                            <div className="text-xs">
+                              <p className="text-gray-700 mb-1"><strong>Reason:</strong> {task.reason}</p>
+                              <p className="text-blue-700"><strong>Evidence:</strong> {task.supporting_evidence}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {analysis.tasks_to_modify?.length > 0 && (
+                    <Card className="border-amber-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-amber-900">
+                          <Edit className="w-4 h-4" />
+                          Tasks to Modify ({analysis.tasks_to_modify.length})
+                        </h4>
+                        {analysis.tasks_to_modify.map((task, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-amber-50 rounded border border-amber-200">
+                            <p className="text-xs text-gray-500 mb-1">Current: {task.current_task}</p>
+                            <p className="font-medium text-sm mb-2">→ Change: {task.suggested_change}</p>
+                            <div className="text-xs">
+                              <p className="text-gray-700 mb-1"><strong>Reason:</strong> {task.reason}</p>
+                              <p className="text-blue-700"><strong>Evidence:</strong> {task.supporting_evidence}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {analysis.tasks_to_remove?.length > 0 && (
+                    <Card className="border-red-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-red-900">
+                          <AlertTriangle className="w-4 h-4" />
+                          Tasks to Remove ({analysis.tasks_to_remove.length})
+                        </h4>
+                        {analysis.tasks_to_remove.map((task, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-red-50 rounded border border-red-200">
+                            <p className="font-medium text-sm mb-2">{task.task_name}</p>
+                            <div className="text-xs">
+                              <p className="text-gray-700 mb-1"><strong>Reason:</strong> {task.reason}</p>
+                              <p className="text-blue-700"><strong>Evidence:</strong> {task.supporting_evidence}</p>
+                            </div>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="risks" className="space-y-3">
+                  {analysis.risks_to_add?.length > 0 && (
+                    <Card className="border-orange-200">
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2 text-orange-900">
+                          <AlertTriangle className="w-4 h-4" />
+                          New Risks Identified ({analysis.risks_to_add.length})
+                        </h4>
+                        {analysis.risks_to_add.map((risk, idx) => (
+                          <div key={idx} className="mb-3 p-3 bg-orange-50 rounded border border-orange-200">
+                            <div className="flex items-start justify-between mb-2">
+                              <p className="font-medium text-sm">{risk.risk}</p>
+                              <div className="flex gap-1">
+                                <Badge className={
+                                  risk.likelihood === 'high' ? 'bg-red-600' :
+                                  risk.likelihood === 'medium' ? 'bg-amber-600' : 'bg-green-600'
+                                }>
+                                  L: {risk.likelihood}
+                                </Badge>
+                                <Badge className={
+                                  risk.impact === 'high' ? 'bg-red-600' :
+                                  risk.impact === 'medium' ? 'bg-amber-600' : 'bg-green-600'
+                                }>
+                                  I: {risk.impact}
+                                </Badge>
+                              </div>
+                            </div>
+                            <p className="text-xs text-gray-600 mb-2">
+                              <strong>Controls:</strong> {risk.control_measures}
+                            </p>
+                            <p className="text-xs text-blue-700">
+                              <strong>Evidence:</strong> {risk.supporting_evidence}
+                            </p>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+
+                <TabsContent value="other" className="space-y-3">
+                  {analysis.medication_adjustments?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2">
+                          <Pill className="w-4 h-4 text-pink-600" />
+                          Medication Management Suggestions
+                        </h4>
+                        {analysis.medication_adjustments.map((adj, idx) => (
+                          <div key={idx} className="mb-2 p-3 bg-pink-50 rounded border border-pink-200">
+                            <p className="text-sm font-medium mb-1">{adj.adjustment}</p>
+                            <p className="text-xs text-gray-600 mb-1">{adj.reason}</p>
+                            <p className="text-xs text-blue-700">Evidence: {adj.supporting_evidence}</p>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+
+                  {analysis.routine_adjustments?.length > 0 && (
+                    <Card>
+                      <CardContent className="p-4">
+                        <h4 className="font-medium mb-3 flex items-center gap-2">
+                          <Clock className="w-4 h-4 text-blue-600" />
+                          Daily Routine Adjustments
+                        </h4>
+                        {analysis.routine_adjustments.map((adj, idx) => (
+                          <div key={idx} className="mb-2 p-3 bg-blue-50 rounded border border-blue-200">
+                            <p className="text-sm font-medium mb-1">{adj.time_of_day}: {adj.adjustment}</p>
+                            <p className="text-xs text-gray-600">{adj.reason}</p>
+                          </div>
+                        ))}
+                      </CardContent>
+                    </Card>
+                  )}
+                </TabsContent>
+              </Tabs>
+            )}
+
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setStep("configure")}>
+                ← Back
+              </Button>
+              <Button 
+                onClick={() => saveMutation.mutate()}
+                disabled={saveMutation.isPending}
+                className="bg-green-600 hover:bg-green-700"
+              >
+                {saveMutation.isPending ? (
+                  <>
+                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    Saving...
+                  </>
+                ) : (
+                  <>
+                    <CheckCircle className="w-4 h-4 mr-2" />
+                    {analysis.mode === "CREATE" ? "Save Care Plan" : "Apply Adjustments"}
+                  </>
+                )}
+              </Button>
+            </DialogFooter>
+          </div>
+        )}
+      </DialogContent>
+    </Dialog>
   );
 }
