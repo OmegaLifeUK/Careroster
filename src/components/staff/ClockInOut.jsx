@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { format } from "date-fns";
 import AINotesAssistant from "./AINotesAssistant";
+import CareTaskCompletionWidget from "./CareTaskCompletionWidget";
 
 // Geo-fencing distance threshold in meters
 const GEO_FENCE_RADIUS = 100; // 100 meters
@@ -33,8 +34,21 @@ export default function ClockInOut({ shift = null, carer = null, client = null, 
   const [completionNotes, setCompletionNotes] = useState("");
   const [completedTasks, setCompletedTasks] = useState([]);
   const [showAIAssistant, setShowAIAssistant] = useState(false);
+  const [user, setUser] = useState(null);
 
   const queryClient = useQueryClient();
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await base44.auth.me();
+        setUser(userData);
+      } catch (error) {
+        console.error("Error loading user:", error);
+      }
+    };
+    loadUser();
+  }, []);
 
   // Calculate distance between two coordinates using Haversine formula
   const calculateDistance = (lat1, lon1, lat2, lon2) => {
@@ -396,11 +410,17 @@ export default function ClockInOut({ shift = null, carer = null, client = null, 
 
       {timeAttendance?.clock_in_time && !timeAttendance.clock_out_time && (
         <div className="space-y-4">
+          <CareTaskCompletionWidget 
+            clientId={client?.id}
+            shiftId={shift?.id}
+            user={user}
+          />
+
           {shift.tasks && shift.tasks.length > 0 && (
             <div className="p-4 bg-white border rounded-lg">
               <h4 className="font-semibold mb-3 flex items-center gap-2">
                 <CheckSquare className="w-4 h-4 text-blue-600" />
-                {entityType === 'shift' ? 'Shift' : 'Visit'} Tasks
+                {entityType === 'shift' ? 'Shift' : 'Visit'} Tasks (Old)
               </h4>
               <div className="space-y-2">
                 {shift.tasks.map((task, index) => (
