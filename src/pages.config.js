@@ -1,149 +1,163 @@
-import Dashboard from './pages/Dashboard';
-import Schedule from './pages/Schedule';
-import Reports from './pages/Reports';
-import Carers from './pages/Carers';
-import Clients from './pages/Clients';
-import Notifications from './pages/Notifications';
-import StaffPortal from './pages/StaffPortal';
-import LeaveRequests from './pages/LeaveRequests';
-import DomCareDashboard from './pages/DomCareDashboard';
-import DomCareSchedule from './pages/DomCareSchedule';
-import DomCareStaff from './pages/DomCareStaff';
-import DomCareClients from './pages/DomCareClients';
-import DomCareRuns from './pages/DomCareRuns';
-import DomCareReports from './pages/DomCareReports';
-import CommunicationHub from './pages/CommunicationHub';
-import StaffTraining from './pages/StaffTraining';
-import ClientFeedback from './pages/ClientFeedback';
-import ManagerDashboard from './pages/ManagerDashboard';
-import IncidentManagement from './pages/IncidentManagement';
-import SupportedLivingDashboard from './pages/SupportedLivingDashboard';
-import DayCentreDashboard from './pages/DayCentreDashboard';
-import SupportedLivingClients from './pages/SupportedLivingClients';
-import SupportedLivingProperties from './pages/SupportedLivingProperties';
-import SupportedLivingSchedule from './pages/SupportedLivingSchedule';
-import DayCentreClients from './pages/DayCentreClients';
-import DayCentreActivities from './pages/DayCentreActivities';
-import DayCentreSessions from './pages/DayCentreSessions';
-import DayCentreAttendance from './pages/DayCentreAttendance';
-import ModuleSettings from './pages/ModuleSettings';
-import ClientPortal from './pages/ClientPortal';
-import ClientPortalSchedule from './pages/ClientPortalSchedule';
-import ClientPortalMessages from './pages/ClientPortalMessages';
-import ClientPortalBookings from './pages/ClientPortalBookings';
-import UserManagement from './pages/UserManagement';
-import CareDocuments from './pages/CareDocuments';
-import MessagingCenter from './pages/MessagingCenter';
-import ComplianceHub from './pages/ComplianceHub';
-import ActionPlans from './pages/ActionPlans';
-import Audits from './pages/Audits';
-import RegulatoryNotifications from './pages/RegulatoryNotifications';
-import MedicalErrors from './pages/MedicalErrors';
-import MockInspections from './pages/MockInspections';
-import ComplaintsManagement from './pages/ComplaintsManagement';
-import TrainingMatrix from './pages/TrainingMatrix';
-import ComplianceReports from './pages/ComplianceReports';
-import RoleManagement from './pages/RoleManagement';
-import AuditTemplates from './pages/AuditTemplates';
 import ActionPlanProgress from './pages/ActionPlanProgress';
-import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
-import FormBuilder from './pages/FormBuilder';
-import PayrollDashboard from './pages/PayrollDashboard';
-import TimesheetReconciliation from './pages/TimesheetReconciliation';
-import PayrollProcessing from './pages/PayrollProcessing';
-import InvoiceManagement from './pages/InvoiceManagement';
+import ActionPlans from './pages/ActionPlans';
+import AnalyticsPage from './pages/AnalyticsPage';
+import AuditTemplates from './pages/AuditTemplates';
+import Audits from './pages/Audits';
 import CRMDashboard from './pages/CRMDashboard';
-import SupervisionManagement from './pages/SupervisionManagement';
-import ClientCommunicationHub from './pages/ClientCommunicationHub';
-import StaffTasks from './pages/StaffTasks';
-import CarerAvailability from './pages/CarerAvailability';
-import DailyLog from './pages/DailyLog';
 import CallTranscripts from './pages/CallTranscripts';
-import TechnicalSpecification from './pages/TechnicalSpecification';
-import ReportingEngine from './pages/ReportingEngine';
-import FollowUpTracker from './pages/FollowUpTracker';
-import EnquiryDetail from './pages/EnquiryDetail';
+import CareDocuments from './pages/CareDocuments';
+import CarerAvailability from './pages/CarerAvailability';
 import CarerDetail from './pages/CarerDetail';
 import CarerPerformanceDashboard from './pages/CarerPerformanceDashboard';
-import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
-import DomCareClientProfile from './pages/DomCareClientProfile';
-import SupportedLivingClientProfile from './pages/SupportedLivingClientProfile';
+import Carers from './pages/Carers';
+import ClientCommunicationHub from './pages/ClientCommunicationHub';
+import ClientFeedback from './pages/ClientFeedback';
+import ClientPortal from './pages/ClientPortal';
+import ClientPortalBookings from './pages/ClientPortalBookings';
+import ClientPortalMessages from './pages/ClientPortalMessages';
+import ClientPortalSchedule from './pages/ClientPortalSchedule';
+import Clients from './pages/Clients';
+import CommunicationHub from './pages/CommunicationHub';
+import ComplaintsManagement from './pages/ComplaintsManagement';
+import ComplianceHub from './pages/ComplianceHub';
+import ComplianceReports from './pages/ComplianceReports';
+import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
+import CustomReportsPage from './pages/CustomReportsPage';
+import DailyLog from './pages/DailyLog';
+import Dashboard from './pages/Dashboard';
+import DayCentreActivities from './pages/DayCentreActivities';
+import DayCentreAttendance from './pages/DayCentreAttendance';
 import DayCentreClientProfile from './pages/DayCentreClientProfile';
+import DayCentreClients from './pages/DayCentreClients';
+import DayCentreDashboard from './pages/DayCentreDashboard';
+import DayCentreSessions from './pages/DayCentreSessions';
+import DomCareClientProfile from './pages/DomCareClientProfile';
+import DomCareClients from './pages/DomCareClients';
+import DomCareDashboard from './pages/DomCareDashboard';
+import DomCareReports from './pages/DomCareReports';
+import DomCareRuns from './pages/DomCareRuns';
+import DomCareSchedule from './pages/DomCareSchedule';
+import DomCareStaff from './pages/DomCareStaff';
+import EnquiryDetail from './pages/EnquiryDetail';
+import FollowUpTracker from './pages/FollowUpTracker';
+import FormBuilder from './pages/FormBuilder';
+import Home from './pages/Home';
+import IncidentManagement from './pages/IncidentManagement';
+import InvoiceManagement from './pages/InvoiceManagement';
+import LeaveRequests from './pages/LeaveRequests';
+import ManagerDashboard from './pages/ManagerDashboard';
+import MedicalErrors from './pages/MedicalErrors';
+import MessagingCenter from './pages/MessagingCenter';
+import MockInspections from './pages/MockInspections';
+import ModuleSettings from './pages/ModuleSettings';
+import Notifications from './pages/Notifications';
+import PayrollDashboard from './pages/PayrollDashboard';
+import PayrollProcessing from './pages/PayrollProcessing';
+import PermissionsPage from './pages/PermissionsPage';
+import RegulatoryNotifications from './pages/RegulatoryNotifications';
+import ReportingEngine from './pages/ReportingEngine';
+import Reports from './pages/Reports';
+import RoleManagement from './pages/RoleManagement';
+import Schedule from './pages/Schedule';
+import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
+import StaffPortal from './pages/StaffPortal';
+import StaffRoleAssignments from './pages/StaffRoleAssignments';
+import StaffTasks from './pages/StaffTasks';
+import StaffTraining from './pages/StaffTraining';
+import SupervisionManagement from './pages/SupervisionManagement';
+import SupportedLivingClientProfile from './pages/SupportedLivingClientProfile';
+import SupportedLivingClients from './pages/SupportedLivingClients';
+import SupportedLivingDashboard from './pages/SupportedLivingDashboard';
+import SupportedLivingProperties from './pages/SupportedLivingProperties';
+import SupportedLivingSchedule from './pages/SupportedLivingSchedule';
+import TechnicalSpecification from './pages/TechnicalSpecification';
+import TimesheetReconciliation from './pages/TimesheetReconciliation';
+import TrainingMatrix from './pages/TrainingMatrix';
+import UserManagement from './pages/UserManagement';
+import WorkflowsPage from './pages/WorkflowsPage';
+import ComplianceDashboard from './pages/ComplianceDashboard';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
-    "Dashboard": Dashboard,
-    "Schedule": Schedule,
-    "Reports": Reports,
-    "Carers": Carers,
-    "Clients": Clients,
-    "Notifications": Notifications,
-    "StaffPortal": StaffPortal,
-    "LeaveRequests": LeaveRequests,
-    "DomCareDashboard": DomCareDashboard,
-    "DomCareSchedule": DomCareSchedule,
-    "DomCareStaff": DomCareStaff,
-    "DomCareClients": DomCareClients,
-    "DomCareRuns": DomCareRuns,
-    "DomCareReports": DomCareReports,
-    "CommunicationHub": CommunicationHub,
-    "StaffTraining": StaffTraining,
-    "ClientFeedback": ClientFeedback,
-    "ManagerDashboard": ManagerDashboard,
-    "IncidentManagement": IncidentManagement,
-    "SupportedLivingDashboard": SupportedLivingDashboard,
-    "DayCentreDashboard": DayCentreDashboard,
-    "SupportedLivingClients": SupportedLivingClients,
-    "SupportedLivingProperties": SupportedLivingProperties,
-    "SupportedLivingSchedule": SupportedLivingSchedule,
-    "DayCentreClients": DayCentreClients,
-    "DayCentreActivities": DayCentreActivities,
-    "DayCentreSessions": DayCentreSessions,
-    "DayCentreAttendance": DayCentreAttendance,
-    "ModuleSettings": ModuleSettings,
-    "ClientPortal": ClientPortal,
-    "ClientPortalSchedule": ClientPortalSchedule,
-    "ClientPortalMessages": ClientPortalMessages,
-    "ClientPortalBookings": ClientPortalBookings,
-    "UserManagement": UserManagement,
-    "CareDocuments": CareDocuments,
-    "MessagingCenter": MessagingCenter,
-    "ComplianceHub": ComplianceHub,
-    "ActionPlans": ActionPlans,
-    "Audits": Audits,
-    "RegulatoryNotifications": RegulatoryNotifications,
-    "MedicalErrors": MedicalErrors,
-    "MockInspections": MockInspections,
-    "ComplaintsManagement": ComplaintsManagement,
-    "TrainingMatrix": TrainingMatrix,
-    "ComplianceReports": ComplianceReports,
-    "RoleManagement": RoleManagement,
-    "AuditTemplates": AuditTemplates,
     "ActionPlanProgress": ActionPlanProgress,
-    "ComplianceTaskCenter": ComplianceTaskCenter,
-    "FormBuilder": FormBuilder,
-    "PayrollDashboard": PayrollDashboard,
-    "TimesheetReconciliation": TimesheetReconciliation,
-    "PayrollProcessing": PayrollProcessing,
-    "InvoiceManagement": InvoiceManagement,
+    "ActionPlans": ActionPlans,
+    "AnalyticsPage": AnalyticsPage,
+    "AuditTemplates": AuditTemplates,
+    "Audits": Audits,
     "CRMDashboard": CRMDashboard,
-    "SupervisionManagement": SupervisionManagement,
-    "ClientCommunicationHub": ClientCommunicationHub,
-    "StaffTasks": StaffTasks,
-    "CarerAvailability": CarerAvailability,
-    "DailyLog": DailyLog,
     "CallTranscripts": CallTranscripts,
-    "TechnicalSpecification": TechnicalSpecification,
-    "ReportingEngine": ReportingEngine,
-    "FollowUpTracker": FollowUpTracker,
-    "EnquiryDetail": EnquiryDetail,
+    "CareDocuments": CareDocuments,
+    "CarerAvailability": CarerAvailability,
     "CarerDetail": CarerDetail,
     "CarerPerformanceDashboard": CarerPerformanceDashboard,
-    "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
-    "DomCareClientProfile": DomCareClientProfile,
-    "SupportedLivingClientProfile": SupportedLivingClientProfile,
+    "Carers": Carers,
+    "ClientCommunicationHub": ClientCommunicationHub,
+    "ClientFeedback": ClientFeedback,
+    "ClientPortal": ClientPortal,
+    "ClientPortalBookings": ClientPortalBookings,
+    "ClientPortalMessages": ClientPortalMessages,
+    "ClientPortalSchedule": ClientPortalSchedule,
+    "Clients": Clients,
+    "CommunicationHub": CommunicationHub,
+    "ComplaintsManagement": ComplaintsManagement,
+    "ComplianceHub": ComplianceHub,
+    "ComplianceReports": ComplianceReports,
+    "ComplianceTaskCenter": ComplianceTaskCenter,
+    "CustomReportsPage": CustomReportsPage,
+    "DailyLog": DailyLog,
+    "Dashboard": Dashboard,
+    "DayCentreActivities": DayCentreActivities,
+    "DayCentreAttendance": DayCentreAttendance,
     "DayCentreClientProfile": DayCentreClientProfile,
+    "DayCentreClients": DayCentreClients,
+    "DayCentreDashboard": DayCentreDashboard,
+    "DayCentreSessions": DayCentreSessions,
+    "DomCareClientProfile": DomCareClientProfile,
+    "DomCareClients": DomCareClients,
+    "DomCareDashboard": DomCareDashboard,
+    "DomCareReports": DomCareReports,
+    "DomCareRuns": DomCareRuns,
+    "DomCareSchedule": DomCareSchedule,
+    "DomCareStaff": DomCareStaff,
+    "EnquiryDetail": EnquiryDetail,
+    "FollowUpTracker": FollowUpTracker,
+    "FormBuilder": FormBuilder,
+    "Home": Home,
+    "IncidentManagement": IncidentManagement,
+    "InvoiceManagement": InvoiceManagement,
+    "LeaveRequests": LeaveRequests,
+    "ManagerDashboard": ManagerDashboard,
+    "MedicalErrors": MedicalErrors,
+    "MessagingCenter": MessagingCenter,
+    "MockInspections": MockInspections,
+    "ModuleSettings": ModuleSettings,
+    "Notifications": Notifications,
+    "PayrollDashboard": PayrollDashboard,
+    "PayrollProcessing": PayrollProcessing,
+    "PermissionsPage": PermissionsPage,
+    "RegulatoryNotifications": RegulatoryNotifications,
+    "ReportingEngine": ReportingEngine,
+    "Reports": Reports,
+    "RoleManagement": RoleManagement,
+    "Schedule": Schedule,
+    "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
+    "StaffPortal": StaffPortal,
+    "StaffRoleAssignments": StaffRoleAssignments,
+    "StaffTasks": StaffTasks,
+    "StaffTraining": StaffTraining,
+    "SupervisionManagement": SupervisionManagement,
+    "SupportedLivingClientProfile": SupportedLivingClientProfile,
+    "SupportedLivingClients": SupportedLivingClients,
+    "SupportedLivingDashboard": SupportedLivingDashboard,
+    "SupportedLivingProperties": SupportedLivingProperties,
+    "SupportedLivingSchedule": SupportedLivingSchedule,
+    "TechnicalSpecification": TechnicalSpecification,
+    "TimesheetReconciliation": TimesheetReconciliation,
+    "TrainingMatrix": TrainingMatrix,
+    "UserManagement": UserManagement,
+    "WorkflowsPage": WorkflowsPage,
+    "ComplianceDashboard": ComplianceDashboard,
 }
 
 export const pagesConfig = {
