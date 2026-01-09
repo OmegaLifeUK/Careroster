@@ -99,6 +99,7 @@ const generalNav = [
   { title: "Reporting Engine", url: createPageUrl("ReportingEngine"), icon: FileText },
   { title: "Audit Templates", url: createPageUrl("AuditTemplates"), icon: FileText },
   { title: "Form Builder", url: createPageUrl("FormBuilder"), icon: FileText },
+  { title: "Onboarding Hub", url: createPageUrl("OnboardingHub"), icon: UserCircle },
   { title: "CRM Dashboard", url: createPageUrl("CRMDashboard"), icon: Users },
   { title: "Client Comms Hub", url: createPageUrl("ClientCommunicationHub"), icon: MessageSquare },
 ];

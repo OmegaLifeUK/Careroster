@@ -19,6 +19,7 @@ import ClientPortalSchedule from './pages/ClientPortalSchedule';
 import Clients from './pages/Clients';
 import CommunicationHub from './pages/CommunicationHub';
 import ComplaintsManagement from './pages/ComplaintsManagement';
+import ComplianceDashboard from './pages/ComplianceDashboard';
 import ComplianceHub from './pages/ComplianceHub';
 import ComplianceReports from './pages/ComplianceReports';
 import ComplianceTaskCenter from './pages/ComplianceTaskCenter';
@@ -75,7 +76,7 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import ComplianceDashboard from './pages/ComplianceDashboard';
+import OnboardingHub from './pages/OnboardingHub';
 import __Layout from './Layout.jsx';
 
 
@@ -101,6 +102,7 @@ export const PAGES = {
     "Clients": Clients,
     "CommunicationHub": CommunicationHub,
     "ComplaintsManagement": ComplaintsManagement,
+    "ComplianceDashboard": ComplianceDashboard,
     "ComplianceHub": ComplianceHub,
     "ComplianceReports": ComplianceReports,
     "ComplianceTaskCenter": ComplianceTaskCenter,
@@ -157,7 +159,7 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "ComplianceDashboard": ComplianceDashboard,
+    "OnboardingHub": OnboardingHub,
 }
 
 export const pagesConfig = {

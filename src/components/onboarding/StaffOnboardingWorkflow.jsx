@@ -22,6 +22,9 @@ import {
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addMonths } from "date-fns";
+import PreEmploymentForm from "./PreEmploymentForm";
+import DBSReferencesForm from "./DBSReferencesForm";
+import InductionForm from "./InductionForm";
 
 export default function StaffOnboardingWorkflow({ staffId, staffName, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -370,17 +373,23 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
             </TabsContent>
 
             <TabsContent value="details" className="space-y-6">
-              <p className="text-sm text-gray-600">
-                Detailed forms and management for each onboarding stage
-              </p>
-              {/* Detailed stage management would go here */}
-              <Card>
-                <CardContent className="p-8 text-center text-gray-500">
-                  <FileText className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                  <p>Detailed stage forms coming soon</p>
-                  <p className="text-sm">Access individual stage records from the main staff profile</p>
-                </CardContent>
-              </Card>
+              <PreEmploymentForm 
+                staffId={staffId} 
+                existingRecord={preEmployment}
+                onComplete={() => queryClient.invalidateQueries()}
+              />
+              
+              <DBSReferencesForm 
+                staffId={staffId} 
+                existingRecord={dbs}
+                onComplete={() => queryClient.invalidateQueries()}
+              />
+
+              <InductionForm 
+                staffId={staffId} 
+                existingRecord={induction}
+                onComplete={() => queryClient.invalidateQueries()}
+              />
             </TabsContent>
           </Tabs>
         </div>
