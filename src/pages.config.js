@@ -52,15 +52,19 @@ import MessagingCenter from './pages/MessagingCenter';
 import MockInspections from './pages/MockInspections';
 import ModuleSettings from './pages/ModuleSettings';
 import Notifications from './pages/Notifications';
+import OnboardingHub from './pages/OnboardingHub';
+import OrganisationSetup from './pages/OrganisationSetup';
 import PayrollDashboard from './pages/PayrollDashboard';
 import PayrollProcessing from './pages/PayrollProcessing';
 import PermissionsPage from './pages/PermissionsPage';
+import PolicyLibrary from './pages/PolicyLibrary';
 import RegulatoryNotifications from './pages/RegulatoryNotifications';
 import ReportingEngine from './pages/ReportingEngine';
 import Reports from './pages/Reports';
 import RoleManagement from './pages/RoleManagement';
 import Schedule from './pages/Schedule';
 import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
+import StaffOnboarding from './pages/StaffOnboarding';
 import StaffPortal from './pages/StaffPortal';
 import StaffRoleAssignments from './pages/StaffRoleAssignments';
 import StaffTasks from './pages/StaffTasks';
@@ -76,10 +80,7 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import OnboardingHub from './pages/OnboardingHub';
-import PolicyLibrary from './pages/PolicyLibrary';
-import OrganisationSetup from './pages/OrganisationSetup';
-import StaffOnboarding from './pages/StaffOnboarding';
+import ClientOnboarding from './pages/ClientOnboarding';
 import __Layout from './Layout.jsx';
 
 
@@ -138,15 +139,19 @@ export const PAGES = {
     "MockInspections": MockInspections,
     "ModuleSettings": ModuleSettings,
     "Notifications": Notifications,
+    "OnboardingHub": OnboardingHub,
+    "OrganisationSetup": OrganisationSetup,
     "PayrollDashboard": PayrollDashboard,
     "PayrollProcessing": PayrollProcessing,
     "PermissionsPage": PermissionsPage,
+    "PolicyLibrary": PolicyLibrary,
     "RegulatoryNotifications": RegulatoryNotifications,
     "ReportingEngine": ReportingEngine,
     "Reports": Reports,
     "RoleManagement": RoleManagement,
     "Schedule": Schedule,
     "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
+    "StaffOnboarding": StaffOnboarding,
     "StaffPortal": StaffPortal,
     "StaffRoleAssignments": StaffRoleAssignments,
     "StaffTasks": StaffTasks,
@@ -162,10 +167,7 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "OnboardingHub": OnboardingHub,
-    "PolicyLibrary": PolicyLibrary,
-    "OrganisationSetup": OrganisationSetup,
-    "StaffOnboarding": StaffOnboarding,
+    "ClientOnboarding": ClientOnboarding,
 }
 
 export const pagesConfig = {
