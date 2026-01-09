@@ -78,6 +78,7 @@ import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
 import OnboardingHub from './pages/OnboardingHub';
 import PolicyLibrary from './pages/PolicyLibrary';
+import OrganisationSetup from './pages/OrganisationSetup';
 import __Layout from './Layout.jsx';
 
 
@@ -162,6 +163,7 @@ export const PAGES = {
     "WorkflowsPage": WorkflowsPage,
     "OnboardingHub": OnboardingHub,
     "PolicyLibrary": PolicyLibrary,
+    "OrganisationSetup": OrganisationSetup,
 }
 
 export const pagesConfig = {
