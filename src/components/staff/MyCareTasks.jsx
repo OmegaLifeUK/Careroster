@@ -19,17 +19,20 @@ export default function MyCareTasks({ user }) {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
+        console.log('[MyCareTasks] All shifts:', allShifts?.length);
+        console.log('[MyCareTasks] User:', user.email, user.id);
+
         return Array.isArray(allShifts) 
           ? allShifts.filter(s => {
-              const shiftDate = new Date(s.shift_date);
-              return s.carer_id === user.email && 
+              const shiftDate = new Date(s.shift_date || s.date);
+              return (s.carer_id === user.email || s.carer_id === user.id) && 
                      shiftDate >= today && 
                      shiftDate < tomorrow &&
                      s.status !== 'cancelled';
             })
           : [];
       } catch (error) {
-        console.log("Shifts not available");
+        console.log("Shifts not available:", error);
         return [];
       }
     },
@@ -48,17 +51,19 @@ export default function MyCareTasks({ user }) {
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);
 
+        console.log('[MyCareTasks] All visits:', allVisits?.length);
+
         return Array.isArray(allVisits) 
           ? allVisits.filter(v => {
               const visitDate = new Date(v.scheduled_start);
-              return v.assigned_staff_id === user.email && 
+              return (v.assigned_staff_id === user.email || v.assigned_staff_id === user.id) && 
                      visitDate >= today && 
                      visitDate < tomorrow &&
                      v.status !== 'cancelled';
             })
           : [];
       } catch (error) {
-        console.log("Visits not available");
+        console.log("Visits not available:", error);
         return [];
       }
     },

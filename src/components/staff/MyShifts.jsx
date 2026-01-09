@@ -36,11 +36,20 @@ export default function MyShifts() {
       if (!user?.email) return [];
       try {
         const allShifts = await base44.entities.Shift.list();
-        return Array.isArray(allShifts) 
-          ? allShifts.filter(s => s.carer_id === user.email || s.carer_id === user.id)
+        console.log('[MyShifts] All shifts:', allShifts?.length);
+        console.log('[MyShifts] User email:', user.email, 'User ID:', user.id);
+        
+        const filtered = Array.isArray(allShifts) 
+          ? allShifts.filter(s => {
+              console.log('[MyShifts] Shift carer_id:', s.carer_id, 'matches email?', s.carer_id === user.email, 'matches id?', s.carer_id === user.id);
+              return s.carer_id === user.email || s.carer_id === user.id;
+            })
           : [];
+        
+        console.log('[MyShifts] Filtered shifts:', filtered.length);
+        return filtered;
       } catch (error) {
-        console.log("Shifts not available");
+        console.log("Shifts not available:", error);
         return [];
       }
     },
