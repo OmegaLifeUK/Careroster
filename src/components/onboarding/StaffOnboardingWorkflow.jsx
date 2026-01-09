@@ -373,22 +373,43 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
             </TabsContent>
 
             <TabsContent value="details" className="space-y-6">
+              <div className="mb-4 p-4 bg-blue-50 rounded border border-blue-200">
+                <p className="text-sm text-blue-800">
+                  Complete each stage in order. All stages must be completed before staff can be approved as fit to work.
+                </p>
+              </div>
+
               <PreEmploymentForm 
                 staffId={staffId} 
                 existingRecord={preEmployment}
-                onComplete={() => queryClient.invalidateQueries()}
+                onComplete={() => {
+                  queryClient.invalidateQueries();
+                  setActiveTab("overview");
+                }}
               />
               
               <DBSReferencesForm 
                 staffId={staffId} 
                 existingRecord={dbs}
+                onComplete={() => {
+                  queryClient.invalidateQueries();
+                  setActiveTab("overview");
+                }}
+              />
+
+              <MandatoryTrainingTracker 
+                staffId={staffId}
+                trainingRecords={trainingRecords}
                 onComplete={() => queryClient.invalidateQueries()}
               />
 
               <InductionForm 
                 staffId={staffId} 
                 existingRecord={induction}
-                onComplete={() => queryClient.invalidateQueries()}
+                onComplete={() => {
+                  queryClient.invalidateQueries();
+                  setActiveTab("overview");
+                }}
               />
             </TabsContent>
           </Tabs>

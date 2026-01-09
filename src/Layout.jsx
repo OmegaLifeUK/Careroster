@@ -96,6 +96,7 @@ const generalNav = [
   { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Organisation Setup", url: createPageUrl("OrganisationSetup"), icon: Building2 },
+  { title: "Staff Onboarding", url: createPageUrl("StaffOnboarding"), icon: Users },
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
