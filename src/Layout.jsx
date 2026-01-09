@@ -35,6 +35,7 @@ import GlobalSearch from "@/components/ui/global-search";
 import { ToastProvider } from "@/components/ui/toast";
 import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
+import ComplianceAutomations from "@/components/onboarding/ComplianceAutomations";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -94,6 +95,8 @@ const generalNav = [
   { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Compliance Hub", url: createPageUrl("ComplianceHub"), icon: Shield },
+  { title: "Compliance Dashboard", url: createPageUrl("ComplianceDashboard"), icon: Shield },
+  { title: "Policy Library", url: createPageUrl("PolicyLibrary"), icon: FileText },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
   { title: "Reporting Engine", url: createPageUrl("ReportingEngine"), icon: FileText },
@@ -537,6 +540,7 @@ export default function Layout({ children, currentPageName }) {
           {accessibilityOpen && (
             <AccessibilityPanel onClose={() => setAccessibilityOpen(false)} />
           )}
+          <ComplianceAutomations />
           </div>
           </div>
           </ToastProvider>

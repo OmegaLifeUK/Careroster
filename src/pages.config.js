@@ -77,6 +77,7 @@ import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
 import OnboardingHub from './pages/OnboardingHub';
+import PolicyLibrary from './pages/PolicyLibrary';
 import __Layout from './Layout.jsx';
 
 
@@ -160,6 +161,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
     "OnboardingHub": OnboardingHub,
+    "PolicyLibrary": PolicyLibrary,
 }
 
 export const pagesConfig = {
