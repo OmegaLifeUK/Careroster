@@ -1,44 +1,26 @@
-import React, { useState } from "react";
+import React from "react";
 import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Progress } from "@/components/ui/progress";
 import { 
   Shield, 
   Users, 
-  GraduationCap, 
-  AlertTriangle, 
+  UserCircle, 
+  BookOpen,
+  AlertTriangle,
   CheckCircle,
+  Clock,
   FileText,
   TrendingUp,
-  Calendar,
-  Lock,
-  Unlock,
-  Eye
+  Activity
 } from "lucide-react";
-import { format, isPast, addMonths, differenceInDays } from "date-fns";
-import StaffOnboardingWorkflow from "@/components/onboarding/StaffOnboardingWorkflow";
+import { isPast, differenceInDays, format } from "date-fns";
+import { Link } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function ComplianceDashboard() {
-  const [selectedStaff, setSelectedStaff] = useState(null);
-  const [view, setView] = useState("manager");
-
-  // Fetch all staff
-  const { data: allStaff = [] } = useQuery({
-    queryKey: ['all-staff'],
-    queryFn: async () => {
-      const staff = await base44.entities.Staff.list();
-      const carers = await base44.entities.Carer.list();
-      return [...(staff || []), ...(carers || [])].map(s => ({
-        ...s,
-        is_staff: !s.employment_type // Staff entity
-      }));
-    }
-  });
-
-  // Fetch organisation profile
   const { data: orgProfile } = useQuery({
     queryKey: ['org-profile'],
     queryFn: async () => {
@@ -47,343 +29,398 @@ export default function ComplianceDashboard() {
     }
   });
 
-  // Fetch all DBS records
+  const { data: allStaff = [] } = useQuery({
+    queryKey: ['all-staff-compliance'],
+    queryFn: async () => {
+      const staff = await base44.entities.Staff.list();
+      const carers = await base44.entities.Carer.list();
+      return [...(staff || []), ...(carers || [])];
+    }
+  });
+
+  const { data: allClients = [] } = useQuery({
+    queryKey: ['all-clients-compliance'],
+    queryFn: async () => {
+      const clients = await base44.entities.Client.list();
+      const domClients = await base44.entities.DomCareClient.list();
+      const slClients = await base44.entities.SupportedLivingClient.list();
+      const dcClients = await base44.entities.DayCentreClient.list();
+      
+      return [
+        ...(Array.isArray(clients) ? clients : []),
+        ...(Array.isArray(domClients) ? domClients : []),
+        ...(Array.isArray(slClients) ? slClients : []),
+        ...(Array.isArray(dcClients) ? dcClients : [])
+      ];
+    }
+  });
+
+  const { data: policies = [] } = useQuery({
+    queryKey: ['policies'],
+    queryFn: async () => {
+      const p = await base44.entities.PolicyLibrary.list();
+      return Array.isArray(p) ? p : [];
+    }
+  });
+
   const { data: allDBS = [] } = useQuery({
-    queryKey: ['all-dbs'],
+    queryKey: ['all-dbs-compliance'],
     queryFn: async () => {
       const records = await base44.entities.DBSAndReferences.list();
       return Array.isArray(records) ? records : [];
     }
   });
 
-  // Fetch all training
+  const { data: allPreEmployment = [] } = useQuery({
+    queryKey: ['all-pre-employment-compliance'],
+    queryFn: async () => {
+      const records = await base44.entities.PreEmploymentCompliance.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
+  const { data: allInductions = [] } = useQuery({
+    queryKey: ['all-inductions-compliance'],
+    queryFn: async () => {
+      const records = await base44.entities.InductionRecord.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
   const { data: allTraining = [] } = useQuery({
-    queryKey: ['all-training'],
+    queryKey: ['all-training-compliance'],
     queryFn: async () => {
       const records = await base44.entities.TrainingAssignment.list();
       return Array.isArray(records) ? records : [];
     }
   });
 
-  // Fetch care plans
-  const { data: carePlans = [] } = useQuery({
-    queryKey: ['care-plans-compliance'],
+  const { data: allConsent = [] } = useQuery({
+    queryKey: ['all-consent-compliance'],
     queryFn: async () => {
-      const plans = await base44.entities.CarePlan.list();
-      return Array.isArray(plans) ? plans : [];
+      const records = await base44.entities.ConsentAndCapacity.list();
+      return Array.isArray(records) ? records : [];
     }
   });
 
-  // Fetch clients
-  const { data: clients = [] } = useQuery({
-    queryKey: ['clients-compliance'],
+  const { data: allAssessments = [] } = useQuery({
+    queryKey: ['all-assessments-compliance'],
     queryFn: async () => {
-      const c = await base44.entities.Client.list();
-      const dc = await base44.entities.DomCareClient.list();
-      const sc = await base44.entities.SupportedLivingClient.list();
-      const dcc = await base44.entities.DayCentreClient.list();
-      return [...(c || []), ...(dc || []), ...(sc || []), ...(dcc || [])];
+      const records = await base44.entities.CareAssessment.list();
+      return Array.isArray(records) ? records : [];
     }
   });
 
-  // Fetch safeguarding
-  const { data: safeguarding = [] } = useQuery({
-    queryKey: ['safeguarding-open'],
+  const { data: allCarePlans = [] } = useQuery({
+    queryKey: ['all-careplans-compliance'],
     queryFn: async () => {
-      const records = await base44.entities.SafeguardingReferral.list();
-      return Array.isArray(records) ? records.filter(r => r.status !== 'closed') : [];
+      const records = await base44.entities.CarePlan.list();
+      return Array.isArray(records) ? records : [];
     }
   });
 
-  // Calculate compliance metrics
-  const metrics = {
-    totalStaff: allStaff.length,
-    fitToWork: allStaff.filter(s => 
-      s.onboarding_status === 'approved_fit_to_work' || 
-      (s.status === 'active' && s.is_active)
-    ).length,
-    dbsExpiringSoon: allDBS.filter(dbs => {
-      if (!dbs.dbs_review_date) return false;
-      const daysUntil = differenceInDays(new Date(dbs.dbs_review_date), new Date());
-      return daysUntil <= 30 && daysUntil >= 0;
-    }).length,
-    dbsExpired: allDBS.filter(dbs => 
-      dbs.dbs_review_date && isPast(new Date(dbs.dbs_review_date))
-    ).length,
-    trainingExpiring: allTraining.filter(t => {
-      if (!t.expiry_date) return false;
-      const daysUntil = differenceInDays(new Date(t.expiry_date), new Date());
-      return daysUntil <= 30 && daysUntil >= 0;
-    }).length,
-    activeClients: clients.filter(c => 
-      c.status === 'active' || c.client_status === 'active'
-    ).length,
-    carePlansOverdue: carePlans.filter(cp => 
-      cp.review_date && isPast(new Date(cp.review_date))
-    ).length,
-    openSafeguarding: safeguarding.length
-  };
+  // Organisation compliance
+  const mandatoryPolicies = policies.filter(p => p.is_mandatory);
+  const approvedMandatory = mandatoryPolicies.filter(p => p.status === 'approved');
+  const orgCompliant = orgProfile?.organisation_name && 
+                       orgProfile?.registered_manager_email &&
+                       approvedMandatory.length >= 8;
 
-  const StatCard = ({ title, value, icon: Icon, color, badge }) => (
-    <Card>
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <p className="text-sm text-gray-600">{title}</p>
-            <p className="text-3xl font-bold mt-1">{value}</p>
-          </div>
-          <div className={`p-3 rounded-full ${color}`}>
-            <Icon className="w-6 h-6 text-white" />
-          </div>
-        </div>
-        {badge && (
-          <Badge className={`mt-2 ${badge.color}`}>
-            {badge.text}
-          </Badge>
-        )}
-      </CardContent>
-    </Card>
-  );
+  // Staff compliance
+  const mandatoryTraining = [
+    "Safeguarding Adults", "Safeguarding Children", "Health & Safety",
+    "Infection Control", "Moving & Handling", "Medication Awareness",
+    "GDPR & Confidentiality", "First Aid / BLS"
+  ];
+
+  const staffFitToWork = allStaff.filter(s => {
+    const preEmp = allPreEmployment.find(p => p.staff_id === s.id && p.status === 'verified');
+    const dbs = allDBS.find(d => d.staff_id === s.id && d.dbs_status === 'clear');
+    const induction = allInductions.find(i => i.staff_id === s.id && i.status === 'completed');
+    const training = allTraining.filter(t => t.staff_id === s.id);
+    const hasAllTraining = mandatoryTraining.every(mt => 
+      training.some(tr => tr.training_name === mt && tr.status === 'completed')
+    );
+    return preEmp && dbs && induction && hasAllTraining;
+  }).length;
+
+  const dbsExpired = allDBS.filter(dbs => 
+    dbs.dbs_review_date && isPast(new Date(dbs.dbs_review_date))
+  ).length;
+
+  const dbsExpiringSoon = allDBS.filter(dbs => {
+    if (!dbs.dbs_review_date) return false;
+    const days = differenceInDays(new Date(dbs.dbs_review_date), new Date());
+    return days > 0 && days <= 30;
+  }).length;
+
+  const trainingExpiringSoon = allTraining.filter(t => {
+    if (!t.expiry_date || t.status !== 'completed') return false;
+    const days = differenceInDays(new Date(t.expiry_date), new Date());
+    return days > 0 && days <= 30;
+  }).length;
+
+  // Client compliance
+  const clientsActive = allClients.filter(c => {
+    const consent = allConsent.find(co => co.client_id === c.id && co.status === 'obtained');
+    const assessment = allAssessments.find(a => a.client_id === c.id && a.status === 'completed');
+    const carePlan = allCarePlans.find(cp => cp.client_id === c.id && cp.status === 'active');
+    return consent && assessment && carePlan;
+  }).length;
+
+  const carePlansOverdueReview = allCarePlans.filter(cp => 
+    cp.status === 'active' && cp.next_review_date && isPast(new Date(cp.next_review_date))
+  ).length;
+
+  const assessmentsOverdue = allAssessments.filter(a => 
+    a.next_review_date && isPast(new Date(a.next_review_date))
+  ).length;
+
+  // Policy compliance
+  const policiesOverdue = policies.filter(p => 
+    p.review_date && isPast(new Date(p.review_date))
+  ).length;
+
+  const policiesReviewSoon = policies.filter(p => {
+    if (!p.review_date) return false;
+    const days = differenceInDays(new Date(p.review_date), new Date());
+    return days > 0 && days <= 30;
+  }).length;
+
+  // Overall compliance score
+  const complianceChecks = [
+    { name: "Organisation Setup", passed: orgCompliant },
+    { name: "Mandatory Policies", passed: approvedMandatory.length >= 8 },
+    { name: "Staff Onboarding", passed: staffFitToWork === allStaff.length },
+    { name: "DBS Current", passed: dbsExpired === 0 },
+    { name: "Client Onboarding", passed: clientsActive === allClients.length },
+    { name: "Care Plans Current", passed: carePlansOverdueReview === 0 }
+  ];
+
+  const passedChecks = complianceChecks.filter(c => c.passed).length;
+  const complianceScore = Math.round((passedChecks / complianceChecks.length) * 100);
+
+  const criticalIssues = [
+    { count: dbsExpired, label: "Expired DBS Checks", type: "critical", link: "StaffOnboarding" },
+    { count: policiesOverdue, label: "Overdue Policy Reviews", type: "high", link: "PolicyLibrary" },
+    { count: carePlansOverdueReview, label: "Overdue Care Plan Reviews", type: "high", link: "ClientOnboarding" },
+    { count: dbsExpiringSoon, label: "DBS Expiring Soon", type: "warning", link: "StaffOnboarding" },
+    { count: trainingExpiringSoon, label: "Training Expiring Soon", type: "warning", link: "StaffTraining" },
+    { count: policiesReviewSoon, label: "Policies Due Review", type: "warning", link: "PolicyLibrary" }
+  ].filter(issue => issue.count > 0);
 
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
-        <h1 className="text-3xl font-bold mb-2">Compliance Dashboard</h1>
-        <p className="text-gray-600">
-          CQC / Ofsted Regulatory Compliance Overview
+        <h1 className="text-3xl font-bold flex items-center gap-2">
+          <Shield className="w-8 h-8 text-blue-600" />
+          Compliance Dashboard
+        </h1>
+        <p className="text-gray-600 mt-1">
+          CQC / Ofsted regulatory compliance overview
         </p>
       </div>
 
-      {/* Organisation Status */}
-      {orgProfile && (
-        <Card className="mb-6 border-blue-200 bg-blue-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <h3 className="font-semibold text-blue-900">{orgProfile.organisation_name}</h3>
-                <div className="flex gap-4 mt-2 text-sm">
-                  {orgProfile.cqc_registration_number && (
-                    <span>CQC: {orgProfile.cqc_registration_number}</span>
-                  )}
-                  {orgProfile.ofsted_registration_number && (
-                    <span>Ofsted: {orgProfile.ofsted_registration_number}</span>
-                  )}
-                </div>
-              </div>
-              <Badge className={
-                orgProfile.organisation_status === 'compliant' ? 'bg-green-600' :
-                orgProfile.organisation_status === 'incomplete' ? 'bg-amber-600' :
-                'bg-red-600'
-              }>
-                {orgProfile.organisation_status}
+      {/* Overall Compliance Score */}
+      <Card className="mb-6">
+        <CardContent className="p-6">
+          <div className="flex items-center justify-between mb-4">
+            <div>
+              <h3 className="text-lg font-semibold">Overall Compliance Score</h3>
+              <p className="text-sm text-gray-600">Based on key regulatory requirements</p>
+            </div>
+            <div className="text-right">
+              <p className="text-4xl font-bold">{complianceScore}%</p>
+              <Badge className={complianceScore >= 90 ? 'bg-green-600' : complianceScore >= 70 ? 'bg-amber-600' : 'bg-red-600'}>
+                {complianceScore >= 90 ? 'Excellent' : complianceScore >= 70 ? 'Good' : 'Needs Attention'}
               </Badge>
             </div>
+          </div>
+          <Progress value={complianceScore} className="h-3 mb-4" />
+          <div className="grid md:grid-cols-3 gap-3">
+            {complianceChecks.map(check => (
+              <div key={check.name} className="flex items-center gap-2 text-sm">
+                {check.passed ? (
+                  <CheckCircle className="w-4 h-4 text-green-600" />
+                ) : (
+                  <AlertTriangle className="w-4 h-4 text-amber-600" />
+                )}
+                <span className={check.passed ? 'text-gray-700' : 'text-gray-900 font-medium'}>
+                  {check.name}
+                </span>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Critical Issues */}
+      {criticalIssues.length > 0 && (
+        <Card className="mb-6 border-red-300 bg-red-50">
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-red-900">
+              <AlertTriangle className="w-5 h-5" />
+              Action Required ({criticalIssues.filter(i => i.type === 'critical' || i.type === 'high').length} high priority)
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-2">
+            {criticalIssues.map((issue, idx) => (
+              <Link key={idx} to={createPageUrl(issue.link)}>
+                <div className={`p-3 rounded flex items-center justify-between hover:opacity-80 ${
+                  issue.type === 'critical' ? 'bg-red-100 border border-red-300' :
+                  issue.type === 'high' ? 'bg-amber-100 border border-amber-300' :
+                  'bg-yellow-100 border border-yellow-300'
+                }`}>
+                  <div className="flex items-center gap-2">
+                    <AlertTriangle className={`w-4 h-4 ${
+                      issue.type === 'critical' ? 'text-red-600' :
+                      issue.type === 'high' ? 'text-amber-600' : 'text-yellow-600'
+                    }`} />
+                    <span className="font-medium">{issue.label}</span>
+                  </div>
+                  <Badge className={
+                    issue.type === 'critical' ? 'bg-red-600' :
+                    issue.type === 'high' ? 'bg-amber-600' : 'bg-yellow-600'
+                  }>
+                    {issue.count}
+                  </Badge>
+                </div>
+              </Link>
+            ))}
           </CardContent>
         </Card>
       )}
 
-      <Tabs value={view} onValueChange={setView}>
-        <TabsList className="mb-6">
-          <TabsTrigger value="manager">Manager View</TabsTrigger>
-          <TabsTrigger value="inspector">Inspector View (Read-Only)</TabsTrigger>
-        </TabsList>
-
-        <TabsContent value="manager" className="space-y-6">
-          {/* Key Metrics */}
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-            <StatCard
-              title="Total Staff"
-              value={metrics.totalStaff}
-              icon={Users}
-              color="bg-blue-500"
-            />
-            <StatCard
-              title="Fit to Work"
-              value={`${metrics.fitToWork}/${metrics.totalStaff}`}
-              icon={Unlock}
-              color="bg-green-500"
-              badge={{
-                text: `${Math.round((metrics.fitToWork / metrics.totalStaff) * 100)}% compliant`,
-                color: metrics.fitToWork === metrics.totalStaff ? 'bg-green-600' : 'bg-amber-600'
-              }}
-            />
-            <StatCard
-              title="DBS Alerts"
-              value={metrics.dbsExpiringSoon + metrics.dbsExpired}
-              icon={Shield}
-              color={metrics.dbsExpired > 0 ? 'bg-red-500' : 'bg-amber-500'}
-              badge={
-                metrics.dbsExpired > 0 
-                  ? { text: `${metrics.dbsExpired} expired`, color: 'bg-red-600' }
-                  : { text: `${metrics.dbsExpiringSoon} expiring soon`, color: 'bg-amber-600' }
-              }
-            />
-            <StatCard
-              title="Training Expiring"
-              value={metrics.trainingExpiring}
-              icon={GraduationCap}
-              color="bg-purple-500"
-            />
-          </div>
-
-          {/* Alerts */}
-          {(metrics.dbsExpired > 0 || metrics.carePlansOverdue > 0 || metrics.openSafeguarding > 0) && (
-            <Card className="border-red-300 bg-red-50">
-              <CardHeader>
-                <CardTitle className="flex items-center gap-2 text-red-900">
-                  <AlertTriangle className="w-5 h-5" />
-                  Action Required
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-2">
-                {metrics.dbsExpired > 0 && (
-                  <div className="flex items-center gap-2 text-red-800">
-                    <Shield className="w-4 h-4" />
-                    <span>{metrics.dbsExpired} staff with expired DBS checks</span>
-                  </div>
-                )}
-                {metrics.carePlansOverdue > 0 && (
-                  <div className="flex items-center gap-2 text-red-800">
-                    <FileText className="w-4 h-4" />
-                    <span>{metrics.carePlansOverdue} care plans overdue for review</span>
-                  </div>
-                )}
-                {metrics.openSafeguarding > 0 && (
-                  <div className="flex items-center gap-2 text-red-800">
-                    <AlertTriangle className="w-4 h-4" />
-                    <span>{metrics.openSafeguarding} open safeguarding concerns</span>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          )}
-
-          {/* Staff Compliance List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="flex items-center gap-2">
-                <Users className="w-5 h-5" />
-                Staff Onboarding Status
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-2">
-                {allStaff.slice(0, 10).map(staff => {
-                  const isFitToWork = staff.onboarding_status === 'approved_fit_to_work' || 
-                                     (staff.status === 'active' && staff.is_active);
-                  return (
-                    <div 
-                      key={staff.id}
-                      className="flex items-center justify-between p-3 border rounded hover:bg-gray-50"
-                    >
-                      <div className="flex items-center gap-3">
-                        {isFitToWork ? (
-                          <Unlock className="w-5 h-5 text-green-600" />
-                        ) : (
-                          <Lock className="w-5 h-5 text-amber-600" />
-                        )}
-                        <div>
-                          <p className="font-medium">{staff.full_name}</p>
-                          <p className="text-sm text-gray-600">{staff.email}</p>
-                        </div>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge className={isFitToWork ? 'bg-green-600' : 'bg-amber-600'}>
-                          {isFitToWork ? 'Fit to Work' : 'Onboarding'}
-                        </Badge>
-                        <Button 
-                          size="sm" 
-                          variant="outline"
-                          onClick={() => setSelectedStaff(staff)}
-                        >
-                          <Eye className="w-4 h-4" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
+      {/* Key Metrics */}
+      <div className="grid md:grid-cols-3 gap-6 mb-6">
+        {/* Organisation */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Shield className="w-5 h-5 text-purple-600" />
+              Organisation
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Setup Complete</span>
+              {orgCompliant ? (
+                <CheckCircle className="w-5 h-5 text-green-600" />
+              ) : (
+                <AlertTriangle className="w-5 h-5 text-amber-600" />
+              )}
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Mandatory Policies</span>
+              <Badge>{approvedMandatory.length}/{mandatoryPolicies.length}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Total Policies</span>
+              <Badge variant="outline">{policies.length}</Badge>
+            </div>
+            <Link to={createPageUrl("OrganisationSetup")}>
+              <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
+                View Details →
               </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
+            </Link>
+          </CardContent>
+        </Card>
 
-        <TabsContent value="inspector" className="space-y-6">
-          <Card className="border-blue-200 bg-blue-50">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-2 text-blue-900">
-                <Eye className="w-5 h-5" />
-                <p className="font-medium">Inspector Read-Only View</p>
+        {/* Staff */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <Users className="w-5 h-5 text-blue-600" />
+              Staff
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Total Staff</span>
+              <Badge>{allStaff.length}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Fit to Work</span>
+              <Badge className="bg-green-600">{staffFitToWork}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">DBS Expired</span>
+              <Badge className={dbsExpired > 0 ? 'bg-red-600' : 'bg-green-600'}>{dbsExpired}</Badge>
+            </div>
+            <Link to={createPageUrl("StaffOnboarding")}>
+              <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
+                View Details →
               </div>
-              <p className="text-sm text-blue-700 mt-1">
-                Audit trail and compliance records for regulatory inspection
-              </p>
-            </CardContent>
-          </Card>
+            </Link>
+          </CardContent>
+        </Card>
 
-          {/* CQC KLOE Mapping */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Shield className="w-4 h-4 text-green-600" />
-                  Safe
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-1">
-                <p>✓ Safeguarding records: {safeguarding.length}</p>
-                <p>✓ DBS checks: {allDBS.filter(d => d.dbs_status === 'clear').length}/{allDBS.length}</p>
-              </CardContent>
-            </Card>
+        {/* Clients */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center gap-2 text-lg">
+              <UserCircle className="w-5 h-5 text-green-600" />
+              Clients
+            </CardTitle>
+          </CardHeader>
+          <CardContent className="space-y-3">
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Total Clients</span>
+              <Badge>{allClients.length}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Active</span>
+              <Badge className="bg-green-600">{clientsActive}</Badge>
+            </div>
+            <div className="flex justify-between items-center">
+              <span className="text-sm">Overdue Reviews</span>
+              <Badge className={carePlansOverdueReview > 0 ? 'bg-red-600' : 'bg-green-600'}>
+                {carePlansOverdueReview}
+              </Badge>
+            </div>
+            <Link to={createPageUrl("ClientOnboarding")}>
+              <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
+                View Details →
+              </div>
+            </Link>
+          </CardContent>
+        </Card>
+      </div>
 
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <GraduationCap className="w-4 h-4 text-blue-600" />
-                  Effective
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-1">
-                <p>✓ Training records: {allTraining.length}</p>
-                <p>✓ Care plans: {carePlans.length}</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <Users className="w-4 h-4 text-purple-600" />
-                  Caring
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-1">
-                <p>✓ Active clients: {metrics.activeClients}</p>
-                <p>✓ Consent records tracked</p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle className="text-base flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4 text-orange-600" />
-                  Responsive
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="text-sm space-y-1">
-                <p>✓ Care plan reviews monitored</p>
-                <p>✓ Incident reporting active</p>
-              </CardContent>
-            </Card>
+      {/* Quick Links */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Quick Actions</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <div className="grid md:grid-cols-4 gap-3">
+            <Link to={createPageUrl("OrganisationSetup")}>
+              <div className="p-4 border rounded hover:bg-gray-50 cursor-pointer">
+                <Shield className="w-6 h-6 text-purple-600 mb-2" />
+                <p className="font-medium text-sm">Organisation Setup</p>
+              </div>
+            </Link>
+            <Link to={createPageUrl("StaffOnboarding")}>
+              <div className="p-4 border rounded hover:bg-gray-50 cursor-pointer">
+                <Users className="w-6 h-6 text-blue-600 mb-2" />
+                <p className="font-medium text-sm">Staff Onboarding</p>
+              </div>
+            </Link>
+            <Link to={createPageUrl("ClientOnboarding")}>
+              <div className="p-4 border rounded hover:bg-gray-50 cursor-pointer">
+                <UserCircle className="w-6 h-6 text-green-600 mb-2" />
+                <p className="font-medium text-sm">Client Onboarding</p>
+              </div>
+            </Link>
+            <Link to={createPageUrl("PolicyLibrary")}>
+              <div className="p-4 border rounded hover:bg-gray-50 cursor-pointer">
+                <BookOpen className="w-6 h-6 text-purple-600 mb-2" />
+                <p className="font-medium text-sm">Policy Library</p>
+              </div>
+            </Link>
           </div>
-        </TabsContent>
-      </Tabs>
-
-      {selectedStaff && (
-        <StaffOnboardingWorkflow
-          staffId={selectedStaff.id}
-          staffName={selectedStaff.full_name}
-          onClose={() => setSelectedStaff(null)}
-        />
-      )}
+        </CardContent>
+      </Card>
     </div>
   );
 }
