@@ -12,6 +12,7 @@ import CarerPerformanceDashboard from './pages/CarerPerformanceDashboard';
 import Carers from './pages/Carers';
 import ClientCommunicationHub from './pages/ClientCommunicationHub';
 import ClientFeedback from './pages/ClientFeedback';
+import ClientOnboarding from './pages/ClientOnboarding';
 import ClientPortal from './pages/ClientPortal';
 import ClientPortalBookings from './pages/ClientPortalBookings';
 import ClientPortalMessages from './pages/ClientPortalMessages';
@@ -80,7 +81,6 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import ClientOnboarding from './pages/ClientOnboarding';
 import __Layout from './Layout.jsx';
 
 
@@ -99,6 +99,7 @@ export const PAGES = {
     "Carers": Carers,
     "ClientCommunicationHub": ClientCommunicationHub,
     "ClientFeedback": ClientFeedback,
+    "ClientOnboarding": ClientOnboarding,
     "ClientPortal": ClientPortal,
     "ClientPortalBookings": ClientPortalBookings,
     "ClientPortalMessages": ClientPortalMessages,
@@ -167,7 +168,6 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "ClientOnboarding": ClientOnboarding,
 }
 
 export const pagesConfig = {

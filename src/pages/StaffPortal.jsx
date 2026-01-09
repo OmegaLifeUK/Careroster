@@ -17,7 +17,8 @@ import {
   Camera,
   PoundSterling,
   Shield,
-  Lock
+  Lock,
+  Heart
 } from "lucide-react";
 
 import MyShifts from "../components/staff/MyShifts";
@@ -31,6 +32,7 @@ import MyPayslips from "../components/staff/MyPayslips";
 import SafeguardingInfo from "../components/staff/SafeguardingInfo";
 import ConfidentialIssue from "../components/staff/ConfidentialIssue";
 import MyAvailability from "../components/staff/MyAvailability";
+import MyCareTasks from "../components/staff/MyCareTasks";
 
 export default function StaffPortal() {
   const [activeTab, setActiveTab] = useState("shifts");
@@ -134,10 +136,14 @@ export default function StaffPortal() {
 
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-10 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-11 h-auto p-1">
               <TabsTrigger value="shifts" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">My</span> Shifts
+              </TabsTrigger>
+              <TabsTrigger value="tasks" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Heart className="w-4 h-4" />
+                Care Tasks
               </TabsTrigger>
               <TabsTrigger value="clock" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Clock className="w-4 h-4" />
@@ -182,6 +188,10 @@ export default function StaffPortal() {
 
             <TabsContent value="shifts" className="p-4 md:p-6">
               <MyShifts />
+            </TabsContent>
+
+            <TabsContent value="tasks" className="p-4 md:p-6">
+              <MyCareTasks user={user} />
             </TabsContent>
 
             <TabsContent value="clock" className="p-4 md:p-6">
