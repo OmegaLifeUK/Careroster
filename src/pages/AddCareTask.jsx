@@ -26,6 +26,8 @@ export default function AddCareTask() {
     client_id: "",
     care_plan_id: "",
     assigned_carer_id: "",
+    shift_id: "",
+    visit_id: "",
     frequency: "once",
     scheduled_date: "",
     scheduled_time: "",
@@ -75,6 +77,38 @@ export default function AddCareTask() {
     },
   });
 
+  const { data: visits = [] } = useQuery({
+    queryKey: ['visits', formData.client_id, formData.scheduled_date],
+    queryFn: async () => {
+      if (!formData.client_id || !formData.scheduled_date) return [];
+      const allVisits = await base44.entities.Visit.list();
+      return Array.isArray(allVisits) 
+        ? allVisits.filter(v => 
+            v.client_id === formData.client_id && 
+            v.scheduled_start?.startsWith(formData.scheduled_date) &&
+            v.status !== 'cancelled'
+          )
+        : [];
+    },
+    enabled: !!formData.client_id && !!formData.scheduled_date,
+  });
+
+  const { data: shifts = [] } = useQuery({
+    queryKey: ['shifts', formData.client_id, formData.scheduled_date],
+    queryFn: async () => {
+      if (!formData.client_id || !formData.scheduled_date) return [];
+      const allShifts = await base44.entities.Shift.list();
+      return Array.isArray(allShifts) 
+        ? allShifts.filter(s => 
+            s.client_id === formData.client_id && 
+            s.scheduled_date === formData.scheduled_date &&
+            s.status !== 'cancelled'
+          )
+        : [];
+    },
+    enabled: !!formData.client_id && !!formData.scheduled_date,
+  });
+
   const createTaskMutation = useMutation({
     mutationFn: async (taskData) => {
       // Validation: Check care plan is approved
@@ -101,6 +135,8 @@ export default function AddCareTask() {
         client_id: taskData.client_id,
         care_plan_id: taskData.care_plan_id,
         assigned_carer_id: taskData.assigned_carer_id,
+        shift_id: taskData.shift_id,
+        visit_id: taskData.visit_id,
         task_category: taskData.task_category,
         priority_level: taskData.priority_level,
         frequency: taskData.frequency,
@@ -421,7 +457,7 @@ export default function AddCareTask() {
             <CardHeader>
               <CardTitle>Assignment</CardTitle>
             </CardHeader>
-            <CardContent>
+            <CardContent className="space-y-4">
               <div>
                 <Label htmlFor="assigned_carer_id">Assigned Carer</Label>
                 <Select
@@ -440,6 +476,56 @@ export default function AddCareTask() {
                   </SelectContent>
                 </Select>
                 <p className="text-xs text-gray-500 mt-1">Only active carers are shown</p>
+              </div>
+
+              <div>
+                <Label htmlFor="visit_id">Link to Visit (Time-Specific)</Label>
+                <Select
+                  value={formData.visit_id}
+                  onValueChange={(value) => handleChange('visit_id', value)}
+                  disabled={!formData.client_id || !formData.scheduled_date}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.client_id && formData.scheduled_date ? "Select visit" : "Select client and date first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {visits.length === 0 ? (
+                      <div className="p-2 text-sm text-gray-500">No visits found for this date</div>
+                    ) : (
+                      visits.map(visit => (
+                        <SelectItem key={visit.id} value={visit.id}>
+                          {new Date(visit.scheduled_start).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} - {new Date(visit.scheduled_end).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Task will appear for carer during this visit</p>
+              </div>
+
+              <div>
+                <Label htmlFor="shift_id">Link to Shift</Label>
+                <Select
+                  value={formData.shift_id}
+                  onValueChange={(value) => handleChange('shift_id', value)}
+                  disabled={!formData.client_id || !formData.scheduled_date}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={formData.client_id && formData.scheduled_date ? "Select shift" : "Select client and date first"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {shifts.length === 0 ? (
+                      <div className="p-2 text-sm text-gray-500">No shifts found for this date</div>
+                    ) : (
+                      shifts.map(shift => (
+                        <SelectItem key={shift.id} value={shift.id}>
+                          {shift.shift_type} - {shift.scheduled_date}
+                        </SelectItem>
+                      ))
+                    )}
+                  </SelectContent>
+                </Select>
+                <p className="text-xs text-gray-500 mt-1">Task will appear for carer during this shift</p>
               </div>
             </CardContent>
           </Card>

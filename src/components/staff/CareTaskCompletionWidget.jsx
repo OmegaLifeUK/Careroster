@@ -12,7 +12,7 @@ import { Badge } from "@/components/ui/badge";
 import { CheckCircle, XCircle, AlertCircle, Heart, ChevronDown, ChevronUp, Upload } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
-export default function CareTaskCompletionWidget({ clientId, shiftId, user, onTasksUpdate }) {
+export default function CareTaskCompletionWidget({ clientId, shiftId, visitId, user, onTasksUpdate }) {
   const [expandedTasks, setExpandedTasks] = useState({});
   const [completions, setCompletions] = useState({});
   const [signatureFile, setSignatureFile] = useState(null);
@@ -22,7 +22,7 @@ export default function CareTaskCompletionWidget({ clientId, shiftId, user, onTa
   const { toast } = useToast();
 
   const { data: careTasks = [] } = useQuery({
-    queryKey: ['care-tasks-widget', clientId],
+    queryKey: ['care-tasks-widget', clientId, shiftId, visitId],
     queryFn: async () => {
       if (!clientId) return [];
       try {
@@ -33,7 +33,9 @@ export default function CareTaskCompletionWidget({ clientId, shiftId, user, onTa
               t.client_id === clientId && 
               t.task_status !== 'completed' &&
               t.task_status !== 'cancelled' &&
-              t.scheduled_date === today
+              t.scheduled_date === today &&
+              // Show tasks linked to this shift or visit, or general tasks for the client
+              (t.shift_id === shiftId || t.visit_id === visitId || (!t.shift_id && !t.visit_id))
             )
           : [];
       } catch (error) {
