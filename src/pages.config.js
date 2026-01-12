@@ -1,5 +1,6 @@
 import ActionPlanProgress from './pages/ActionPlanProgress';
 import ActionPlans from './pages/ActionPlans';
+import AddCareTask from './pages/AddCareTask';
 import AnalyticsPage from './pages/AnalyticsPage';
 import AuditTemplates from './pages/AuditTemplates';
 import Audits from './pages/Audits';
@@ -81,13 +82,14 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import AddCareTask from './pages/AddCareTask';
+import AddAssessment from './pages/AddAssessment';
 import __Layout from './Layout.jsx';
 
 
 export const PAGES = {
     "ActionPlanProgress": ActionPlanProgress,
     "ActionPlans": ActionPlans,
+    "AddCareTask": AddCareTask,
     "AnalyticsPage": AnalyticsPage,
     "AuditTemplates": AuditTemplates,
     "Audits": Audits,
@@ -169,7 +171,7 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "AddCareTask": AddCareTask,
+    "AddAssessment": AddAssessment,
 }
 
 export const pagesConfig = {
