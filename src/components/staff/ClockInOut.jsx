@@ -412,7 +412,8 @@ export default function ClockInOut({ shift = null, carer = null, client = null, 
         <div className="space-y-4">
           <CareTaskCompletionWidget 
             clientId={client?.id}
-            shiftId={shift?.id}
+            shiftId={entityType === 'shift' ? shift?.id : null}
+            visitId={entityType === 'visit' ? shift?.id : null}
             user={user}
           />
 
