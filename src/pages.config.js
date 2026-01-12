@@ -83,6 +83,7 @@ import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
 import AddAssessment from './pages/AddAssessment';
+import AddMARSheet from './pages/AddMARSheet';
 import __Layout from './Layout.jsx';
 
 
@@ -172,6 +173,7 @@ export const PAGES = {
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
     "AddAssessment": AddAssessment,
+    "AddMARSheet": AddMARSheet,
 }
 
 export const pagesConfig = {
