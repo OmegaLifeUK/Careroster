@@ -320,19 +320,38 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
       }
       
       if (generatedPlan.care_tasks?.length) {
-        carePlanData.care_tasks = generatedPlan.care_tasks.map((task, idx) => ({
-          task_id: `task_${Date.now()}_${idx}`,
-          category: task.category || 'personal_care',
-          task_name: task.task_name || task.description || 'Care Task',
-          description: task.description || '',
-          frequency: task.frequency || 'daily',
-          preferred_time: task.preferred_time || '',
-          duration_minutes: task.duration_minutes || 30,
-          special_instructions: task.special_instructions || '',
-          requires_two_carers: task.requires_two_carers || false,
-          is_active: true,
-          linked_shift_types: []
-        }));
+        carePlanData.care_tasks = generatedPlan.care_tasks.map((task, idx) => {
+          const taskObj = {
+            task_id: `task_${Date.now()}_${idx}`,
+            category: String(task.category || 'personal_care'),
+            task_name: String(task.task_name || task.description || 'Care Task'),
+            description: String(task.description || task.task_name || ''),
+            frequency: String(task.frequency || 'daily'),
+            preferred_time: String(task.preferred_time || ''),
+            duration_minutes: Number(task.duration_minutes) || 30,
+            special_instructions: String(task.special_instructions || ''),
+            requires_two_carers: Boolean(task.requires_two_carers),
+            is_active: true,
+            linked_shift_types: Array.isArray(task.linked_shift_types) ? task.linked_shift_types : []
+          };
+          
+          // Ensure all string fields are actually strings
+          Object.keys(taskObj).forEach(key => {
+            if (typeof taskObj[key] === 'undefined' || taskObj[key] === null) {
+              if (key === 'duration_minutes') {
+                taskObj[key] = 30;
+              } else if (key === 'requires_two_carers' || key === 'is_active') {
+                taskObj[key] = key === 'is_active';
+              } else if (key === 'linked_shift_types') {
+                taskObj[key] = [];
+              } else {
+                taskObj[key] = '';
+              }
+            }
+          });
+          
+          return taskObj;
+        });
       }
       
       if (generatedPlan.medication_management?.medications?.length) {
