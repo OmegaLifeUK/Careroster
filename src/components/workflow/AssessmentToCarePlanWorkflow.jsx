@@ -340,12 +340,10 @@ export const createDraftCarePlan = async (carePlanData, clientId, assessmentSour
       risk_factors: carePlanData.risk_factors || [],
       emergency_info: {},
       version: 1,
-      generated_from_assessment: true,
-      approval_completed: false,
-      source_assessment_type: assessmentSource.type,
-      source_assessment_id: assessmentSource.id,
-      dols_info: carePlanData.dols || null,
-      dnacpr_info: carePlanData.dnacpr || null
+      last_reviewed_by: JSON.stringify({ 
+        dols_pending: carePlanData.dols, 
+        dnacpr_pending: carePlanData.dnacpr 
+      })
     });
 
     // Link back to source assessment
