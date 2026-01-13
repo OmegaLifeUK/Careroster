@@ -395,7 +395,7 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
-                      {plan.generated_from_assessment && !plan.approval_completed && (
+                      {plan.generated_from_assessment && !plan.approval_completed && plan.status === 'draft' && (
                         <Button 
                           size="sm" 
                           onClick={() => handleApproveCarePlan(plan.id)}
@@ -404,15 +404,15 @@ export default function CarePlanManager({ client }) {
                           Approve & Create Records
                         </Button>
                       )}
-                      {plan.status === 'active' && plan.generated_from_assessment && !plan.approval_completed && (
+                      {plan.generated_from_assessment && !plan.approval_completed && plan.status === 'active' && (
                         <Button 
                           size="sm" 
                           onClick={() => handleApproveCarePlan(plan.id)}
                           className="bg-amber-600 hover:bg-amber-700"
-                          title="This AI-generated plan was activated but records were never created. Click to create tasks, medications, and risks."
+                          title="AI-generated plan needs approval to create tasks, medications, and risks"
                         >
                           <AlertTriangle className="w-4 h-4 mr-1" />
-                          Create Missing Records
+                          Activate Care Plan & Workflows
                         </Button>
                       )}
                       <Button 
