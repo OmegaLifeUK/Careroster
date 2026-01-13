@@ -296,18 +296,46 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
         review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
         assessed_by: "AI Generated (Requires Review)",
         status: "draft",
+        version: 1,
         generated_from_assessment: true,
         approval_completed: false,
-        ...generatedPlan,
-        care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
-          ...task,
-          task_id: `task_${Date.now()}_${idx}`,
-          is_active: true
-        })),
+        personal_details: generatedPlan.personal_details || {},
+        physical_health: generatedPlan.physical_health || {},
+        mental_health: generatedPlan.mental_health || {},
         care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
           ...obj,
           status: obj.status || "not_started"
-        }))
+        })),
+        care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
+          task_id: `task_${Date.now()}_${idx}`,
+          category: String(task.category || 'personal_care'),
+          task_name: String(task.task_name || task.description || 'Care Task'),
+          description: String(task.description || task.task_name || ''),
+          frequency: String(task.frequency || 'daily'),
+          preferred_time: String(task.preferred_time || ''),
+          duration_minutes: Number(task.duration_minutes || 30),
+          special_instructions: String(task.special_instructions || ''),
+          requires_two_carers: Boolean(task.requires_two_carers),
+          is_active: true,
+          linked_shift_types: task.linked_shift_types || []
+        })),
+        medication_management: generatedPlan.medication_management || {
+          medications: [],
+          self_administers: false,
+          administration_support: 'assistance'
+        },
+        daily_routine: generatedPlan.daily_routine || {},
+        preferences: generatedPlan.preferences || {},
+        risk_factors: (generatedPlan.risk_factors || []).map(risk => ({
+          risk: String(risk.risk || ''),
+          likelihood: String(risk.likelihood || 'medium'),
+          impact: String(risk.impact || 'medium'),
+          control_measures: String(risk.control_measures || '')
+        })),
+        emergency_info: generatedPlan.emergency_info || {},
+        consent: {},
+        dols_info: generatedPlan.dols || null,
+        dnacpr_info: generatedPlan.dnacpr || null
       };
 
       return base44.entities.CarePlan.create(carePlanData);
@@ -318,8 +346,9 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
       onSuccess?.(newPlan);
       onClose();
     },
-    onError: () => {
-      toast.error("Error", "Failed to save care plan");
+    onError: (error) => {
+      console.error("Save error:", error);
+      toast.error("Error", error?.message || "Failed to save care plan. Please check the generated data and try again.");
     }
   });
 
