@@ -27,11 +27,14 @@ import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
 import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
+import AICarePlanApproval from "@/components/careplan/AICarePlanApproval";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
   const [showAIGenerator, setShowAIGenerator] = useState(false);
+  const [showApproval, setShowApproval] = useState(false);
+  const [approvingPlan, setApprovingPlan] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -295,6 +298,12 @@ export default function CarePlanManager({ client }) {
                         <Heart className="w-5 h-5 text-blue-600" />
                         <h3 className="font-semibold capitalize">{plan.plan_type} Care Plan</h3>
                         <Badge className={statusColors[plan.status]}>{plan.status}</Badge>
+                        {plan.status === 'draft' && plan.last_reviewed_by?.includes('ai_generated') && (
+                          <Badge className="bg-purple-100 text-purple-700">
+                            <Sparkles className="w-3 h-3 mr-1" />
+                            Awaiting Review
+                          </Badge>
+                        )}
                         {reviewStatus && (
                           <Badge className={reviewStatus.color}>{reviewStatus.label}</Badge>
                         )}
@@ -326,6 +335,16 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
+                      {plan.status === 'draft' && plan.last_reviewed_by?.includes('ai_generated') && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => { setApprovingPlan(plan); setShowApproval(true); }}
+                          className="bg-purple-600 hover:bg-purple-700"
+                        >
+                          <Sparkles className="w-4 h-4 mr-1" />
+                          Review & Approve
+                        </Button>
+                      )}
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -374,6 +393,19 @@ export default function CarePlanManager({ client }) {
           assessmentDocuments={assessmentDocs}
           onClose={() => setShowAIGenerator(false)}
           onSuccess={() => setShowAIGenerator(false)}
+        />
+      )}
+
+      {showApproval && approvingPlan && (
+        <AICarePlanApproval
+          carePlan={approvingPlan}
+          client={client}
+          onClose={() => { setShowApproval(false); setApprovingPlan(null); }}
+          onApprove={() => {
+            setShowApproval(false);
+            setApprovingPlan(null);
+            queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+          }}
         />
       )}
     </div>
