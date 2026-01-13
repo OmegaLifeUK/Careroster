@@ -296,6 +296,7 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
         review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
         assessed_by: "AI Generated (Requires Review)",
         status: "draft",
+        generated_from_assessment: true,
         ...generatedPlan,
         care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
           ...task,
