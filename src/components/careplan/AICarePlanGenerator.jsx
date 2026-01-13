@@ -14,7 +14,8 @@ import {
   Loader2, 
   FileText, 
   CheckCircle,
-  Upload
+  Upload,
+  AlertCircle
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addMonths } from "date-fns";
@@ -48,28 +49,61 @@ export default function AICarePlanGenerator({ client, assessmentDocuments = [], 
     setStep("generating");
 
     try {
-      const prompt = `Analyze the assessment documents for ${client.full_name} and generate a comprehensive care plan.
+      const systemInstruction = `You are an AI assistant generating draft UK-compliant, person-centred care plans.
+You must:
+- Use only the uploaded documents
+- Avoid assumptions or diagnoses
+- Highlight uncertainty clearly
+- Use professional, neutral language
+- Follow UK care standards and terminology
+- Produce a DRAFT requiring human approval`;
 
-Client Details:
-- Name: ${client.full_name}
-- DOB: ${client.date_of_birth || 'Not provided'}
-- Address: ${client.address?.street || ''}, ${client.address?.postcode || ''}
-- Care Needs: ${(client.care_needs || []).join(', ') || 'Not specified'}
-- Mobility: ${client.mobility || 'Not specified'}
+      const prompt = `${systemInstruction}
 
+Using the uploaded assessments and documents:
+
+Client: ${client.full_name}
+DOB: ${client.date_of_birth || 'Not provided'}
+Current Address: ${client.address?.street || ''}, ${client.address?.postcode || ''}
 Care Setting: ${careSetting.replace('_', ' ')}
-Additional Context: ${additionalContext || 'None'}
 
-Generate a care plan with:
-1. Physical & Mental Health Assessment
-2. Care Objectives (3-5 SMART goals)
-3. Care Tasks (daily activities needed)
-4. Medications (if mentioned)
-5. Risk Factors
-6. Preferences & Routines
-7. DoLS/DNACPR status (if mentioned)
+Additional Context: ${additionalContext || 'None provided'}
 
-Return valid JSON matching this structure.`;
+Generate a structured draft care plan following UK care standards with:
+
+1. PERSONAL DETAILS & ABOUT ME:
+   - Preferred name, communication needs
+   - Cultural/religious preferences
+   - Likes, dislikes, routines
+
+2. ASSESSED NEEDS:
+   - Physical health, mental health, mobility
+   - Nutrition, personal care, continence
+   - Medication support, social needs
+
+3. DESIRED OUTCOMES:
+   - What the person wants to achieve
+   - Short and long-term goals
+
+4. SUPPORT INTERVENTIONS (Care Tasks):
+   - What support is required
+   - How it should be delivered
+   - Frequency and who is responsible
+
+5. RISK MANAGEMENT:
+   - Identified risks with likelihood/impact
+   - Mitigation strategies
+
+6. MEDICATIONS (if mentioned):
+   - Current medications with dose, frequency, route
+
+Flag any:
+- Missing information
+- Conflicting data
+- Safeguarding indicators
+- Capacity concerns
+
+Return valid JSON only.`;
 
       const result = await base44.integrations.Core.InvokeLLM({
         prompt,
@@ -77,51 +111,63 @@ Return valid JSON matching this structure.`;
         response_json_schema: {
           type: "object",
           properties: {
-            physical_health: { 
+            personal_details: {
               type: "object",
               properties: {
-                mobility: { type: "string" },
-                continence: { type: "string" },
-                nutrition: { type: "string" },
-                medical_conditions: { type: "array", items: { type: "string" } },
-                allergies: { type: "array", items: { type: "string" } }
-              }
-            },
-            mental_health: { 
-              type: "object",
-              properties: {
-                cognitive_function: { type: "string" },
+                preferred_name: { type: "string" },
                 communication_needs: { type: "string" },
-                behaviour_support_needs: { type: "string" }
+                cultural_preferences: { type: "string" },
+                likes: { type: "array", items: { type: "string" } },
+                dislikes: { type: "array", items: { type: "string" } }
               }
             },
-            care_objectives: { 
+            assessed_needs: {
+              type: "object",
+              properties: {
+                physical_health: { type: "string" },
+                mental_health: { type: "string" },
+                mobility: { type: "string" },
+                nutrition: { type: "string" },
+                personal_care: { type: "string" },
+                social_needs: { type: "string" }
+              }
+            },
+            desired_outcomes: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  objective: { type: "string" },
-                  outcome_measures: { type: "string" },
-                  target_date: { type: "string" },
-                  status: { type: "string" }
+                  outcome: { type: "string" },
+                  timeframe: { type: "string" },
+                  measures: { type: "string" }
                 }
               }
             },
-            care_tasks: { 
+            support_interventions: {
               type: "array",
               items: {
                 type: "object",
                 properties: {
-                  task_name: { type: "string" },
-                  category: { type: "string" },
-                  description: { type: "string" },
+                  need_area: { type: "string" },
+                  support_required: { type: "string" },
                   frequency: { type: "string" },
-                  preferred_time: { type: "string" },
-                  duration_minutes: { type: "number" }
+                  responsible: { type: "string" }
                 }
               }
             },
-            medications: { 
+            risks: {
+              type: "array",
+              items: {
+                type: "object",
+                properties: {
+                  risk: { type: "string" },
+                  likelihood: { type: "string" },
+                  impact: { type: "string" },
+                  mitigation: { type: "string" }
+                }
+              }
+            },
+            medications: {
               type: "array",
               items: {
                 type: "object",
@@ -134,49 +180,12 @@ Return valid JSON matching this structure.`;
                 }
               }
             },
-            risk_factors: { 
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  risk: { type: "string" },
-                  likelihood: { type: "string" },
-                  impact: { type: "string" },
-                  control_measures: { type: "string" }
-                }
-              }
-            },
-            preferences: {
+            flags: {
               type: "object",
               properties: {
-                likes: { type: "array", items: { type: "string" } },
-                dislikes: { type: "array", items: { type: "string" } },
-                hobbies: { type: "array", items: { type: "string" } }
-              }
-            },
-            daily_routine: {
-              type: "object",
-              properties: {
-                morning: { type: "string" },
-                afternoon: { type: "string" },
-                evening: { type: "string" },
-                night: { type: "string" }
-              }
-            },
-            dols: {
-              type: "object",
-              properties: {
-                applicable: { type: "boolean" },
-                status: { type: "string" },
-                reason: { type: "string" }
-              }
-            },
-            dnacpr: {
-              type: "object",
-              properties: {
-                in_place: { type: "boolean" },
-                decision_date: { type: "string" },
-                decision_maker: { type: "string" }
+                missing_information: { type: "array", items: { type: "string" } },
+                safeguarding_indicators: { type: "array", items: { type: "string" } },
+                capacity_concerns: { type: "string" }
               }
             }
           }
@@ -194,95 +203,85 @@ Return valid JSON matching this structure.`;
     }
   };
 
-  const saveMutation = useMutation({
+  const saveDraftMutation = useMutation({
     mutationFn: async () => {
       const currentUser = await base44.auth.me().catch(() => null);
       
-      // Build care tasks array with proper structure
-      const careTasks = (generatedPlan.care_tasks || []).map((task, idx) => ({
-        task_id: `task_${Date.now()}_${idx}`,
-        task_name: task.task_name || 'Care Task',
-        category: task.category || 'personal_care',
-        description: task.description || '',
-        frequency: task.frequency || 'daily',
-        preferred_time: task.preferred_time || '',
-        duration_minutes: task.duration_minutes || 30,
-        special_instructions: task.special_instructions || '',
-        requires_two_carers: false,
-        is_active: true,
-        linked_shift_types: []
-      }));
-
-      const carePlanData = {
+      // Save as draft - NO actual tasks/medications created yet
+      const draftData = {
         client_id: client.id,
         care_setting: careSetting,
         plan_type: "initial",
         assessment_date: format(new Date(), "yyyy-MM-dd"),
         review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
-        assessed_by: currentUser?.full_name || "AI Generated",
+        assessed_by: currentUser?.full_name || "System",
         status: "draft",
         version: 1,
-        physical_health: generatedPlan.physical_health || {},
-        mental_health: generatedPlan.mental_health || {},
-        care_objectives: generatedPlan.care_objectives || [],
-        care_tasks: careTasks,
-        medication_management: {
-          self_administers: false,
-          administration_support: 'assistance',
-          medications: generatedPlan.medications || [],
-          pharmacy_details: '',
-          gp_details: '',
-          allergies_sensitivities: (generatedPlan.physical_health?.allergies || []).join(', ')
+        
+        // Store AI-generated data as metadata for later processing
+        personal_details: generatedPlan.personal_details || {},
+        
+        physical_health: {
+          mobility: generatedPlan.assessed_needs?.mobility || '',
+          nutrition: generatedPlan.assessed_needs?.nutrition || '',
+          medical_conditions: []
         },
-        daily_routine: generatedPlan.daily_routine || {},
-        preferences: generatedPlan.preferences || {},
-        risk_factors: generatedPlan.risk_factors || [],
-        emergency_info: {
-          hospital_preference: '',
-          dnacpr_in_place: Boolean(generatedPlan.dnacpr?.in_place),
-          emergency_protocol: ''
+        
+        mental_health: {
+          cognitive_function: generatedPlan.assessed_needs?.mental_health || '',
+          communication_needs: generatedPlan.personal_details?.communication_needs || ''
         },
-        consent: {
-          capacity_to_consent: true,
-          consent_given_by: '',
-          relationship: '',
-          restrictions: ''
+        
+        preferences: {
+          likes: generatedPlan.personal_details?.likes || [],
+          dislikes: generatedPlan.personal_details?.dislikes || []
         },
-        last_reviewed_by: JSON.stringify({ 
-          dols_pending: generatedPlan.dols, 
-          dnacpr_pending: generatedPlan.dnacpr 
+        
+        // Store as JSON for approval workflow
+        last_reviewed_by: JSON.stringify({
+          ai_generated: true,
+          generated_date: new Date().toISOString(),
+          source_documents: selectedDocs.length,
+          pending_approval: {
+            outcomes: generatedPlan.desired_outcomes || [],
+            interventions: generatedPlan.support_interventions || [],
+            risks: generatedPlan.risks || [],
+            medications: generatedPlan.medications || [],
+            flags: generatedPlan.flags || {}
+          }
         })
       };
       
-      return await base44.entities.CarePlan.create(carePlanData);
+      return await base44.entities.CarePlan.create(draftData);
     },
     onSuccess: (newPlan) => {
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Success!", "Care plan saved as draft. Review and approve to create tasks and workflows.");
+      toast.success("Draft Saved", "Review and approve the plan to create tasks and records.");
       onSuccess?.(newPlan);
       onClose();
     },
     onError: (error) => {
       console.error("Save error:", error);
-      toast.error("Save Failed", error?.message || "Unable to save care plan");
+      toast.error("Save Failed", error?.message || "Unable to save draft");
     }
   });
 
   return (
     <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-600" />
-            AI Care Plan Generator
+            AI Care Plan Generator (UK Compliant)
           </DialogTitle>
         </DialogHeader>
 
         {step === "select" && (
           <div className="space-y-6">
-            <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg">
-              <p className="text-sm text-purple-800">
-                Generate a care plan for <strong>{client.full_name}</strong> from assessment documents.
+            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
+              <p className="text-sm text-blue-800">
+                <strong>AI Assistance:</strong> This tool drafts a UK-compliant, person-centred care plan from assessments.
+                All outputs require human review and approval before use.
               </p>
             </div>
 
@@ -302,16 +301,19 @@ Return valid JSON matching this structure.`;
             </div>
 
             <div>
-              <Label className="mb-2 block font-medium">Assessment Documents</Label>
+              <Label className="mb-2 block font-medium">
+                Select Assessment Documents ({selectedDocs.length} selected)
+              </Label>
               {assessmentDocuments.length === 0 ? (
                 <Card className="border-dashed">
                   <CardContent className="p-8 text-center text-gray-500">
                     <Upload className="w-12 h-12 mx-auto mb-2 text-gray-300" />
                     <p>No assessment documents available</p>
+                    <p className="text-sm mt-1">Upload documents to visits/shifts first</p>
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto">
+                <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-2">
                   {assessmentDocuments.map((doc, idx) => (
                     <div 
                       key={idx}
@@ -328,8 +330,10 @@ Return valid JSON matching this structure.`;
                       />
                       <FileText className="w-5 h-5 text-blue-600" />
                       <div className="flex-1">
-                        <p className="font-medium">{doc.document_name}</p>
-                        <p className="text-sm text-gray-500">{doc.document_type}</p>
+                        <p className="font-medium text-sm">{doc.document_name}</p>
+                        <p className="text-xs text-gray-500">
+                          {doc.document_type} • {doc.source}
+                        </p>
                       </div>
                     </div>
                   ))}
@@ -338,11 +342,11 @@ Return valid JSON matching this structure.`;
             </div>
 
             <div>
-              <Label className="mb-2 block">Additional Context (Optional)</Label>
+              <Label className="mb-2 block">Additional Professional Context (Optional)</Label>
               <Textarea
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder="Any additional information not in documents..."
+                placeholder="Add any recent observations, family input, or professional notes not in the documents..."
                 rows={4}
               />
             </div>
@@ -355,7 +359,7 @@ Return valid JSON matching this structure.`;
                 className="bg-purple-600 hover:bg-purple-700"
               >
                 <Sparkles className="w-4 h-4 mr-2" />
-                Generate Care Plan
+                Generate Draft Care Plan
               </Button>
             </DialogFooter>
           </div>
@@ -364,63 +368,80 @@ Return valid JSON matching this structure.`;
         {step === "generating" && (
           <div className="py-12 text-center">
             <Loader2 className="w-16 h-16 mx-auto mb-4 text-purple-600 animate-spin" />
-            <h3 className="text-lg font-semibold mb-2">Analyzing Documents...</h3>
-            <p className="text-gray-600">Generating comprehensive care plan</p>
+            <h3 className="text-lg font-semibold mb-2">AI Processing Documents...</h3>
+            <p className="text-gray-600">Analyzing assessments and generating draft care plan</p>
             <p className="text-sm text-gray-500 mt-2">This may take 30-60 seconds</p>
           </div>
         )}
 
         {step === "review" && generatedPlan && (
           <div className="space-y-6">
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg flex items-start gap-3">
-              <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
+            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
+              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
               <div>
-                <p className="font-medium text-green-800">Care Plan Generated</p>
-                <p className="text-sm text-green-700">
-                  Save as draft, then review and approve to create tasks and workflows.
+                <p className="font-medium text-amber-800">⚠️ Draft Requires Human Approval</p>
+                <p className="text-sm text-amber-700">
+                  This care plan was drafted with AI assistance. It must be reviewed, edited, and approved by a qualified professional before use.
                 </p>
               </div>
             </div>
 
             <Card>
-              <CardContent className="p-4">
-                <h4 className="font-semibold mb-3">Summary</h4>
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-                  <div className="p-3 bg-blue-50 rounded">
-                    <p className="text-2xl font-bold text-blue-700">
-                      {generatedPlan.care_objectives?.length || 0}
-                    </p>
-                    <p className="text-xs text-gray-600">Objectives</p>
-                  </div>
-                  <div className="p-3 bg-purple-50 rounded">
-                    <p className="text-2xl font-bold text-purple-700">
-                      {generatedPlan.care_tasks?.length || 0}
-                    </p>
-                    <p className="text-xs text-gray-600">Care Tasks</p>
-                  </div>
-                  <div className="p-3 bg-pink-50 rounded">
-                    <p className="text-2xl font-bold text-pink-700">
-                      {generatedPlan.medications?.length || 0}
-                    </p>
-                    <p className="text-xs text-gray-600">Medications</p>
-                  </div>
-                  <div className="p-3 bg-orange-50 rounded">
-                    <p className="text-2xl font-bold text-orange-700">
-                      {generatedPlan.risk_factors?.length || 0}
-                    </p>
-                    <p className="text-xs text-gray-600">Risks</p>
+              <CardContent className="p-4 space-y-4">
+                <div>
+                  <h4 className="font-semibold mb-2">Generated Content Summary</h4>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+                    <div className="p-3 bg-blue-50 rounded">
+                      <p className="text-2xl font-bold text-blue-700">
+                        {generatedPlan.desired_outcomes?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Outcomes</p>
+                    </div>
+                    <div className="p-3 bg-purple-50 rounded">
+                      <p className="text-2xl font-bold text-purple-700">
+                        {generatedPlan.support_interventions?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Interventions</p>
+                    </div>
+                    <div className="p-3 bg-pink-50 rounded">
+                      <p className="text-2xl font-bold text-pink-700">
+                        {generatedPlan.medications?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Medications</p>
+                    </div>
+                    <div className="p-3 bg-orange-50 rounded">
+                      <p className="text-2xl font-bold text-orange-700">
+                        {generatedPlan.risks?.length || 0}
+                      </p>
+                      <p className="text-xs text-gray-600">Risks</p>
+                    </div>
                   </div>
                 </div>
 
-                {generatedPlan.care_tasks?.length > 0 && (
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-700 mb-2">Care Tasks:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {generatedPlan.care_tasks.slice(0, 6).map((task, idx) => (
-                        <Badge key={idx} variant="outline">{task.task_name}</Badge>
+                {generatedPlan.flags?.safeguarding_indicators?.length > 0 && (
+                  <div className="p-3 bg-red-50 border border-red-200 rounded">
+                    <p className="text-sm font-medium text-red-800 mb-1">🚨 Safeguarding Indicators:</p>
+                    <ul className="text-sm text-red-700 list-disc list-inside">
+                      {generatedPlan.flags.safeguarding_indicators.map((flag, i) => (
+                        <li key={i}>{flag}</li>
                       ))}
-                      {generatedPlan.care_tasks.length > 6 && (
-                        <Badge variant="outline">+{generatedPlan.care_tasks.length - 6} more</Badge>
+                    </ul>
+                  </div>
+                )}
+
+                {generatedPlan.support_interventions?.length > 0 && (
+                  <div>
+                    <p className="text-sm font-medium text-gray-700 mb-2">Support Interventions (Preview):</p>
+                    <div className="space-y-2">
+                      {generatedPlan.support_interventions.slice(0, 3).map((intervention, idx) => (
+                        <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
+                          <p className="font-medium">{intervention.need_area}</p>
+                          <p className="text-gray-600 text-xs">{intervention.support_required}</p>
+                          <p className="text-gray-500 text-xs">Frequency: {intervention.frequency}</p>
+                        </div>
+                      ))}
+                      {generatedPlan.support_interventions.length > 3 && (
+                        <p className="text-xs text-gray-500">+{generatedPlan.support_interventions.length - 3} more</p>
                       )}
                     </div>
                   </div>
@@ -428,16 +449,22 @@ Return valid JSON matching this structure.`;
               </CardContent>
             </Card>
 
+            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
+              <p className="text-sm text-green-800">
+                <strong>Next Steps:</strong> Save as draft → Review in Care Plan Manager → Edit if needed → Approve to create tasks and records
+              </p>
+            </div>
+
             <DialogFooter>
               <Button variant="outline" onClick={() => setStep("select")}>
                 ← Back
               </Button>
               <Button 
-                onClick={() => saveMutation.mutate()}
-                disabled={saveMutation.isPending}
+                onClick={() => saveDraftMutation.mutate()}
+                disabled={saveDraftMutation.isPending}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {saveMutation.isPending ? (
+                {saveDraftMutation.isPending ? (
                   <>
                     <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                     Saving...
@@ -445,7 +472,7 @@ Return valid JSON matching this structure.`;
                 ) : (
                   <>
                     <CheckCircle className="w-4 h-4 mr-2" />
-                    Save as Draft
+                    Save Draft for Review
                   </>
                 )}
               </Button>
