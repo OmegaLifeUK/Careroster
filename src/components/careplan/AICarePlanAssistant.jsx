@@ -220,12 +220,21 @@ CRITICAL: Every recommendation must cite specific evidence (e.g., "Based on the 
           personal_details: { type: "object" },
           physical_health: { type: "object" },
           mental_health: { type: "object" },
-          care_objectives: { type: "array" },
-          care_tasks: { type: "array" },
+          care_objectives: { 
+            type: "array",
+            items: { type: "object" }
+          },
+          care_tasks: { 
+            type: "array",
+            items: { type: "object" }
+          },
           medication_management: { type: "object" },
           daily_routine: { type: "object" },
           preferences: { type: "object" },
-          risk_factors: { type: "array" },
+          risk_factors: { 
+            type: "array",
+            items: { type: "object" }
+          },
           emergency_info: { type: "object" },
           evidence_summary: { 
             type: "string",
