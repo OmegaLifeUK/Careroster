@@ -173,15 +173,18 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
           Back to Care Plans
         </Button>
         <div className="flex gap-2">
-          {carePlan.generated_from_assessment && !carePlan.approval_completed && (
-            <Button 
-              onClick={handleApproveCarePlan}
-              className="bg-green-600 hover:bg-green-700"
-            >
-              <CheckCircle className="w-4 h-4 mr-2" />
-              Activate Care Plan & Workflows
-            </Button>
-          )}
+          {/* DEBUG: Always show button with status */}
+          <Button 
+            onClick={() => {
+              alert(`DEBUG INFO:\ngenerated_from_assessment: ${carePlan.generated_from_assessment}\napproval_completed: ${carePlan.approval_completed}\nstatus: ${carePlan.status}\nid: ${carePlan.id}`);
+              handleApproveCarePlan();
+            }}
+            className="bg-green-600 hover:bg-green-700"
+            title={`generated_from_assessment: ${carePlan.generated_from_assessment}, approval_completed: ${carePlan.approval_completed}`}
+          >
+            <CheckCircle className="w-4 h-4 mr-2" />
+            Activate Care Plan & Workflows (DEBUG)
+          </Button>
           <div className="flex gap-1 mr-2">
             <Button
               variant={viewMode === 'standard' ? 'default' : 'outline'}
