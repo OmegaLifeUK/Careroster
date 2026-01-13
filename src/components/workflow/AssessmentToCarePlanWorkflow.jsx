@@ -553,12 +553,44 @@ function mapFrequencyToEnum(frequency) {
 function categorizeRisk(riskDescription) {
   const lower = riskDescription.toLowerCase();
   if (lower.includes('fall')) return 'falls';
-  if (lower.includes('medication') || lower.includes('medicine')) return 'medication';
+  if (lower.includes('chok')) return 'choking';
+  if (lower.includes('pressure') || lower.includes('skin') || lower.includes('ulcer')) return 'pressure_ulcer';
   if (lower.includes('safeguard') || lower.includes('abuse')) return 'safeguarding';
-  if (lower.includes('nutrition') || lower.includes('food') || lower.includes('eating')) return 'nutrition';
-  if (lower.includes('pressure') || lower.includes('skin')) return 'pressure_sores';
-  if (lower.includes('infection')) return 'infection';
-  return 'other';
+  if (lower.includes('fire')) return 'fire';
+  if (lower.includes('medication') || lower.includes('medicine')) return 'medication';
+  if (lower.includes('mental') || lower.includes('capacity')) return 'mental_capacity';
+  if (lower.includes('behav')) return 'behaviour';
+  if (lower.includes('environment') || lower.includes('home')) return 'environmental';
+  return 'general';
+}
+
+function calculateRiskLevel(likelihood, impact) {
+  const likelihoodScore = { low: 1, medium: 2, high: 3 };
+  const impactScore = { low: 1, medium: 2, high: 3 };
+  const total = (likelihoodScore[likelihood] || 1) * (impactScore[impact] || 1);
+  
+  if (total >= 6) return 'critical';
+  if (total >= 4) return 'high';
+  if (total >= 2) return 'medium';
+  return 'low';
+}
+
+function mapLikelihood(likelihood) {
+  const mapping = {
+    low: 'unlikely',
+    medium: 'possible',
+    high: 'likely'
+  };
+  return mapping[likelihood] || 'possible';
+}
+
+function mapSeverity(impact) {
+  const mapping = {
+    low: 'minor',
+    medium: 'moderate',
+    high: 'major'
+  };
+  return mapping[impact] || 'moderate';
 }
 
 function mapDoLSStatus(status) {
