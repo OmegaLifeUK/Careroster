@@ -19,22 +19,16 @@ import {
   User,
   ChevronRight,
   FileText,
-  Sparkles
+
 } from "lucide-react";
 import { format, parseISO, isPast, differenceInDays } from "date-fns";
 import { useToast } from "@/components/ui/toast";
 import CarePlanEditor from "@/components/careplan/CarePlanEditor";
 import CarePlanViewer from "@/components/careplan/CarePlanViewer";
-import AICarePlanGenerator from "@/components/careplan/AICarePlanGenerator";
-import AICarePlanAssistant from "@/components/careplan/AICarePlanAssistant";
-import { AssessmentToCarePlanWorkflow } from "@/components/workflow/AssessmentToCarePlanWorkflow";
 
 export default function CarePlanManager({ client }) {
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [showEditor, setShowEditor] = useState(false);
-  const [showAIGenerator, setShowAIGenerator] = useState(false);
-  const [showAIAssistant, setShowAIAssistant] = useState(false);
-  const [assistantMode, setAssistantMode] = useState(null);
   const [editingPlan, setEditingPlan] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -47,45 +41,7 @@ export default function CarePlanManager({ client }) {
     },
   });
 
-  // Fetch assessment documents from visits and shifts
-  const { data: assessmentDocs = [] } = useQuery({
-    queryKey: ['assessment-docs', client.id],
-    queryFn: async () => {
-      const docs = [];
-      
-      // Get from visits (domiciliary care)
-      try {
-        const visits = await base44.entities.Visit.filter({ client_id: client.id });
-        (visits || []).forEach(v => {
-          if (v.assessment_documents?.length) {
-            docs.push(...v.assessment_documents.map(d => ({
-              ...d,
-              source: 'visit',
-              source_id: v.id,
-              visit_type: v.visit_type
-            })));
-          }
-        });
-      } catch (e) { console.log("No visits found"); }
-      
-      // Get from shifts (residential, supported living, day centre)
-      try {
-        const shifts = await base44.entities.Shift.filter({ client_id: client.id });
-        (shifts || []).forEach(s => {
-          if (s.assessment_documents?.length) {
-            docs.push(...s.assessment_documents.map(d => ({
-              ...d,
-              source: 'shift',
-              source_id: s.id,
-              shift_type: s.shift_type
-            })));
-          }
-        });
-      } catch (e) { console.log("No shifts found"); }
-      
-      return docs;
-    },
-  });
+
 
   // Fetch actual care tasks for accurate counts
   const { data: careTasks = [] } = useQuery({
@@ -139,35 +95,7 @@ export default function CarePlanManager({ client }) {
     }
   };
 
-  const handleApproveCarePlan = async (planId) => {
-    if (confirm("Approve this care plan? This will create all medication, task, and risk records.")) {
-      try {
-        const result = await AssessmentToCarePlanWorkflow.approveCarePlan(planId);
-        if (result.success) {
-          // Mark as approved
-          await base44.entities.CarePlan.update(planId, { 
-            status: 'active',
-            approval_completed: true,
-            approved_date: new Date().toISOString().split('T')[0]
-          });
-          
-          queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-          queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
-          queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
-          queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
-          toast.success(
-            'Care plan approved',
-            `Created ${result.results.tasks.length} tasks, ${result.results.medications.length} medications, ${result.results.risks.length} risks`
-          );
-        } else {
-          toast.error('Approval failed', result.error);
-        }
-      } catch (error) {
-        console.error("Approval error:", error);
-        toast.error('Approval failed', error.message || 'Unknown error');
-      }
-    }
-  };
+
 
   const getReviewStatus = (reviewDate) => {
     if (!reviewDate) return null;
@@ -204,60 +132,17 @@ export default function CarePlanManager({ client }) {
           <Heart className="w-5 h-5 text-blue-600" />
           Care Plans
         </h2>
-        <div className="flex gap-2">
-          <Button 
-            size="sm" 
-            variant="outline"
-            className="border-purple-300 text-purple-700 hover:bg-purple-50"
-            onClick={() => { setAssistantMode('create'); setShowAIAssistant(true); }}
-          >
-            <Sparkles className="w-4 h-4 mr-2" />
-            AI Generate Care Plan
-          </Button>
-          {activePlan && (
-            <Button 
-              size="sm" 
-              variant="outline"
-              className="border-blue-300 text-blue-700 hover:bg-blue-50"
-              onClick={() => { setAssistantMode('adjust'); setShowAIAssistant(true); }}
-            >
-              <Sparkles className="w-4 h-4 mr-2" />
-              AI Suggest Adjustments
-            </Button>
-          )}
-          <Button 
-            size="sm" 
-            className="bg-blue-600 hover:bg-blue-700"
-            onClick={() => { setEditingPlan(null); setShowEditor(true); }}
-          >
-            <Plus className="w-4 h-4 mr-2" />
-            Create Care Plan
-          </Button>
-        </div>
+        <Button 
+          size="sm" 
+          className="bg-blue-600 hover:bg-blue-700"
+          onClick={() => { setEditingPlan(null); setShowEditor(true); }}
+        >
+          <Plus className="w-4 h-4 mr-2" />
+          Create Care Plan
+        </Button>
       </div>
 
-      {/* Assessment Documents Available */}
-      {assessmentDocs.length > 0 && (
-        <Card className="mb-4 border-purple-200 bg-purple-50">
-          <CardContent className="p-3 flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <FileText className="w-4 h-4 text-purple-600" />
-              <span className="text-sm text-purple-800">
-                <strong>{assessmentDocs.length}</strong> assessment document(s) available from visits
-              </span>
-            </div>
-            <Button 
-              size="sm" 
-              variant="ghost"
-              className="text-purple-700"
-              onClick={() => setShowAIGenerator(true)}
-            >
-              <Sparkles className="w-4 h-4 mr-1" />
-              Generate Care Plan
-            </Button>
-          </CardContent>
-        </Card>
-      )}
+
 
       {/* Active Plan Summary */}
       {activePlan && (
@@ -358,12 +243,6 @@ export default function CarePlanManager({ client }) {
                         <Heart className="w-5 h-5 text-blue-600" />
                         <h3 className="font-semibold capitalize">{plan.plan_type} Care Plan</h3>
                         <Badge className={statusColors[plan.status]}>{plan.status}</Badge>
-                        {plan.generated_from_assessment && (
-                          <Badge className="bg-purple-100 text-purple-700">
-                            <Sparkles className="w-3 h-3 mr-1" />
-                            AI Generated
-                          </Badge>
-                        )}
                         {reviewStatus && (
                           <Badge className={reviewStatus.color}>{reviewStatus.label}</Badge>
                         )}
@@ -395,17 +274,6 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
-                      {((plan.generated_from_assessment === true || (plan.generated_from_assessment !== false && plan.assessed_by?.includes('AI Generated'))) && plan.approval_completed !== true) && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleApproveCarePlan(plan.id)}
-                          className="bg-green-600 hover:bg-green-700"
-                          title="Create care tasks, medications, and risk assessments from this plan"
-                        >
-                          <AlertTriangle className="w-4 h-4 mr-1" />
-                          Approve & Create Records
-                        </Button>
-                      )}
                       <Button 
                         variant="outline" 
                         size="sm" 
@@ -445,28 +313,6 @@ export default function CarePlanManager({ client }) {
           carePlan={editingPlan}
           client={client}
           onClose={() => { setShowEditor(false); setEditingPlan(null); }}
-        />
-      )}
-
-      {showAIGenerator && (
-        <AICarePlanGenerator
-          client={client}
-          assessmentDocuments={assessmentDocs}
-          onClose={() => setShowAIGenerator(false)}
-          onSuccess={() => setShowAIGenerator(false)}
-        />
-      )}
-
-      {showAIAssistant && (
-        <AICarePlanAssistant
-          client={client}
-          existingCarePlan={assistantMode === 'adjust' ? activePlan : null}
-          onClose={() => { setShowAIAssistant(false); setAssistantMode(null); }}
-          onSuccess={() => {
-            setShowAIAssistant(false);
-            setAssistantMode(null);
-            queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-          }}
         />
       )}
     </div>
