@@ -7,12 +7,13 @@ import { Badge } from "@/components/ui/badge";
 import { Plus, Sparkles, ListChecks, AlertCircle, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
-import TaskDialog from "./TaskDialog";
 import TaskCard from "./TaskCard";
 import GenerateTasksDialog from "./GenerateTasksDialog";
+import { useNavigate } from "react-router-dom";
+import { createPageUrl } from "@/utils";
 
 export default function TaskManager({ client }) {
-  const [showDialog, setShowDialog] = useState(false);
+  const navigate = useNavigate();
   const [editingTask, setEditingTask] = useState(null);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
@@ -103,10 +104,7 @@ export default function TaskManager({ client }) {
                 AI Generate from Care Needs
               </Button>
               <Button
-                onClick={() => {
-                  setEditingTask(null);
-                  setShowDialog(true);
-                }}
+                onClick={() => navigate(createPageUrl("AddCareTask"))}
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -153,7 +151,7 @@ export default function TaskManager({ client }) {
                   <Sparkles className="w-4 h-4 mr-2" />
                   Generate from Care Needs
                 </Button>
-                <Button onClick={() => setShowDialog(true)}>
+                <Button onClick={() => navigate(createPageUrl("AddCareTask"))}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Manually
                 </Button>
@@ -187,18 +185,6 @@ export default function TaskManager({ client }) {
           )}
         </CardContent>
       </Card>
-
-      {showDialog && (
-        <TaskDialog
-          task={editingTask}
-          client={client}
-          qualifications={qualifications}
-          onClose={() => {
-            setShowDialog(false);
-            setEditingTask(null);
-          }}
-        />
-      )}
 
       {showGenerateDialog && (
         <GenerateTasksDialog
