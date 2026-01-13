@@ -288,118 +288,118 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      try {
-        const currentUser = await base44.auth.me().catch(() => null);
-        
-        const carePlanData = {
-          client_id: client.id,
-          care_setting: careSetting,
-          plan_type: "initial",
-          assessment_date: format(new Date(), "yyyy-MM-dd"),
-          review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
-          assessed_by: currentUser?.full_name || "AI Generated (Requires Review)",
-          status: "draft",
-          version: 1,
-          generated_from_assessment: true,
-          approval_completed: false,
-          personal_details: generatedPlan.personal_details || {},
-          physical_health: generatedPlan.physical_health || {},
-          mental_health: generatedPlan.mental_health || {},
-          care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
-            objective: String(obj.objective || ''),
-            outcome_measures: String(obj.outcome_measures || ''),
-            target_date: obj.target_date || format(addMonths(new Date(), 3), "yyyy-MM-dd"),
-            status: obj.status || "not_started",
-            review_notes: ''
+      const currentUser = await base44.auth.me().catch(() => null);
+      
+      // Store DoLS and DNACPR data separately - they'll be created on approval
+      const dolsData = generatedPlan.dols;
+      const dnacprData = generatedPlan.dnacpr;
+      
+      const carePlanData = {
+        client_id: client.id,
+        care_setting: careSetting,
+        plan_type: "initial",
+        assessment_date: format(new Date(), "yyyy-MM-dd"),
+        review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
+        assessed_by: currentUser?.full_name || "AI Generated",
+        status: "draft",
+        version: 1,
+        personal_details: generatedPlan.personal_details || {},
+        physical_health: generatedPlan.physical_health || {},
+        mental_health: generatedPlan.mental_health || {},
+        care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
+          objective: String(obj.objective || ''),
+          outcome_measures: String(obj.outcome_measures || ''),
+          target_date: obj.target_date || format(addMonths(new Date(), 3), "yyyy-MM-dd"),
+          status: obj.status || "not_started",
+          review_notes: ''
+        })),
+        care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
+          task_id: `task_${Date.now()}_${idx}`,
+          category: String(task.category || 'personal_care'),
+          task_name: String(task.task_name || task.description || 'Care Task'),
+          description: String(task.description || task.task_name || ''),
+          frequency: String(task.frequency || 'daily'),
+          preferred_time: String(task.preferred_time || ''),
+          duration_minutes: Number(task.duration_minutes || 30),
+          special_instructions: String(task.special_instructions || ''),
+          requires_two_carers: Boolean(task.requires_two_carers),
+          is_active: true,
+          linked_shift_types: []
+        })),
+        medication_management: {
+          self_administers: Boolean(generatedPlan.medication_management?.self_administers),
+          administration_support: generatedPlan.medication_management?.administration_support || 'assistance',
+          medication_storage: generatedPlan.medication_management?.medication_storage || '',
+          pharmacy_details: generatedPlan.medication_management?.pharmacy_details || '',
+          gp_details: generatedPlan.medication_management?.gp_details || '',
+          medications: (generatedPlan.medication_management?.medications || []).map(med => ({
+            name: String(med.name || ''),
+            dose: String(med.dose || ''),
+            frequency: String(med.frequency || ''),
+            route: String(med.route || 'oral'),
+            time_of_day: Array.isArray(med.time_of_day) ? med.time_of_day : [],
+            purpose: String(med.purpose || ''),
+            special_instructions: String(med.special_instructions || ''),
+            side_effects_to_monitor: String(med.side_effects_to_monitor || ''),
+            is_prn: Boolean(med.is_prn),
+            prn_instructions: String(med.prn_instructions || '')
           })),
-          care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
-            task_id: `task_${Date.now()}_${idx}`,
-            category: String(task.category || 'personal_care'),
-            task_name: String(task.task_name || task.description || 'Care Task'),
-            description: String(task.description || task.task_name || ''),
-            frequency: String(task.frequency || 'daily'),
-            preferred_time: String(task.preferred_time || ''),
-            duration_minutes: Number(task.duration_minutes || 30),
-            special_instructions: String(task.special_instructions || ''),
-            requires_two_carers: Boolean(task.requires_two_carers),
-            is_active: true,
-            linked_shift_types: []
-          })),
-          medication_management: {
-            self_administers: Boolean(generatedPlan.medication_management?.self_administers),
-            administration_support: generatedPlan.medication_management?.administration_support || 'assistance',
-            medication_storage: generatedPlan.medication_management?.medication_storage || '',
-            pharmacy_details: generatedPlan.medication_management?.pharmacy_details || '',
-            gp_details: generatedPlan.medication_management?.gp_details || '',
-            medications: (generatedPlan.medication_management?.medications || []).map(med => ({
-              name: String(med.name || ''),
-              dose: String(med.dose || ''),
-              frequency: String(med.frequency || ''),
-              route: String(med.route || 'oral'),
-              time_of_day: Array.isArray(med.time_of_day) ? med.time_of_day : [],
-              purpose: String(med.purpose || ''),
-              special_instructions: String(med.special_instructions || ''),
-              side_effects_to_monitor: String(med.side_effects_to_monitor || ''),
-              is_prn: Boolean(med.is_prn),
-              prn_instructions: String(med.prn_instructions || '')
-            })),
-            allergies_sensitivities: generatedPlan.medication_management?.allergies_sensitivities || '',
-            notes: ''
-          },
-          daily_routine: generatedPlan.daily_routine || {
-            morning: '',
-            afternoon: '',
-            evening: '',
-            night: ''
-          },
-          preferences: {
-            likes: Array.isArray(generatedPlan.preferences?.likes) ? generatedPlan.preferences.likes : [],
-            dislikes: Array.isArray(generatedPlan.preferences?.dislikes) ? generatedPlan.preferences.dislikes : [],
-            hobbies: Array.isArray(generatedPlan.preferences?.hobbies) ? generatedPlan.preferences.hobbies : [],
-            social_preferences: generatedPlan.preferences?.social_preferences || '',
-            food_preferences: generatedPlan.preferences?.food_preferences || '',
-            communication_preferences: generatedPlan.preferences?.communication_preferences || '',
-            personal_care_preferences: generatedPlan.preferences?.personal_care_preferences || ''
-          },
-          risk_factors: (generatedPlan.risk_factors || []).map(risk => ({
-            risk: String(risk.risk || ''),
-            likelihood: String(risk.likelihood || 'medium'),
-            impact: String(risk.impact || 'medium'),
-            control_measures: String(risk.control_measures || '')
-          })),
-          consent: {
-            capacity_to_consent: true,
-            consent_given_by: '',
-            relationship: '',
-            restrictions: ''
-          },
-          emergency_info: {
-            hospital_preference: generatedPlan.emergency_info?.hospital_preference || '',
-            dnacpr_in_place: Boolean(generatedPlan.dnacpr?.in_place),
-            advance_directive: generatedPlan.emergency_info?.advance_directive || '',
-            emergency_protocol: generatedPlan.emergency_info?.emergency_protocol || ''
-          }
-        };
+          allergies_sensitivities: generatedPlan.medication_management?.allergies_sensitivities || '',
+          notes: ''
+        },
+        daily_routine: generatedPlan.daily_routine || {},
+        preferences: {
+          likes: Array.isArray(generatedPlan.preferences?.likes) ? generatedPlan.preferences.likes : [],
+          dislikes: Array.isArray(generatedPlan.preferences?.dislikes) ? generatedPlan.preferences.dislikes : [],
+          hobbies: Array.isArray(generatedPlan.preferences?.hobbies) ? generatedPlan.preferences.hobbies : [],
+          social_preferences: generatedPlan.preferences?.social_preferences || '',
+          food_preferences: generatedPlan.preferences?.food_preferences || '',
+          communication_preferences: generatedPlan.preferences?.communication_preferences || '',
+          personal_care_preferences: generatedPlan.preferences?.personal_care_preferences || ''
+        },
+        risk_factors: (generatedPlan.risk_factors || []).map(risk => ({
+          risk: String(risk.risk || ''),
+          likelihood: String(risk.likelihood || 'medium'),
+          impact: String(risk.impact || 'medium'),
+          control_measures: String(risk.control_measures || '')
+        })),
+        consent: {
+          capacity_to_consent: true,
+          consent_given_by: '',
+          relationship: '',
+          restrictions: ''
+        },
+        emergency_info: {
+          hospital_preference: generatedPlan.emergency_info?.hospital_preference || '',
+          dnacpr_in_place: Boolean(dnacprData?.in_place),
+          advance_directive: generatedPlan.emergency_info?.advance_directive || '',
+          emergency_protocol: generatedPlan.emergency_info?.emergency_protocol || ''
+        }
+      };
 
-        console.log("Saving care plan with data:", carePlanData);
-        const result = await base44.entities.CarePlan.create(carePlanData);
-        console.log("Care plan saved successfully:", result);
-        return result;
-      } catch (error) {
-        console.error("Detailed save error:", error);
-        throw error;
+      const result = await base44.entities.CarePlan.create(carePlanData);
+      
+      // Store DoLS/DNACPR metadata temporarily on the care plan for approval workflow
+      if (dolsData || dnacprData) {
+        await base44.entities.CarePlan.update(result.id, {
+          last_reviewed_by: JSON.stringify({ 
+            dols_pending: dolsData, 
+            dnacpr_pending: dnacprData 
+          })
+        });
       }
+      
+      return result;
     },
     onSuccess: (newPlan) => {
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Care Plan Created", "AI-generated care plan saved as draft. Please review and update.");
+      toast.success("Care Plan Created", "Draft saved successfully. Click 'Activate Care Plan & Workflows' to create tasks and related records.");
       onSuccess?.(newPlan);
       onClose();
     },
     onError: (error) => {
-      console.error("Save mutation error:", error);
-      const errorMsg = error?.message || error?.toString() || "Unknown error";
-      toast.error("Save Failed", errorMsg);
+      console.error("Save error:", error);
+      toast.error("Save Failed", error?.message || "Failed to save care plan");
     }
   });
 
