@@ -481,40 +481,55 @@ export const approveCarePlan = async (carePlanId) => {
     }
 
     // 4. Create DoLS record if applicable
-    if (carePlan.dols_info?.applicable) {
-      const dolsRecord = await base44.entities.DoLS.create({
-        client_id: carePlan.client_id,
-        dols_status: mapDoLSStatus(carePlan.dols_info.status),
-        authorisation_type: 'standard',
-        authorisation_start_date: carePlan.dols_info.authorisation_start || null,
-        authorisation_end_date: carePlan.dols_info.authorisation_end || null,
-        supervisory_body: carePlan.dols_info.supervisory_body || '',
-        case_reference: carePlan.dols_info.case_reference || '',
-        reason_for_dols: carePlan.dols_info.reason || '',
-        restrictions_in_place: carePlan.dols_info.restrictions || [],
-        care_plan_updated: true,
-        capacity_assessment_completed: true
-      });
-      results.dols = dolsRecord;
+    if (dolsData?.applicable) {
+      try {
+        const dolsRecord = await base44.entities.DoLS.create({
+          client_id: carePlan.client_id,
+          dols_status: mapDoLSStatus(dolsData.status),
+          authorisation_type: 'standard',
+          authorisation_start_date: dolsData.authorisation_start || null,
+          authorisation_end_date: dolsData.authorisation_end || null,
+          supervisory_body: dolsData.supervisory_body || '',
+          case_reference: dolsData.case_reference || '',
+          reason_for_dols: dolsData.reason || '',
+          restrictions_in_place: dolsData.restrictions || [],
+          care_plan_updated: true,
+          capacity_assessment_completed: true
+        });
+        results.dols = dolsRecord;
+      } catch (e) {
+        console.error('DoLS creation error:', e);
+      }
     }
 
     // 5. Create DNACPR record if in place
-    if (carePlan.dnacpr_info?.in_place) {
-      const dnacprRecord = await base44.entities.DNACPR.create({
-        client_id: carePlan.client_id,
-        status: 'active',
-        decision_date: carePlan.dnacpr_info.decision_date || new Date().toISOString().split('T')[0],
-        review_date: calculateReviewDate(365), // Annual review
-        decision_made_by: carePlan.dnacpr_info.decision_maker || '',
-        decision_maker_role: carePlan.dnacpr_info.decision_maker_role || '',
-        clinical_reasons: carePlan.dnacpr_info.clinical_reasons || '',
-        mental_capacity: carePlan.dnacpr_info.mental_capacity || 'has_capacity',
-        patient_involvement: carePlan.dnacpr_info.patient_involvement || 'patient_has_capacity_and_agrees',
-        family_involved: carePlan.dnacpr_info.family_involved || false,
-        care_plan_updated: true
-      });
-      results.dnacpr = dnacprRecord;
+    if (dnacprData?.in_place) {
+      try {
+        const dnacprRecord = await base44.entities.DNACPR.create({
+          client_id: carePlan.client_id,
+          status: 'active',
+          decision_date: dnacprData.decision_date || new Date().toISOString().split('T')[0],
+          review_date: calculateReviewDate(365),
+          decision_made_by: dnacprData.decision_maker || '',
+          decision_maker_role: dnacprData.decision_maker_role || '',
+          clinical_reasons: dnacprData.clinical_reasons || '',
+          mental_capacity: dnacprData.mental_capacity || 'has_capacity',
+          patient_involvement: dnacprData.patient_involvement || 'patient_has_capacity_and_agrees',
+          family_involved: dnacprData.family_involved || false,
+          care_plan_updated: true
+        });
+        results.dnacpr = dnacprRecord;
+      } catch (e) {
+        console.error('DNACPR creation error:', e);
+      }
     }
+
+    // Update status to active after all workflows complete
+    await base44.entities.CarePlan.update(carePlanId, { 
+      status: 'active',
+      last_reviewed_date: new Date().toISOString().split('T')[0],
+      last_reviewed_by: ''
+    });
 
     return { success: true, results };
   } catch (error) {
