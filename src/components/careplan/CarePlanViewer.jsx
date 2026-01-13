@@ -47,6 +47,8 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
   const printRef = React.useRef();
   const [printing, setPrinting] = React.useState(false);
   const [viewMode, setViewMode] = React.useState('standard'); // 'standard' or 'printable'
+  const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
@@ -71,6 +73,36 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
 
   const handlePrint = () => {
     window.print();
+  };
+
+  const handleApproveCarePlan = async () => {
+    if (confirm("Approve this care plan? This will create all medication, task, and risk records.")) {
+      try {
+        const result = await AssessmentToCarePlanWorkflow.approveCarePlan(carePlan.id);
+        if (result.success) {
+          await base44.entities.CarePlan.update(carePlan.id, { 
+            status: 'active',
+            approval_completed: true,
+            approved_date: new Date().toISOString().split('T')[0]
+          });
+          
+          queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+          queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
+          queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
+          toast.success(
+            'Care plan approved',
+            `Created ${result.results.tasks.length} tasks, ${result.results.medications.length} medications, ${result.results.risks.length} risks`
+          );
+          onBack(); // Go back to list view
+        } else {
+          toast.error('Approval failed', result.error);
+        }
+      } catch (error) {
+        console.error("Approval error:", error);
+        toast.error('Approval failed', error.message || 'Unknown error');
+      }
+    }
   };
 
   const handleExportPDF = async () => {
@@ -124,6 +156,15 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
           Back to Care Plans
         </Button>
         <div className="flex gap-2">
+          {carePlan.generated_from_assessment && !carePlan.approval_completed && (
+            <Button 
+              onClick={handleApproveCarePlan}
+              className="bg-green-600 hover:bg-green-700"
+            >
+              <CheckCircle className="w-4 h-4 mr-2" />
+              Activate Care Plan & Workflows
+            </Button>
+          )}
           <div className="flex gap-1 mr-2">
             <Button
               variant={viewMode === 'standard' ? 'default' : 'outline'}
