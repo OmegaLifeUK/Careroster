@@ -72,22 +72,25 @@ export default function AICarePlanApproval({ carePlan, client, onClose, onApprov
       if (sectionStatus.interventions === 'accepted' || sectionStatus.interventions === 'edited') {
         for (const intervention of pendingData.interventions || []) {
           try {
+            const taskType = mapNeedAreaToTaskType(intervention.need_area);
             const created = await base44.entities.CareTask.create({
               client_id: client.id,
               care_plan_id: carePlan.id,
               task_title: intervention.need_area || intervention.support_required || 'Care Task',
               task_description: intervention.support_required || '',
-              task_type: mapNeedAreaToTaskType(intervention.need_area),
-              task_category: 'personal_care',
+              task_type: taskType,
+              task_category: taskType,
               priority_level: 'medium',
               frequency: mapFrequencyToEnum(intervention.frequency),
               scheduled_date: new Date().toISOString().split('T')[0],
+              scheduled_time: '',
               duration_estimate_minutes: 30,
               location: 'home'
             });
             results.tasks.push(created);
           } catch (err) {
             console.error('Task creation error:', err);
+            console.error('Failed intervention data:', intervention);
           }
         }
       }
