@@ -409,13 +409,14 @@ export const approveCarePlan = async (carePlanId) => {
 
     // 1. Create care tasks
     for (const task of carePlan.care_tasks || []) {
+      const taskCategory = task.category || 'personal_care';
       const created = await base44.entities.CareTask.create({
         client_id: carePlan.client_id,
         care_plan_id: carePlanId,
-        task_title: task.task_name || task.task_title || 'Care Task',
-        task_description: task.description || '',
-        task_type: mapTaskTypeToEnum(task.category),
-        task_category: task.category || 'other',
+        task_title: task.task_name || task.task_title || task.description || 'Care Task',
+        task_description: task.description || task.task_name || '',
+        task_type: mapTaskTypeToEnum(taskCategory),
+        task_category: taskCategory,
         priority_level: 'medium',
         frequency: mapFrequencyToEnum(task.frequency),
         scheduled_date: new Date().toISOString().split('T')[0],
