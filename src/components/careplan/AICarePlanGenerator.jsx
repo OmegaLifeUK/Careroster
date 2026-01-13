@@ -290,45 +290,33 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
     mutationFn: async () => {
       const currentUser = await base44.auth.me().catch(() => null);
       
-      console.log("=== STARTING CARE PLAN SAVE ===");
-      console.log("Generated plan data:", generatedPlan);
-      
-      const carePlanData = {
+      // Step 1: Save minimal required fields only
+      const minimalData = {
         client_id: client.id,
         care_setting: careSetting,
-        plan_type: "initial",
         assessment_date: format(new Date(), "yyyy-MM-dd"),
-        review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
-        assessed_by: currentUser?.full_name || "AI Generated",
-        status: "draft",
-        version: 1
+        assessed_by: currentUser?.full_name || "AI Generated"
       };
-
-      // Add optional nested objects only if they have data
-      if (generatedPlan.personal_details) {
-        carePlanData.personal_details = generatedPlan.personal_details;
-      }
       
-      if (generatedPlan.physical_health) {
-        carePlanData.physical_health = generatedPlan.physical_health;
-      }
+      const carePlan = await base44.entities.CarePlan.create(minimalData);
       
-      if (generatedPlan.mental_health) {
-        carePlanData.mental_health = generatedPlan.mental_health;
-      }
-      
-      if (generatedPlan.care_objectives?.length) {
-        carePlanData.care_objectives = generatedPlan.care_objectives.map(obj => ({
+      // Step 2: Update with all generated content
+      const updateData = {
+        plan_type: "initial",
+        review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
+        status: "draft",
+        version: 1,
+        personal_details: generatedPlan.personal_details || {},
+        physical_health: generatedPlan.physical_health || {},
+        mental_health: generatedPlan.mental_health || {},
+        care_objectives: (generatedPlan.care_objectives || []).map(obj => ({
           objective: String(obj.objective || ''),
           outcome_measures: String(obj.outcome_measures || ''),
           target_date: obj.target_date || format(addMonths(new Date(), 3), "yyyy-MM-dd"),
           status: obj.status || "not_started",
           review_notes: ''
-        }));
-      }
-      
-      if (generatedPlan.care_tasks?.length) {
-        carePlanData.care_tasks = generatedPlan.care_tasks.map((task, idx) => ({
+        })),
+        care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
           task_id: `task_${Date.now()}_${idx}`,
           category: String(task.category || 'personal_care'),
           task_name: String(task.task_name || task.description || 'Care Task'),
@@ -340,17 +328,14 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
           requires_two_carers: Boolean(task.requires_two_carers),
           is_active: true,
           linked_shift_types: []
-        }));
-      }
-      
-      if (generatedPlan.medication_management) {
-        carePlanData.medication_management = {
-          self_administers: Boolean(generatedPlan.medication_management.self_administers),
-          administration_support: generatedPlan.medication_management.administration_support || 'assistance',
-          medication_storage: generatedPlan.medication_management.medication_storage || '',
-          pharmacy_details: generatedPlan.medication_management.pharmacy_details || '',
-          gp_details: generatedPlan.medication_management.gp_details || '',
-          medications: (generatedPlan.medication_management.medications || []).map(med => ({
+        })),
+        medication_management: {
+          self_administers: Boolean(generatedPlan.medication_management?.self_administers),
+          administration_support: generatedPlan.medication_management?.administration_support || 'assistance',
+          medication_storage: generatedPlan.medication_management?.medication_storage || '',
+          pharmacy_details: generatedPlan.medication_management?.pharmacy_details || '',
+          gp_details: generatedPlan.medication_management?.gp_details || '',
+          medications: (generatedPlan.medication_management?.medications || []).map(med => ({
             name: String(med.name || ''),
             dose: String(med.dose || ''),
             frequency: String(med.frequency || ''),
@@ -362,84 +347,55 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
             is_prn: Boolean(med.is_prn),
             prn_instructions: String(med.prn_instructions || '')
           })),
-          allergies_sensitivities: generatedPlan.medication_management.allergies_sensitivities || '',
+          allergies_sensitivities: generatedPlan.medication_management?.allergies_sensitivities || '',
           notes: ''
-        };
-      }
-      
-      if (generatedPlan.daily_routine) {
-        carePlanData.daily_routine = generatedPlan.daily_routine;
-      }
-      
-      if (generatedPlan.preferences) {
-        carePlanData.preferences = {
-          likes: Array.isArray(generatedPlan.preferences.likes) ? generatedPlan.preferences.likes : [],
-          dislikes: Array.isArray(generatedPlan.preferences.dislikes) ? generatedPlan.preferences.dislikes : [],
-          hobbies: Array.isArray(generatedPlan.preferences.hobbies) ? generatedPlan.preferences.hobbies : [],
-          social_preferences: generatedPlan.preferences.social_preferences || '',
-          food_preferences: generatedPlan.preferences.food_preferences || '',
-          communication_preferences: generatedPlan.preferences.communication_preferences || '',
-          personal_care_preferences: generatedPlan.preferences.personal_care_preferences || ''
-        };
-      }
-      
-      if (generatedPlan.risk_factors?.length) {
-        carePlanData.risk_factors = generatedPlan.risk_factors.map(risk => ({
+        },
+        daily_routine: generatedPlan.daily_routine || {},
+        preferences: {
+          likes: Array.isArray(generatedPlan.preferences?.likes) ? generatedPlan.preferences.likes : [],
+          dislikes: Array.isArray(generatedPlan.preferences?.dislikes) ? generatedPlan.preferences.dislikes : [],
+          hobbies: Array.isArray(generatedPlan.preferences?.hobbies) ? generatedPlan.preferences.hobbies : [],
+          social_preferences: generatedPlan.preferences?.social_preferences || '',
+          food_preferences: generatedPlan.preferences?.food_preferences || '',
+          communication_preferences: generatedPlan.preferences?.communication_preferences || '',
+          personal_care_preferences: generatedPlan.preferences?.personal_care_preferences || ''
+        },
+        risk_factors: (generatedPlan.risk_factors || []).map(risk => ({
           risk: String(risk.risk || ''),
           likelihood: String(risk.likelihood || 'medium'),
           impact: String(risk.impact || 'medium'),
           control_measures: String(risk.control_measures || '')
-        }));
-      }
-      
-      carePlanData.consent = {
-        capacity_to_consent: true,
-        consent_given_by: '',
-        relationship: '',
-        restrictions: ''
+        })),
+        consent: {
+          capacity_to_consent: true,
+          consent_given_by: '',
+          relationship: '',
+          restrictions: ''
+        },
+        emergency_info: {
+          hospital_preference: generatedPlan.emergency_info?.hospital_preference || '',
+          dnacpr_in_place: Boolean(generatedPlan.dnacpr?.in_place),
+          advance_directive: generatedPlan.emergency_info?.advance_directive || '',
+          emergency_protocol: generatedPlan.emergency_info?.emergency_protocol || ''
+        },
+        last_reviewed_by: JSON.stringify({ 
+          dols_pending: generatedPlan.dols, 
+          dnacpr_pending: generatedPlan.dnacpr 
+        })
       };
       
-      carePlanData.emergency_info = {
-        hospital_preference: generatedPlan.emergency_info?.hospital_preference || '',
-        dnacpr_in_place: Boolean(generatedPlan.dnacpr?.in_place),
-        advance_directive: generatedPlan.emergency_info?.advance_directive || '',
-        emergency_protocol: generatedPlan.emergency_info?.emergency_protocol || ''
-      };
-
-      console.log("Final care plan data to save:", JSON.stringify(carePlanData, null, 2));
-      
-      try {
-        const result = await base44.entities.CarePlan.create(carePlanData);
-        console.log("✅ Care plan saved successfully:", result);
-        
-        // Store DoLS/DNACPR for approval workflow
-        if (generatedPlan.dols || generatedPlan.dnacpr) {
-          await base44.entities.CarePlan.update(result.id, {
-            last_reviewed_by: JSON.stringify({ 
-              dols_pending: generatedPlan.dols, 
-              dnacpr_pending: generatedPlan.dnacpr 
-            })
-          });
-        }
-        
-        return result;
-      } catch (saveError) {
-        console.error("❌ Save error details:", saveError);
-        console.error("Error message:", saveError?.message);
-        console.error("Error stack:", saveError?.stack);
-        throw new Error(saveError?.message || "Unknown save error - check console");
-      }
+      await base44.entities.CarePlan.update(carePlan.id, updateData);
+      return { ...carePlan, ...updateData };
     },
     onSuccess: (newPlan) => {
       queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Success!", "Care plan saved as draft. Click 'Activate Care Plan & Workflows' to generate tasks.");
+      toast.success("Success!", "Care plan saved. Click 'Activate Care Plan & Workflows' to generate tasks.");
       onSuccess?.(newPlan);
       onClose();
     },
     onError: (error) => {
-      console.error("❌ Mutation error:", error);
-      alert(`SAVE FAILED: ${error?.message || 'Unknown error'}\n\nCheck browser console (F12) for details.`);
-      toast.error("Save Failed", error?.message || "Check browser console for details");
+      console.error("Save error:", error);
+      toast.error("Save Failed", error?.message || "Failed to save care plan");
     }
   });
 
