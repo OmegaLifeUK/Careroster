@@ -404,6 +404,17 @@ export default function CarePlanManager({ client }) {
                           Approve & Create Records
                         </Button>
                       )}
+                      {plan.status === 'active' && plan.generated_from_assessment && !plan.approval_completed && (
+                        <Button 
+                          size="sm" 
+                          onClick={() => handleApproveCarePlan(plan.id)}
+                          className="bg-amber-600 hover:bg-amber-700"
+                          title="This AI-generated plan was activated but records were never created. Click to create tasks, medications, and risks."
+                        >
+                          <AlertTriangle className="w-4 h-4 mr-1" />
+                          Create Missing Records
+                        </Button>
+                      )}
                       <Button 
                         variant="outline" 
                         size="sm" 
