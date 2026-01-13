@@ -341,6 +341,7 @@ export const createDraftCarePlan = async (carePlanData, clientId, assessmentSour
       emergency_info: {},
       version: 1,
       generated_from_assessment: true,
+      approval_completed: false,
       source_assessment_type: assessmentSource.type,
       source_assessment_id: assessmentSource.id,
       dols_info: carePlanData.dols || null,

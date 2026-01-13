@@ -297,6 +297,7 @@ Be thorough but realistic. Include specific, actionable care tasks based on the 
         assessed_by: "AI Generated (Requires Review)",
         status: "draft",
         generated_from_assessment: true,
+        approval_completed: false,
         ...generatedPlan,
         care_tasks: (generatedPlan.care_tasks || []).map((task, idx) => ({
           ...task,

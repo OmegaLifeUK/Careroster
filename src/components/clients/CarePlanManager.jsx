@@ -395,19 +395,15 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
-                      {/* Show approval button for AI-generated plans that haven't been approved */}
-                      {plan.generated_from_assessment && !plan.approval_completed && (
+                      {((plan.generated_from_assessment === true || (plan.generated_from_assessment !== false && plan.assessed_by?.includes('AI Generated'))) && plan.approval_completed !== true) && (
                         <Button 
                           size="sm" 
-                          onClick={() => {
-                            console.log('Approving care plan:', plan.id, plan);
-                            handleApproveCarePlan(plan.id);
-                          }}
-                          className={plan.status === 'draft' ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}
+                          onClick={() => handleApproveCarePlan(plan.id)}
+                          className="bg-green-600 hover:bg-green-700"
                           title="Create care tasks, medications, and risk assessments from this plan"
                         >
                           <AlertTriangle className="w-4 h-4 mr-1" />
-                          {plan.status === 'draft' ? 'Approve & Create Records' : 'Activate Care Plan & Workflows'}
+                          Approve & Create Records
                         </Button>
                       )}
                       <Button 
