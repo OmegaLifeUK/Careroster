@@ -398,14 +398,26 @@ export const approveCarePlan = async (carePlanId) => {
   try {
     const carePlan = await base44.entities.CarePlan.get(carePlanId);
     
-    // Update status to active
-    await base44.entities.CarePlan.update(carePlanId, { status: 'active' });
-
     const results = {
       tasks: [],
       medications: [],
-      risks: []
+      risks: [],
+      dols: null,
+      dnacpr: null
     };
+
+    // Parse stored DoLS/DNACPR data if present
+    let dolsData = null;
+    let dnacprData = null;
+    try {
+      if (carePlan.last_reviewed_by) {
+        const stored = JSON.parse(carePlan.last_reviewed_by);
+        dolsData = stored.dols_pending;
+        dnacprData = stored.dnacpr_pending;
+      }
+    } catch (e) {
+      console.log('No pending DoLS/DNACPR data');
+    }
 
     // 1. Create care tasks
     for (const task of carePlan.care_tasks || []) {
