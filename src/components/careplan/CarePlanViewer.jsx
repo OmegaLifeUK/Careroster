@@ -56,6 +56,17 @@ export default function CarePlanViewer({ carePlan, client, onBack, onEdit }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Debug: Log care plan data
+  React.useEffect(() => {
+    console.log('=== CARE PLAN VIEWER DEBUG ===');
+    console.log('Care Plan ID:', carePlan.id);
+    console.log('generated_from_assessment:', carePlan.generated_from_assessment);
+    console.log('approval_completed:', carePlan.approval_completed);
+    console.log('status:', carePlan.status);
+    console.log('Should show button:', carePlan.generated_from_assessment && !carePlan.approval_completed);
+    console.log('Full care plan:', carePlan);
+  }, [carePlan]);
+
   const statusColors = {
     draft: "bg-gray-100 text-gray-800",
     active: "bg-green-100 text-green-800",
