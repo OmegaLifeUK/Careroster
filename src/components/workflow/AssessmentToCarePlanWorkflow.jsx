@@ -417,32 +417,63 @@ export const approveCarePlan = async (carePlanId) => {
       console.log('No pending DoLS/DNACPR data');
     }
 
-    // 1. Create care tasks
-    for (const task of carePlan.care_tasks || []) {
-      if (!task || typeof task !== 'object') continue;
-      
-      const taskTitle = String(task.task_name || task.task_title || task.description || 'Care Task').trim();
-      const taskCategory = String(task.category || 'personal_care').trim();
-      const taskType = mapTaskTypeToEnum(taskCategory);
-      const taskFrequency = mapFrequencyToEnum(String(task.frequency || 'daily').trim());
-      
-      if (!taskTitle || !taskType || !taskCategory || !taskFrequency) {
-        console.warn('Skipping invalid task:', task);
+    // 1. Create care tasks from plan metadata
+    const tasksArray = carePlan.care_tasks || [];
+    console.log('Processing care tasks from plan:', tasksArray);
+
+    for (const task of tasksArray) {
+      if (!task || typeof task !== 'object') {
+        console.warn('Invalid task object, skipping:', task);
         continue;
       }
-      
-      const created = await base44.entities.CareTask.create({
-        client_id: carePlan.client_id,
-        care_plan_id: carePlanId,
-        task_title: taskTitle,
-        task_description: String(task.description || task.task_name || '').trim(),
-        task_type: taskType,
-        task_category: taskCategory,
-        priority_level: 'medium',
-        frequency: taskFrequency,
-        scheduled_date: new Date().toISOString().split('T')[0]
-      });
-      results.tasks.push(created);
+
+      try {
+        // Extract and validate required fields
+        const taskTitle = String(task.task_name || task.description || 'Care Task').trim();
+        const category = String(task.category || 'personal_care').trim().toLowerCase();
+
+        // Map category to valid task_type enum
+        const taskType = mapTaskTypeToEnum(category);
+
+        // Map frequency to valid enum
+        const frequency = String(task.frequency || 'daily').trim().toLowerCase();
+        const taskFrequency = mapFrequencyToEnum(frequency);
+
+        // Validate all required fields are present
+        if (!taskTitle) {
+          console.warn('Task missing title, skipping:', task);
+          continue;
+        }
+
+        console.log('Creating care task:', {
+          title: taskTitle,
+          type: taskType,
+          category: category,
+          frequency: taskFrequency
+        });
+
+        const created = await base44.entities.CareTask.create({
+          client_id: carePlan.client_id,
+          care_plan_id: carePlanId,
+          task_title: taskTitle,
+          task_description: String(task.description || task.task_name || '').trim(),
+          task_type: taskType,
+          task_category: category,
+          priority_level: 'medium',
+          frequency: taskFrequency,
+          scheduled_date: new Date().toISOString().split('T')[0],
+          scheduled_time: task.preferred_time || '',
+          duration_estimate_minutes: Number(task.duration_minutes) || 30,
+          location: 'home'
+        });
+
+        results.tasks.push(created);
+        console.log('Successfully created task:', created.id);
+      } catch (taskError) {
+        console.error('Error creating individual task:', taskError);
+        console.error('Task data was:', task);
+        // Continue with other tasks even if one fails
+      }
     }
 
     // 2. Create MAR sheets
