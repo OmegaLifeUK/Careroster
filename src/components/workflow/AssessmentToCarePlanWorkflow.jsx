@@ -448,28 +448,15 @@ export const approveCarePlan = async (carePlanId) => {
     }
 
     // 3. Create risk assessments
-    const currentUser = await base44.auth.me();
+    const currentUser = await base44.auth.me().catch(() => null);
     for (const risk of carePlan.risk_factors || []) {
+      const riskLevel = calculateRiskLevel(risk.likelihood, risk.impact);
       const created = await base44.entities.RiskAssessment.create({
         client_id: carePlan.client_id,
         assessment_type: categorizeRisk(risk.risk),
         assessment_date: new Date().toISOString().split('T')[0],
         assessed_by: currentUser?.full_name || carePlan.assessed_by || 'System',
-        review_date: calculateReviewDate(90),
-        risk_identified: risk.risk,
-        risk_level: calculateRiskLevel(risk.likelihood, risk.impact),
-        likelihood: mapLikelihood(risk.likelihood),
-        severity: mapSeverity(risk.impact),
-        persons_at_risk: ['Client'],
-        existing_controls: risk.control_measures ? [
-          {
-            control_measure: risk.control_measures,
-            effectiveness: 'effective'
-          }
-        ] : [],
-        residual_risk_level: 'low',
-        monitoring_frequency: 'weekly',
-        status: 'active'
+        risk_level: riskLevel
       });
       results.risks.push(created);
     }
