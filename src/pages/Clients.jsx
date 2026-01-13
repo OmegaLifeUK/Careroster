@@ -16,7 +16,6 @@ import EmergencyContactsManager from "../components/clients/EmergencyContactsMan
 import DocumentManager from "../components/clients/DocumentManager";
 import ClientAlertManager from "../components/clients/ClientAlertManager";
 import AlertBanner from "../components/clients/AlertBanner";
-import AICareplanGenerator from "../components/clients/AICareplanGenerator";
 import CarePlanManager from "../components/clients/CarePlanManager";
 import RiskAssessmentManager from "../components/clients/RiskAssessmentManager";
 import PEEPManager from "../components/clients/PEEPManager";
@@ -43,7 +42,6 @@ export default function Clients() {
   const [editingClient, setEditingClient] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
-  const [showCarePlanGenerator, setShowCarePlanGenerator] = useState(false);
   const [showDocumentImporter, setShowDocumentImporter] = useState(false);
   const [showNewClientImporter, setShowNewClientImporter] = useState(false);
 
@@ -223,13 +221,6 @@ export default function Clients() {
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Import Documents
-              </Button>
-              <Button
-                onClick={() => setShowCarePlanGenerator(true)}
-                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Care Plan
               </Button>
             </div>
           </div>
@@ -518,13 +509,6 @@ export default function Clients() {
 
           {activeTab === "progress" && (
             <ClientProgressReport clientId={selectedClient.id} client={selectedClient} />
-          )}
-
-          {showCarePlanGenerator && (
-            <AICareplanGenerator
-              client={selectedClient}
-              onClose={() => setShowCarePlanGenerator(false)}
-            />
           )}
 
           {showDocumentImporter && (
