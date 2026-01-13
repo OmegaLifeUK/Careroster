@@ -24,12 +24,18 @@ import {
   Printer,
   Activity,
   Brain,
-  Shield
+  Shield,
+  Sparkles,
+  CheckCircle
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 import PrintableCarePlan from "./PrintableCarePlan";
+import { useQueryClient } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
+import { useToast } from "@/components/ui/toast";
+import { AssessmentToCarePlanWorkflow } from "@/components/workflow/AssessmentToCarePlanWorkflow";
 
 const TASK_CATEGORIES = {
   personal_care: "Personal Care",
