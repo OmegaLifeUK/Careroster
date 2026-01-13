@@ -359,7 +359,19 @@ CRITICAL: Every recommendation must cite specific evidence (e.g., "Based on the 
       setStep("review");
     } catch (error) {
       console.error("Analysis error:", error);
-      toast.error("Analysis Failed", "Failed to analyze client data. Please try again.");
+      let errorMessage = "Failed to analyze client data. ";
+      if (error?.message) {
+        if (error.message.includes('timeout')) {
+          errorMessage += "Request took too long. Try again with less data.";
+        } else if (error.message.includes('quota') || error.message.includes('limit')) {
+          errorMessage += "AI service limit reached. Please try again later.";
+        } else {
+          errorMessage += error.message;
+        }
+      } else {
+        errorMessage += "Please try again.";
+      }
+      toast.error("Analysis Failed", errorMessage);
       setStep("configure");
     } finally {
       setIsAnalyzing(false);

@@ -141,18 +141,30 @@ export default function CarePlanManager({ client }) {
 
   const handleApproveCarePlan = async (planId) => {
     if (confirm("Approve this care plan? This will create all medication, task, and risk records.")) {
-      const result = await AssessmentToCarePlanWorkflow.approveCarePlan(planId);
-      if (result.success) {
-        queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-        queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
-        queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
-        queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
-        toast.success(
-          'Care plan approved',
-          `Created ${result.results.tasks.length} tasks, ${result.results.medications.length} medications, ${result.results.risks.length} risks`
-        );
-      } else {
-        toast.error('Approval failed', result.error);
+      try {
+        const result = await AssessmentToCarePlanWorkflow.approveCarePlan(planId);
+        if (result.success) {
+          // Mark as approved
+          await base44.entities.CarePlan.update(planId, { 
+            status: 'active',
+            approval_completed: true,
+            approved_date: new Date().toISOString().split('T')[0]
+          });
+          
+          queryClient.invalidateQueries({ queryKey: ['care-plans'] });
+          queryClient.invalidateQueries({ queryKey: ['care-tasks'] });
+          queryClient.invalidateQueries({ queryKey: ['mar-sheets'] });
+          queryClient.invalidateQueries({ queryKey: ['risk-assessments'] });
+          toast.success(
+            'Care plan approved',
+            `Created ${result.results.tasks.length} tasks, ${result.results.medications.length} medications, ${result.results.risks.length} risks`
+          );
+        } else {
+          toast.error('Approval failed', result.error);
+        }
+      } catch (error) {
+        console.error("Approval error:", error);
+        toast.error('Approval failed', error.message || 'Unknown error');
       }
     }
   };
@@ -383,7 +395,7 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
-                      {plan.status === 'draft' && plan.generated_from_assessment && (
+                      {plan.generated_from_assessment && !plan.approval_completed && (
                         <Button 
                           size="sm" 
                           onClick={() => handleApproveCarePlan(plan.id)}
