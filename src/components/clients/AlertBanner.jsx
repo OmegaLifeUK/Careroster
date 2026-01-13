@@ -25,16 +25,21 @@ export default function AlertBanner({ clientId, section = "dashboard", compact =
   const { data: alerts = [] } = useQuery({
     queryKey: ['client-alerts-banner', clientId, section],
     queryFn: async () => {
-      const allAlerts = await base44.entities.ClientAlert.filter({ 
-        client_id: clientId,
-        status: 'active'
-      }, '-severity,-created_date');
-      
-      // Filter by section
-      return allAlerts.filter(alert => 
-        alert.display_on_sections?.includes('all') || 
-        alert.display_on_sections?.includes(section)
-      );
+      try {
+        const allAlerts = await base44.entities.ClientAlert.filter({ 
+          client_id: clientId,
+          status: 'active'
+        });
+        
+        // Filter by section
+        return allAlerts.filter(alert => 
+          alert.display_on_sections?.includes('all') || 
+          alert.display_on_sections?.includes(section)
+        );
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+        return [];
+      }
     },
     refetchInterval: 60000, // Refresh every minute
   });
