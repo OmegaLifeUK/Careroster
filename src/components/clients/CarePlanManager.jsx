@@ -395,24 +395,19 @@ export default function CarePlanManager({ client }) {
                     </div>
                     
                     <div className="flex gap-2">
-                      {plan.generated_from_assessment && !plan.approval_completed && plan.status === 'draft' && (
+                      {/* Show approval button for AI-generated plans that haven't been approved */}
+                      {plan.generated_from_assessment && !plan.approval_completed && (
                         <Button 
                           size="sm" 
-                          onClick={() => handleApproveCarePlan(plan.id)}
-                          className="bg-green-600 hover:bg-green-700"
-                        >
-                          Approve & Create Records
-                        </Button>
-                      )}
-                      {plan.generated_from_assessment && !plan.approval_completed && plan.status === 'active' && (
-                        <Button 
-                          size="sm" 
-                          onClick={() => handleApproveCarePlan(plan.id)}
-                          className="bg-amber-600 hover:bg-amber-700"
-                          title="AI-generated plan needs approval to create tasks, medications, and risks"
+                          onClick={() => {
+                            console.log('Approving care plan:', plan.id, plan);
+                            handleApproveCarePlan(plan.id);
+                          }}
+                          className={plan.status === 'draft' ? 'bg-green-600 hover:bg-green-700' : 'bg-amber-600 hover:bg-amber-700'}
+                          title="Create care tasks, medications, and risk assessments from this plan"
                         >
                           <AlertTriangle className="w-4 h-4 mr-1" />
-                          Activate Care Plan & Workflows
+                          {plan.status === 'draft' ? 'Approve & Create Records' : 'Activate Care Plan & Workflows'}
                         </Button>
                       )}
                       <Button 
