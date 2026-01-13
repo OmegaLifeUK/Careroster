@@ -61,7 +61,7 @@ export default function AddCareTask() {
       if (!formData.client_id) return [];
       const allPlans = await base44.entities.CarePlan.list();
       return Array.isArray(allPlans) 
-        ? allPlans.filter(p => p.client_id === formData.client_id && p.status === 'approved')
+        ? allPlans.filter(p => p.client_id === formData.client_id && p.status !== 'archived')
         : [];
     },
     enabled: !!formData.client_id,
@@ -111,11 +111,11 @@ export default function AddCareTask() {
 
   const createTaskMutation = useMutation({
     mutationFn: async (taskData) => {
-      // Validation: Check care plan is approved
+      // Validation: Check care plan exists
       if (taskData.care_plan_id) {
         const carePlan = carePlans.find(p => p.id === taskData.care_plan_id);
-        if (!carePlan || carePlan.status !== 'approved') {
-          throw new Error("Cannot create task: Care plan must be approved");
+        if (!carePlan) {
+          throw new Error("Cannot create task: Care plan not found");
         }
       }
 
@@ -344,7 +344,7 @@ export default function AddCareTask() {
               </div>
 
               <div>
-                <Label htmlFor="care_plan_id">Care Plan (Approved Only) *</Label>
+                <Label htmlFor="care_plan_id">Care Plan *</Label>
                 <Select
                   value={formData.care_plan_id}
                   onValueChange={(value) => handleChange('care_plan_id', value)}
@@ -355,7 +355,7 @@ export default function AddCareTask() {
                   </SelectTrigger>
                   <SelectContent>
                     {carePlans.length === 0 ? (
-                      <div className="p-2 text-sm text-gray-500">No approved care plans available</div>
+                      <div className="p-2 text-sm text-gray-500">No care plans available</div>
                     ) : (
                       carePlans.map(plan => (
                         <SelectItem key={plan.id} value={plan.id}>
@@ -367,7 +367,7 @@ export default function AddCareTask() {
                 </Select>
                 {formData.client_id && carePlans.length === 0 && (
                   <p className="text-sm text-red-600 mt-1">
-                    ⚠️ No approved care plans found for this client
+                    ⚠️ No care plans found for this client
                   </p>
                 )}
               </div>
