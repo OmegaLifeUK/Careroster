@@ -411,16 +411,17 @@ export const approveCarePlan = async (carePlanId) => {
       const created = await base44.entities.CareTask.create({
         client_id: carePlan.client_id,
         care_plan_id: carePlanId,
-        task_name: task.task_name,
-        description: task.description,
-        category: task.category,
-        frequency: task.frequency,
-        preferred_time: task.preferred_time,
-        duration_minutes: task.duration_minutes,
-        special_instructions: task.special_instructions,
-        requires_two_carers: task.requires_two_carers,
-        is_active: task.is_active !== false,
-        status: 'pending'
+        task_title: task.task_name || task.task_title || 'Care Task',
+        task_description: task.description || '',
+        task_type: mapTaskTypeToEnum(task.category),
+        task_category: task.category || 'other',
+        priority_level: 'medium',
+        frequency: mapFrequencyToEnum(task.frequency),
+        scheduled_date: new Date().toISOString().split('T')[0],
+        scheduled_time: task.preferred_time || '',
+        duration_estimate_minutes: task.duration_minutes || 30,
+        location: 'home',
+        task_status: 'scheduled'
       });
       results.tasks.push(created);
     }
@@ -508,6 +509,33 @@ function calculateReviewDate(days) {
   const date = new Date();
   date.setDate(date.getDate() + days);
   return date.toISOString().split('T')[0];
+}
+
+function mapTaskTypeToEnum(category) {
+  const mapping = {
+    'personal_care': 'personal_care',
+    'medication': 'medication',
+    'nutrition': 'nutrition_meals',
+    'mobility': 'mobility_support',
+    'social': 'emotional_support',
+    'emotional': 'emotional_support',
+    'healthcare': 'clinical_support',
+    'domestic': 'domestic_support',
+    'other': 'personal_care'
+  };
+  return mapping[category] || 'personal_care';
+}
+
+function mapFrequencyToEnum(frequency) {
+  const mapping = {
+    'daily': 'daily',
+    'twice_daily': 'daily',
+    'weekly': 'weekly',
+    'as_needed': 'custom',
+    'with_each_visit': 'daily',
+    'monthly': 'custom'
+  };
+  return mapping[frequency] || 'daily';
 }
 
 function categorizeRisk(riskDescription) {
