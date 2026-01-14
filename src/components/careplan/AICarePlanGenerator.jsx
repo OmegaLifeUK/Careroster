@@ -288,13 +288,15 @@ Write in clear, professional UK English.`;
         throw new Error("Please accept at least one section before saving");
       }
 
+      const currentUser = await base44.auth.me();
+
       // Prepare care plan data
       const carePlanData = {
         client_id: client.id,
         care_setting: careSetting,
         plan_type: "initial",
         assessment_date: new Date().toISOString().split('T')[0],
-        assessed_by: (await base44.auth.me()).email,
+        assessed_by: currentUser.email,
         status: "draft",
         
         // Map AI sections to care plan structure
@@ -328,7 +330,23 @@ Write in clear, professional UK English.`;
         }
       };
 
-      return await base44.entities.CarePlan.create(carePlanData);
+      const newCarePlan = await base44.entities.CarePlan.create(carePlanData);
+
+      // Create notification for the care plan review
+      try {
+        await base44.entities.Notification.create({
+          recipient_id: currentUser.id,
+          title: 'New Care Plan Ready for Review',
+          message: `AI-generated care plan created for ${client.full_name}. Please review and approve.`,
+          type: 'general',
+          priority: 'high',
+          is_read: false
+        });
+      } catch (notifError) {
+        console.log("Could not create notification:", notifError);
+      }
+
+      return newCarePlan;
     },
     onSuccess: (newPlan) => {
       queryClient.invalidateQueries({ queryKey: ['care-plans', client.id] });
