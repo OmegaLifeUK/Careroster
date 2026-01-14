@@ -242,13 +242,14 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Risk Assessments
       if (selectedTypes.includes("risk_assessment") && extractedData.risk_assessment?.length > 0) {
         try {
+          const currentUser = await base44.auth.me();
           for (const risk of extractedData.risk_assessment) {
             await base44.entities.RiskAssessment.create({
               client_id: clientId,
-              risk_title: risk.risk_area,
-              risk_level: risk.risk_level || "medium",
-              description: risk.description || "",
-              assessment_date: new Date().toISOString().split('T')[0]
+              assessment_type: "general",
+              assessment_date: new Date().toISOString().split('T')[0],
+              assessed_by: currentUser.email,
+              risk_level: risk.risk_level || "medium"
             });
           }
           results.success.push(`Risk Assessments (${extractedData.risk_assessment.length})`);
@@ -263,7 +264,8 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.BehaviorChart.create({
             client_id: clientId,
-            chart_date: new Date().toISOString().split('T')[0]
+            chart_date: new Date().toISOString().split('T')[0],
+            behavior_being_monitored: extractedData.behavior_chart.behaviors_of_concern?.[0] || "General behavior monitoring"
           });
           results.success.push("Behaviour Support Plan");
         } catch (e) {
@@ -275,10 +277,13 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Mental Capacity
       if (selectedTypes.includes("mental_capacity") && extractedData.mental_capacity) {
         try {
+          const currentUser = await base44.auth.me();
           await base44.entities.MentalCapacityAssessment.create({
             client_id: clientId,
             assessment_date: new Date().toISOString().split('T')[0],
-            decision_to_assess: "General capacity assessment"
+            assessor: currentUser.email,
+            specific_decision: "General capacity assessment",
+            conclusion: extractedData.mental_capacity.has_capacity ? "has_capacity" : "lacks_capacity"
           });
           results.success.push("Mental Capacity Assessment");
         } catch (e) {
@@ -290,9 +295,13 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import PEEP
       if (selectedTypes.includes("peep") && extractedData.peep) {
         try {
+          const currentUser = await base44.auth.me();
           await base44.entities.PEEP.create({
             client_id: clientId,
-            assessment_date: new Date().toISOString().split('T')[0]
+            assessment_date: new Date().toISOString().split('T')[0],
+            assessed_by: currentUser.email,
+            mobility_level: extractedData.peep.mobility_level || "fully_mobile",
+            evacuation_method: extractedData.peep.evacuation_method || "independent"
           });
           results.success.push("PEEP");
         } catch (e) {
