@@ -199,6 +199,23 @@ Be thorough and extract ALL relevant information from the document.`,
     const results = { success: [], failed: [] };
 
     try {
+      // First, create an Assessment record with the uploaded document URL
+      // so it can be found by the AI Care Plan Generator
+      try {
+        const currentUser = await base44.auth.me();
+        await base44.entities.Assessment.create({
+          client_id: clientId,
+          assessment_type: "initial_needs",
+          assessment_title: `Imported Assessment - ${selectedTypes.join(', ')}`,
+          assessment_description: `Imported from document on ${new Date().toLocaleDateString()}. Document contains: ${selectedTypes.map(t => IMPORT_TYPES.find(it => it.id === t)?.label).filter(Boolean).join(', ')}`,
+          assessment_date: new Date().toISOString().split('T')[0],
+          completed_by: currentUser.email,
+          assessment_status: "completed"
+        });
+      } catch (e) {
+        console.log("Could not create assessment record:", e);
+      }
+
       // Import Care Plan
       if (selectedTypes.includes("care_plan") && extractedData.care_plan) {
         try {
