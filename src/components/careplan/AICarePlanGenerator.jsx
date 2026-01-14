@@ -294,6 +294,21 @@ Write in clear, professional UK English.`;
 
       const currentUser = await base44.auth.me();
 
+      // Map AI interventions to care tasks structure
+      const careTasks = (generatedPlan.support_interventions?.interventions || []).map((intervention, idx) => ({
+        task_id: `task_${Date.now()}_${idx}`,
+        task_name: intervention.substring(0, 100),
+        category: categorizeIntervention(intervention),
+        description: intervention,
+        frequency: "daily",
+        preferred_time: "",
+        duration_minutes: 30,
+        special_instructions: "",
+        requires_two_carers: false,
+        is_active: true,
+        linked_shift_types: []
+      }));
+
       // Prepare care plan data
       const carePlanData = {
         client_id: client.id,
@@ -312,6 +327,8 @@ Write in clear, professional UK English.`;
           objective: outcome,
           status: "not_started"
         })) || [],
+        
+        care_tasks: careTasks,
         
         risk_factors: generatedPlan.risk_management?.risks?.map(risk => ({
           risk: risk,
@@ -335,6 +352,15 @@ Write in clear, professional UK English.`;
       };
 
       const newCarePlan = await base44.entities.CarePlan.create(carePlanData);
+
+      // Auto-approve and create related records (care tasks, risk assessments)
+      try {
+        // Import the workflow
+        const { approveCarePlan } = await import('@/components/workflow/AssessmentToCarePlanWorkflow');
+        await approveCarePlan(newCarePlan.id);
+      } catch (workflowError) {
+        console.log("Could not auto-approve care plan:", workflowError);
+      }
 
       // Create notification for the care plan review
       try {
@@ -362,6 +388,17 @@ Write in clear, professional UK English.`;
       toast.error("Failed to save care plan", error.message);
     }
   });
+
+  const categorizeIntervention = (intervention) => {
+    const lower = intervention.toLowerCase();
+    if (lower.includes('medication') || lower.includes('medicine')) return 'medication';
+    if (lower.includes('meal') || lower.includes('food') || lower.includes('nutrition')) return 'nutrition';
+    if (lower.includes('mobility') || lower.includes('walk') || lower.includes('transfer')) return 'mobility';
+    if (lower.includes('wash') || lower.includes('bath') || lower.includes('shower') || lower.includes('personal care')) return 'personal_care';
+    if (lower.includes('social') || lower.includes('activity') || lower.includes('engagement')) return 'social';
+    if (lower.includes('emotional') || lower.includes('mental health')) return 'emotional';
+    return 'other';
+  };
 
   const canSave = Object.values(sectionStatus).some(status => 
     status === 'accepted' || status === 'edited'
