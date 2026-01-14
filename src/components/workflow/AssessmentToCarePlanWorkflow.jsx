@@ -372,15 +372,18 @@ export const createDraftCarePlan = async (carePlanData, clientId, assessmentSour
     }
 
     // Create notification for staff to review
-    await base44.entities.Notification.create({
-      user_email: currentUser?.email || 'admin',
-      title: 'New Care Plan Ready for Review',
-      message: `AI-generated care plan created from assessment. Please review and approve.`,
-      type: 'care_plan',
-      priority: 'high',
-      action_url: `/clients?client=${clientId}&tab=care_plan`,
-      is_read: false
-    });
+    try {
+      await base44.entities.Notification.create({
+        recipient_id: currentUser?.id || 'system',
+        title: 'New Care Plan Ready for Review',
+        message: `AI-generated care plan created from assessment. Please review and approve.`,
+        type: 'general',
+        priority: 'high',
+        is_read: false
+      });
+    } catch (notifError) {
+      console.log("Could not create notification:", notifError);
+    }
 
     return { success: true, carePlan };
   } catch (error) {
