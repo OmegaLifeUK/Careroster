@@ -64,10 +64,14 @@ export default function AICarePlanGenerator({ client, onClose, onSuccess }) {
       // Include ClientDocuments that are assessments
       clientDocs?.forEach(d => {
         if (d.document_type === 'assessment' && d.file_url) {
+          const uploadDate = d.upload_date 
+            ? (typeof d.upload_date === 'string' ? d.upload_date.split('T')[0] : new Date().toISOString().split('T')[0])
+            : new Date().toISOString().split('T')[0];
+          
           docs.push({
             id: `doc-${d.id}`,
             type: 'client_document',
-            date: d.upload_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+            date: uploadDate,
             url: d.file_url,
             label: `${d.document_name}`
           });
