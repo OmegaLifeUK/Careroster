@@ -45,6 +45,7 @@ export default function Clients() {
   const [activeTab, setActiveTab] = useState("details");
   const [showDocumentImporter, setShowDocumentImporter] = useState(false);
   const [showNewClientImporter, setShowNewClientImporter] = useState(false);
+  const [showAICarePlan, setShowAICarePlan] = useState(false);
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -222,6 +223,13 @@ export default function Clients() {
               >
                 <Upload className="w-4 h-4 mr-2" />
                 Import Documents
+              </Button>
+              <Button
+                onClick={() => setShowAICarePlan(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Care Plan
               </Button>
             </div>
           </div>
@@ -517,6 +525,14 @@ export default function Clients() {
               clientId={selectedClient.id}
               clientName={selectedClient.full_name}
               onClose={() => setShowDocumentImporter(false)}
+            />
+          )}
+
+          {showAICarePlan && (
+            <AICarePlanGenerator
+              client={selectedClient}
+              onClose={() => setShowAICarePlan(false)}
+              onSuccess={() => setActiveTab("care_plan")}
             />
           )}
         </div>
