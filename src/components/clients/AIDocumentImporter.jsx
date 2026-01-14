@@ -202,22 +202,18 @@ Be thorough and extract ALL relevant information from the document.`,
       // Import Care Plan
       if (selectedTypes.includes("care_plan") && extractedData.care_plan) {
         try {
+          const currentUser = await base44.auth.me();
           await base44.entities.CarePlan.create({
             client_id: clientId,
-            plan_type: "general",
-            status: "active",
-            start_date: new Date().toISOString().split('T')[0],
-            care_needs: extractedData.care_plan.care_needs || [],
-            goals: extractedData.care_plan.goals || [],
-            daily_routine: extractedData.care_plan.daily_routine || "",
-            personal_care: extractedData.care_plan.personal_care_needs || "",
-            communication_needs: extractedData.care_plan.communication_needs || "",
-            dietary_requirements: extractedData.care_plan.dietary_requirements || "",
-            preferences: extractedData.care_plan.preferences || "",
-            notes: extractedData.care_plan.notes || ""
+            care_setting: "residential",
+            plan_type: "initial",
+            assessment_date: new Date().toISOString().split('T')[0],
+            assessed_by: currentUser.email,
+            status: "draft"
           });
           results.success.push("Care Plan");
         } catch (e) {
+          console.error("Care Plan error:", e);
           results.failed.push("Care Plan");
         }
       }
@@ -228,21 +224,17 @@ Be thorough and extract ALL relevant information from the document.`,
           for (const med of extractedData.medication) {
             await base44.entities.MARSheet.create({
               client_id: clientId,
-              drug_name: med.drug_name,
+              medication_name: med.drug_name,
               dosage: med.dosage,
-              frequency: med.frequency,
               route: med.route || "oral",
-              time_slots: med.time_slots || [],
-              prescriber: med.prescriber || "",
+              frequency: med.frequency || "once_daily",
               start_date: med.start_date || new Date().toISOString().split('T')[0],
-              is_prn: med.is_prn || false,
-              prn_reason: med.prn_reason || "",
-              special_instructions: med.special_instructions || "",
-              status: "active"
+              mar_status: "active"
             });
           }
           results.success.push(`Medications (${extractedData.medication.length})`);
         } catch (e) {
+          console.error("Medication error:", e);
           results.failed.push("Medications");
         }
       }
@@ -253,18 +245,15 @@ Be thorough and extract ALL relevant information from the document.`,
           for (const risk of extractedData.risk_assessment) {
             await base44.entities.RiskAssessment.create({
               client_id: clientId,
-              risk_area: risk.risk_area,
+              risk_title: risk.risk_area,
               risk_level: risk.risk_level || "medium",
               description: risk.description || "",
-              triggers: risk.triggers || [],
-              control_measures: risk.control_measures || [],
-              review_date: risk.review_date || "",
-              status: "active",
-              assessed_date: new Date().toISOString().split('T')[0]
+              assessment_date: new Date().toISOString().split('T')[0]
             });
           }
           results.success.push(`Risk Assessments (${extractedData.risk_assessment.length})`);
         } catch (e) {
+          console.error("Risk Assessment error:", e);
           results.failed.push("Risk Assessments");
         }
       }
@@ -274,18 +263,11 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.BehaviorChart.create({
             client_id: clientId,
-            behaviors_of_concern: extractedData.behavior_chart.behaviors_of_concern || [],
-            triggers: extractedData.behavior_chart.triggers || [],
-            early_warning_signs: extractedData.behavior_chart.early_warning_signs || [],
-            de_escalation_strategies: extractedData.behavior_chart.de_escalation_strategies || [],
-            positive_strategies: extractedData.behavior_chart.positive_strategies || [],
-            crisis_intervention: extractedData.behavior_chart.crisis_intervention || "",
-            post_incident_support: extractedData.behavior_chart.post_incident_support || "",
-            status: "active",
-            created_date: new Date().toISOString()
+            chart_date: new Date().toISOString().split('T')[0]
           });
           results.success.push("Behaviour Support Plan");
         } catch (e) {
+          console.error("Behavior Chart error:", e);
           results.failed.push("Behaviour Support Plan");
         }
       }
@@ -295,16 +277,12 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.MentalCapacityAssessment.create({
             client_id: clientId,
-            has_capacity: extractedData.mental_capacity.has_capacity,
-            assessment_areas: extractedData.mental_capacity.assessment_areas || [],
-            decisions_assessed: extractedData.mental_capacity.decisions_assessed || [],
-            restrictions: extractedData.mental_capacity.restrictions || "",
-            notes: extractedData.mental_capacity.notes || "",
             assessment_date: new Date().toISOString().split('T')[0],
-            status: "active"
+            decision_to_assess: "General capacity assessment"
           });
           results.success.push("Mental Capacity Assessment");
         } catch (e) {
+          console.error("Mental Capacity error:", e);
           results.failed.push("Mental Capacity Assessment");
         }
       }
@@ -314,17 +292,11 @@ Be thorough and extract ALL relevant information from the document.`,
         try {
           await base44.entities.PEEP.create({
             client_id: clientId,
-            mobility_level: extractedData.peep.mobility_level || "",
-            evacuation_method: extractedData.peep.evacuation_method || "",
-            equipment_required: extractedData.peep.equipment_required || [],
-            staff_required: extractedData.peep.staff_required || 1,
-            special_instructions: extractedData.peep.special_instructions || "",
-            meeting_point: extractedData.peep.meeting_point || "",
-            status: "active",
-            review_date: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().split('T')[0]
+            assessment_date: new Date().toISOString().split('T')[0]
           });
           results.success.push("PEEP");
         } catch (e) {
+          console.error("PEEP error:", e);
           results.failed.push("PEEP");
         }
       }
