@@ -199,21 +199,35 @@ Be thorough and extract ALL relevant information from the document.`,
     const results = { success: [], failed: [] };
 
     try {
-      // First, create an Assessment record with the uploaded document URL
-      // so it can be found by the AI Care Plan Generator
+      // Create a ClientDocument record with the uploaded file
+      // so it can be found and used by the AI Care Plan Generator
       try {
         const currentUser = await base44.auth.me();
+        await base44.entities.ClientDocument.create({
+          client_id: clientId,
+          document_type: "assessment",
+          document_name: `AI Imported Assessment - ${new Date().toLocaleDateString()}`,
+          file_url: uploadedUrl,
+          file_type: file.type,
+          file_size: file.size,
+          uploaded_by_staff_id: currentUser.id,
+          upload_date: new Date().toISOString(),
+          notes: `Contains: ${selectedTypes.map(t => IMPORT_TYPES.find(it => it.id === t)?.label).filter(Boolean).join(', ')}`,
+          tags: selectedTypes
+        });
+        
+        // Also create an Assessment record for compatibility
         await base44.entities.Assessment.create({
           client_id: clientId,
           assessment_type: "initial_needs",
           assessment_title: `Imported Assessment - ${selectedTypes.join(', ')}`,
-          assessment_description: `Imported from document on ${new Date().toLocaleDateString()}. Document contains: ${selectedTypes.map(t => IMPORT_TYPES.find(it => it.id === t)?.label).filter(Boolean).join(', ')}`,
+          assessment_description: `Imported from document on ${new Date().toLocaleDateString()}. Document contains: ${selectedTypes.map(t => IMPORT_TYPES.find(it => it.id === t)?.label).filter(Boolean).join(', ')}\n\nDocument URL: ${uploadedUrl}`,
           assessment_date: new Date().toISOString().split('T')[0],
           completed_by: currentUser.email,
           assessment_status: "completed"
         });
       } catch (e) {
-        console.log("Could not create assessment record:", e);
+        console.log("Could not create document/assessment record:", e);
       }
 
       // Import Care Plan

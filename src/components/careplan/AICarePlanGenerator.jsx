@@ -28,10 +28,11 @@ export default function AICarePlanGenerator({ client, onClose, onSuccess }) {
   const { data: assessmentDocs = [] } = useQuery({
     queryKey: ['assessment-docs', client.id],
     queryFn: async () => {
-      const [visits, shifts, assessments] = await Promise.all([
+      const [visits, shifts, assessments, clientDocs] = await Promise.all([
         base44.entities.Visit.filter({ client_id: client.id }).catch(() => []),
         base44.entities.Shift.filter({ client_id: client.id }).catch(() => []),
-        base44.entities.Assessment.filter({ client_id: client.id }).catch(() => [])
+        base44.entities.Assessment.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.ClientDocument.filter({ client_id: client.id }).catch(() => [])
       ]);
 
       const docs = [];
@@ -60,12 +61,27 @@ export default function AICarePlanGenerator({ client, onClose, onSuccess }) {
         }
       });
 
+      // Include ClientDocuments that are assessments
+      clientDocs?.forEach(d => {
+        if (d.document_type === 'assessment' && d.file_url) {
+          docs.push({
+            id: `doc-${d.id}`,
+            type: 'client_document',
+            date: d.upload_date?.split('T')[0] || new Date().toISOString().split('T')[0],
+            url: d.file_url,
+            label: `${d.document_name}`
+          });
+        }
+      });
+
       assessments?.forEach(a => {
+        // Check if description contains a document URL
+        const urlMatch = a.assessment_description?.match(/Document URL: (https?:\/\/[^\s]+)/);
         docs.push({
           id: `assessment-${a.id}`,
           type: a.assessment_type,
           date: a.assessment_date,
-          url: null,
+          url: urlMatch ? urlMatch[1] : null,
           description: a.assessment_description,
           label: `${a.assessment_title} - ${a.assessment_date}`
         });
