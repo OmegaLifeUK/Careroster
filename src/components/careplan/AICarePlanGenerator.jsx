@@ -1,299 +1,376 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useQueryClient, useMutation, useQuery } from "@tanstack/react-query";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { 
-  Sparkles, 
-  Loader2, 
-  FileText, 
-  CheckCircle,
-  Upload,
-  AlertCircle
-} from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertCircle, Sparkles, CheckCircle, XCircle, Edit, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
-import { format, addMonths } from "date-fns";
 
-export default function AICarePlanGenerator({ client, assessmentDocuments = [], onClose, onSuccess }) {
-  const [selectedDocs, setSelectedDocs] = useState(assessmentDocuments.map(d => d.document_url));
+export default function AICarePlanGenerator({ client, onClose, onSuccess }) {
+  const [step, setStep] = useState("select"); // select, generating, review
+  const [careSetting, setCareSetting] = useState("residential");
+  const [selectedDocuments, setSelectedDocuments] = useState([]);
   const [additionalContext, setAdditionalContext] = useState("");
-  const [careSetting, setCareSetting] = useState("domiciliary");
-  const [isGenerating, setIsGenerating] = useState(false);
   const [generatedPlan, setGeneratedPlan] = useState(null);
-  const [step, setStep] = useState("select");
-  
+  const [sectionStatus, setSectionStatus] = useState({});
+  const [editingSections, setEditingSections] = useState({});
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  const toggleDoc = (url) => {
-    setSelectedDocs(prev => 
-      prev.includes(url) 
-        ? prev.filter(u => u !== url)
-        : [...prev, url]
+  // Fetch available assessment documents
+  const { data: assessmentDocs = [] } = useQuery({
+    queryKey: ['assessment-docs', client.id],
+    queryFn: async () => {
+      const [visits, shifts, assessments] = await Promise.all([
+        base44.entities.Visit.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.Shift.filter({ client_id: client.id }).catch(() => []),
+        base44.entities.Assessment.filter({ client_id: client.id }).catch(() => [])
+      ]);
+
+      const docs = [];
+      
+      visits?.forEach(v => {
+        if (v.assessment_document_url) {
+          docs.push({
+            id: `visit-${v.id}`,
+            type: 'visit_assessment',
+            date: v.visit_date,
+            url: v.assessment_document_url,
+            label: `Visit Assessment - ${v.visit_date}`
+          });
+        }
+      });
+
+      shifts?.forEach(s => {
+        if (s.assessment_document_url) {
+          docs.push({
+            id: `shift-${s.id}`,
+            type: 'shift_assessment',
+            date: s.shift_date,
+            url: s.assessment_document_url,
+            label: `Shift Assessment - ${s.shift_date}`
+          });
+        }
+      });
+
+      assessments?.forEach(a => {
+        docs.push({
+          id: `assessment-${a.id}`,
+          type: a.assessment_type,
+          date: a.assessment_date,
+          url: null,
+          description: a.assessment_description,
+          label: `${a.assessment_title} - ${a.assessment_date}`
+        });
+      });
+
+      return docs.sort((a, b) => new Date(b.date) - new Date(a.date));
+    },
+  });
+
+  const toggleDocument = (docId) => {
+    setSelectedDocuments(prev =>
+      prev.includes(docId)
+        ? prev.filter(id => id !== docId)
+        : [...prev, docId]
     );
   };
 
   const generateCarePlan = async () => {
-    if (selectedDocs.length === 0) {
-      toast.error("No Documents", "Please select at least one assessment document");
+    if (selectedDocuments.length === 0) {
+      toast.error("Please select at least one document");
       return;
     }
 
-    setIsGenerating(true);
     setStep("generating");
 
     try {
-      const systemInstruction = `You are an AI assistant generating draft UK-compliant, person-centred care plans.
-You must:
-- Use only the uploaded documents
+      const selectedDocs = assessmentDocs.filter(doc => selectedDocuments.includes(doc.id));
+      const fileUrls = selectedDocs.filter(d => d.url).map(d => d.url);
+      const textContent = selectedDocs.filter(d => d.description).map(d => 
+        `${d.label}:\n${d.description}`
+      ).join('\n\n');
+
+      const systemPrompt = `You are a UK care-sector documentation assistant that supports regulated professionals by drafting person-centred care plans. You do not make decisions, do not provide clinical or legal judgement, and all outputs require human review and approval.
+
+CRITICAL RULES:
+- Use only the provided documents
 - Avoid assumptions or diagnoses
 - Highlight uncertainty clearly
 - Use professional, neutral language
 - Follow UK care standards and terminology
-- Produce a DRAFT requiring human approval`;
+- Produce a DRAFT requiring human approval
+- Do not invent data`;
 
-      const prompt = `${systemInstruction}
+      const userPrompt = `Using the uploaded assessments and documents for ${client.full_name}, generate a structured DRAFT care plan for ${careSetting} care setting.
 
-Using the uploaded assessments and documents:
+Available Assessment Information:
+${textContent}
 
-Client: ${client.full_name}
-DOB: ${client.date_of_birth || 'Not provided'}
-Current Address: ${client.address?.street || ''}, ${client.address?.postcode || ''}
-Care Setting: ${careSetting.replace('_', ' ')}
+${additionalContext ? `Additional Context:\n${additionalContext}\n\n` : ''}
 
-Additional Context: ${additionalContext || 'None provided'}
-
-Generate a structured draft care plan following UK care standards with:
-
-1. PERSONAL DETAILS & ABOUT ME:
-   - Preferred name, communication needs
-   - Cultural/religious preferences
-   - Likes, dislikes, routines
-
-2. ASSESSED NEEDS:
-   - Physical health, mental health, mobility
-   - Nutrition, personal care, continence
-   - Medication support, social needs
-
-3. DESIRED OUTCOMES:
-   - What the person wants to achieve
-   - Short and long-term goals
-
-4. SUPPORT INTERVENTIONS (Care Tasks):
-   - What support is required
-   - How it should be delivered
-   - Frequency and who is responsible
-
-5. RISK MANAGEMENT:
-   - Identified risks with likelihood/impact
-   - Mitigation strategies
-
-6. MEDICATIONS (if mentioned):
-   - Current medications with dose, frequency, route
-
-Flag any:
+Extract all relevant care needs, risks, preferences, and outcomes. Clearly flag:
 - Missing information
 - Conflicting data
-- Safeguarding indicators
-- Capacity concerns
+- Safeguarding or capacity indicators
 
-Return valid JSON only.`;
+Generate a UK-compliant care plan following this structure:
+1. Personal Details
+2. About Me (Person-Centred preferences, communication needs, likes/dislikes)
+3. Assessed Needs (Physical health, mental health, mobility, nutrition, personal care, medication support, social needs)
+4. Desired Outcomes (What the person wants to achieve)
+5. Support Interventions (For each need: what support, how delivered, frequency, who responsible)
+6. Risk Management (Identified risks, likelihood/impact, mitigation strategies)
+7. Mental Capacity & Consent (If applicable)
+8. Safeguarding (If applicable - summary only)
 
-      const result = await base44.integrations.Core.InvokeLLM({
-        prompt,
-        file_urls: selectedDocs,
+Write in clear, professional UK English.`;
+
+      const response = await base44.integrations.Core.InvokeLLM({
+        prompt: userPrompt,
+        add_context_from_internet: false,
+        file_urls: fileUrls.length > 0 ? fileUrls : null,
         response_json_schema: {
           type: "object",
           properties: {
             personal_details: {
               type: "object",
               properties: {
-                preferred_name: { type: "string" },
-                communication_needs: { type: "string" },
-                cultural_preferences: { type: "string" },
-                likes: { type: "array", items: { type: "string" } },
-                dislikes: { type: "array", items: { type: "string" } }
+                content: { type: "string" },
+                missing_info: { type: "array", items: { type: "string" } },
+                flags: { type: "array", items: { type: "string" } }
+              }
+            },
+            about_me: {
+              type: "object",
+              properties: {
+                content: { type: "string" },
+                missing_info: { type: "array", items: { type: "string" } }
               }
             },
             assessed_needs: {
               type: "object",
               properties: {
-                physical_health: { type: "string" },
-                mental_health: { type: "string" },
-                mobility: { type: "string" },
-                nutrition: { type: "string" },
-                personal_care: { type: "string" },
-                social_needs: { type: "string" }
+                content: { type: "string" },
+                needs_list: { type: "array", items: { type: "string" } },
+                missing_info: { type: "array", items: { type: "string" } }
               }
             },
             desired_outcomes: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  outcome: { type: "string" },
-                  timeframe: { type: "string" },
-                  measures: { type: "string" }
-                }
+              type: "object",
+              properties: {
+                content: { type: "string" },
+                outcomes_list: { type: "array", items: { type: "string" } }
               }
             },
             support_interventions: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  need_area: { type: "string" },
-                  support_required: { type: "string" },
-                  frequency: { type: "string" },
-                  responsible: { type: "string" }
-                }
-              }
-            },
-            risks: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  risk: { type: "string" },
-                  likelihood: { type: "string" },
-                  impact: { type: "string" },
-                  mitigation: { type: "string" }
-                }
-              }
-            },
-            medications: {
-              type: "array",
-              items: {
-                type: "object",
-                properties: {
-                  name: { type: "string" },
-                  dose: { type: "string" },
-                  frequency: { type: "string" },
-                  route: { type: "string" },
-                  purpose: { type: "string" }
-                }
-              }
-            },
-            flags: {
               type: "object",
               properties: {
-                missing_information: { type: "array", items: { type: "string" } },
-                safeguarding_indicators: { type: "array", items: { type: "string" } },
-                capacity_concerns: { type: "string" }
+                content: { type: "string" },
+                interventions: { type: "array", items: { type: "string" } }
               }
+            },
+            risk_management: {
+              type: "object",
+              properties: {
+                content: { type: "string" },
+                risks: { type: "array", items: { type: "string" } },
+                safeguarding_flags: { type: "array", items: { type: "string" } }
+              }
+            },
+            mental_capacity_consent: {
+              type: "object",
+              properties: {
+                content: { type: "string" },
+                capacity_indicators: { type: "array", items: { type: "string" } }
+              }
+            },
+            safeguarding: {
+              type: "object",
+              properties: {
+                content: { type: "string" },
+                flags: { type: "array", items: { type: "string" } }
+              }
+            },
+            overall_flags: {
+              type: "array",
+              items: { type: "string" },
+              description: "Overall concerns, missing data, or contradictions"
             }
           }
         }
       });
 
-      setGeneratedPlan(result);
+      setGeneratedPlan(response);
+      
+      // Initialize all sections as pending review
+      const initialStatus = {};
+      Object.keys(response).forEach(key => {
+        if (key !== 'overall_flags') {
+          initialStatus[key] = 'pending';
+        }
+      });
+      setSectionStatus(initialStatus);
+      
       setStep("review");
+      toast.success("Draft care plan generated", "Please review and approve each section");
     } catch (error) {
-      console.error("Generation error:", error);
-      toast.error("Generation Failed", "Unable to generate care plan. Please check documents and try again.");
+      console.error("Error generating care plan:", error);
+      toast.error("Failed to generate care plan", error.message);
       setStep("select");
-    } finally {
-      setIsGenerating(false);
     }
   };
 
-  const saveDraftMutation = useMutation({
+  const handleSectionAction = (section, action) => {
+    if (action === 'edit') {
+      setEditingSections(prev => ({ ...prev, [section]: generatedPlan[section].content }));
+    } else if (action === 'save_edit') {
+      setGeneratedPlan(prev => ({
+        ...prev,
+        [section]: {
+          ...prev[section],
+          content: editingSections[section]
+        }
+      }));
+      setEditingSections(prev => {
+        const updated = { ...prev };
+        delete updated[section];
+        return updated;
+      });
+      setSectionStatus(prev => ({ ...prev, [section]: 'edited' }));
+      toast.success("Section updated");
+    } else if (action === 'cancel_edit') {
+      setEditingSections(prev => {
+        const updated = { ...prev };
+        delete updated[section];
+        return updated;
+      });
+    } else {
+      setSectionStatus(prev => ({ ...prev, [section]: action }));
+      if (action === 'accepted') {
+        toast.success("Section accepted");
+      } else if (action === 'rejected') {
+        toast.info("Section rejected");
+      }
+    }
+  };
+
+  const saveCarePlanMutation = useMutation({
     mutationFn: async () => {
-      const currentUser = await base44.auth.me().catch(() => null);
-      
-      // Save as draft - NO actual tasks/medications created yet
-      const draftData = {
+      const acceptedSections = Object.entries(sectionStatus)
+        .filter(([_, status]) => status === 'accepted' || status === 'edited')
+        .map(([section]) => section);
+
+      if (acceptedSections.length === 0) {
+        throw new Error("Please accept at least one section before saving");
+      }
+
+      // Prepare care plan data
+      const carePlanData = {
         client_id: client.id,
         care_setting: careSetting,
         plan_type: "initial",
-        assessment_date: format(new Date(), "yyyy-MM-dd"),
-        review_date: format(addMonths(new Date(), 3), "yyyy-MM-dd"),
-        assessed_by: currentUser?.full_name || "System",
+        assessment_date: new Date().toISOString().split('T')[0],
+        assessed_by: (await base44.auth.me()).email,
         status: "draft",
-        version: 1,
         
-        // Store AI-generated data as metadata for later processing
-        personal_details: generatedPlan.personal_details || {},
+        // Map AI sections to care plan structure
+        personal_details: generatedPlan.personal_details?.content ? {
+          notes: generatedPlan.personal_details.content
+        } : null,
         
-        physical_health: {
-          mobility: generatedPlan.assessed_needs?.mobility || '',
-          nutrition: generatedPlan.assessed_needs?.nutrition || '',
-          medical_conditions: []
+        care_objectives: generatedPlan.desired_outcomes?.outcomes_list?.map(outcome => ({
+          objective: outcome,
+          status: "not_started"
+        })) || [],
+        
+        risk_factors: generatedPlan.risk_management?.risks?.map(risk => ({
+          risk: risk,
+          likelihood: "medium",
+          impact: "medium",
+          control_measures: generatedPlan.risk_management.content
+        })) || [],
+        
+        consent: {
+          notes: generatedPlan.mental_capacity_consent?.content || ""
         },
         
-        mental_health: {
-          cognitive_function: generatedPlan.assessed_needs?.mental_health || '',
-          communication_needs: generatedPlan.personal_details?.communication_needs || ''
-        },
-        
-        preferences: {
-          likes: generatedPlan.personal_details?.likes || [],
-          dislikes: generatedPlan.personal_details?.dislikes || []
-        },
-        
-        // Store as JSON for approval workflow
-        last_reviewed_by: JSON.stringify({
-          ai_generated: true,
-          generated_date: new Date().toISOString(),
-          source_documents: selectedDocs.length,
-          pending_approval: {
-            outcomes: generatedPlan.desired_outcomes || [],
-            interventions: generatedPlan.support_interventions || [],
-            risks: generatedPlan.risks || [],
-            medications: generatedPlan.medications || [],
-            flags: generatedPlan.flags || {}
-          }
-        })
+        // Store full AI-generated content in a notes field
+        ai_generated_content: {
+          timestamp: new Date().toISOString(),
+          sections: generatedPlan,
+          accepted_sections: acceptedSections,
+          source_documents: selectedDocuments,
+          care_setting: careSetting
+        }
       };
-      
-      return await base44.entities.CarePlan.create(draftData);
+
+      return await base44.entities.CarePlan.create(carePlanData);
     },
     onSuccess: (newPlan) => {
-      queryClient.invalidateQueries({ queryKey: ['care-plans'] });
-      toast.success("Draft Saved", "Review and approve the plan to create tasks and records.");
-      onSuccess?.(newPlan);
+      queryClient.invalidateQueries({ queryKey: ['care-plans', client.id] });
+      toast.success("Draft care plan saved", "Please review and complete the full care plan");
+      if (onSuccess) onSuccess(newPlan);
       onClose();
     },
     onError: (error) => {
-      console.error("Save error:", error);
-      toast.error("Save Failed", error?.message || "Unable to save draft");
+      toast.error("Failed to save care plan", error.message);
     }
   });
 
+  const canSave = Object.values(sectionStatus).some(status => 
+    status === 'accepted' || status === 'edited'
+  );
+
+  const sectionLabels = {
+    personal_details: "Personal Details",
+    about_me: "About Me",
+    assessed_needs: "Assessed Needs",
+    desired_outcomes: "Desired Outcomes",
+    support_interventions: "Support Interventions",
+    risk_management: "Risk Management",
+    mental_capacity_consent: "Mental Capacity & Consent",
+    safeguarding: "Safeguarding"
+  };
+
   return (
-    <Dialog open onOpenChange={onClose}>
-      <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+    <Dialog open={true} onOpenChange={onClose}>
+      <DialogContent className="max-w-5xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2">
             <Sparkles className="w-5 h-5 text-purple-600" />
-            AI Care Plan Generator (UK Compliant)
+            AI-Assisted Care Plan Generation (UK Compliant)
           </DialogTitle>
+          <div className="bg-amber-50 border border-amber-200 rounded-lg p-3 mt-2">
+            <div className="flex items-start gap-2">
+              <AlertTriangle className="w-5 h-5 text-amber-600 flex-shrink-0 mt-0.5" />
+              <p className="text-sm text-amber-900">
+                <strong>Important:</strong> This care plan is drafted with AI assistance using existing assessments. 
+                It must be reviewed, edited, and approved by a qualified professional before use. 
+                AI is advisory only and does not replace professional judgement.
+              </p>
+            </div>
+          </div>
         </DialogHeader>
 
         {step === "select" && (
-          <div className="space-y-6">
-            <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg">
-              <p className="text-sm text-blue-800">
-                <strong>AI Assistance:</strong> This tool drafts a UK-compliant, person-centred care plan from assessments.
-                All outputs require human review and approval before use.
-              </p>
-            </div>
-
+          <div className="space-y-6 py-4">
             <div>
-              <Label className="mb-2 block font-medium">Care Setting</Label>
+              <Label>Care Setting *</Label>
               <Select value={careSetting} onValueChange={setCareSetting}>
-                <SelectTrigger>
+                <SelectTrigger className="mt-2">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
                   <SelectItem value="residential">Residential Care</SelectItem>
+                  <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
                   <SelectItem value="supported_living">Supported Living</SelectItem>
                   <SelectItem value="day_centre">Day Centre</SelectItem>
                 </SelectContent>
@@ -301,184 +378,238 @@ Return valid JSON only.`;
             </div>
 
             <div>
-              <Label className="mb-2 block font-medium">
-                Select Assessment Documents ({selectedDocs.length} selected)
-              </Label>
-              {assessmentDocuments.length === 0 ? (
-                <Card className="border-dashed">
-                  <CardContent className="p-8 text-center text-gray-500">
-                    <Upload className="w-12 h-12 mx-auto mb-2 text-gray-300" />
-                    <p>No assessment documents available</p>
-                    <p className="text-sm mt-1">Upload documents to visits/shifts first</p>
+              <Label className="mb-3 block">Select Assessment Documents *</Label>
+              {assessmentDocs.length === 0 ? (
+                <Card>
+                  <CardContent className="p-6 text-center text-gray-500">
+                    No assessment documents found. Please upload assessments before generating a care plan.
                   </CardContent>
                 </Card>
               ) : (
-                <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-2">
-                  {assessmentDocuments.map((doc, idx) => (
-                    <div 
-                      key={idx}
-                      className={`p-3 border rounded-lg flex items-center gap-3 cursor-pointer transition-colors ${
-                        selectedDocs.includes(doc.document_url) 
-                          ? 'border-purple-300 bg-purple-50' 
-                          : 'hover:bg-gray-50'
-                      }`}
-                      onClick={() => toggleDoc(doc.document_url)}
-                    >
-                      <Checkbox 
-                        checked={selectedDocs.includes(doc.document_url)}
-                        onCheckedChange={() => toggleDoc(doc.document_url)}
+                <div className="space-y-2 max-h-64 overflow-y-auto border rounded-lg p-4">
+                  {assessmentDocs.map(doc => (
+                    <div key={doc.id} className="flex items-start gap-3 p-3 hover:bg-gray-50 rounded-lg">
+                      <Checkbox
+                        checked={selectedDocuments.includes(doc.id)}
+                        onCheckedChange={() => toggleDocument(doc.id)}
+                        id={doc.id}
                       />
-                      <FileText className="w-5 h-5 text-blue-600" />
-                      <div className="flex-1">
-                        <p className="font-medium text-sm">{doc.document_name}</p>
-                        <p className="text-xs text-gray-500">
-                          {doc.document_type} • {doc.source}
-                        </p>
-                      </div>
+                      <label htmlFor={doc.id} className="flex-1 cursor-pointer">
+                        <div className="flex items-center gap-2">
+                          <FileText className="w-4 h-4 text-gray-400" />
+                          <span className="font-medium">{doc.label}</span>
+                        </div>
+                        <Badge variant="outline" className="mt-1 text-xs capitalize">
+                          {doc.type.replace('_', ' ')}
+                        </Badge>
+                      </label>
                     </div>
                   ))}
                 </div>
               )}
+              <p className="text-sm text-gray-500 mt-2">
+                {selectedDocuments.length} document(s) selected
+              </p>
             </div>
 
             <div>
-              <Label className="mb-2 block">Additional Professional Context (Optional)</Label>
+              <Label>Additional Context (Optional)</Label>
               <Textarea
                 value={additionalContext}
                 onChange={(e) => setAdditionalContext(e.target.value)}
-                placeholder="Add any recent observations, family input, or professional notes not in the documents..."
-                rows={4}
+                placeholder="Add any additional information or specific focus areas for the care plan..."
+                className="mt-2 h-24"
               />
             </div>
-
-            <DialogFooter>
-              <Button variant="outline" onClick={onClose}>Cancel</Button>
-              <Button 
-                onClick={generateCarePlan}
-                disabled={selectedDocs.length === 0}
-                className="bg-purple-600 hover:bg-purple-700"
-              >
-                <Sparkles className="w-4 h-4 mr-2" />
-                Generate Draft Care Plan
-              </Button>
-            </DialogFooter>
           </div>
         )}
 
         {step === "generating" && (
           <div className="py-12 text-center">
-            <Loader2 className="w-16 h-16 mx-auto mb-4 text-purple-600 animate-spin" />
-            <h3 className="text-lg font-semibold mb-2">AI Processing Documents...</h3>
-            <p className="text-gray-600">Analyzing assessments and generating draft care plan</p>
+            <Loader2 className="w-12 h-12 animate-spin text-purple-600 mx-auto mb-4" />
+            <h3 className="text-lg font-semibold mb-2">Generating Draft Care Plan</h3>
+            <p className="text-gray-600">
+              AI is analysing assessment documents and drafting a UK-compliant care plan...
+            </p>
             <p className="text-sm text-gray-500 mt-2">This may take 30-60 seconds</p>
           </div>
         )}
 
         {step === "review" && generatedPlan && (
-          <div className="space-y-6">
-            <div className="p-4 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-amber-600 mt-0.5 flex-shrink-0" />
-              <div>
-                <p className="font-medium text-amber-800">⚠️ Draft Requires Human Approval</p>
-                <p className="text-sm text-amber-700">
-                  This care plan was drafted with AI assistance. It must be reviewed, edited, and approved by a qualified professional before use.
-                </p>
-              </div>
-            </div>
+          <div className="space-y-4 py-4">
+            {generatedPlan.overall_flags && generatedPlan.overall_flags.length > 0 && (
+              <Card className="border-orange-300 bg-orange-50">
+                <CardHeader>
+                  <CardTitle className="text-orange-900 flex items-center gap-2">
+                    <AlertCircle className="w-5 h-5" />
+                    Attention Required
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <ul className="list-disc list-inside space-y-1 text-sm text-orange-900">
+                    {generatedPlan.overall_flags.map((flag, idx) => (
+                      <li key={idx}>{flag}</li>
+                    ))}
+                  </ul>
+                </CardContent>
+              </Card>
+            )}
 
-            <Card>
-              <CardContent className="p-4 space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Generated Content Summary</h4>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
-                    <div className="p-3 bg-blue-50 rounded">
-                      <p className="text-2xl font-bold text-blue-700">
-                        {generatedPlan.desired_outcomes?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-600">Outcomes</p>
-                    </div>
-                    <div className="p-3 bg-purple-50 rounded">
-                      <p className="text-2xl font-bold text-purple-700">
-                        {generatedPlan.support_interventions?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-600">Interventions</p>
-                    </div>
-                    <div className="p-3 bg-pink-50 rounded">
-                      <p className="text-2xl font-bold text-pink-700">
-                        {generatedPlan.medications?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-600">Medications</p>
-                    </div>
-                    <div className="p-3 bg-orange-50 rounded">
-                      <p className="text-2xl font-bold text-orange-700">
-                        {generatedPlan.risks?.length || 0}
-                      </p>
-                      <p className="text-xs text-gray-600">Risks</p>
-                    </div>
-                  </div>
-                </div>
+            <Tabs defaultValue="personal_details" className="w-full">
+              <TabsList className="grid grid-cols-4 lg:grid-cols-8 gap-1">
+                {Object.keys(sectionLabels).map(section => (
+                  generatedPlan[section] && (
+                    <TabsTrigger key={section} value={section} className="text-xs">
+                      {sectionStatus[section] === 'accepted' && <CheckCircle className="w-3 h-3 mr-1 text-green-600" />}
+                      {sectionStatus[section] === 'rejected' && <XCircle className="w-3 h-3 mr-1 text-red-600" />}
+                      {sectionStatus[section] === 'edited' && <Edit className="w-3 h-3 mr-1 text-blue-600" />}
+                      {sectionLabels[section].split(' ')[0]}
+                    </TabsTrigger>
+                  )
+                ))}
+              </TabsList>
 
-                {generatedPlan.flags?.safeguarding_indicators?.length > 0 && (
-                  <div className="p-3 bg-red-50 border border-red-200 rounded">
-                    <p className="text-sm font-medium text-red-800 mb-1">🚨 Safeguarding Indicators:</p>
-                    <ul className="text-sm text-red-700 list-disc list-inside">
-                      {generatedPlan.flags.safeguarding_indicators.map((flag, i) => (
-                        <li key={i}>{flag}</li>
-                      ))}
-                    </ul>
-                  </div>
-                )}
+              {Object.keys(sectionLabels).map(section => (
+                generatedPlan[section] && (
+                  <TabsContent key={section} value={section} className="mt-4">
+                    <Card>
+                      <CardHeader className="bg-purple-50">
+                        <CardTitle className="flex items-center justify-between">
+                          <span>{sectionLabels[section]}</span>
+                          <Badge variant={
+                            sectionStatus[section] === 'accepted' ? 'default' :
+                            sectionStatus[section] === 'rejected' ? 'destructive' :
+                            sectionStatus[section] === 'edited' ? 'secondary' :
+                            'outline'
+                          }>
+                            {sectionStatus[section] === 'accepted' && 'Accepted'}
+                            {sectionStatus[section] === 'rejected' && 'Rejected'}
+                            {sectionStatus[section] === 'edited' && 'Edited'}
+                            {sectionStatus[section] === 'pending' && 'Pending Review'}
+                          </Badge>
+                        </CardTitle>
+                      </CardHeader>
+                      <CardContent className="p-6">
+                        {editingSections[section] !== undefined ? (
+                          <div className="space-y-4">
+                            <Textarea
+                              value={editingSections[section]}
+                              onChange={(e) => setEditingSections(prev => ({
+                                ...prev,
+                                [section]: e.target.value
+                              }))}
+                              className="min-h-[200px]"
+                            />
+                            <div className="flex gap-2">
+                              <Button onClick={() => handleSectionAction(section, 'save_edit')}>
+                                Save Changes
+                              </Button>
+                              <Button variant="outline" onClick={() => handleSectionAction(section, 'cancel_edit')}>
+                                Cancel
+                              </Button>
+                            </div>
+                          </div>
+                        ) : (
+                          <>
+                            <div className="prose max-w-none mb-4">
+                              <div className="whitespace-pre-wrap text-gray-900">
+                                {generatedPlan[section].content}
+                              </div>
+                            </div>
 
-                {generatedPlan.support_interventions?.length > 0 && (
-                  <div>
-                    <p className="text-sm font-medium text-gray-700 mb-2">Support Interventions (Preview):</p>
-                    <div className="space-y-2">
-                      {generatedPlan.support_interventions.slice(0, 3).map((intervention, idx) => (
-                        <div key={idx} className="p-2 bg-gray-50 rounded text-sm">
-                          <p className="font-medium">{intervention.need_area}</p>
-                          <p className="text-gray-600 text-xs">{intervention.support_required}</p>
-                          <p className="text-gray-500 text-xs">Frequency: {intervention.frequency}</p>
-                        </div>
-                      ))}
-                      {generatedPlan.support_interventions.length > 3 && (
-                        <p className="text-xs text-gray-500">+{generatedPlan.support_interventions.length - 3} more</p>
-                      )}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+                            {generatedPlan[section].missing_info && generatedPlan[section].missing_info.length > 0 && (
+                              <div className="bg-yellow-50 border border-yellow-200 rounded p-3 mb-4">
+                                <p className="text-sm font-semibold text-yellow-900 mb-2">Missing Information:</p>
+                                <ul className="list-disc list-inside text-sm text-yellow-800 space-y-1">
+                                  {generatedPlan[section].missing_info.map((info, idx) => (
+                                    <li key={idx}>{info}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
 
-            <div className="p-4 bg-green-50 border border-green-200 rounded-lg">
-              <p className="text-sm text-green-800">
-                <strong>Next Steps:</strong> Save as draft → Review in Care Plan Manager → Edit if needed → Approve to create tasks and records
-              </p>
-            </div>
+                            {generatedPlan[section].flags && generatedPlan[section].flags.length > 0 && (
+                              <div className="bg-red-50 border border-red-200 rounded p-3 mb-4">
+                                <p className="text-sm font-semibold text-red-900 mb-2">Flags:</p>
+                                <ul className="list-disc list-inside text-sm text-red-800 space-y-1">
+                                  {generatedPlan[section].flags.map((flag, idx) => (
+                                    <li key={idx}>{flag}</li>
+                                  ))}
+                                </ul>
+                              </div>
+                            )}
 
-            <DialogFooter>
+                            <div className="flex gap-2 pt-4 border-t">
+                              <Button
+                                variant={sectionStatus[section] === 'accepted' ? 'default' : 'outline'}
+                                onClick={() => handleSectionAction(section, 'accepted')}
+                              >
+                                <CheckCircle className="w-4 h-4 mr-2" />
+                                Accept
+                              </Button>
+                              <Button
+                                variant="outline"
+                                onClick={() => handleSectionAction(section, 'edit')}
+                              >
+                                <Edit className="w-4 h-4 mr-2" />
+                                Edit
+                              </Button>
+                              <Button
+                                variant={sectionStatus[section] === 'rejected' ? 'destructive' : 'outline'}
+                                onClick={() => handleSectionAction(section, 'rejected')}
+                              >
+                                <XCircle className="w-4 h-4 mr-2" />
+                                Reject
+                              </Button>
+                            </div>
+                          </>
+                        )}
+                      </CardContent>
+                    </Card>
+                  </TabsContent>
+                )
+              ))}
+            </Tabs>
+          </div>
+        )}
+
+        <DialogFooter>
+          {step === "select" && (
+            <>
+              <Button variant="outline" onClick={onClose}>
+                Cancel
+              </Button>
+              <Button
+                onClick={generateCarePlan}
+                disabled={selectedDocuments.length === 0}
+                className="bg-purple-600 hover:bg-purple-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                Generate Draft Care Plan
+              </Button>
+            </>
+          )}
+
+          {step === "review" && (
+            <>
               <Button variant="outline" onClick={() => setStep("select")}>
                 ← Back
               </Button>
-              <Button 
-                onClick={() => saveDraftMutation.mutate()}
-                disabled={saveDraftMutation.isPending}
+              <Button
+                onClick={() => saveCarePlanMutation.mutate()}
+                disabled={!canSave || saveCarePlanMutation.isPending}
                 className="bg-green-600 hover:bg-green-700"
               >
-                {saveDraftMutation.isPending ? (
-                  <>
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
-                    Saving...
-                  </>
+                {saveCarePlanMutation.isPending ? (
+                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
                 ) : (
-                  <>
-                    <CheckCircle className="w-4 h-4 mr-2" />
-                    Save Draft for Review
-                  </>
+                  <CheckCircle className="w-4 h-4 mr-2" />
                 )}
+                Save Draft Care Plan
               </Button>
-            </DialogFooter>
-          </div>
-        )}
+            </>
+          )}
+        </DialogFooter>
       </DialogContent>
     </Dialog>
   );

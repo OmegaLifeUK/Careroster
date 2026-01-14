@@ -15,6 +15,7 @@ import EmergencyContactsManager from "../components/clients/EmergencyContactsMan
 import DocumentManager from "../components/clients/DocumentManager";
 import ClientAlertManager from "../components/clients/ClientAlertManager";
 import CarePlanManager from "../components/clients/CarePlanManager";
+import AICarePlanGenerator from "../components/careplan/AICarePlanGenerator";
 import RiskAssessmentManager from "../components/clients/RiskAssessmentManager";
 import PEEPManager from "../components/clients/PEEPManager";
 import RepositioningChartManager from "../components/clients/RepositioningChartManager";
@@ -30,6 +31,7 @@ export default function SupportedLivingClients() {
   const [selectedClient, setSelectedClient] = useState(null);
   const [activeTab, setActiveTab] = useState("details");
   const [showClientDialog, setShowClientDialog] = useState(false);
+  const [showAICarePlan, setShowAICarePlan] = useState(false);
   const [editingClient, setEditingClient] = useState(null);
 
   const { data: clients = [], isLoading } = useQuery({
@@ -134,6 +136,13 @@ export default function SupportedLivingClients() {
               >
                 <Edit className="w-4 h-4 mr-2" />
                 Edit Client
+              </Button>
+              <Button
+                onClick={() => setShowAICarePlan(true)}
+                className="bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700"
+              >
+                <Sparkles className="w-4 h-4 mr-2" />
+                AI Care Plan
               </Button>
             </div>
           </div>
@@ -420,6 +429,14 @@ export default function SupportedLivingClients() {
 
           {activeTab === "documents" && (
             <DocumentManager client={selectedClient} />
+          )}
+
+          {showAICarePlan && (
+            <AICarePlanGenerator
+              client={selectedClient}
+              onClose={() => setShowAICarePlan(false)}
+              onSuccess={() => setActiveTab("care_plan")}
+            />
           )}
         </div>
       </div>

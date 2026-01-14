@@ -17,6 +17,7 @@ import DocumentManager from "../components/clients/DocumentManager";
 import ClientAlertManager from "../components/clients/ClientAlertManager";
 import AlertBanner from "../components/clients/AlertBanner";
 import CarePlanManager from "../components/clients/CarePlanManager";
+import AICarePlanGenerator from "../components/careplan/AICarePlanGenerator";
 import RiskAssessmentManager from "../components/clients/RiskAssessmentManager";
 import PEEPManager from "../components/clients/PEEPManager";
 import RepositioningChartManager from "../components/clients/RepositioningChartManager";
