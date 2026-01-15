@@ -40,7 +40,7 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (carer) {
-        return base44.entities.Carer.update(carer.id, data);
+        return await base44.entities.Carer.update(carer.id, data);
       } else {
         // Create new carer and auto-setup availability
         const newCarer = await base44.entities.Carer.create(data);
@@ -102,8 +102,14 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
       queryClient.invalidateQueries({ queryKey: ['carer-availability'] });
       if (!carer) {
         toast.success("Carer Onboarded", "Carer created with availability, location, and training assigned. Ready for scheduling!");
+      } else {
+        toast.success("Carer Updated", "Carer details updated successfully");
       }
       onClose();
+    },
+    onError: (error) => {
+      console.error("Save error:", error);
+      toast.error("Error", `Failed to ${carer ? 'update' : 'create'} carer: ${error.message || 'Unknown error'}`);
     },
   });
 
