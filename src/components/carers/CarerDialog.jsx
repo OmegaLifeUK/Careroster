@@ -39,11 +39,16 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      if (carer) {
-        return await base44.entities.Carer.update(carer.id, data);
-      } else {
-        // Create new carer and auto-setup availability
-        const newCarer = await base44.entities.Carer.create(data);
+      console.log("saveMutation running with data:", data);
+      try {
+        if (carer) {
+          console.log("Updating existing carer:", carer.id);
+          return await base44.entities.Carer.update(carer.id, data);
+        } else {
+          console.log("Creating new carer...");
+          // Create new carer and auto-setup availability
+          const newCarer = await base44.entities.Carer.create(data);
+          console.log("New carer created:", newCarer);
         
         // Auto-create default working hours based on employment type
         const defaultHours = data.employment_type === 'full_time' 
@@ -94,7 +99,11 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
           }
         });
         
-        return newCarer;
+          return newCarer;
+        }
+      } catch (error) {
+        console.error("Error in saveMutation:", error);
+        throw error;
       }
     },
     onSuccess: (result) => {
@@ -139,6 +148,15 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
+    console.log("Form submitted with data:", formData);
+    
+    // Validate required fields
+    if (!formData.full_name || !formData.email || !formData.phone) {
+      toast.error("Validation Error", "Please fill in all required fields (Name, Email, Phone)");
+      return;
+    }
+    
+    console.log("Calling save mutation...");
     saveMutation.mutate(formData);
   };
 
