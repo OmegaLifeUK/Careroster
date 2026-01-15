@@ -148,7 +148,6 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    console.log("Form submitted with data:", formData);
     
     // Validate required fields
     if (!formData.full_name || !formData.email || !formData.phone) {
@@ -156,8 +155,13 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
       return;
     }
     
-    console.log("Calling save mutation...");
-    saveMutation.mutate(formData);
+    // Clean data - remove empty string numbers
+    const cleanData = { ...formData };
+    if (cleanData.overtime_max_hours === "" || cleanData.overtime_max_hours === null) {
+      delete cleanData.overtime_max_hours;
+    }
+    
+    saveMutation.mutate(cleanData);
   };
 
   return (
