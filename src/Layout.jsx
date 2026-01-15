@@ -37,6 +37,7 @@ import { ToastProvider } from "@/components/ui/toast";
 import AccessibilityPanel from "@/components/accessibility/AccessibilityPanel";
 import NotificationDropdown from "@/components/notifications/NotificationDropdown";
 import ComplianceAutomations from "@/components/onboarding/ComplianceAutomations";
+import VisitFormAutomation from "@/components/workflow/VisitFormAutomation";
 
 const residentialCareNav = [
   { title: "Dashboard", url: createPageUrl("Dashboard"), icon: LayoutDashboard },
@@ -544,6 +545,7 @@ export default function Layout({ children, currentPageName }) {
             <AccessibilityPanel onClose={() => setAccessibilityOpen(false)} />
           )}
           <ComplianceAutomations />
+          <VisitFormAutomation />
           </div>
           </div>
           </ToastProvider>
