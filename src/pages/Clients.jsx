@@ -33,6 +33,7 @@ import AINewClientImporter from "../components/clients/AINewClientImporter";
 import ClientProgressReport from "../components/clients/ClientProgressReport";
 import AssessmentMonitor from "../components/workflow/AssessmentMonitor";
 import AIClientAnalyzer from "../components/ai/AIClientAnalyzer";
+import ClientFormsManager from "../components/clients/ClientFormsManager";
 import { useLocation } from "react-router-dom";
 
 export default function Clients() {
@@ -366,6 +367,13 @@ export default function Clients() {
               Documents
             </Button>
             <Button
+              variant={activeTab === "forms" ? "default" : "ghost"}
+              onClick={() => setActiveTab("forms")}
+              className="flex-shrink-0"
+            >
+              Forms
+            </Button>
+            <Button
               variant={activeTab === "progress" ? "default" : "ghost"}
               onClick={() => setActiveTab("progress")}
               className="flex-shrink-0"
@@ -514,6 +522,10 @@ export default function Clients() {
 
           {activeTab === "documents" && (
             <DocumentManager client={selectedClient} />
+          )}
+
+          {activeTab === "forms" && (
+            <ClientFormsManager client={selectedClient} />
           )}
 
           {activeTab === "progress" && (
