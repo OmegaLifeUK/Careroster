@@ -9,6 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Badge } from "@/components/ui/badge";
 import { Plus, Trash2, Loader2, CheckCircle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { Progress } from "@/components/ui/progress";
 
 export default function FormPreview({ template, clientId, onSubmitSuccess, onSubmitted, prefillData = {}, contextData = {} }) {
   const [formValues, setFormValues] = useState({});
@@ -136,6 +137,7 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
   });
 
   const calculateProgress = () => {
+    if (!template?.sections || template.sections.length === 0) return 0;
     const allFields = template.sections.flatMap(s => s.fields || []);
     const filledFields = allFields.filter(f => 
       formValues[f.field_id] !== undefined && 
@@ -162,6 +164,11 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
   };
 
   const handleSubmit = async () => {
+    if (!template?.sections || template.sections.length === 0) {
+      toast.error("Invalid Form", "This form has no sections or fields");
+      return;
+    }
+    
     const allFields = template.sections.flatMap(s => s.fields || []);
     const missingRequired = allFields.filter(f => 
       f.required && !formValues[f.field_id] && formValues[f.field_id] !== false
@@ -451,6 +458,33 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
         return <Input {...commonProps} />;
     }
   };
+
+  if (!template) {
+    return (
+      <Card>
+        <CardContent className="p-12 text-center">
+          <p className="text-gray-500">No template data available</p>
+        </CardContent>
+      </Card>
+    );
+  }
+
+  if (!template.sections || template.sections.length === 0) {
+    return (
+      <Card>
+        <CardHeader className="border-b bg-gradient-to-r from-blue-50 to-purple-50">
+          <CardTitle className="text-2xl">{template.form_name}</CardTitle>
+          {template.description && (
+            <p className="text-gray-600 mt-2">{template.description}</p>
+          )}
+        </CardHeader>
+        <CardContent className="p-12 text-center">
+          <p className="text-gray-500 mb-2">This form template has no sections or fields defined yet.</p>
+          <p className="text-sm text-gray-400">Please edit the template to add sections and fields.</p>
+        </CardContent>
+      </Card>
+    );
+  }
 
   return (
     <Card>
