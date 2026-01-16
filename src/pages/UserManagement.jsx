@@ -5,6 +5,9 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/components/ui/toast";
 import { 
   Users,
   UserPlus,
@@ -24,8 +27,12 @@ export default function UserManagement() {
   const [searchQuery, setSearchQuery] = useState("");
   const [editingUser, setEditingUser] = useState(null);
   const [newRole, setNewRole] = useState("");
+  const [showInviteDialog, setShowInviteDialog] = useState(false);
+  const [inviteEmail, setInviteEmail] = useState("");
+  const [inviteRole, setInviteRole] = useState("user");
 
   const queryClient = useQueryClient();
+  const { toast } = useToast();
 
   useEffect(() => {
     const loadUser = async () => {
@@ -61,17 +68,45 @@ export default function UserManagement() {
       queryClient.invalidateQueries({ queryKey: ['all-users'] });
       setEditingUser(null);
       setNewRole("");
+      toast.success("Role updated successfully");
+    },
+  });
+
+  const inviteUserMutation = useMutation({
+    mutationFn: async ({ email, role }) => {
+      return await base44.users.inviteUser(email, role);
+    },
+    onSuccess: () => {
+      toast.success("User invited successfully", "They will receive an invitation email");
+      setShowInviteDialog(false);
+      setInviteEmail("");
+      setInviteRole("user");
+      // Refresh the users list
+      setTimeout(() => {
+        queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      }, 1000);
+    },
+    onError: (error) => {
+      toast.error("Failed to invite user", error.message);
     },
   });
 
   const handleUpdateRole = (userId) => {
     if (!newRole) {
-      alert('Please select a role');
+      toast.error("Please select a role");
       return;
     }
     if (confirm(`Are you sure you want to change this user's role to ${newRole}?`)) {
       updateUserMutation.mutate({ userId, role: newRole });
     }
+  };
+
+  const handleInviteUser = () => {
+    if (!inviteEmail || !inviteEmail.includes('@')) {
+      toast.error("Please enter a valid email address");
+      return;
+    }
+    inviteUserMutation.mutate({ email: inviteEmail, role: inviteRole });
   };
 
   const filteredUsers = allUsers.filter(u => 
@@ -109,14 +144,23 @@ export default function UserManagement() {
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-6">
-          <div className="flex items-center gap-3 mb-3">
-            <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
-              <Users className="w-8 h-8 text-white" />
+          <div className="flex items-center justify-between mb-3">
+            <div className="flex items-center gap-3">
+              <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-600 rounded-xl">
+                <Users className="w-8 h-8 text-white" />
+              </div>
+              <div>
+                <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
+                <p className="text-gray-500">Manage user roles and permissions</p>
+              </div>
             </div>
-            <div>
-              <h1 className="text-3xl font-bold text-gray-900">User Management</h1>
-              <p className="text-gray-500">Manage user roles and permissions</p>
-            </div>
+            <Button
+              onClick={() => setShowInviteDialog(true)}
+              className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+            >
+              <UserPlus className="w-5 h-5 mr-2" />
+              Invite User
+            </Button>
           </div>
         </div>
 
@@ -180,21 +224,7 @@ export default function UserManagement() {
           </CardContent>
         </Card>
 
-        {/* Important Notice */}
-        <Card className="mb-6 bg-blue-50 border-blue-200">
-          <CardContent className="p-4">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-blue-600 mt-0.5" />
-              <div>
-                <h3 className="font-semibold text-blue-900 mb-1">User Invitation Required</h3>
-                <p className="text-sm text-blue-800">
-                  New users must be invited through the Base44 platform's "Invite User" feature before they can access the system. 
-                  Once invited, you can update their role here.
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
+
 
         {/* Users List */}
         <Card>
@@ -318,34 +348,79 @@ export default function UserManagement() {
           </CardContent>
         </Card>
 
-        {/* Instructions */}
-        <Card className="mt-6 bg-yellow-50 border-yellow-200">
-          <CardContent className="p-6">
-            <h3 className="font-semibold text-yellow-900 mb-3 flex items-center gap-2">
-              <UserPlus className="w-5 h-5" />
-              How to Add New Users
-            </h3>
-            <ol className="space-y-2 text-sm text-yellow-800">
-              <li className="flex items-start gap-2">
-                <span className="font-bold">1.</span>
-                <span>Go to the Base44 Dashboard (Settings → Users)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">2.</span>
-                <span>Click "Invite User" and enter their email address (e.g., p.holt@omegalife.uk)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">3.</span>
-                <span>The user will receive an invitation email to create their account</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="font-bold">4.</span>
-                <span>Once they've registered, return to this page and update their role to "Administrator" if needed</span>
-              </li>
-            </ol>
-          </CardContent>
-        </Card>
       </div>
+
+      {/* Invite User Dialog */}
+      <Dialog open={showInviteDialog} onOpenChange={setShowInviteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <UserPlus className="w-5 h-5" />
+              Invite New User
+            </DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4">
+            <div>
+              <Label htmlFor="invite-email">Email Address *</Label>
+              <Input
+                id="invite-email"
+                type="email"
+                placeholder="user@example.com"
+                value={inviteEmail}
+                onChange={(e) => setInviteEmail(e.target.value)}
+                className="mt-1"
+              />
+            </div>
+            <div>
+              <Label htmlFor="invite-role">Role *</Label>
+              <select
+                id="invite-role"
+                value={inviteRole}
+                onChange={(e) => setInviteRole(e.target.value)}
+                className="mt-1 w-full p-2 border rounded-md"
+              >
+                <option value="user">User</option>
+                <option value="admin">Administrator</option>
+              </select>
+            </div>
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-3">
+              <p className="text-sm text-blue-800">
+                The user will receive an invitation email with instructions to create their account.
+              </p>
+            </div>
+            <div className="flex gap-2 justify-end">
+              <Button
+                variant="outline"
+                onClick={() => {
+                  setShowInviteDialog(false);
+                  setInviteEmail("");
+                  setInviteRole("user");
+                }}
+                disabled={inviteUserMutation.isPending}
+              >
+                Cancel
+              </Button>
+              <Button
+                onClick={handleInviteUser}
+                disabled={inviteUserMutation.isPending}
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700"
+              >
+                {inviteUserMutation.isPending ? (
+                  <>
+                    <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                    Sending...
+                  </>
+                ) : (
+                  <>
+                    <Mail className="w-4 h-4 mr-2" />
+                    Send Invitation
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
