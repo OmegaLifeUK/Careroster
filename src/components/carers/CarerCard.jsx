@@ -1,11 +1,12 @@
 import React from "react";
 import { base44 } from "@/api/base44Client";
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Phone, Mail, MapPin, Award, Edit, Trash2, ClipboardList, CheckCircle, AlertTriangle, Clock, Eye } from "lucide-react";
+import { useToast } from "@/components/ui/toast";
+import { Phone, Mail, MapPin, Award, Edit, Trash2, ClipboardList, CheckCircle, AlertTriangle, Clock, Eye, UserPlus } from "lucide-react";
 import { createPageUrl } from "@/utils";
 import { differenceInDays } from "date-fns";
 
@@ -17,6 +18,8 @@ const statusColors = {
 
 export default function CarerCard({ carer, qualifications = [], onEdit, onDelete }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
+  const queryClient = useQueryClient();
   
   if (!carer) return null;
 
@@ -56,6 +59,42 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
   };
 
   const supervisionStatus = getSupervisionStatus();
+
+  // Check if user account exists for this carer
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.User.list();
+      } catch (error) {
+        return [];
+      }
+    },
+  });
+
+  const hasUserAccount = carer.email && allUsers.some(u => u.email === carer.email);
+
+  const inviteUserMutation = useMutation({
+    mutationFn: async () => {
+      return await base44.users.inviteUser(carer.email, "user");
+    },
+    onSuccess: () => {
+      toast.success("Invitation sent", `${carer.full_name} will receive an email to register`);
+      queryClient.invalidateQueries({ queryKey: ['all-users'] });
+    },
+    onError: (error) => {
+      toast.error("Failed to send invitation", error.message);
+    },
+  });
+
+  const handleInviteUser = (e) => {
+    e.stopPropagation();
+    if (!carer.email) {
+      toast.error("No email address", "Please add an email to this carer before inviting");
+      return;
+    }
+    inviteUserMutation.mutate();
+  };
 
   return (
     <Card 
@@ -145,6 +184,25 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             <Edit className="w-4 h-4 mr-2" />
             Edit
           </Button>
+          {!hasUserAccount && carer.email && (
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={handleInviteUser}
+              disabled={inviteUserMutation.isPending}
+              className="flex-1 text-blue-600 hover:text-blue-700 hover:bg-blue-50"
+              title="Invite as user to access Staff Portal"
+            >
+              <UserPlus className="w-4 h-4 mr-2" />
+              Invite
+            </Button>
+          )}
+          {hasUserAccount && (
+            <Badge variant="outline" className="text-green-600 border-green-600 px-3">
+              <CheckCircle className="w-3 h-3 mr-1" />
+              User
+            </Badge>
+          )}
           <Button 
             variant="outline" 
             size="sm" 
