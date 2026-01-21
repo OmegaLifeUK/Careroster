@@ -1,6 +1,6 @@
 import React, { useState } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import {
   Dialog,
   DialogContent,
@@ -12,10 +12,20 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { geocodeAndUpdateAddress, assignMandatoryTraining } from "@/components/workflow/AutomatedWorkflowEngine";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 export default function CarerDialog({ carer, qualifications, onClose }) {
   const { toast } = useToast();
@@ -35,7 +45,22 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
     dbs_expiry: carer?.dbs_expiry || "",
   });
 
+  const [showInvitePrompt, setShowInvitePrompt] = useState(false);
+  const [newCarerId, setNewCarerId] = useState(null);
+
   const queryClient = useQueryClient();
+
+  // Check existing users
+  const { data: allUsers = [] } = useQuery({
+    queryKey: ['all-users'],
+    queryFn: async () => {
+      try {
+        return await base44.entities.User.list();
+      } catch (error) {
+        return [];
+      }
+    },
+  });
 
   const saveMutation = useMutation({
     mutationFn: async (data) => {
@@ -106,15 +131,26 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
         throw error;
       }
     },
-    onSuccess: (result) => {
+    onSuccess: async (result) => {
       queryClient.invalidateQueries({ queryKey: ['carers'] });
       queryClient.invalidateQueries({ queryKey: ['carer-availability'] });
+      
       if (!carer) {
-        toast.success("Carer Onboarded", "Carer created with availability, location, and training assigned. Ready for scheduling!");
+        // New carer created - check if user account exists
+        const emailExists = allUsers.some(u => u.email === result.email);
+        
+        if (emailExists) {
+          toast.success("Carer Onboarded & Linked", "Carer created and linked to existing user account. Ready for Staff Portal!");
+        } else {
+          // Prompt to invite
+          setNewCarerId(result.id);
+          setShowInvitePrompt(true);
+          toast.success("Carer Onboarded", "Carer created with availability, location, and training assigned. Ready for scheduling!");
+        }
       } else {
         toast.success("Carer Updated", "Carer details updated successfully");
+        onClose();
       }
-      onClose();
     },
     onError: (error) => {
       console.error("Save error:", error);
@@ -165,6 +201,7 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
   };
 
   return (
+    <>
     <Dialog open onOpenChange={onClose}>
       <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
@@ -377,5 +414,47 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
         </form>
       </DialogContent>
     </Dialog>
+
+    <AlertDialog open={showInvitePrompt} onOpenChange={setShowInvitePrompt}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Invite to Staff Portal?</AlertDialogTitle>
+          <AlertDialogDescription>
+            <strong>{formData.full_name}</strong> has been successfully created as a carer.
+            <br /><br />
+            Would you like to send them an email invitation to set up their Staff Portal account? 
+            This will allow them to view their shifts, complete care tasks, and access the mobile app.
+            <br /><br />
+            <div className="flex items-center gap-2 mt-2 p-2 bg-blue-50 rounded">
+              <Mail className="w-4 h-4 text-blue-600" />
+              <span className="text-sm font-medium text-blue-900">{formData.email}</span>
+            </div>
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel onClick={() => { setShowInvitePrompt(false); onClose(); }}>
+            Skip for Now
+          </AlertDialogCancel>
+          <AlertDialogAction
+            onClick={() => inviteUserMutation.mutate(formData.email)}
+            disabled={inviteUserMutation.isPending}
+            className="bg-blue-600 hover:bg-blue-700"
+          >
+            {inviteUserMutation.isPending ? (
+              <>
+                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                Sending...
+              </>
+            ) : (
+              <>
+                <Mail className="w-4 h-4 mr-2" />
+                Send Invitation
+              </>
+            )}
+          </AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
+    </>
   );
 }
