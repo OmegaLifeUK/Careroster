@@ -110,12 +110,12 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             <div>
               <h3 className="font-semibold text-lg">{carer.full_name}</h3>
               <p className="text-sm text-gray-500">
-                {carer.employment_type?.replace('_', ' ') || 'Not specified'}
+                {carer.employment_type ? carer.employment_type.replace(/_/g, ' ') : 'Not specified'}
               </p>
             </div>
           </div>
           <Badge className={statusColors[carer.status] || statusColors.inactive}>
-            {carer.status?.replace('_', ' ') || 'Unknown'}
+            {carer.status ? carer.status.replace(/_/g, ' ') : 'Unknown'}
           </Badge>
         </div>
 
