@@ -211,23 +211,26 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
         
         {/* Staff Portal Access Section */}
         <div className="mt-4 pt-4 border-t">
-          {!hasUserAccount && carer.email ? (
-            <Button 
-              size="sm" 
-              onClick={handleInviteUser}
-              disabled={inviteUserMutation.isPending}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white"
-            >
-              <UserPlus className="w-4 h-4 mr-2" />
-              {inviteUserMutation.isPending ? "Sending..." : "Send Staff Portal Invite"}
-            </Button>
-          ) : !hasUserAccount && !carer.email ? (
-            <p className="text-xs text-gray-500 text-center">Add email to send portal invite</p>
-          ) : (
-            <div className="flex items-center justify-center gap-2 text-sm text-green-600">
-              <CheckCircle className="w-4 h-4" />
-              <span className="font-medium">Staff Portal Access Active</span>
+          {carer.email ? (
+            <div className="space-y-2">
+              {hasUserAccount && (
+                <div className="flex items-center justify-center gap-2 text-xs text-green-600 mb-1">
+                  <CheckCircle className="w-3 h-3" />
+                  <span className="font-medium">Portal Access Active</span>
+                </div>
+              )}
+              <Button 
+                size="sm" 
+                onClick={handleInviteUser}
+                disabled={inviteUserMutation.isPending}
+                className="w-full bg-blue-600 hover:bg-blue-700 text-white"
+              >
+                <UserPlus className="w-4 h-4 mr-2" />
+                {inviteUserMutation.isPending ? "Sending..." : hasUserAccount ? "Resend Portal Invite" : "Send Portal Invite"}
+              </Button>
             </div>
+          ) : (
+            <p className="text-xs text-gray-500 text-center">Add email to send portal invite</p>
           )}
         </div>
       </CardContent>
