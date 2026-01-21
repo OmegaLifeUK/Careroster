@@ -62,6 +62,20 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
     },
   });
 
+  const inviteUserMutation = useMutation({
+    mutationFn: async (email) => {
+      return await base44.users.inviteUser(email, "user");
+    },
+    onSuccess: () => {
+      toast.success("Invitation Sent", "User will receive an email to set up their Staff Portal account");
+      queryClient.invalidateQueries({ queryKey: ['all-users'] });
+      onClose();
+    },
+    onError: (error) => {
+      toast.error("Failed to send invitation", error.message);
+    },
+  });
+
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       console.log("saveMutation running with data:", data);
