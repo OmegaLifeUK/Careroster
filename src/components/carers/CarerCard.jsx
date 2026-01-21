@@ -177,6 +177,18 @@ export default function CarerCard({ carer, qualifications = [], onEdit, onDelete
             size="sm" 
             onClick={(e) => {
               e.stopPropagation();
+              navigate(createPageUrl('CarerDetail') + `?id=${carer.id}`);
+            }}
+            className="flex-1"
+          >
+            <Eye className="w-4 h-4 mr-2" />
+            View
+          </Button>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={(e) => {
+              e.stopPropagation();
               if (onEdit) onEdit(carer);
             }}
             className="flex-1"
