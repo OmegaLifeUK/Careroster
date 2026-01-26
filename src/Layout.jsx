@@ -133,13 +133,16 @@ export default function Layout({ children, currentPageName }) {
   const [portalAccess, setPortalAccess] = React.useState(null);
 
   React.useEffect(() => {
+    let mounted = true;
     const loadUser = async () => {
       try {
         const userData = await base44.auth.me();
+        if (!mounted) return;
         setUser(userData);
         
         try {
           const allAccess = await base44.entities.ClientPortalAccess.list();
+          if (!mounted) return;
           if (allAccess && Array.isArray(allAccess)) {
             const userAccess = allAccess.find(a => 
               a.user_email === userData.email && a.is_active
@@ -148,13 +151,14 @@ export default function Layout({ children, currentPageName }) {
           }
         } catch (portalError) {
           console.log("Portal access not configured");
-          setPortalAccess(null);
+          if (mounted) setPortalAccess(null);
         }
       } catch (error) {
         console.error("Error loading user:", error);
       }
     };
     loadUser();
+    return () => { mounted = false; };
   }, []);
 
   React.useEffect(() => {
