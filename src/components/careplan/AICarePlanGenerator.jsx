@@ -376,6 +376,41 @@ Write in clear, professional UK English.`;
         console.log("Could not create notification:", notifError);
       }
 
+      // Create staff tasks for assessments/reviews linked to this client
+      if (generatedPlan.mental_capacity_consent?.content || generatedPlan.safeguarding?.content) {
+        try {
+          // Create mental capacity assessment task if needed
+          if (generatedPlan.mental_capacity_consent?.capacity_indicators?.length > 0) {
+            await base44.entities.StaffTask.create({
+              title: `Mental Capacity Assessment - ${client.full_name}`,
+              description: `Complete mental capacity assessment based on care plan indicators`,
+              task_type: 'assessment',
+              assigned_to_staff_id: currentUser.id,
+              subject_client_id: client.id,
+              priority: 'high',
+              due_date: format(new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+              status: 'pending'
+            });
+          }
+
+          // Create safeguarding task if flags present
+          if (generatedPlan.safeguarding?.flags?.length > 0) {
+            await base44.entities.StaffTask.create({
+              title: `Safeguarding Review - ${client.full_name}`,
+              description: `Review safeguarding concerns identified in care plan: ${generatedPlan.safeguarding.flags.join(', ')}`,
+              task_type: 'review',
+              assigned_to_staff_id: currentUser.id,
+              subject_client_id: client.id,
+              priority: 'urgent',
+              due_date: format(new Date(Date.now() + 3 * 24 * 60 * 60 * 1000), 'yyyy-MM-dd'),
+              status: 'pending'
+            });
+          }
+        } catch (taskError) {
+          console.log("Could not create assessment tasks:", taskError);
+        }
+      }
+
       return newCarePlan;
     },
     onSuccess: (newPlan) => {
