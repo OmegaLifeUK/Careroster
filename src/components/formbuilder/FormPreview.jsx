@@ -51,37 +51,62 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
             const fieldId = field.field_id;
             const fieldLabel = field.field_label?.toLowerCase() || '';
             
-            if (prefillData.full_name && (fieldLabel.includes('name') && !fieldLabel.includes('supervisor'))) {
+            // Client/Service User name matching
+            if (prefillData.full_name && (
+              fieldLabel.includes('name') || 
+              fieldLabel.includes('client') || 
+              fieldLabel.includes('service user') ||
+              fieldLabel.includes('resident')
+            ) && !fieldLabel.includes('supervisor') && !fieldLabel.includes('staff')) {
               initialValues[fieldId] = prefillData.full_name;
             }
-            if (prefillData.staff_name && fieldLabel.includes('staff') && fieldLabel.includes('name')) {
+            
+            // Staff name matching
+            if (prefillData.staff_name && (fieldLabel.includes('staff') || fieldLabel.includes('employee')) && fieldLabel.includes('name')) {
               initialValues[fieldId] = prefillData.staff_name;
             }
-            if (prefillData.supervisor_name && fieldLabel.includes('supervisor')) {
+            
+            // Supervisor name
+            if (prefillData.supervisor_name && (fieldLabel.includes('supervisor') || fieldLabel.includes('manager'))) {
               initialValues[fieldId] = prefillData.supervisor_name;
             }
-            if (prefillData.client_name && fieldLabel.includes('client')) {
+            
+            // Client name specific
+            if (prefillData.client_name && (fieldLabel.includes('client') || fieldLabel.includes('service user') || fieldLabel.includes('resident'))) {
               initialValues[fieldId] = prefillData.client_name;
             }
-            if (prefillData.date_of_birth && (fieldLabel.includes('dob') || fieldLabel.includes('date of birth'))) {
+            
+            // Date of birth
+            if (prefillData.date_of_birth && (fieldLabel.includes('dob') || fieldLabel.includes('date of birth') || fieldLabel.includes('birth'))) {
               initialValues[fieldId] = prefillData.date_of_birth;
             }
+            
+            // Generic date
             if (prefillData.date && fieldLabel.includes('date') && !fieldLabel.includes('birth')) {
               initialValues[fieldId] = prefillData.date;
             }
+            
+            // Email
             if (prefillData.email && fieldLabel.includes('email')) {
               initialValues[fieldId] = prefillData.email;
             }
-            if (prefillData.phone && fieldLabel.includes('phone')) {
+            
+            // Phone
+            if (prefillData.phone && (fieldLabel.includes('phone') || fieldLabel.includes('telephone') || fieldLabel.includes('contact'))) {
               initialValues[fieldId] = prefillData.phone;
             }
+            
+            // Address
             if (prefillData.address && fieldLabel.includes('address')) {
               initialValues[fieldId] = prefillData.address;
             }
-            if (prefillData.nhs_number && fieldLabel.includes('nhs')) {
+            
+            // NHS Number
+            if (prefillData.nhs_number && (fieldLabel.includes('nhs') || fieldLabel.includes('national health'))) {
               initialValues[fieldId] = prefillData.nhs_number;
             }
             
+            // Direct field ID match (highest priority)
             if (prefillData[fieldId]) {
               initialValues[fieldId] = prefillData[fieldId];
             }
