@@ -19,12 +19,16 @@ import {
   Loader2,
   Play,
   FileText,
-  Users
+  Users,
+  List,
+  LayoutGrid
 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 import StaffTaskFormExecutor from "./StaffTaskFormExecutor";
 import TaskProgressBar from "./TaskProgressBar";
+import StaffTaskCalendar from "./StaffTaskCalendar";
+import StaffTaskKanban from "./StaffTaskKanban";
 
 const TASK_TYPE_CONFIG = {
   supervision: { label: "Supervision", icon: Users, color: "bg-blue-100 text-blue-700" },
@@ -47,6 +51,7 @@ export default function StaffTaskManager() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [executingTask, setExecutingTask] = useState(null);
   const [filterStatus, setFilterStatus] = useState("pending");
+  const [viewMode, setViewMode] = useState("list");
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -131,10 +136,41 @@ export default function StaffTaskManager() {
           <h2 className="text-xl font-bold text-gray-900">Staff Tasks</h2>
           <p className="text-gray-600">Supervisions, assessments, and other tasks</p>
         </div>
-        <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
-          <Plus className="w-4 h-4 mr-2" />
-          Create Task
-        </Button>
+        <div className="flex items-center gap-2">
+          <div className="flex items-center border rounded-lg bg-white">
+            <Button
+              variant={viewMode === "list" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("list")}
+              className="rounded-r-none"
+            >
+              <List className="w-4 h-4 mr-1" />
+              List
+            </Button>
+            <Button
+              variant={viewMode === "kanban" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("kanban")}
+              className="rounded-none border-x"
+            >
+              <LayoutGrid className="w-4 h-4 mr-1" />
+              Kanban
+            </Button>
+            <Button
+              variant={viewMode === "calendar" ? "default" : "ghost"}
+              size="sm"
+              onClick={() => setViewMode("calendar")}
+              className="rounded-l-none"
+            >
+              <Calendar className="w-4 h-4 mr-1" />
+              Calendar
+            </Button>
+          </div>
+          <Button onClick={() => setShowCreateDialog(true)} className="bg-blue-600 hover:bg-blue-700">
+            <Plus className="w-4 h-4 mr-2" />
+            Create Task
+          </Button>
+        </div>
       </div>
 
       {/* Stats */}
@@ -197,19 +233,20 @@ export default function StaffTaskManager() {
         ))}
       </div>
 
-      {/* Task List */}
-      <div className="space-y-3">
-        {isLoading ? (
-          <Card><CardContent className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></CardContent></Card>
-        ) : tasks.length === 0 ? (
-          <Card>
-            <CardContent className="p-8 text-center text-gray-500">
-              <ClipboardList className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-              <p>No tasks found</p>
-            </CardContent>
-          </Card>
-        ) : (
-          tasks.map(task => {
+      {/* Task Views */}
+      {viewMode === "list" && (
+        <div className="space-y-3">
+          {isLoading ? (
+            <Card><CardContent className="p-8 text-center"><Loader2 className="w-6 h-6 animate-spin mx-auto" /></CardContent></Card>
+          ) : tasks.length === 0 ? (
+            <Card>
+              <CardContent className="p-8 text-center text-gray-500">
+                <ClipboardList className="w-12 h-12 mx-auto mb-4 text-gray-300" />
+                <p>No tasks found</p>
+              </CardContent>
+            </Card>
+          ) : (
+            tasks.map(task => {
             const typeConfig = TASK_TYPE_CONFIG[task.task_type] || TASK_TYPE_CONFIG.general;
             const TypeIcon = typeConfig.icon;
             const isOverdue = task.due_date && new Date(task.due_date) < new Date() && task.status === 'pending';
@@ -308,9 +345,30 @@ export default function StaffTaskManager() {
                 </CardContent>
               </Card>
             );
-          })
-        )}
-      </div>
+            })
+          )}
+        </div>
+      )}
+
+      {viewMode === "kanban" && (
+        <StaffTaskKanban 
+          tasks={tasks} 
+          onTaskClick={handleStartTask}
+          onTaskUpdate={() => {
+            queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+          }}
+        />
+      )}
+
+      {viewMode === "calendar" && (
+        <StaffTaskCalendar 
+          tasks={tasks} 
+          onTaskClick={handleStartTask}
+          onTaskUpdate={() => {
+            queryClient.invalidateQueries({ queryKey: ['staff-tasks'] });
+          }}
+        />
+      )}
 
       {showCreateDialog && (
         <CreateStaffTaskDialog
