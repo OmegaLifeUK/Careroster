@@ -329,6 +329,85 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
         </div>
       </div>
 
+      {/* Client/Staff Details Card */}
+      {(subjectClient || subjectStaff) && (
+        <div className="max-w-4xl mx-auto px-4 pt-6">
+          <Card className="bg-blue-50 border-blue-200">
+            <CardHeader>
+              <CardTitle className="text-base">
+                {subjectClient ? 'Client Details' : 'Staff Member Details'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4 text-sm">
+                {subjectClient && (
+                  <>
+                    <div>
+                      <span className="font-medium text-gray-700">Name:</span>
+                      <p className="text-gray-900">{subjectClient.full_name}</p>
+                    </div>
+                    {subjectClient.date_of_birth && (
+                      <div>
+                        <span className="font-medium text-gray-700">Date of Birth:</span>
+                        <p className="text-gray-900">{format(new Date(subjectClient.date_of_birth), 'dd/MM/yyyy')}</p>
+                      </div>
+                    )}
+                    {subjectClient.phone && (
+                      <div>
+                        <span className="font-medium text-gray-700">Phone:</span>
+                        <p className="text-gray-900">{subjectClient.phone}</p>
+                      </div>
+                    )}
+                    {subjectClient.address && (
+                      <div className="col-span-2">
+                        <span className="font-medium text-gray-700">Address:</span>
+                        <p className="text-gray-900">
+                          {subjectClient.address.street && `${subjectClient.address.street}, `}
+                          {subjectClient.address.city && `${subjectClient.address.city}, `}
+                          {subjectClient.address.postcode}
+                        </p>
+                      </div>
+                    )}
+                    {subjectClient.nhs_number && (
+                      <div>
+                        <span className="font-medium text-gray-700">NHS Number:</span>
+                        <p className="text-gray-900">{subjectClient.nhs_number}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+                {subjectStaff && (
+                  <>
+                    <div>
+                      <span className="font-medium text-gray-700">Name:</span>
+                      <p className="text-gray-900">{subjectStaff.full_name}</p>
+                    </div>
+                    {subjectStaff.email && (
+                      <div>
+                        <span className="font-medium text-gray-700">Email:</span>
+                        <p className="text-gray-900">{subjectStaff.email}</p>
+                      </div>
+                    )}
+                    {subjectStaff.phone && (
+                      <div>
+                        <span className="font-medium text-gray-700">Phone:</span>
+                        <p className="text-gray-900">{subjectStaff.phone}</p>
+                      </div>
+                    )}
+                    {subjectStaff.employment_type && (
+                      <div>
+                        <span className="font-medium text-gray-700">Employment Type:</span>
+                        <p className="text-gray-900">{subjectStaff.employment_type?.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}</p>
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+      )}
+
       <div className="max-w-4xl mx-auto px-4 py-6">
         {/* Task Info */}
         {task.description && (
