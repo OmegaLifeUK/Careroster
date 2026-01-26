@@ -12,6 +12,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AlertCircle, Sparkles, CheckCircle, XCircle, Edit, FileText, Loader2, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
+import { format } from "date-fns";
 
 export default function AICarePlanGenerator({ client, onClose, onSuccess }) {
   const [step, setStep] = useState("select"); // select, generating, review
