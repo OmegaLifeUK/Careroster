@@ -313,7 +313,13 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
                   {task.scheduled_date && (
                     <span className="flex items-center gap-1">
                       <Calendar className="w-4 h-4" />
-                      {format(new Date(task.scheduled_date), 'dd MMM yyyy')}
+                      {(() => {
+                        try {
+                          return format(new Date(task.scheduled_date), 'dd MMM yyyy');
+                        } catch {
+                          return task.scheduled_date;
+                        }
+                      })()}
                       {task.scheduled_time && ` at ${task.scheduled_time}`}
                     </span>
                   )}
@@ -349,7 +355,13 @@ export default function StaffTaskFormExecutor({ task, onClose, onComplete, allSt
                     {subjectClient.date_of_birth && (
                       <div>
                         <span className="font-medium text-gray-700">Date of Birth:</span>
-                        <p className="text-gray-900">{format(new Date(subjectClient.date_of_birth), 'dd/MM/yyyy')}</p>
+                        <p className="text-gray-900">{(() => {
+                          try {
+                            return format(new Date(subjectClient.date_of_birth), 'dd/MM/yyyy');
+                          } catch {
+                            return subjectClient.date_of_birth;
+                          }
+                        })()}</p>
                       </div>
                     )}
                     {subjectClient.phone && (
