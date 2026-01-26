@@ -70,6 +70,11 @@ export default function StaffTaskManager() {
     queryFn: () => base44.entities.Carer.list()
   });
 
+  const { data: clients = [] } = useQuery({
+    queryKey: ['all-clients'],
+    queryFn: () => base44.entities.Client.list()
+  });
+
   const { data: formTemplates = [] } = useQuery({
     queryKey: ['form-templates'],
     queryFn: async () => {
@@ -311,6 +316,7 @@ export default function StaffTaskManager() {
         <CreateStaffTaskDialog
           onClose={() => setShowCreateDialog(false)}
           allStaff={allStaff}
+          clients={clients}
           formTemplates={formTemplates}
           auditTemplates={auditTemplates}
         />
@@ -319,7 +325,7 @@ export default function StaffTaskManager() {
   );
 }
 
-function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplates }) {
+function CreateStaffTaskDialog({ onClose, allStaff, clients, formTemplates, auditTemplates }) {
   const [formData, setFormData] = useState({
     title: "",
     description: "",
@@ -328,6 +334,7 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
     audit_template_id: "",
     assigned_to_staff_id: "",
     subject_staff_id: "",
+    subject_client_id: "",
     priority: "medium",
     due_date: "",
     scheduled_date: "",
@@ -433,7 +440,7 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
             </Select>
           </div>
 
-          {(formData.task_type === "supervision" || formData.task_type === "spot_check" || formData.task_type === "assessment") && (
+          {(formData.task_type === "supervision" || formData.task_type === "spot_check") && (
             <div>
               <label className="text-sm font-medium">About (staff member being supervised/assessed)</label>
               <Select 
@@ -443,7 +450,7 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
                   let title = formData.title;
                   if (formData.task_type === "supervision") title = `Supervision - ${name}`;
                   if (formData.task_type === "spot_check") title = `Spot Check - ${name}`;
-                  setFormData({ ...formData, subject_staff_id: v, title });
+                  setFormData({ ...formData, subject_staff_id: v, subject_client_id: "", title });
                 }}
               >
                 <SelectTrigger>
@@ -452,6 +459,31 @@ function CreateStaffTaskDialog({ onClose, allStaff, formTemplates, auditTemplate
                 <SelectContent>
                   {allStaff.map(s => (
                     <SelectItem key={s.id} value={s.id}>{s.full_name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          )}
+
+          {(formData.task_type === "assessment" || formData.task_type === "review") && (
+            <div>
+              <label className="text-sm font-medium">About (client being assessed/reviewed)</label>
+              <Select 
+                value={formData.subject_client_id} 
+                onValueChange={(v) => {
+                  const name = clients.find(c => c.id === v)?.full_name || "";
+                  let title = formData.title;
+                  if (formData.task_type === "assessment") title = `Assessment - ${name}`;
+                  if (formData.task_type === "review") title = `Review - ${name}`;
+                  setFormData({ ...formData, subject_client_id: v, subject_staff_id: "", title });
+                }}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Select client" />
+                </SelectTrigger>
+                <SelectContent>
+                  {clients.map(c => (
+                    <SelectItem key={c.id} value={c.id}>{c.full_name}</SelectItem>
                   ))}
                 </SelectContent>
               </Select>
