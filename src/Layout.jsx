@@ -97,6 +97,7 @@ const generalNav = [
   { title: "Payroll & Finance", url: createPageUrl("PayrollDashboard"), icon: FileText },
   { title: "Reports", url: createPageUrl("Reports"), icon: FileText },
   { title: "Organisation Setup", url: createPageUrl("OrganisationSetup"), icon: Building2 },
+  { title: "Onboarding Configuration", url: createPageUrl("OnboardingConfiguration"), icon: Settings },
   { title: "Staff Onboarding", url: createPageUrl("StaffOnboarding"), icon: Users },
   { title: "Client Onboarding", url: createPageUrl("ClientOnboarding"), icon: UserCircle },
   { title: "Policy Library", url: createPageUrl("PolicyLibrary"), icon: FileText },
