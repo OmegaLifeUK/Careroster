@@ -117,9 +117,45 @@ export default function OnboardingHub() {
     return { checks, completed, percentage, allComplete: completed === 5 };
   };
 
+  const { data: allConsent = [] } = useQuery({
+    queryKey: ['all-consent-onboarding'],
+    queryFn: async () => {
+      const records = await base44.entities.ConsentAndCapacity.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
+  const { data: allAssessments = [] } = useQuery({
+    queryKey: ['all-assessments-onboarding'],
+    queryFn: async () => {
+      const records = await base44.entities.CareAssessment.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
+  const { data: allCarePlans = [] } = useQuery({
+    queryKey: ['all-care-plans-onboarding'],
+    queryFn: async () => {
+      const records = await base44.entities.CarePlan.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
   const getClientOnboardingStatus = (clientId) => {
-    // Would check consent, assessment, care plan
-    return { percentage: 0, allComplete: false };
+    const consent = allConsent.find(c => c.client_id === clientId);
+    const assessment = allAssessments.find(a => a.client_id === clientId);
+    const carePlan = allCarePlans.find(cp => cp.client_id === clientId && cp.status === 'active');
+
+    const checks = {
+      consent: consent?.status === 'obtained',
+      assessment: assessment?.status === 'completed' || assessment?.status === 'approved',
+      carePlan: !!carePlan
+    };
+
+    const completed = Object.values(checks).filter(Boolean).length;
+    const percentage = Math.round((completed / 3) * 100);
+    
+    return { checks, completed, percentage, allComplete: completed === 3 };
   };
 
   // Calculate metrics
