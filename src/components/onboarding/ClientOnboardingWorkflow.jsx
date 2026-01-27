@@ -57,7 +57,7 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
   const calculateStatus = () => {
     const checks = {
       consent: consent?.status === 'obtained',
-      assessment: assessment?.status === 'approved',
+      assessment: assessment?.status === 'completed' || assessment?.status === 'approved',
       carePlan: !!approvedCarePlan
     };
 
