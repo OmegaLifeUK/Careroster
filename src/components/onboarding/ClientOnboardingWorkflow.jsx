@@ -427,8 +427,8 @@ function AssessmentForm({ clientId, existingRecord, onComplete }) {
         return base44.entities.CareAssessment.create(data);
       }
     },
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['care-assessment', clientId] });
+    onSuccess: async () => {
+      await queryClient.refetchQueries({ queryKey: ['care-assessment', clientId] });
       toast.success("Saved", "Care assessment completed");
       onComplete?.();
     }
