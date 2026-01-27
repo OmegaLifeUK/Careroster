@@ -428,7 +428,7 @@ function AssessmentForm({ clientId, existingRecord, onComplete }) {
       }
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['care-assessment'] });
+      queryClient.invalidateQueries({ queryKey: ['care-assessment', clientId] });
       toast.success("Saved", "Care assessment completed");
       onComplete?.();
     }
