@@ -5,6 +5,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/components/ui/toast";
 import { 
   ArrowLeft, Calendar, GraduationCap, ClipboardList, 
@@ -26,12 +28,19 @@ export default function CarerDetail() {
   const carerId = new URLSearchParams(location.search).get('id');
   
   const [activeTab, setActiveTab] = useState("general");
+  const [noteDialogOpen, setNoteDialogOpen] = useState(false);
+  const [newNote, setNewNote] = useState("");
+  const [notesList, setNotesList] = useState([]);
 
   const { data: carer, isLoading } = useQuery({
     queryKey: ['carer', carerId],
     queryFn: async () => {
       const all = await base44.entities.Carer.list();
-      return all.find(c => c.id === carerId);
+      const carerData = all.find(c => c.id === carerId);
+      if (carerData?.notes) {
+        setNotesList(Array.isArray(carerData.notes) ? carerData.notes : []);
+      }
+      return carerData;
     },
     enabled: !!carerId
   });
@@ -88,6 +97,35 @@ export default function CarerDetail() {
       toast.success("Terminated", "Carer status set to inactive");
     }
   });
+
+  const addNoteMutation = useMutation({
+    mutationFn: async (note) => {
+      const user = await base44.auth.me();
+      const noteObj = {
+        note: note,
+        added_by: user.full_name || user.email,
+        added_date: new Date().toISOString(),
+      };
+      const updatedNotes = [...notesList, noteObj];
+      await base44.entities.Carer.update(carerId, { notes: updatedNotes });
+      return updatedNotes;
+    },
+    onSuccess: (updatedNotes) => {
+      setNotesList(updatedNotes);
+      queryClient.invalidateQueries({ queryKey: ['carer', carerId] });
+      toast.success("Note Added", "Note has been saved");
+      setNewNote("");
+      setNoteDialogOpen(false);
+    }
+  });
+
+  const handleAddNote = () => {
+    if (!newNote.trim()) {
+      toast.error("Error", "Please enter a note");
+      return;
+    }
+    addNoteMutation.mutate(newNote);
+  };
 
   if (isLoading || !carer) {
     return (
@@ -459,17 +497,66 @@ export default function CarerDetail() {
               <CardContent className="p-6">
                 <div className="flex items-center justify-between mb-4">
                   <h3 className="font-semibold text-lg">Notes</h3>
-                  <Button size="sm">
+                  <Button size="sm" onClick={() => setNoteDialogOpen(true)}>
                     <StickyNote className="w-4 h-4 mr-2" />
                     Add Note
                   </Button>
                 </div>
-                <p className="text-center text-gray-500 py-8">No notes recorded</p>
+
+                {notesList.length === 0 ? (
+                  <p className="text-center text-gray-500 py-8">No notes recorded</p>
+                ) : (
+                  <div className="space-y-3">
+                    {notesList.map((note, idx) => (
+                      <div key={idx} className="p-4 border rounded-lg bg-yellow-50 border-yellow-200">
+                        <p className="text-gray-900 whitespace-pre-wrap">{note.note}</p>
+                        <div className="flex items-center gap-2 mt-2 text-xs text-gray-600">
+                          <span className="font-medium">{note.added_by}</span>
+                          <span>•</span>
+                          <span>
+                            {(() => {
+                              try {
+                                return format(new Date(note.added_date), 'PPp');
+                              } catch {
+                                return note.added_date;
+                              }
+                            })()}
+                          </span>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </CardContent>
             </Card>
           </TabsContent>
         </Tabs>
       </div>
+
+      <Dialog open={noteDialogOpen} onOpenChange={setNoteDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Note</DialogTitle>
+          </DialogHeader>
+          <div className="py-4">
+            <Textarea
+              value={newNote}
+              onChange={(e) => setNewNote(e.target.value)}
+              placeholder="Enter your note here..."
+              rows={5}
+              className="resize-none"
+            />
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setNoteDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleAddNote} disabled={addNoteMutation.isPending}>
+              {addNoteMutation.isPending ? "Saving..." : "Save Note"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
