@@ -41,7 +41,9 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
     queryFn: async () => {
       const records = await base44.entities.CareAssessment.filter({ client_id: clientId });
       return records[0] || null;
-    }
+    },
+    refetchOnMount: true,
+    staleTime: 0
   });
 
   const { data: carePlans = [] } = useQuery({
