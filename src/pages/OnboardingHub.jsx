@@ -320,19 +320,37 @@ export default function OnboardingHub() {
             {filteredClients.map(client => {
               const clientStatus = client.status || client.client_status;
               const isActive = clientStatus === 'active';
+              const onboardingStatus = getClientOnboardingStatus(client.id);
 
               return (
                 <Card key={client.id} className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
                     <div className="flex items-center justify-between">
                       <div className="flex items-center gap-3">
-                        <UserCircle className="w-5 h-5 text-blue-600" />
-                        <div>
-                          <p className="font-medium">{client.full_name || client.client_full_name}</p>
-                          <p className="text-sm text-gray-600">{client.address?.postcode}</p>
+                        {onboardingStatus.allComplete ? (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <UserCircle className="w-5 h-5 text-blue-600" />
+                        )}
+                        <div className="flex items-center gap-3">
+                          <div>
+                            <p className="font-medium">{client.full_name || client.client_full_name}</p>
+                            <p className="text-sm text-gray-600">{client.address?.postcode}</p>
+                          </div>
+                          <div className="flex items-center gap-1 text-xs">
+                            {onboardingStatus.checks.consent && <Badge className="bg-green-100 text-green-800 text-xs">Consent</Badge>}
+                            {onboardingStatus.checks.assessment && <Badge className="bg-green-100 text-green-800 text-xs">Assessment</Badge>}
+                            {onboardingStatus.checks.carePlan && <Badge className="bg-green-100 text-green-800 text-xs">Care Plan</Badge>}
+                          </div>
                         </div>
                       </div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-3">
+                        <div className="text-right">
+                          <p className="text-sm font-medium">{onboardingStatus.percentage}%</p>
+                          <p className="text-xs text-gray-500">
+                            {onboardingStatus.completed}/3 complete
+                          </p>
+                        </div>
                         <Badge className={isActive ? 'bg-green-600' : 'bg-amber-600'}>
                           {isActive ? 'Active' : 'Onboarding'}
                         </Badge>
@@ -341,7 +359,8 @@ export default function OnboardingHub() {
                           variant="outline"
                           onClick={() => setSelectedClient(client)}
                         >
-                          <Eye className="w-4 h-4" />
+                          <Eye className="w-4 h-4 mr-1" />
+                          Manage
                         </Button>
                       </div>
                     </div>
