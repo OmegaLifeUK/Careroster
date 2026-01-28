@@ -38,6 +38,7 @@ import {
 } from "lucide-react";
 
 export default function OnboardingConfiguration() {
+  const [selectedCareSetting, setSelectedCareSetting] = useState("all");
   const [selectedWorkflow, setSelectedWorkflow] = useState(null);
   const [editingStage, setEditingStage] = useState(null);
   const [showStageDialog, setShowStageDialog] = useState(false);
@@ -80,6 +81,7 @@ export default function OnboardingConfiguration() {
   const createDefaultStaffWorkflow = () => {
     const defaultWorkflow = {
       workflow_type: "staff",
+      care_setting: "all",
       workflow_name: "Standard Staff Onboarding",
       is_active: true,
       auto_activate_on_completion: true,
@@ -160,9 +162,13 @@ export default function OnboardingConfiguration() {
   };
 
   const createDefaultClientWorkflow = () => {
+    const careSettingName = selectedCareSetting === 'all' ? 'All Settings' : 
+      selectedCareSetting.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    
     const defaultWorkflow = {
       workflow_type: "client",
-      workflow_name: "Standard Client Onboarding",
+      care_setting: selectedCareSetting,
+      workflow_name: `${careSettingName} Client Onboarding`,
       is_active: true,
       auto_activate_on_completion: true,
       stages: [
@@ -471,17 +477,40 @@ export default function OnboardingConfiguration() {
         </TabsContent>
 
         <TabsContent value="clients" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">{clientWorkflows.length} workflow(s) configured</p>
-            <Button onClick={createDefaultClientWorkflow}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Default Client Workflow
-            </Button>
+          <div className="space-y-4">
+            <div>
+              <Label>Care Setting</Label>
+              <Select
+                value={selectedCareSetting}
+                onValueChange={setSelectedCareSetting}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Care Settings</SelectItem>
+                  <SelectItem value="residential">Residential Care</SelectItem>
+                  <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
+                  <SelectItem value="supported_living">Supported Living</SelectItem>
+                  <SelectItem value="day_centre">Day Centre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {clientWorkflows.filter(w => w.care_setting === selectedCareSetting).length} workflow(s) for {selectedCareSetting === 'all' ? 'all settings' : selectedCareSetting.replace('_', ' ')}
+              </p>
+              <Button onClick={createDefaultClientWorkflow}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Workflow
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              {clientWorkflows.map(workflow => (
+              {clientWorkflows.filter(w => w.care_setting === selectedCareSetting).map(workflow => (
                 <Card
                   key={workflow.id}
                   className={`cursor-pointer transition-all ${
