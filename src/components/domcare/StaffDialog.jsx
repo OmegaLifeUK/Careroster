@@ -63,10 +63,15 @@ export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
       return;
     }
 
+    const dataToSave = {
+      ...formData,
+      care_setting: formData.care_setting || defaultCareSetting || "domiciliary"
+    };
+
     if (isEditing) {
-      updateMutation.mutate({ id: staff.id, data: formData });
+      updateMutation.mutate({ id: staff.id, data: dataToSave });
     } else {
-      createMutation.mutate(formData);
+      createMutation.mutate(dataToSave);
     }
   };
 
