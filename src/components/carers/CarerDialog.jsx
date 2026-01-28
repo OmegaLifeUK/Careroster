@@ -33,6 +33,7 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
     full_name: carer?.full_name || "",
     email: carer?.email || "",
     phone: carer?.phone || "",
+    care_setting: carer?.care_setting || "residential",
     status: carer?.status || "active",
     employment_type: carer?.employment_type || "full_time",
     hourly_rate: carer?.hourly_rate || 15,
