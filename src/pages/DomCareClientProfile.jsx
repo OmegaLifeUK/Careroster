@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -18,15 +19,19 @@ import {
   Clock,
   Shield,
   FileText,
-  Edit
+  Edit,
+  UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import DomCareClientDialog from "../components/domcare/DomCareClientDialog";
+import ClientOnboardingWorkflow from "../components/onboarding/ClientOnboardingWorkflow";
 
 export default function DomCareClientProfile() {
   const [searchParams] = useSearchParams();
   const clientId = searchParams.get('id');
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   const { data: client, isLoading: clientLoading } = useQuery({
     queryKey: ['domcare-client', clientId],
@@ -134,7 +139,28 @@ export default function DomCareClientProfile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="care_tasks">Care Tasks</TabsTrigger>
+            <TabsTrigger value="alerts">Alerts</TabsTrigger>
+            <TabsTrigger value="care_plan">Care Plan</TabsTrigger>
+            <TabsTrigger value="risk_assessments">Risk Assessments</TabsTrigger>
+            <TabsTrigger value="medication">Medication</TabsTrigger>
+            <TabsTrigger value="peep">PEEP</TabsTrigger>
+            <TabsTrigger value="repositioning">Repositioning</TabsTrigger>
+            <TabsTrigger value="behavior">Behavior</TabsTrigger>
+            <TabsTrigger value="mental_capacity">Mental Capacity</TabsTrigger>
+            <TabsTrigger value="safeguarding">Safeguarding</TabsTrigger>
+            <TabsTrigger value="consent">Consent</TabsTrigger>
+            <TabsTrigger value="onboarding">
+              <UserCheck className="w-4 h-4 mr-2" />
+              Onboarding
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Main Info */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact Information */}
@@ -420,12 +446,126 @@ export default function DomCareClientProfile() {
               </CardContent>
             </Card>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="care_tasks" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Care tasks view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="alerts" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Alerts view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="care_plan" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Care plan view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="risk_assessments" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Risk assessments view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="medication" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Medication view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="peep" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                PEEP view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="repositioning" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Repositioning view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="behavior" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Behavior view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="mental_capacity" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Mental capacity view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="safeguarding" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Safeguarding view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="consent" className="mt-6">
+            <Card>
+              <CardContent className="p-6 text-center text-gray-500">
+                Consent view coming soon
+              </CardContent>
+            </Card>
+          </TabsContent>
+
+          <TabsContent value="onboarding" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-blue-600" />
+                  Client Onboarding Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setShowOnboarding(true)}>
+                  View Onboarding Workflow
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {showEditDialog && (
           <DomCareClientDialog
             client={client}
             onClose={() => setShowEditDialog(false)}
+          />
+        )}
+
+        {showOnboarding && (
+          <ClientOnboardingWorkflow
+            clientId={clientId}
+            clientName={client.full_name}
+            onClose={() => setShowOnboarding(false)}
           />
         )}
       </div>

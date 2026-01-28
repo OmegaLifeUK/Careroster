@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -18,15 +19,19 @@ import {
   Home,
   FileText,
   Edit,
-  Shield
+  Shield,
+  UserCheck
 } from "lucide-react";
 import { format } from "date-fns";
 import SupportedLivingClientDialog from "../components/supportedliving/SupportedLivingClientDialog";
+import ClientOnboardingWorkflow from "../components/onboarding/ClientOnboardingWorkflow";
 
 export default function SupportedLivingClientProfile() {
   const [searchParams] = useSearchParams();
   const clientId = searchParams.get('id');
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   const { data: client, isLoading: clientLoading } = useQuery({
     queryKey: ['supported-living-client', clientId],
@@ -132,7 +137,17 @@ export default function SupportedLivingClientProfile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="onboarding">
+              <UserCheck className="w-4 h-4 mr-2" />
+              Onboarding
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact & Property Info */}
@@ -350,12 +365,38 @@ export default function SupportedLivingClientProfile() {
               </CardContent>
             </Card>
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="onboarding" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-blue-600" />
+                  Client Onboarding Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setShowOnboarding(true)}>
+                  View Onboarding Workflow
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {showEditDialog && (
           <SupportedLivingClientDialog
             client={client}
             onClose={() => setShowEditDialog(false)}
+          />
+        )}
+
+        {showOnboarding && (
+          <ClientOnboardingWorkflow
+            clientId={clientId}
+            clientName={client.full_name}
+            onClose={() => setShowOnboarding(false)}
           />
         )}
       </div>

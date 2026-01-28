@@ -6,6 +6,7 @@ import { createPageUrl } from "@/utils";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { 
   ArrowLeft, 
   MapPin, 
@@ -20,15 +21,19 @@ import {
   MessageCircle,
   Target,
   Edit,
-  TrendingUp
+  TrendingUp,
+  UserCheck
 } from "lucide-react";
 import { format, parseISO } from "date-fns";
 import DayCentreClientDialog from "../components/daycentre/DayCentreClientDialog";
+import ClientOnboardingWorkflow from "../components/onboarding/ClientOnboardingWorkflow";
 
 export default function DayCentreClientProfile() {
   const [searchParams] = useSearchParams();
   const clientId = searchParams.get('id');
   const [showEditDialog, setShowEditDialog] = useState(false);
+  const [showOnboarding, setShowOnboarding] = useState(false);
+  const [activeTab, setActiveTab] = useState("details");
 
   const { data: client, isLoading: clientLoading } = useQuery({
     queryKey: ['daycentre-client', clientId],
@@ -145,7 +150,17 @@ export default function DayCentreClientProfile() {
           </div>
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <Tabs value={activeTab} onValueChange={setActiveTab} className="mb-6">
+          <TabsList>
+            <TabsTrigger value="details">Details</TabsTrigger>
+            <TabsTrigger value="onboarding">
+              <UserCheck className="w-4 h-4 mr-2" />
+              Onboarding
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="details" className="mt-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column */}
           <div className="lg:col-span-2 space-y-6">
             {/* Contact Information */}
