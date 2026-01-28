@@ -79,10 +79,13 @@ export default function OnboardingConfiguration() {
   });
 
   const createDefaultStaffWorkflow = () => {
+    const careSettingName = selectedCareSetting === 'all' ? 'All Settings' : 
+      selectedCareSetting.split('_').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ');
+    
     const defaultWorkflow = {
       workflow_type: "staff",
-      care_setting: "all",
-      workflow_name: "Standard Staff Onboarding",
+      care_setting: selectedCareSetting,
+      workflow_name: `${careSettingName} Staff Onboarding`,
       is_active: true,
       auto_activate_on_completion: true,
       stages: [
@@ -297,6 +300,11 @@ export default function OnboardingConfiguration() {
   const staffWorkflows = workflows.filter(w => w.workflow_type === 'staff');
   const clientWorkflows = workflows.filter(w => w.workflow_type === 'client');
 
+  // Reset selection when changing care setting
+  React.useEffect(() => {
+    setSelectedWorkflow(null);
+  }, [selectedCareSetting]);
+
   return (
     <div className="p-6 max-w-7xl mx-auto">
       <div className="mb-6">
@@ -317,17 +325,40 @@ export default function OnboardingConfiguration() {
         </TabsList>
 
         <TabsContent value="staff" className="space-y-4">
-          <div className="flex items-center justify-between">
-            <p className="text-sm text-gray-600">{staffWorkflows.length} workflow(s) configured</p>
-            <Button onClick={createDefaultStaffWorkflow}>
-              <Plus className="w-4 h-4 mr-2" />
-              Create Default Staff Workflow
-            </Button>
+          <div className="space-y-4">
+            <div>
+              <Label>Care Setting</Label>
+              <Select
+                value={selectedCareSetting}
+                onValueChange={setSelectedCareSetting}
+              >
+                <SelectTrigger>
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Care Settings</SelectItem>
+                  <SelectItem value="residential">Residential Care</SelectItem>
+                  <SelectItem value="domiciliary">Domiciliary Care</SelectItem>
+                  <SelectItem value="supported_living">Supported Living</SelectItem>
+                  <SelectItem value="day_centre">Day Centre</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+
+            <div className="flex items-center justify-between">
+              <p className="text-sm text-gray-600">
+                {staffWorkflows.filter(w => w.care_setting === selectedCareSetting).length} workflow(s) for {selectedCareSetting === 'all' ? 'all settings' : selectedCareSetting.replace('_', ' ')}
+              </p>
+              <Button onClick={createDefaultStaffWorkflow}>
+                <Plus className="w-4 h-4 mr-2" />
+                Create Workflow
+              </Button>
+            </div>
           </div>
 
           <div className="grid md:grid-cols-3 gap-6">
             <div className="space-y-2">
-              {staffWorkflows.map(workflow => (
+              {staffWorkflows.filter(w => w.care_setting === selectedCareSetting).map(workflow => (
                 <Card
                   key={workflow.id}
                   className={`cursor-pointer transition-all ${
@@ -340,7 +371,7 @@ export default function OnboardingConfiguration() {
                       <div className="flex-1">
                         <p className="font-medium">{workflow.workflow_name}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {workflow.stages?.length || 0} stages
+                          {workflow.stages?.length || 0} stages • {workflow.care_setting}
                         </p>
                       </div>
                       <Badge className={workflow.is_active ? 'bg-green-600' : 'bg-gray-400'}>
