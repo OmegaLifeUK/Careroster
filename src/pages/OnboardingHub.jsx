@@ -158,8 +158,30 @@ export default function OnboardingHub() {
   });
 
   const getClientOnboardingStatus = (clientId) => {
-    // Fetch active client workflow
-    const activeWorkflow = workflows.find(w => w.workflow_type === 'client' && w.is_active);
+    const client = allClients.find(c => c.id === clientId);
+    if (!client) return { checks: {}, completed: 0, total: 3, percentage: 0, allComplete: false };
+
+    // Determine client's care setting
+    const getClientCareSetting = () => {
+      if (client?.care_setting) return client.care_setting;
+      if (client?.standard_visit_duration) return 'domiciliary';
+      if (client?.property_id) return 'supported_living';
+      if (client?.attendance_pattern) return 'day_centre';
+      return 'residential';
+    };
+
+    const clientCareSetting = getClientCareSetting();
+
+    // Find workflow: first try specific care setting, then fall back to 'all'
+    const activeWorkflow = workflows.find(w => 
+      w.workflow_type === 'client' && 
+      w.is_active && 
+      w.care_setting === clientCareSetting
+    ) || workflows.find(w => 
+      w.workflow_type === 'client' && 
+      w.is_active && 
+      w.care_setting === 'all'
+    );
     
     if (!activeWorkflow || !activeWorkflow.stages) {
       // Fallback to old logic if no workflow configured
