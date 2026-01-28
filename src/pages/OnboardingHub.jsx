@@ -96,25 +96,98 @@ export default function OnboardingHub() {
   ];
 
   const getStaffOnboardingStatus = (staffId) => {
-    const preEmp = allPreEmployment.find(p => p.staff_id === staffId);
-    const dbs = allDBS.find(d => d.staff_id === staffId);
-    const induction = allInductions.find(i => i.staff_id === staffId);
-    const training = allTraining.filter(t => t.staff_id === staffId);
+    const staff = allStaff.find(s => s.id === staffId);
+    if (!staff) return { checks: {}, completed: 0, total: 5, percentage: 0, allComplete: false };
 
-    const checks = {
-      preEmployment: preEmp?.status === 'verified',
-      dbs: dbs?.dbs_status === 'clear',
-      references: dbs?.all_references_satisfactory === true,
-      training: mandatoryTraining.every(mt => 
-        training.some(tr => tr.training_name === mt && tr.status === 'completed')
-      ),
-      induction: induction?.status === 'completed'
+    // Determine staff's care setting
+    const getStaffCareSetting = () => {
+      if (staff?.care_setting) return staff.care_setting;
+      if (staff?.vehicle_type) return 'domiciliary';
+      return 'residential';
     };
 
-    const completed = Object.values(checks).filter(Boolean).length;
-    const percentage = Math.round((completed / 5) * 100);
+    const staffCareSetting = getStaffCareSetting();
+
+    // Find workflow: first try specific care setting, then fall back to 'all'
+    const activeWorkflow = workflows.find(w => 
+      w.workflow_type === 'staff' && 
+      w.is_active && 
+      w.care_setting === staffCareSetting
+    ) || workflows.find(w => 
+      w.workflow_type === 'staff' && 
+      w.is_active && 
+      w.care_setting === 'all'
+    );
+
+    if (!activeWorkflow || !activeWorkflow.stages) {
+      // Fallback to old logic if no workflow configured
+      const preEmp = allPreEmployment.find(p => p.staff_id === staffId);
+      const dbs = allDBS.find(d => d.staff_id === staffId);
+      const induction = allInductions.find(i => i.staff_id === staffId);
+      const training = allTraining.filter(t => t.staff_id === staffId);
+
+      const checks = {
+        preEmployment: preEmp?.status === 'verified',
+        dbs: dbs?.dbs_status === 'clear',
+        references: dbs?.all_references_satisfactory === true,
+        training: mandatoryTraining.every(mt => 
+          training.some(tr => tr.training_name === mt && tr.status === 'completed')
+        ),
+        induction: induction?.status === 'completed'
+      };
+
+      const completed = Object.values(checks).filter(Boolean).length;
+      const percentage = Math.round((completed / 5) * 100);
+      
+      return { checks, completed, total: 5, percentage, allComplete: completed === 5 };
+    }
+
+    // Use workflow configuration
+    const stages = activeWorkflow.stages.sort((a, b) => a.order - b.order);
+    const requiredStages = stages.filter(s => s.is_required);
     
-    return { checks, completed, percentage, allComplete: completed === 5 };
+    const checkStageComplete = (stage) => {
+      if (!stage.completion_criteria) return false;
+      
+      const { entity_type, status_field, required_status } = stage.completion_criteria;
+      
+      if (entity_type === 'PreEmploymentCompliance') {
+        const preEmp = allPreEmployment.find(p => p.staff_id === staffId);
+        return preEmp && (!status_field || required_status?.includes(preEmp[status_field]));
+      } else if (entity_type === 'DBSAndReferences') {
+        const dbs = allDBS.find(d => d.staff_id === staffId);
+        return dbs && (!status_field || required_status?.includes(dbs[status_field]));
+      } else if (entity_type === 'InductionRecord') {
+        const induction = allInductions.find(i => i.staff_id === staffId);
+        return induction && (!status_field || required_status?.includes(induction[status_field]));
+      } else if (entity_type === 'TrainingAssignment') {
+        const training = allTraining.filter(t => t.staff_id === staffId);
+        return mandatoryTraining.every(mt => 
+          training.some(tr => tr.training_name === mt && tr.status === 'completed')
+        );
+      }
+      
+      return false;
+    };
+
+    const checksMap = {};
+    stages.forEach(stage => {
+      checksMap[stage.stage_id] = checkStageComplete(stage);
+    });
+
+    const completedRequired = requiredStages.filter(s => checksMap[s.stage_id]).length;
+    const percentage = requiredStages.length > 0 
+      ? Math.round((completedRequired / requiredStages.length) * 100) 
+      : 0;
+    const allComplete = completedRequired === requiredStages.length;
+
+    return { 
+      checks: checksMap, 
+      completed: completedRequired, 
+      total: stages.length,
+      percentage, 
+      allComplete 
+    };
   };
 
   const { data: allConsent = [] } = useQuery({
@@ -370,7 +443,7 @@ export default function OnboardingHub() {
                         <div className="text-right">
                           <p className="text-sm font-medium">{onboardingStatus.percentage}%</p>
                           <p className="text-xs text-gray-500">
-                            {onboardingStatus.completed}/5 stages
+                            {onboardingStatus.completed}/{onboardingStatus.total || 5} stages
                           </p>
                         </div>
                         <Badge className={isFitToWork ? 'bg-green-600' : 'bg-amber-600'}>

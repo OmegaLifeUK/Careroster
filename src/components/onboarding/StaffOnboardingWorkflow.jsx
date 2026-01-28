@@ -31,6 +31,50 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
+  // Fetch staff/carer record to determine care setting
+  const { data: staffRecord } = useQuery({
+    queryKey: ['staff-record', staffId],
+    queryFn: async () => {
+      try {
+        const staff = await base44.entities.Staff.filter({ id: staffId });
+        if (staff && staff.length > 0) return staff[0];
+      } catch (e) {}
+      try {
+        const carer = await base44.entities.Carer.filter({ id: staffId });
+        if (carer && carer.length > 0) return carer[0];
+      } catch (e) {}
+      return null;
+    }
+  });
+
+  // Fetch workflows
+  const { data: workflows = [] } = useQuery({
+    queryKey: ['onboarding-workflows-staff'],
+    queryFn: async () => {
+      const records = await base44.entities.OnboardingWorkflowConfig.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
+  // Determine staff's care setting and find matching workflow
+  const getStaffCareSetting = () => {
+    if (staffRecord?.care_setting) return staffRecord.care_setting;
+    if (staffRecord?.vehicle_type) return 'domiciliary';
+    return 'residential';
+  };
+
+  const staffCareSetting = getStaffCareSetting();
+
+  const activeWorkflow = workflows.find(w => 
+    w.workflow_type === 'staff' && 
+    w.is_active && 
+    w.care_setting === staffCareSetting
+  ) || workflows.find(w => 
+    w.workflow_type === 'staff' && 
+    w.is_active && 
+    w.care_setting === 'all'
+  );
+
   // Fetch all onboarding records
   const { data: preEmployment } = useQuery({
     queryKey: ['pre-employment', staffId],
