@@ -217,7 +217,7 @@ export default function OnboardingHub() {
     return { 
       checks: checksMap, 
       completed: completedRequired, 
-      total: requiredStages.length,
+      total: stages.length,
       percentage, 
       allComplete 
     };
@@ -413,7 +413,7 @@ export default function OnboardingHub() {
                         <div className="text-right">
                           <p className="text-sm font-medium">{onboardingStatus.percentage}%</p>
                           <p className="text-xs text-gray-500">
-                            {onboardingStatus.completed}/{onboardingStatus.total || 3} complete
+                            {onboardingStatus.completed}/{onboardingStatus.total || 3} stages
                           </p>
                         </div>
                         <Badge className={isActive ? 'bg-green-600' : 'bg-amber-600'}>
