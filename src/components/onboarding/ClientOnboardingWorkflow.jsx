@@ -86,9 +86,9 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
     const { entity_type, status_field, required_status } = stage.completion_criteria;
 
     if (entity_type === 'ConsentAndCapacity') {
-      return consent && required_status?.includes(consent[status_field]);
+      return consent && (!status_field || required_status?.includes(consent[status_field]));
     } else if (entity_type === 'CareAssessment') {
-      return assessment && required_status?.some(s => assessment[status_field] === s);
+      return assessment && (!status_field || required_status?.some(s => assessment[status_field] === s));
     } else if (entity_type === 'CarePlan') {
       return !!approvedCarePlan;
     } else if (entity_type === 'RiskAssessment') {
@@ -205,7 +205,8 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
 
           {stages.map((stage, index) => {
             const isComplete = status.checks[stage.stage_id];
-            const canEdit = stage.stage_id === 'consent' || stage.stage_id === 'assessment';
+            const entityType = stage.completion_criteria?.entity_type;
+            const canEdit = entityType === 'ConsentAndCapacity' || entityType === 'CareAssessment';
 
             return (
               <Card key={stage.stage_id} className={isComplete ? 'border-green-300' : 'border-gray-200'}>
@@ -225,15 +226,20 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
                         {!stage.is_required && (
                           <Badge variant="outline" className="text-xs">Optional</Badge>
                         )}
+                        {stage.is_required && (
+                          <Badge className="bg-red-100 text-red-800 text-xs">Required</Badge>
+                        )}
                       </div>
                       <p className="text-sm text-gray-600 mt-1 ml-7">{stage.stage_description}</p>
                     </div>
                     <Badge className={isComplete ? 'bg-green-600' : 'bg-gray-400'}>
-                      {isComplete ? 'Complete' : 'Pending'}
+                      {isComplete ? 'Complete' : stage.is_required ? 'Required' : 'Pending'}
                     </Badge>
                   </div>
                 </CardHeader>
-                {activeStage === stage.stage_id && stage.stage_id === 'consent' && (
+                
+                {/* Consent Form */}
+                {activeStage === stage.stage_id && entityType === 'ConsentAndCapacity' && (
                   <CardContent>
                     <ConsentForm 
                       clientId={clientId} 
@@ -242,7 +248,9 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
                     />
                   </CardContent>
                 )}
-                {activeStage === stage.stage_id && stage.stage_id === 'assessment' && (
+                
+                {/* Assessment Form */}
+                {activeStage === stage.stage_id && entityType === 'CareAssessment' && (
                   <CardContent>
                     <AssessmentForm 
                       clientId={clientId} 
@@ -251,7 +259,9 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
                     />
                   </CardContent>
                 )}
-                {stage.stage_id === 'care_plan' && (
+                
+                {/* Care Plan Status */}
+                {entityType === 'CarePlan' && (
                   <CardContent>
                     <p className="text-sm text-gray-600 mb-2">
                       Create care plan from the client profile page using the Care Plan Manager
@@ -266,14 +276,31 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
                     )}
                   </CardContent>
                 )}
-                {stage.stage_id === 'risk_assessment' && isComplete && (
+                
+                {/* Risk Assessment Status */}
+                {entityType === 'RiskAssessment' && (
                   <CardContent>
-                    <div className="p-3 bg-green-50 rounded flex items-center gap-2">
-                      <Shield className="w-4 h-4 text-green-600" />
-                      <span className="text-sm text-green-800">
-                        Risk assessment completed on {completedRiskAssessment?.updated_date ? format(new Date(completedRiskAssessment.updated_date), 'dd/MM/yyyy') : 'N/A'}
-                      </span>
-                    </div>
+                    {isComplete ? (
+                      <div className="p-3 bg-green-50 rounded flex items-center gap-2">
+                        <Shield className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-800">
+                          Risk assessment completed on {completedRiskAssessment?.updated_date ? format(new Date(completedRiskAssessment.updated_date), 'dd/MM/yyyy') : 'N/A'}
+                        </span>
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-600">
+                        Complete risk assessment from the client profile page
+                      </p>
+                    )}
+                  </CardContent>
+                )}
+
+                {/* Generic stage with no specific form */}
+                {!entityType && (
+                  <CardContent>
+                    <p className="text-sm text-gray-600">
+                      Complete this stage as per your organisation's procedure
+                    </p>
                   </CardContent>
                 )}
               </Card>
