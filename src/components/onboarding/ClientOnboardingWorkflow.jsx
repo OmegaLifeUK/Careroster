@@ -24,9 +24,23 @@ import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 
 export default function ClientOnboardingWorkflow({ clientId, clientName, onClose }) {
-  const [activeStage, setActiveStage] = useState("consent");
+  const [activeStage, setActiveStage] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  // Fetch active workflow configuration
+  const { data: workflowConfig } = useQuery({
+    queryKey: ['active-client-workflow'],
+    queryFn: async () => {
+      const workflows = await base44.entities.OnboardingWorkflowConfig.filter({ 
+        workflow_type: 'client', 
+        is_active: true 
+      });
+      return workflows[0] || null;
+    }
+  });
+
+  const stages = workflowConfig?.stages?.sort((a, b) => a.order - b.order) || [];
 
   const { data: consent } = useQuery({
     queryKey: ['consent-capacity', clientId],
@@ -54,20 +68,51 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
     }
   });
 
+  const { data: riskAssessments = [] } = useQuery({
+    queryKey: ['risk-assessments', clientId],
+    queryFn: async () => {
+      const records = await base44.entities.RiskAssessment.filter({ client_id: clientId });
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
   const approvedCarePlan = carePlans.find(cp => cp.status === 'active');
+  const completedRiskAssessment = riskAssessments.find(ra => ra.status === 'completed');
+
+  // Check stage completion based on configuration
+  const checkStageComplete = (stage) => {
+    if (!stage.completion_criteria) return false;
+
+    const { entity_type, status_field, required_status } = stage.completion_criteria;
+
+    if (entity_type === 'ConsentAndCapacity') {
+      return consent && required_status?.includes(consent[status_field]);
+    } else if (entity_type === 'CareAssessment') {
+      return assessment && required_status?.some(s => assessment[status_field] === s);
+    } else if (entity_type === 'CarePlan') {
+      return !!approvedCarePlan;
+    } else if (entity_type === 'RiskAssessment') {
+      return !!completedRiskAssessment;
+    }
+
+    return false;
+  };
 
   const calculateStatus = () => {
-    const checks = {
-      consent: consent?.status === 'obtained',
-      assessment: assessment?.status === 'completed' || assessment?.status === 'approved',
-      carePlan: !!approvedCarePlan
-    };
+    const requiredStages = stages.filter(s => s.is_required);
+    const checksMap = {};
+    
+    stages.forEach(stage => {
+      checksMap[stage.stage_id] = checkStageComplete(stage);
+    });
 
-    const completed = Object.values(checks).filter(Boolean).length;
-    const percentage = Math.round((completed / 3) * 100);
-    const allComplete = completed === 3;
+    const completedRequired = requiredStages.filter(s => checksMap[s.stage_id]).length;
+    const percentage = requiredStages.length > 0 
+      ? Math.round((completedRequired / requiredStages.length) * 100) 
+      : 0;
+    const allComplete = completedRequired === requiredStages.length;
 
-    return { checks, completed, percentage, allComplete };
+    return { checks: checksMap, completed: completedRequired, total: requiredStages.length, percentage, allComplete };
   };
 
   const status = calculateStatus();
@@ -124,15 +169,18 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
                 <span className="text-2xl font-bold text-blue-700">{status.percentage}%</span>
               </div>
               <Progress value={status.percentage} className="h-2" />
+              <p className="text-sm text-gray-600 mt-2">
+                {status.completed}/{status.total} required stages complete
+              </p>
             </CardContent>
           </Card>
 
-          {status.allComplete && (
+          {status.allComplete && workflowConfig?.auto_activate_on_completion && (
             <Card className="border-green-300 bg-green-50">
               <CardContent className="p-4 flex items-start gap-3">
                 <CheckCircle className="w-5 h-5 text-green-600 mt-0.5" />
                 <div className="flex-1">
-                  <p className="font-semibold text-green-900">All Onboarding Complete</p>
+                  <p className="font-semibold text-green-900">Client onboarding complete! All stages approved.</p>
                   <p className="text-sm text-green-700">Client can now be activated</p>
                 </div>
                 <Button 
@@ -146,93 +194,91 @@ export default function ClientOnboardingWorkflow({ clientId, clientName, onClose
             </Card>
           )}
 
-          {/* Stage 1: Consent & Capacity */}
-          <Card className={status.checks.consent ? 'border-green-300' : 'border-gray-200'}>
-            <CardHeader className="cursor-pointer" onClick={() => setActiveStage("consent")}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {status.checks.consent ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-gray-300" />
-                  )}
-                  <span className="font-medium">1. Consent & Mental Capacity</span>
-                </div>
-                <Badge className={status.checks.consent ? 'bg-green-600' : 'bg-gray-400'}>
-                  {status.checks.consent ? 'Complete' : 'Pending'}
-                </Badge>
-              </div>
-            </CardHeader>
-            {activeStage === "consent" && (
-              <CardContent>
-                <ConsentForm 
-                  clientId={clientId} 
-                  existingRecord={consent}
-                  onComplete={() => setActiveStage("assessment")}
-                />
+          {stages.length === 0 && (
+            <Card>
+              <CardContent className="p-8 text-center">
+                <Shield className="w-12 h-12 mx-auto text-gray-400 mb-3" />
+                <p className="text-gray-600">No workflow configured. Please set up client onboarding in Configuration.</p>
               </CardContent>
-            )}
-          </Card>
+            </Card>
+          )}
 
-          {/* Stage 2: Care Assessment */}
-          <Card className={status.checks.assessment ? 'border-green-300' : 'border-gray-200'}>
-            <CardHeader className="cursor-pointer" onClick={() => setActiveStage("assessment")}>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {status.checks.assessment ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-gray-300" />
-                  )}
-                  <span className="font-medium">2. Care Assessment</span>
-                </div>
-                <Badge className={status.checks.assessment ? 'bg-green-600' : 'bg-gray-400'}>
-                  {status.checks.assessment ? 'Complete' : 'Pending'}
-                </Badge>
-              </div>
-            </CardHeader>
-            {activeStage === "assessment" && (
-              <CardContent>
-                <AssessmentForm 
-                  clientId={clientId} 
-                  existingRecord={assessment}
-                  onComplete={() => setActiveStage("careplan")}
-                />
-              </CardContent>
-            )}
-          </Card>
+          {stages.map((stage, index) => {
+            const isComplete = status.checks[stage.stage_id];
+            const canEdit = stage.stage_id === 'consent' || stage.stage_id === 'assessment';
 
-          {/* Stage 3: Care Plan */}
-          <Card className={status.checks.carePlan ? 'border-green-300' : 'border-gray-200'}>
-            <CardHeader>
-              <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                  {status.checks.carePlan ? (
-                    <CheckCircle className="w-5 h-5 text-green-600" />
-                  ) : (
-                    <Circle className="w-5 h-5 text-gray-300" />
-                  )}
-                  <span className="font-medium">3. Care Plan</span>
-                </div>
-                <Badge className={status.checks.carePlan ? 'bg-green-600' : 'bg-gray-400'}>
-                  {status.checks.carePlan ? 'Approved' : 'Required'}
-                </Badge>
-              </div>
-            </CardHeader>
-            <CardContent>
-              <p className="text-sm text-gray-600 mb-2">
-                Create care plan from the client profile page using the Care Plan Manager
-              </p>
-              {approvedCarePlan && (
-                <div className="p-3 bg-green-50 rounded flex items-center gap-2">
-                  <Heart className="w-4 h-4 text-green-600" />
-                  <span className="text-sm text-green-800">
-                    Care plan approved on {format(new Date(approvedCarePlan.assessment_date), 'dd/MM/yyyy')}
-                  </span>
-                </div>
-              )}
-            </CardContent>
-          </Card>
+            return (
+              <Card key={stage.stage_id} className={isComplete ? 'border-green-300' : 'border-gray-200'}>
+                <CardHeader 
+                  className={canEdit ? 'cursor-pointer' : ''}
+                  onClick={() => canEdit && setActiveStage(stage.stage_id)}
+                >
+                  <div className="flex items-center justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-2">
+                        {isComplete ? (
+                          <CheckCircle className="w-5 h-5 text-green-600" />
+                        ) : (
+                          <Circle className="w-5 h-5 text-gray-300" />
+                        )}
+                        <span className="font-medium">{index + 1}. {stage.stage_name}</span>
+                        {!stage.is_required && (
+                          <Badge variant="outline" className="text-xs">Optional</Badge>
+                        )}
+                      </div>
+                      <p className="text-sm text-gray-600 mt-1 ml-7">{stage.stage_description}</p>
+                    </div>
+                    <Badge className={isComplete ? 'bg-green-600' : 'bg-gray-400'}>
+                      {isComplete ? 'Complete' : 'Pending'}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                {activeStage === stage.stage_id && stage.stage_id === 'consent' && (
+                  <CardContent>
+                    <ConsentForm 
+                      clientId={clientId} 
+                      existingRecord={consent}
+                      onComplete={() => setActiveStage(null)}
+                    />
+                  </CardContent>
+                )}
+                {activeStage === stage.stage_id && stage.stage_id === 'assessment' && (
+                  <CardContent>
+                    <AssessmentForm 
+                      clientId={clientId} 
+                      existingRecord={assessment}
+                      onComplete={() => setActiveStage(null)}
+                    />
+                  </CardContent>
+                )}
+                {stage.stage_id === 'care_plan' && (
+                  <CardContent>
+                    <p className="text-sm text-gray-600 mb-2">
+                      Create care plan from the client profile page using the Care Plan Manager
+                    </p>
+                    {approvedCarePlan && (
+                      <div className="p-3 bg-green-50 rounded flex items-center gap-2">
+                        <Heart className="w-4 h-4 text-green-600" />
+                        <span className="text-sm text-green-800">
+                          Care plan approved on {format(new Date(approvedCarePlan.assessment_date), 'dd/MM/yyyy')}
+                        </span>
+                      </div>
+                    )}
+                  </CardContent>
+                )}
+                {stage.stage_id === 'risk_assessment' && isComplete && (
+                  <CardContent>
+                    <div className="p-3 bg-green-50 rounded flex items-center gap-2">
+                      <Shield className="w-4 h-4 text-green-600" />
+                      <span className="text-sm text-green-800">
+                        Risk assessment completed on {completedRiskAssessment?.updated_date ? format(new Date(completedRiskAssessment.updated_date), 'dd/MM/yyyy') : 'N/A'}
+                      </span>
+                    </div>
+                  </CardContent>
+                )}
+              </Card>
+            );
+          })}
         </div>
       </Card>
     </div>
