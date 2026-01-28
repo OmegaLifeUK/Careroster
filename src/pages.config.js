@@ -134,6 +134,8 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
+import DayCentreStaff from './pages/DayCentreStaff';
+import SupportedLivingStaff from './pages/SupportedLivingStaff';
 import __Layout from './Layout.jsx';
 
 
@@ -225,6 +227,8 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
+    "DayCentreStaff": DayCentreStaff,
+    "SupportedLivingStaff": SupportedLivingStaff,
 }
 
 export const pagesConfig = {
