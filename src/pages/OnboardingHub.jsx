@@ -348,7 +348,7 @@ export default function OnboardingHub() {
                         <div className="text-right">
                           <p className="text-sm font-medium">{onboardingStatus.percentage}%</p>
                           <p className="text-xs text-gray-500">
-                            {onboardingStatus.completed}/3 complete
+                            {onboardingStatus.completed}/{onboardingStatus.total || 3} complete
                           </p>
                         </div>
                         <Badge className={isActive ? 'bg-green-600' : 'bg-amber-600'}>
