@@ -141,21 +141,86 @@ export default function OnboardingHub() {
     }
   });
 
-  const getClientOnboardingStatus = (clientId) => {
-    const consent = allConsent.find(c => c.client_id === clientId);
-    const assessment = allAssessments.find(a => a.client_id === clientId);
-    const carePlan = allCarePlans.find(cp => cp.client_id === clientId && cp.status === 'active');
+  const { data: allRiskAssessments = [] } = useQuery({
+    queryKey: ['all-risk-assessments-onboarding'],
+    queryFn: async () => {
+      const records = await base44.entities.RiskAssessment.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
 
-    const checks = {
-      consent: consent?.status === 'obtained',
-      assessment: assessment?.status === 'completed' || assessment?.status === 'approved',
-      carePlan: !!carePlan
+  const { data: workflows = [] } = useQuery({
+    queryKey: ['onboarding-workflows-hub'],
+    queryFn: async () => {
+      const records = await base44.entities.OnboardingWorkflowConfig.list();
+      return Array.isArray(records) ? records : [];
+    }
+  });
+
+  const getClientOnboardingStatus = (clientId) => {
+    // Fetch active client workflow
+    const activeWorkflow = workflows.find(w => w.workflow_type === 'client' && w.is_active);
+    
+    if (!activeWorkflow || !activeWorkflow.stages) {
+      // Fallback to old logic if no workflow configured
+      const consent = allConsent.find(c => c.client_id === clientId);
+      const assessment = allAssessments.find(a => a.client_id === clientId);
+      const carePlan = allCarePlans.find(cp => cp.client_id === clientId && cp.status === 'active');
+
+      const checks = {
+        consent: consent?.status === 'obtained',
+        assessment: assessment?.status === 'completed' || assessment?.status === 'approved',
+        carePlan: !!carePlan
+      };
+
+      const completed = Object.values(checks).filter(Boolean).length;
+      const percentage = Math.round((completed / 3) * 100);
+      
+      return { checks, completed, total: 3, percentage, allComplete: completed === 3 };
+    }
+
+    // Use workflow configuration
+    const stages = activeWorkflow.stages.sort((a, b) => a.order - b.order);
+    const requiredStages = stages.filter(s => s.is_required);
+    
+    const checkStageComplete = (stage) => {
+      if (!stage.completion_criteria) return false;
+      
+      const { entity_type, status_field, required_status } = stage.completion_criteria;
+      
+      if (entity_type === 'ConsentAndCapacity') {
+        const consent = allConsent.find(c => c.client_id === clientId);
+        return consent && (!status_field || required_status?.includes(consent[status_field]));
+      } else if (entity_type === 'CareAssessment') {
+        const assessment = allAssessments.find(a => a.client_id === clientId);
+        return assessment && (!status_field || required_status?.some(s => assessment[status_field] === s));
+      } else if (entity_type === 'CarePlan') {
+        return allCarePlans.some(cp => cp.client_id === clientId && cp.status === 'active');
+      } else if (entity_type === 'RiskAssessment') {
+        return allRiskAssessments.some(ra => ra.client_id === clientId && ra.status === 'completed');
+      }
+      
+      return false;
     };
 
-    const completed = Object.values(checks).filter(Boolean).length;
-    const percentage = Math.round((completed / 3) * 100);
-    
-    return { checks, completed, percentage, allComplete: completed === 3 };
+    const checksMap = {};
+    stages.forEach(stage => {
+      checksMap[stage.stage_id] = checkStageComplete(stage);
+    });
+
+    const completedRequired = requiredStages.filter(s => checksMap[s.stage_id]).length;
+    const percentage = requiredStages.length > 0 
+      ? Math.round((completedRequired / requiredStages.length) * 100) 
+      : 0;
+    const allComplete = completedRequired === requiredStages.length;
+
+    return { 
+      checks: checksMap, 
+      completed: completedRequired, 
+      total: requiredStages.length,
+      percentage, 
+      allComplete 
+    };
   };
 
   // Calculate metrics
