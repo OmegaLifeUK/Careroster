@@ -443,8 +443,8 @@ export default function DayCentreClientProfile() {
                 </CardContent>
               </Card>
             )}
-          </div>
             </div>
+          </div>
           </TabsContent>
 
           <TabsContent value="onboarding" className="mt-6">
