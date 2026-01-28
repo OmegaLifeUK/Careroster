@@ -444,12 +444,38 @@ export default function DayCentreClientProfile() {
               </Card>
             )}
           </div>
-        </div>
+            </div>
+          </TabsContent>
+
+          <TabsContent value="onboarding" className="mt-6">
+            <Card>
+              <CardHeader>
+                <CardTitle className="flex items-center gap-2">
+                  <UserCheck className="w-5 h-5 text-blue-600" />
+                  Client Onboarding Progress
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <Button onClick={() => setShowOnboarding(true)}>
+                  View Onboarding Workflow
+                </Button>
+              </CardContent>
+            </Card>
+          </TabsContent>
+        </Tabs>
 
         {showEditDialog && (
           <DayCentreClientDialog
             client={client}
             onClose={() => setShowEditDialog(false)}
+          />
+        )}
+
+        {showOnboarding && (
+          <ClientOnboardingWorkflow
+            clientId={clientId}
+            clientName={client.full_name}
+            onClose={() => setShowOnboarding(false)}
           />
         )}
       </div>
