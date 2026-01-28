@@ -63,6 +63,7 @@ const domCareNav = [
 const supportedLivingNav = [
   { title: "SL Dashboard", url: createPageUrl("SupportedLivingDashboard"), icon: LayoutDashboard },
   { title: "Clients", url: createPageUrl("SupportedLivingClients"), icon: UserCircle },
+  { title: "Staff", url: createPageUrl("SupportedLivingStaff"), icon: Users },
   { title: "Properties", url: createPageUrl("SupportedLivingProperties"), icon: Home },
   { title: "Schedule", url: createPageUrl("SupportedLivingSchedule"), icon: Calendar },
 ];
@@ -70,6 +71,7 @@ const supportedLivingNav = [
 const dayCentreNav = [
   { title: "Day Centre Dashboard", url: createPageUrl("DayCentreDashboard"), icon: LayoutDashboard },
   { title: "Clients", url: createPageUrl("DayCentreClients"), icon: UserCircle },
+  { title: "Staff", url: createPageUrl("DayCentreStaff"), icon: Users },
   { title: "Activities", url: createPageUrl("DayCentreActivities"), icon: Activity },
   { title: "Sessions", url: createPageUrl("DayCentreSessions"), icon: Calendar },
   { title: "Attendance", url: createPageUrl("DayCentreAttendance"), icon: ClipboardList },
