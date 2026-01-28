@@ -523,7 +523,7 @@ export default function OnboardingConfiguration() {
                       <div className="flex-1">
                         <p className="font-medium">{workflow.workflow_name}</p>
                         <p className="text-xs text-gray-500 mt-1">
-                          {workflow.stages?.length || 0} stages
+                          {workflow.stages?.length || 0} stages • {workflow.care_setting}
                         </p>
                       </div>
                       <Badge className={workflow.is_active ? 'bg-green-600' : 'bg-gray-400'}>
