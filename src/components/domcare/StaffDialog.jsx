@@ -88,7 +88,12 @@ export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
             <h2 className="text-2xl font-bold">
               {isEditing ? "Edit Staff Member" : "Add New Staff"}
             </h2>
-            <p className="text-blue-100 text-sm">Domiciliary Care Team</p>
+            <p className="text-blue-100 text-sm">
+              {formData.care_setting === 'supported_living' && 'Supported Living Team'}
+              {formData.care_setting === 'residential' && 'Residential Care Team'}
+              {formData.care_setting === 'domiciliary' && 'Domiciliary Care Team'}
+              {formData.care_setting === 'day_centre' && 'Day Centre Team'}
+            </p>
           </div>
           <button onClick={onClose} className="text-white hover:bg-white/20 rounded-lg p-2">
             <X className="w-6 h-6" />
