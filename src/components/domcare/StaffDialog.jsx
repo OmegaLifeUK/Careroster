@@ -130,6 +130,26 @@ export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
                 />
               </div>
               <div>
+                <Label htmlFor="care_setting">Care Setting <span className="text-red-500">*</span></Label>
+                <Select
+                  value={formData.care_setting}
+                  onValueChange={(value) => setFormData({ ...formData, care_setting: value })}
+                >
+                  <SelectTrigger id="care_setting">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="residential">Residential</SelectItem>
+                    <SelectItem value="domiciliary">Domiciliary</SelectItem>
+                    <SelectItem value="supported_living">Supported Living</SelectItem>
+                    <SelectItem value="day_centre">Day Centre</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
                 <Label htmlFor="vehicle_type">Vehicle Type</Label>
                 <Select
                   value={formData.vehicle_type}
