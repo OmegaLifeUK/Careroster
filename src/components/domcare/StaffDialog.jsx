@@ -9,7 +9,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 
-export default function StaffDialog({ staff, onClose }) {
+export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
   const { toast } = useToast();
   const queryClient = useQueryClient();
   const isEditing = !!staff;
@@ -18,6 +18,7 @@ export default function StaffDialog({ staff, onClose }) {
     full_name: staff?.full_name || "",
     email: staff?.email || "",
     phone: staff?.phone || "",
+    care_setting: staff?.care_setting || defaultCareSetting || "domiciliary",
     is_active: staff?.is_active !== false,
     vehicle_type: staff?.vehicle_type || "car",
     max_visits_per_day: staff?.max_visits_per_day || 8,
