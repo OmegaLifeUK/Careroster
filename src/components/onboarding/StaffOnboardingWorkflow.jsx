@@ -30,6 +30,7 @@ import MandatoryTrainingTracker from "./MandatoryTrainingTracker";
 
 export default function StaffOnboardingWorkflow({ staffId, staffName, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
+  const [activeStage, setActiveStage] = useState(null);
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
@@ -227,28 +228,33 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
     }
   });
 
-  const StageCard = ({ title, icon: Icon, complete, children, onStart }) => (
+  const StageCard = ({ stageNum, title, icon: Icon, complete, record, onAction }) => (
     <Card className={complete ? 'border-green-300 bg-green-50' : 'border-gray-200'}>
       <CardHeader className="pb-3">
         <CardTitle className="flex items-center justify-between text-base">
-          <div className="flex items-center gap-2">
-            {complete ? (
-              <CheckCircle className="w-5 h-5 text-green-600" />
-            ) : (
-              <Icon className="w-5 h-5 text-gray-400" />
-            )}
+          <div className="flex items-center gap-3">
+            <div className={`w-8 h-8 rounded-full flex items-center justify-center ${complete ? 'bg-green-600' : 'bg-gray-200'}`}>
+              {complete ? (
+                <CheckCircle className="w-5 h-5 text-white" />
+              ) : (
+                <span className="text-sm font-bold">{stageNum}</span>
+              )}
+            </div>
             <span>{title}</span>
           </div>
           {complete ? (
-            <Badge className="bg-green-600">Complete</Badge>
-          ) : onStart ? (
-            <Button size="sm" onClick={onStart}>Start</Button>
+            <Badge className="bg-green-600">Complete ✓</Badge>
+          ) : record ? (
+            <Button size="sm" onClick={onAction} variant="default">
+              Continue
+            </Button>
           ) : (
-            <Badge variant="outline">Pending</Badge>
+            <Button size="sm" onClick={onAction} variant="outline">
+              Start
+            </Button>
           )}
         </CardTitle>
       </CardHeader>
-      {children && <CardContent>{children}</CardContent>}
     </Card>
   );
 
@@ -266,13 +272,8 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
         </CardHeader>
 
         <div className="p-6 overflow-y-auto flex-1">
-          <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid grid-cols-2 w-full mb-6">
-              <TabsTrigger value="overview">Overview</TabsTrigger>
-              <TabsTrigger value="details">Stage Details</TabsTrigger>
-            </TabsList>
-
-            <TabsContent value="overview" className="space-y-6">
+          {!activeStage ? (
+            <div className="space-y-6">
               {/* Progress Summary */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
@@ -280,9 +281,12 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
                     <h3 className="font-semibold">Onboarding Progress</h3>
                     <span className="text-2xl font-bold text-blue-700">{status.percentage}%</span>
                   </div>
-                  <Progress value={status.percentage} className="h-2 mb-2" />
+                  <Progress value={status.percentage} className="h-3 mb-2" />
                   <p className="text-sm text-gray-600">
                     {status.completed} of {status.total} stages completed
+                  </p>
+                  <p className="text-xs text-blue-700 mt-2 font-medium">
+                    👉 Click on any stage below to complete it
                   </p>
                 </CardContent>
               </Card>
@@ -323,162 +327,126 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
               )}
 
               {/* Onboarding Stages */}
-              <div className="space-y-4">
+              <div className="space-y-3">
+                <h3 className="font-semibold text-sm text-gray-700 mb-3">Complete these stages in order:</h3>
+                
                 <StageCard
-                  title="1. Pre-Employment Compliance"
+                  stageNum={1}
+                  title="Pre-Employment Compliance"
                   icon={FileText}
                   complete={status.checks.preEmployment}
-                  onStart={!preEmployment ? () => createPreEmploymentMutation.mutate() : null}
-                >
-                  {preEmployment && (
-                    <div className="text-sm space-y-2">
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={!!preEmployment.right_to_work_confirmed}
-                          onCheckedChange={async (checked) => {
-                            await base44.entities.PreEmploymentCompliance.update(preEmployment.id, {
-                              right_to_work_confirmed: !!checked
-                            });
-                            queryClient.invalidateQueries({ queryKey: ['pre-employment'] });
-                          }}
-                        />
-                        <span>Right to work verified</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Checkbox
-                          checked={!!preEmployment.photo_id_url}
-                          disabled={true}
-                        />
-                        <span className="text-gray-500">Photo ID uploaded</span>
-                      </div>
-                    </div>
-                  )}
-                </StageCard>
+                  record={preEmployment}
+                  onAction={() => {
+                    if (!preEmployment) {
+                      createPreEmploymentMutation.mutate();
+                      setTimeout(() => setActiveStage('pre-employment'), 500);
+                    } else {
+                      setActiveStage('pre-employment');
+                    }
+                  }}
+                />
 
                 <StageCard
-                  title="2. DBS & References"
+                  stageNum={2}
+                  title="DBS & References"
                   icon={Shield}
                   complete={status.checks.dbs && status.checks.references}
-                  onStart={!dbs ? () => createDBSMutation.mutate() : null}
-                >
-                  {dbs && (
-                    <div className="text-sm space-y-1">
-                      <div className="flex items-center gap-2">
-                        {dbs.dbs_status === 'clear' ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-amber-500" />
-                        )}
-                        <span>DBS: {dbs.dbs_status}</span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {dbs.all_references_satisfactory ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-amber-500" />
-                        )}
-                        <span>References satisfactory</span>
-                      </div>
-                    </div>
-                  )}
-                </StageCard>
+                  record={dbs}
+                  onAction={() => {
+                    if (!dbs) {
+                      createDBSMutation.mutate();
+                      setTimeout(() => setActiveStage('dbs'), 500);
+                    } else {
+                      setActiveStage('dbs');
+                    }
+                  }}
+                />
 
                 <StageCard
-                  title="3. Mandatory Training"
+                  stageNum={3}
+                  title="Mandatory Training"
                   icon={GraduationCap}
                   complete={status.checks.training}
-                >
-                  <div className="text-sm space-y-1">
-                    {mandatoryTraining.map(mt => {
-                      const record = trainingRecords.find(tr => tr.training_name === mt);
-                      const complete = record?.status === 'completed';
-                      return (
-                        <div key={mt} className="flex items-center gap-2">
-                          {complete ? (
-                            <CheckCircle className="w-4 h-4 text-green-600" />
-                          ) : (
-                            <Circle className="w-4 h-4 text-gray-300" />
-                          )}
-                          <span>{mt}</span>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </StageCard>
+                  record={trainingRecords.length > 0 ? {} : null}
+                  onAction={() => setActiveStage('training')}
+                />
 
                 <StageCard
-                  title="4. Induction & Competency"
+                  stageNum={4}
+                  title="Induction & Competency"
                   icon={UserCheck}
                   complete={status.checks.induction}
-                  onStart={!induction ? () => createInductionMutation.mutate() : null}
-                >
-                  {induction && (
-                    <div className="text-sm space-y-1">
-                      <div className="flex items-center gap-2">
-                        {induction.shadow_shifts_completed >= induction.shadow_shifts_required ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-amber-500" />
-                        )}
-                        <span>
-                          Shadow shifts: {induction.shadow_shifts_completed}/{induction.shadow_shifts_required}
-                        </span>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        {induction.competency_assessment_result === 'pass' ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Clock className="w-4 h-4 text-amber-500" />
-                        )}
-                        <span>Competency: {induction.competency_assessment_result}</span>
-                      </div>
-                    </div>
-                  )}
-                </StageCard>
+                  record={induction}
+                  onAction={() => {
+                    if (!induction) {
+                      createInductionMutation.mutate();
+                      setTimeout(() => setActiveStage('induction'), 500);
+                    } else {
+                      setActiveStage('induction');
+                    }
+                  }}
+                />
               </div>
-            </TabsContent>
+            </div>
+          ) : (
+            <div>
+              <Button 
+                variant="ghost" 
+                onClick={() => setActiveStage(null)}
+                className="mb-4"
+              >
+                ← Back to Overview
+              </Button>
 
-            <TabsContent value="details" className="space-y-6">
-              <div className="mb-4 p-4 bg-blue-50 rounded border border-blue-200">
-                <p className="text-sm text-blue-800">
-                  Complete each stage in order. All stages must be completed before staff can be approved as fit to work.
-                </p>
-              </div>
+              {activeStage === 'pre-employment' && (
+                <PreEmploymentForm 
+                  staffId={staffId} 
+                  existingRecord={preEmployment}
+                  onComplete={() => {
+                    queryClient.invalidateQueries();
+                    setActiveStage(null);
+                    toast.success("Stage Complete", "Pre-employment checks completed");
+                  }}
+                />
+              )}
 
-              <PreEmploymentForm 
-                staffId={staffId} 
-                existingRecord={preEmployment}
-                onComplete={() => {
-                  queryClient.invalidateQueries();
-                  setActiveTab("overview");
-                }}
-              />
-              
-              <DBSReferencesForm 
-                staffId={staffId} 
-                existingRecord={dbs}
-                onComplete={() => {
-                  queryClient.invalidateQueries();
-                  setActiveTab("overview");
-                }}
-              />
+              {activeStage === 'dbs' && (
+                <DBSReferencesForm 
+                  staffId={staffId} 
+                  existingRecord={dbs}
+                  onComplete={() => {
+                    queryClient.invalidateQueries();
+                    setActiveStage(null);
+                    toast.success("Stage Complete", "DBS & References completed");
+                  }}
+                />
+              )}
 
-              <MandatoryTrainingTracker 
-                staffId={staffId}
-                trainingRecords={trainingRecords}
-                onComplete={() => queryClient.invalidateQueries()}
-              />
+              {activeStage === 'training' && (
+                <MandatoryTrainingTracker 
+                  staffId={staffId}
+                  trainingRecords={trainingRecords}
+                  onComplete={() => {
+                    queryClient.invalidateQueries();
+                    setActiveStage(null);
+                    toast.success("Stage Complete", "Training requirements met");
+                  }}
+                />
+              )}
 
-              <InductionForm 
-                staffId={staffId} 
-                existingRecord={induction}
-                onComplete={() => {
-                  queryClient.invalidateQueries();
-                  setActiveTab("overview");
-                }}
-              />
-            </TabsContent>
-          </Tabs>
+              {activeStage === 'induction' && (
+                <InductionForm 
+                  staffId={staffId} 
+                  existingRecord={induction}
+                  onComplete={() => {
+                    queryClient.invalidateQueries();
+                    setActiveStage(null);
+                    toast.success("Stage Complete", "Induction completed");
+                  }}
+                />
+              )}
+            </div>
+          )}
         </div>
       </Card>
     </div>
