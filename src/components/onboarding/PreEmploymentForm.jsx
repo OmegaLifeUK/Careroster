@@ -194,30 +194,40 @@ export default function PreEmploymentForm({ staffId, existingRecord, onComplete 
 
         <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded">
           <Checkbox
-            id="right_to_work"
             checked={!!formData.right_to_work_confirmed}
             onCheckedChange={(checked) => {
               console.log('Right to work checkbox clicked:', checked);
               setFormData(prev => ({ ...prev, right_to_work_confirmed: !!checked }));
             }}
           />
-          <Label htmlFor="right_to_work" className="font-medium cursor-pointer">
+          <label 
+            onClick={() => {
+              console.log('Label clicked - toggling right to work');
+              setFormData(prev => ({ ...prev, right_to_work_confirmed: !prev.right_to_work_confirmed }));
+            }}
+            className="font-medium cursor-pointer flex-1"
+          >
             I confirm this person has the right to work in the UK *
-          </Label>
+          </label>
         </div>
 
         <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded">
           <Checkbox
-            id="employment_history"
             checked={!!formData.employment_history_verified}
             onCheckedChange={(checked) => {
               console.log('Employment history checkbox clicked:', checked);
               setFormData(prev => ({ ...prev, employment_history_verified: !!checked }));
             }}
           />
-          <Label htmlFor="employment_history" className="font-medium cursor-pointer">
+          <label 
+            onClick={() => {
+              console.log('Label clicked - toggling employment history');
+              setFormData(prev => ({ ...prev, employment_history_verified: !prev.employment_history_verified }));
+            }}
+            className="font-medium cursor-pointer flex-1"
+          >
             Employment history verified (gaps explained)
-          </Label>
+          </label>
         </div>
 
         <div>
