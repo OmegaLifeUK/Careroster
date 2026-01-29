@@ -25,6 +25,7 @@ import { format, addMonths } from "date-fns";
 import PreEmploymentForm from "./PreEmploymentForm";
 import DBSReferencesForm from "./DBSReferencesForm";
 import InductionForm from "./InductionForm";
+import MandatoryTrainingTracker from "./MandatoryTrainingTracker";
 
 export default function StaffOnboardingWorkflow({ staffId, staffName, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
