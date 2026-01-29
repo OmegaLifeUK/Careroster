@@ -19,7 +19,7 @@ export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
     email: staff?.email || "",
     phone: staff?.phone || "",
     care_setting: staff?.care_setting || defaultCareSetting || "domiciliary",
-    is_active: staff?.is_active !== false,
+    is_active: staff ? staff.is_active : false,
     vehicle_type: staff?.vehicle_type || "car",
     max_visits_per_day: staff?.max_visits_per_day || 8,
     hourly_rate: staff?.hourly_rate || 12,
