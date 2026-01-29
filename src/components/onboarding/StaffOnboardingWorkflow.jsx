@@ -20,6 +20,7 @@ import {
   Lock,
   Unlock
 } from "lucide-react";
+import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/components/ui/toast";
 import { format, addMonths } from "date-fns";
 import PreEmploymentForm from "./PreEmploymentForm";
@@ -330,22 +331,25 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
                   onStart={!preEmployment ? () => createPreEmploymentMutation.mutate() : null}
                 >
                   {preEmployment && (
-                    <div className="text-sm space-y-1">
+                    <div className="text-sm space-y-2">
                       <div className="flex items-center gap-2">
-                        {preEmployment.right_to_work_confirmed ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-gray-300" />
-                        )}
+                        <Checkbox
+                          checked={!!preEmployment.right_to_work_confirmed}
+                          onCheckedChange={async (checked) => {
+                            await base44.entities.PreEmploymentCompliance.update(preEmployment.id, {
+                              right_to_work_confirmed: !!checked
+                            });
+                            queryClient.invalidateQueries({ queryKey: ['pre-employment'] });
+                          }}
+                        />
                         <span>Right to work verified</span>
                       </div>
                       <div className="flex items-center gap-2">
-                        {preEmployment.photo_id_url ? (
-                          <CheckCircle className="w-4 h-4 text-green-600" />
-                        ) : (
-                          <Circle className="w-4 h-4 text-gray-300" />
-                        )}
-                        <span>Photo ID uploaded</span>
+                        <Checkbox
+                          checked={!!preEmployment.photo_id_url}
+                          disabled={true}
+                        />
+                        <span className="text-gray-500">Photo ID uploaded</span>
                       </div>
                     </div>
                   )}
