@@ -194,20 +194,22 @@ export default function PreEmploymentForm({ staffId, existingRecord, onComplete 
 
         <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded">
           <Checkbox
+            id="right_to_work"
             checked={formData.right_to_work_confirmed}
             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, right_to_work_confirmed: checked }))}
           />
-          <Label className="font-medium">
+          <Label htmlFor="right_to_work" className="font-medium cursor-pointer">
             I confirm this person has the right to work in the UK *
           </Label>
         </div>
 
         <div className="flex items-center space-x-2 p-3 bg-blue-50 rounded">
           <Checkbox
+            id="employment_history"
             checked={formData.employment_history_verified}
             onCheckedChange={(checked) => setFormData(prev => ({ ...prev, employment_history_verified: checked }))}
           />
-          <Label className="font-medium">
+          <Label htmlFor="employment_history" className="font-medium cursor-pointer">
             Employment history verified (gaps explained)
           </Label>
         </div>
