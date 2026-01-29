@@ -201,6 +201,23 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
           });
         }
       }
+
+      // Notify managers and schedulers
+      const allUsers = await base44.entities.User.list();
+      const managersAndAdmins = allUsers.filter(u => u.role === 'admin');
+      
+      await Promise.all(managersAndAdmins.map(user => 
+        base44.entities.Notification.create({
+          user_email: user.email,
+          notification_type: 'staff_ready',
+          title: 'New Staff Member Ready for Scheduling',
+          message: `${staffName} has completed onboarding and is now active. They are ready to be assigned to shifts and clients.`,
+          priority: 'high',
+          is_read: false,
+          action_url: `/staff-onboarding`,
+          created_date: new Date().toISOString()
+        })
+      ));
     },
     onSuccess: () => {
       queryClient.invalidateQueries();
