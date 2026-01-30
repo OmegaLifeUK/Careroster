@@ -10,6 +10,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle, FileText, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
+import InterviewTranscription from "./InterviewTranscription";
 
 export default function PreEmploymentForm({ staffId, existingRecord, onComplete }) {
   const [formData, setFormData] = useState(existingRecord || {
@@ -61,14 +62,20 @@ export default function PreEmploymentForm({ staffId, existingRecord, onComplete 
   });
 
   return (
-    <Card>
-      <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <FileText className="w-5 h-5 text-blue-600" />
-          Pre-Employment Compliance Checks
-        </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-4">
+    <div className="space-y-6">
+      <InterviewTranscription 
+        record={formData} 
+        onUpdate={() => queryClient.invalidateQueries({ queryKey: ['pre-employment'] })}
+      />
+
+      <Card>
+        <CardHeader>
+          <CardTitle className="flex items-center gap-2">
+            <FileText className="w-5 h-5 text-blue-600" />
+            Pre-Employment Compliance Checks
+          </CardTitle>
+        </CardHeader>
+        <CardContent className="space-y-4">
         <div className="grid md:grid-cols-2 gap-4">
           <div>
             <Label>Photo ID (Passport / Driving Licence) *</Label>
@@ -256,5 +263,6 @@ export default function PreEmploymentForm({ staffId, existingRecord, onComplete 
         </Button>
       </CardContent>
     </Card>
+    </div>
   );
 }
