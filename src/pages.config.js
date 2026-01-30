@@ -85,6 +85,7 @@ import DayCentreClientProfile from './pages/DayCentreClientProfile';
 import DayCentreClients from './pages/DayCentreClients';
 import DayCentreDashboard from './pages/DayCentreDashboard';
 import DayCentreSessions from './pages/DayCentreSessions';
+import DayCentreStaff from './pages/DayCentreStaff';
 import DomCareClientProfile from './pages/DomCareClientProfile';
 import DomCareClients from './pages/DomCareClients';
 import DomCareDashboard from './pages/DomCareDashboard';
@@ -129,13 +130,13 @@ import SupportedLivingClients from './pages/SupportedLivingClients';
 import SupportedLivingDashboard from './pages/SupportedLivingDashboard';
 import SupportedLivingProperties from './pages/SupportedLivingProperties';
 import SupportedLivingSchedule from './pages/SupportedLivingSchedule';
+import SupportedLivingStaff from './pages/SupportedLivingStaff';
 import TechnicalSpecification from './pages/TechnicalSpecification';
 import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import DayCentreStaff from './pages/DayCentreStaff';
-import SupportedLivingStaff from './pages/SupportedLivingStaff';
+import ReferenceForm from './pages/ReferenceForm';
 import __Layout from './Layout.jsx';
 
 
@@ -178,6 +179,7 @@ export const PAGES = {
     "DayCentreClients": DayCentreClients,
     "DayCentreDashboard": DayCentreDashboard,
     "DayCentreSessions": DayCentreSessions,
+    "DayCentreStaff": DayCentreStaff,
     "DomCareClientProfile": DomCareClientProfile,
     "DomCareClients": DomCareClients,
     "DomCareDashboard": DomCareDashboard,
@@ -222,13 +224,13 @@ export const PAGES = {
     "SupportedLivingDashboard": SupportedLivingDashboard,
     "SupportedLivingProperties": SupportedLivingProperties,
     "SupportedLivingSchedule": SupportedLivingSchedule,
+    "SupportedLivingStaff": SupportedLivingStaff,
     "TechnicalSpecification": TechnicalSpecification,
     "TimesheetReconciliation": TimesheetReconciliation,
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "DayCentreStaff": DayCentreStaff,
-    "SupportedLivingStaff": SupportedLivingStaff,
+    "ReferenceForm": ReferenceForm,
 }
 
 export const pagesConfig = {

@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { base44 } from "@/api/base44Client";
-import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useMutation, useQueryClient, useQuery } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Upload, CheckCircle, Shield, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addYears } from "date-fns";
+import AutomatedReferenceRequest from "./AutomatedReferenceRequest";
 
 export default function DBSReferencesForm({ staffId, existingRecord, onComplete }) {
   const [formData, setFormData] = useState(existingRecord || {
@@ -23,8 +24,34 @@ export default function DBSReferencesForm({ staffId, existingRecord, onComplete 
     reference_3: {}
   });
   const [uploading, setUploading] = useState(false);
+  const [staffName, setStaffName] = useState("");
   const queryClient = useQueryClient();
   const { toast } = useToast();
+
+  useEffect(() => {
+    const loadStaffName = async () => {
+      try {
+        const allStaff = await base44.entities.Staff.list();
+        const staff = allStaff.find(s => s.id === staffId);
+        if (staff) setStaffName(staff.full_name);
+        
+        if (!staff) {
+          const allCarers = await base44.entities.Carer.list();
+          const carer = allCarers.find(c => c.id === staffId);
+          if (carer) setStaffName(carer.full_name);
+        }
+      } catch (error) {
+        console.log("Could not load staff name");
+      }
+    };
+    loadStaffName();
+  }, [staffId]);
+
+  useEffect(() => {
+    if (existingRecord) {
+      setFormData(existingRecord);
+    }
+  }, [existingRecord]);
 
   const handleFileUpload = async (file, field) => {
     setUploading(true);
@@ -205,16 +232,14 @@ export default function DBSReferencesForm({ staffId, existingRecord, onComplete 
         {/* References Section */}
         <div className="space-y-4">
           <h3 className="font-semibold">Employment References (Minimum 2 Required)</h3>
+          <p className="text-sm text-gray-600">Enter referee details and send automated requests, or manually upload reference documents.</p>
           
-          {[1, 2, 3].map(refNum => (
-            <Card key={refNum} className="border">
-              <CardHeader className="pb-3">
-                <h4 className="font-medium text-sm">Reference {refNum} {refNum <= 2 && '*'}</h4>
-              </CardHeader>
-              <CardContent className="space-y-3">
-                <div className="grid md:grid-cols-2 gap-3">
+          <div className="space-y-3">
+            {[1, 2, 3].map(refNum => (
+              <div key={refNum}>
+                <div className="grid md:grid-cols-3 gap-3 mb-3">
                   <div>
-                    <Label className="text-sm">Referee Name</Label>
+                    <Label className="text-sm">Referee Name {refNum <= 2 && '*'}</Label>
                     <Input
                       value={formData[`reference_${refNum}`]?.referee_name || ''}
                       onChange={(e) => handleReferenceChange(refNum, 'referee_name', e.target.value)}
@@ -230,44 +255,24 @@ export default function DBSReferencesForm({ staffId, existingRecord, onComplete 
                     />
                   </div>
                   <div>
-                    <Label className="text-sm">Contact (Email/Phone)</Label>
+                    <Label className="text-sm">Email Address</Label>
                     <Input
+                      type="email"
                       value={formData[`reference_${refNum}`]?.referee_contact || ''}
                       onChange={(e) => handleReferenceChange(refNum, 'referee_contact', e.target.value)}
-                      placeholder="email@example.com"
+                      placeholder="referee@email.com"
                     />
-                  </div>
-                  <div className="flex items-center space-x-2">
-                    <Checkbox
-                      checked={formData[`reference_${refNum}`]?.satisfactory || false}
-                      onCheckedChange={(checked) => handleReferenceChange(refNum, 'satisfactory', checked)}
-                    />
-                    <Label className="text-sm">Reference Satisfactory</Label>
                   </div>
                 </div>
 
-                {formData[`reference_${refNum}`]?.reference_url ? (
-                  <div className="flex items-center gap-2 text-green-700">
-                    <CheckCircle className="w-4 h-4" />
-                    <span className="text-sm">Reference uploaded</span>
-                  </div>
-                ) : (
-                  <label className="cursor-pointer block">
-                    <div className="border-2 border-dashed rounded p-2 text-center hover:bg-gray-50">
-                      <Upload className="w-5 h-5 mx-auto text-gray-400 mb-1" />
-                      <p className="text-xs text-gray-600">Upload Reference {refNum}</p>
-                    </div>
-                    <input
-                      type="file"
-                      className="hidden"
-                      accept="application/pdf,image/*"
-                      onChange={(e) => e.target.files[0] && handleReferenceUpload(e.target.files[0], refNum)}
-                    />
-                  </label>
-                )}
-              </CardContent>
-            </Card>
-          ))}
+                <AutomatedReferenceRequest
+                  record={formData}
+                  refNum={refNum}
+                  staffName={staffName}
+                  onUpdate={() => queryClient.invalidateQueries({ queryKey: ['dbs-references'] })}
+                />
+              </div>
+            ))}
 
           <div className="flex items-center space-x-2 p-3 bg-green-50 rounded">
             <Checkbox
