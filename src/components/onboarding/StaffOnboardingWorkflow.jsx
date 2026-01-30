@@ -27,6 +27,9 @@ import PreEmploymentForm from "./PreEmploymentForm";
 import DBSReferencesForm from "./DBSReferencesForm";
 import InductionForm from "./InductionForm";
 import MandatoryTrainingTracker from "./MandatoryTrainingTracker";
+import AIOnboardingPlanGenerator from "./AIOnboardingPlanGenerator";
+import AIWelcomePacket from "./AIWelcomePacket";
+import OnboardingChatbot from "./OnboardingChatbot";
 
 export default function StaffOnboardingWorkflow({ staffId, staffName, onClose }) {
   const [activeTab, setActiveTab] = useState("overview");
@@ -274,6 +277,16 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
         <div className="p-6 overflow-y-auto flex-1">
           {!activeStage ? (
             <div className="space-y-6">
+              {/* AI Tools */}
+              <div className="grid md:grid-cols-2 gap-4">
+                {staffRecord && (
+                  <>
+                    <AIOnboardingPlanGenerator staffMember={staffRecord} />
+                    <AIWelcomePacket staffMember={staffRecord} />
+                  </>
+                )}
+              </div>
+
               {/* Progress Summary */}
               <Card className="border-blue-200 bg-blue-50">
                 <CardContent className="p-4">
@@ -449,6 +462,8 @@ export default function StaffOnboardingWorkflow({ staffId, staffName, onClose })
           )}
         </div>
       </Card>
+
+      {staffRecord && <OnboardingChatbot staffMember={staffRecord} />}
     </div>
   );
 }
