@@ -273,6 +273,7 @@ export default function DBSReferencesForm({ staffId, existingRecord, onComplete 
                 />
               </div>
             ))}
+          </div>
 
           <div className="flex items-center space-x-2 p-3 bg-green-50 rounded">
             <Checkbox
