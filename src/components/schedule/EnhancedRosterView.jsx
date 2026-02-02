@@ -606,6 +606,66 @@ export default function EnhancedRosterView({
             </TabsContent>
 
             <TabsContent value="visit" className="p-4 space-y-4">
+              {/* Attached Documents Section */}
+              {selectedShift.attached_documents && selectedShift.attached_documents.length > 0 && (
+                <div className="border rounded-lg p-3 bg-blue-50">
+                  <div className="flex items-center gap-2 mb-3">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                    <p className="font-semibold text-sm text-blue-900">Attached Documents</p>
+                    <Badge className="bg-blue-100 text-blue-700 text-xs">
+                      {selectedShift.attached_documents.length}
+                    </Badge>
+                  </div>
+                  <div className="space-y-2">
+                    {selectedShift.attached_documents.map((doc, idx) => (
+                      <div key={idx} className="bg-white rounded-lg p-2 border border-blue-200">
+                        <div className="flex items-start gap-2">
+                          <FileText className="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0" />
+                          <div className="flex-1 min-w-0">
+                            <p className="text-sm font-medium text-gray-900 truncate">
+                              {doc.document_name || 'Document'}
+                            </p>
+                            <p className="text-xs text-gray-500 capitalize">
+                              {doc.document_type?.replace('_', ' ') || 'Document'}
+                            </p>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            {doc.requires_completion && (
+                              <Badge className={`text-xs ${
+                                doc.completed 
+                                  ? 'bg-green-100 text-green-700' 
+                                  : 'bg-orange-100 text-orange-700'
+                              }`}>
+                                {doc.completed ? 'Completed' : 'Pending'}
+                              </Badge>
+                            )}
+                            {doc.document_url && (
+                              <a
+                                href={doc.document_url}
+                                target="_blank"
+                                rel="noopener noreferrer"
+                                className="text-blue-600 hover:text-blue-800"
+                                onClick={(e) => e.stopPropagation()}
+                              >
+                                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" />
+                                </svg>
+                              </a>
+                            )}
+                          </div>
+                        </div>
+                        {doc.completed && doc.completed_date && (
+                          <p className="text-xs text-gray-500 mt-1 ml-6">
+                            Completed: {format(parseISO(doc.completed_date), 'dd/MM/yyyy HH:mm')}
+                            {doc.completed_by && ` by ${doc.completed_by}`}
+                          </p>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
               <div className="space-y-3">
                 <Button className="w-full" size="sm">
                   <Plus className="w-4 h-4 mr-2" />
@@ -638,6 +698,14 @@ export default function EnhancedRosterView({
                       {selectedShift.carer_id ? 'Allocated' : 'Unallocated'}
                     </Badge>
                   </div>
+                  {selectedShift.attached_documents && selectedShift.attached_documents.length > 0 && (
+                    <div className="flex justify-between text-sm">
+                      <span className="text-gray-600">Documents</span>
+                      <Badge variant="outline" className="text-xs">
+                        {selectedShift.attached_documents.filter(d => d.requires_completion && !d.completed).length} pending
+                      </Badge>
+                    </div>
+                  )}
                 </div>
               </div>
             </TabsContent>
