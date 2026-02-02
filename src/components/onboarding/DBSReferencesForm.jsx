@@ -12,6 +12,7 @@ import { Upload, CheckCircle, Shield, Loader2 } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format, addYears } from "date-fns";
 import AutomatedReferenceRequest from "./AutomatedReferenceRequest";
+import ReferenceFollowUpAutomation from "./ReferenceFollowUpAutomation";
 
 export default function DBSReferencesForm({ staffId, existingRecord, onComplete }) {
   const [formData, setFormData] = useState(existingRecord || {
@@ -270,6 +271,13 @@ export default function DBSReferencesForm({ staffId, existingRecord, onComplete 
                   refNum={refNum}
                   staffName={staffName}
                   onUpdate={() => queryClient.invalidateQueries({ queryKey: ['dbs-references'] })}
+                />
+                
+                <ReferenceFollowUpAutomation
+                  dbsRecord={formData}
+                  referenceNumber={refNum}
+                  reference={formData[`reference_${refNum}`]}
+                  onFollowUpSent={() => queryClient.invalidateQueries({ queryKey: ['dbs-references'] })}
                 />
               </div>
             ))}
