@@ -438,7 +438,7 @@ export default function FormTemplateEditor({ template, onClose }) {
                             />
                           )}
 
-                          <div className="flex items-center gap-3">
+                          <div className="flex items-center gap-3 flex-wrap">
                             <label className="flex items-center gap-2">
                               <input
                                 type="checkbox"
@@ -448,7 +448,27 @@ export default function FormTemplateEditor({ template, onClose }) {
                               />
                               <span className="text-sm">Required</span>
                             </label>
+                            {field.field_type === 'number' && (
+                              <label className="flex items-center gap-2">
+                                <input
+                                  type="checkbox"
+                                  checked={field.include_in_score}
+                                  onChange={(e) => updateField(fieldIdx, 'include_in_score', e.target.checked)}
+                                  className="w-4 h-4 rounded"
+                                />
+                                <span className="text-sm">Include in Score</span>
+                              </label>
+                            )}
                           </div>
+                          {field.field_type === 'number' && field.include_in_score && (
+                            <Input
+                              type="number"
+                              value={field.score_weight || 1}
+                              onChange={(e) => updateField(fieldIdx, 'score_weight', parseFloat(e.target.value) || 1)}
+                              placeholder="Score Weight (default: 1)"
+                              className="w-32"
+                            />
+                          )}
                         </div>
                         <Button
                           size="sm"

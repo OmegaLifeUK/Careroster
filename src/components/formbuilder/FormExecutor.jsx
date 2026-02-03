@@ -19,10 +19,27 @@ import { format } from "date-fns";
 export default function FormExecutor({ template, onSubmit, initialData = {} }) {
   const [formData, setFormData] = useState(initialData);
   const [tableData, setTableData] = useState({});
+  const [calculatedScore, setCalculatedScore] = useState(0);
 
   const updateField = (fieldId, value) => {
     setFormData(prev => ({ ...prev, [fieldId]: value }));
   };
+
+  // Calculate score whenever formData changes
+  React.useEffect(() => {
+    const allFields = (template.sections || []).flatMap(s => s.fields || []);
+    const scoreFields = allFields.filter(f => f.field_type === 'number' && f.include_in_score);
+    
+    if (scoreFields.length > 0) {
+      let totalScore = 0;
+      scoreFields.forEach(field => {
+        const value = parseFloat(formData[field.field_id]) || 0;
+        const weight = parseFloat(field.score_weight) || 1;
+        totalScore += value * weight;
+      });
+      setCalculatedScore(totalScore);
+    }
+  }, [formData, template]);
 
   const updateTableData = (fieldId, rowIndex, columnName, value) => {
     setTableData(prev => {
@@ -54,7 +71,8 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
     e.preventDefault();
     const finalData = {
       ...formData,
-      ...tableData
+      ...tableData,
+      calculated_score: hasScoring ? calculatedScore : undefined
     };
     onSubmit(finalData);
   };
@@ -346,8 +364,33 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
     }
   };
 
+  // Check if any field has scoring enabled
+  const hasScoring = (template.sections || []).some(s => 
+    s.fields?.some(f => f.field_type === 'number' && f.include_in_score)
+  );
+
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Score Display */}
+      {hasScoring && (
+        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Total Score</p>
+                <p className="text-3xl font-bold text-blue-600">{calculatedScore.toFixed(1)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Calculated from numerical fields</p>
+                <p className="text-xs text-gray-500">
+                  {(template.sections || []).flatMap(s => s.fields || []).filter(f => f.include_in_score).length} fields included
+                </p>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
+
       {(template.sections || []).map((section, sIdx) => (
         <Card key={sIdx}>
           <CardHeader>
