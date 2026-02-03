@@ -130,7 +130,9 @@ export default function FormTemplateEditor({ template, onClose }) {
       options: [],
       table_columns: fieldType === "table" ? [{ name: "Column 1", type: "text", options: [] }] : [],
       validation: {},
-      conditional_logic: {}
+      conditional_logic: {},
+      include_in_score: false,
+      score_weight: 1
     };
     
     const newSections = [...formData.sections];
