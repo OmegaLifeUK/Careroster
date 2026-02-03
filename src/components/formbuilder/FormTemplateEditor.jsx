@@ -26,6 +26,7 @@ const FIELD_TYPES = [
   { value: "text", label: "Text Input" },
   { value: "textarea", label: "Text Area" },
   { value: "number", label: "Number" },
+  { value: "calculated_score", label: "Calculated Score" },
   { value: "date", label: "Date" },
   { value: "time", label: "Time" },
   { value: "datetime", label: "Date & Time" },

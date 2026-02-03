@@ -126,6 +126,22 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
           />
         );
 
+      case "calculated_score":
+        return (
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Calculated Score</p>
+                <p className="text-4xl font-bold text-blue-600">{calculatedScore.toFixed(1)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Auto-calculated</p>
+                <p className="text-xs text-gray-500">from numerical fields</p>
+              </div>
+            </div>
+          </div>
+        );
+
       case "date":
         return (
           <Popover>
@@ -371,26 +387,6 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
 
   return (
     <form onSubmit={handleSubmit} className="space-y-6">
-      {/* Score Display */}
-      {hasScoring && (
-        <Card className="border-2 border-blue-200 bg-gradient-to-r from-blue-50 to-indigo-50">
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600 mb-1">Total Score</p>
-                <p className="text-3xl font-bold text-blue-600">{calculatedScore.toFixed(1)}</p>
-              </div>
-              <div className="text-right">
-                <p className="text-xs text-gray-500">Calculated from numerical fields</p>
-                <p className="text-xs text-gray-500">
-                  {(template.sections || []).flatMap(s => s.fields || []).filter(f => f.include_in_score).length} fields included
-                </p>
-              </div>
-            </div>
-          </CardContent>
-        </Card>
-      )}
-
       {(template.sections || []).map((section, sIdx) => (
         <Card key={sIdx}>
           <CardHeader>
