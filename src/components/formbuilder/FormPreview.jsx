@@ -16,6 +16,7 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
   const [activeSection, setActiveSection] = useState(0);
   const [submitted, setSubmitted] = useState(false);
   const [initialized, setInitialized] = useState(false);
+  const [calculatedScore, setCalculatedScore] = useState(0);
   
   const queryClient = useQueryClient();
   const { toast } = useToast();
@@ -204,6 +205,9 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
       return;
     }
 
+    // Check if scoring is enabled
+    const hasScoring = allFields.some(f => (f.field_type === 'number' || f.field_type === 'radio') && f.include_in_score);
+
     const submission = {
       form_template_id: template.id,
       form_name: template.form_name,
@@ -212,6 +216,7 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
       staff_id: contextData?.subject_staff_id || null,
       staff_task_id: contextData?.staff_task_id || null,
       form_data: formValues,
+      calculated_score: hasScoring ? calculatedScore : undefined,
       status: template.requires_approval ? "submitted" : "approved",
       progress_percentage: 100
     };
@@ -222,6 +227,34 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
   const updateValue = (fieldId, value) => {
     setFormValues({ ...formValues, [fieldId]: value });
   };
+
+  // Calculate score whenever formValues changes
+  React.useEffect(() => {
+    const allFields = (template?.sections || []).flatMap(s => s.fields || []);
+    const scoreFields = allFields.filter(f => 
+      (f.field_type === 'number' || f.field_type === 'radio') && f.include_in_score
+    );
+    
+    if (scoreFields.length > 0) {
+      let totalScore = 0;
+      scoreFields.forEach(field => {
+        let numericValue = 0;
+        const rawValue = formValues[field.field_id];
+        
+        if (field.field_type === 'radio') {
+          // Extract number from radio option (e.g., "2 - Poor" -> 2)
+          const match = String(rawValue).match(/^(\d+)/);
+          numericValue = match ? parseFloat(match[1]) : 0;
+        } else {
+          numericValue = parseFloat(rawValue) || 0;
+        }
+        
+        const weight = parseFloat(field.score_weight) || 1;
+        totalScore += numericValue * weight;
+      });
+      setCalculatedScore(totalScore);
+    }
+  }, [formValues, template]);
 
   const addTableRow = (fieldId, columns) => {
     const currentRows = formValues[fieldId] || [];
@@ -478,6 +511,22 @@ export default function FormPreview({ template, clientId, onSubmitSuccess, onSub
 
       case 'table':
         return renderTableField(field);
+
+      case 'calculated_score':
+        return (
+          <div className="p-4 bg-gradient-to-r from-blue-50 to-indigo-50 border-2 border-blue-200 rounded-lg">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600 mb-1">Calculated Score</p>
+                <p className="text-4xl font-bold text-blue-600">{calculatedScore.toFixed(1)}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-xs text-gray-500">Auto-calculated</p>
+                <p className="text-xs text-gray-500">from numerical fields</p>
+              </div>
+            </div>
+          </div>
+        );
 
       default:
         return <Input {...commonProps} />;
