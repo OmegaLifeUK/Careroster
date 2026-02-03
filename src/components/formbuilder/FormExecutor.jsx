@@ -28,14 +28,26 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
   // Calculate score whenever formData changes
   React.useEffect(() => {
     const allFields = (template.sections || []).flatMap(s => s.fields || []);
-    const scoreFields = allFields.filter(f => f.field_type === 'number' && f.include_in_score);
+    const scoreFields = allFields.filter(f => 
+      (f.field_type === 'number' || f.field_type === 'radio') && f.include_in_score
+    );
     
     if (scoreFields.length > 0) {
       let totalScore = 0;
       scoreFields.forEach(field => {
-        const value = parseFloat(formData[field.field_id]) || 0;
+        let numericValue = 0;
+        const rawValue = formData[field.field_id];
+        
+        if (field.field_type === 'radio') {
+          // Extract number from radio option (e.g., "2 - Poor" -> 2)
+          const match = String(rawValue).match(/^(\d+)/);
+          numericValue = match ? parseFloat(match[1]) : 0;
+        } else {
+          numericValue = parseFloat(rawValue) || 0;
+        }
+        
         const weight = parseFloat(field.score_weight) || 1;
-        totalScore += value * weight;
+        totalScore += numericValue * weight;
       });
       setCalculatedScore(totalScore);
     }
@@ -382,7 +394,7 @@ export default function FormExecutor({ template, onSubmit, initialData = {} }) {
 
   // Check if any field has scoring enabled
   const hasScoring = (template.sections || []).some(s => 
-    s.fields?.some(f => f.field_type === 'number' && f.include_in_score)
+    s.fields?.some(f => (f.field_type === 'number' || f.field_type === 'radio') && f.include_in_score)
   );
 
   return (

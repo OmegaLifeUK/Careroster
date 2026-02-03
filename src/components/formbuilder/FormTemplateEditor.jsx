@@ -449,7 +449,7 @@ export default function FormTemplateEditor({ template, onClose }) {
                               />
                               <span className="text-sm">Required</span>
                             </label>
-                            {field.field_type === 'number' && (
+                            {(field.field_type === 'number' || field.field_type === 'radio') && (
                               <label className="flex items-center gap-2">
                                 <input
                                   type="checkbox"
@@ -461,7 +461,7 @@ export default function FormTemplateEditor({ template, onClose }) {
                               </label>
                             )}
                           </div>
-                          {field.field_type === 'number' && field.include_in_score && (
+                          {(field.field_type === 'number' || field.field_type === 'radio') && field.include_in_score && (
                             <Input
                               type="number"
                               value={field.score_weight || 1}
