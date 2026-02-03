@@ -60,11 +60,11 @@ export default function ComplianceAutomations() {
           if (!existingAlerts || existingAlerts.length === 0) {
             // Create notification
             await base44.entities.Notification.create({
+              recipient_id: user.id,
               title: `DBS Expiring in ${daysUntil} days`,
               message: `DBS check for staff member expires on ${dbs.dbs_review_date}. Please arrange renewal immediately.`,
-              type: 'compliance_alert',
+              type: 'general',
               priority: daysUntil <= 7 ? 'urgent' : 'high',
-              recipient_email: managerEmail || user.email,
               related_entity_type: 'DBSAndReferences',
               related_entity_id: dbs.id,
               is_read: false
@@ -81,11 +81,11 @@ export default function ComplianceAutomations() {
           
           if (!existingAlerts || existingAlerts.length === 0) {
             await base44.entities.Notification.create({
+              recipient_id: user.id,
               title: `⚠️ DBS EXPIRED`,
               message: `DBS check expired on ${dbs.dbs_review_date}. Staff member must not work until renewed.`,
-              type: 'compliance_alert',
+              type: 'general',
               priority: 'urgent',
-              recipient_email: managerEmail || user.email,
               related_entity_type: 'DBSAndReferences',
               related_entity_id: `${dbs.id}_expired`,
               is_read: false
@@ -108,11 +108,11 @@ export default function ComplianceAutomations() {
           
           if (!existingAlerts || existingAlerts.length === 0) {
             await base44.entities.Notification.create({
+              recipient_id: user.id,
               title: `Training Expiring: ${training.training_name}`,
               message: `Training expires in ${daysUntil} days. Renewal required.`,
-              type: 'training_reminder',
-              priority: daysUntil <= 14 ? 'high' : 'medium',
-              recipient_email: managerEmail || user.email,
+              type: 'general',
+              priority: daysUntil <= 14 ? 'high' : 'normal',
               related_entity_type: 'TrainingAssignment',
               related_entity_id: training.id,
               is_read: false
@@ -133,11 +133,11 @@ export default function ComplianceAutomations() {
           
           if (!existingAlerts || existingAlerts.length === 0) {
             await base44.entities.Notification.create({
+              recipient_id: user.id,
               title: `Care Plan Review Overdue`,
               message: `Care plan review was due on ${plan.review_date}. Please complete review immediately.`,
-              type: 'care_plan_review',
+              type: 'general',
               priority: 'high',
-              recipient_email: managerEmail || user.email,
               related_entity_type: 'CarePlan',
               related_entity_id: `${plan.id}_overdue`,
               is_read: false
