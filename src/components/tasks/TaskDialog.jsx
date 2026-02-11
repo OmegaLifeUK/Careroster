@@ -14,7 +14,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2, Plus, X } from "lucide-react";
+import { Loader2, AlertCircle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 export default function TaskDialog({ task, client, qualifications = [], onClose }) {
@@ -36,6 +36,12 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
     start_date: task?.start_date || new Date().toISOString().split('T')[0],
     end_date: task?.end_date || "",
     source: task?.source || "manual",
+    scheduled_date: task?.scheduled_date || "",
+    scheduled_time: task?.scheduled_time || "",
+    time_of_day: task?.time_of_day || "anytime",
+    recurrence_type: task?.recurrence_type || "one_off",
+    recurrence_days: task?.recurrence_days || [],
+    recurrence_end_date: task?.recurrence_end_date || "",
   });
 
   const [timeInput, setTimeInput] = useState("");
@@ -182,47 +188,89 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
               </div>
 
               <div>
-                <Label htmlFor="frequency">Frequency *</Label>
-                <Select value={formData.frequency} onValueChange={(value) => handleInputChange("frequency", value)}>
+                <Label htmlFor="recurrence_type">Schedule Type *</Label>
+                <Select value={formData.recurrence_type} onValueChange={(value) => handleInputChange("recurrence_type", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="every_visit">Every Visit/Shift</SelectItem>
+                    <SelectItem value="one_off">One-Off</SelectItem>
                     <SelectItem value="daily">Daily</SelectItem>
-                    <SelectItem value="twice_daily">Twice Daily</SelectItem>
-                    <SelectItem value="three_times_daily">Three Times Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
-                    <SelectItem value="as_needed">As Needed (PRN)</SelectItem>
-                    <SelectItem value="specific_times">Specific Times</SelectItem>
+                    <SelectItem value="monthly">Monthly</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
 
-              {formData.frequency === "specific_times" && (
-                <div>
-                  <Label>Specific Times</Label>
-                  <div className="flex gap-2 mb-2">
-                    <Input
-                      type="time"
-                      value={timeInput}
-                      onChange={(e) => setTimeInput(e.target.value)}
-                      placeholder="Add time"
-                    />
-                    <Button type="button" onClick={addSpecificTime} size="sm">
-                      <Plus className="w-4 h-4" />
-                    </Button>
-                  </div>
-                  <div className="flex flex-wrap gap-2">
-                    {formData.specific_times.map(time => (
-                      <Badge key={time} variant="outline" className="flex items-center gap-1">
-                        {time}
-                        <button type="button" onClick={() => removeSpecificTime(time)}>
-                          <X className="w-3 h-3" />
-                        </button>
-                      </Badge>
+              {formData.recurrence_type === "weekly" && (
+                <div className="md:col-span-2">
+                  <Label>Days of Week</Label>
+                  <div className="flex flex-wrap gap-2 mt-2">
+                    {["monday", "tuesday", "wednesday", "thursday", "friday", "saturday", "sunday"].map(day => (
+                      <label key={day} className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                        <Checkbox
+                          checked={formData.recurrence_days?.includes(day)}
+                          onCheckedChange={(checked) => {
+                            const days = formData.recurrence_days || [];
+                            handleInputChange("recurrence_days", checked 
+                              ? [...days, day]
+                              : days.filter(d => d !== day)
+                            );
+                          }}
+                        />
+                        <span className="text-sm capitalize">{day}</span>
+                      </label>
                     ))}
                   </div>
+                </div>
+              )}
+
+              <div>
+                <Label htmlFor="scheduled_date">Scheduled Date</Label>
+                <Input
+                  id="scheduled_date"
+                  type="date"
+                  value={formData.scheduled_date}
+                  onChange={(e) => handleInputChange("scheduled_date", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="scheduled_time">Scheduled Time (Optional)</Label>
+                <Input
+                  id="scheduled_time"
+                  type="time"
+                  value={formData.scheduled_time}
+                  onChange={(e) => handleInputChange("scheduled_time", e.target.value)}
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="time_of_day">Time of Day</Label>
+                <Select value={formData.time_of_day} onValueChange={(value) => handleInputChange("time_of_day", value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="anytime">Anytime</SelectItem>
+                    <SelectItem value="morning">Morning</SelectItem>
+                    <SelectItem value="lunchtime">Lunchtime</SelectItem>
+                    <SelectItem value="afternoon">Afternoon</SelectItem>
+                    <SelectItem value="evening">Evening</SelectItem>
+                    <SelectItem value="dinner_time">Dinner Time</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              {formData.recurrence_type !== "one_off" && (
+                <div>
+                  <Label htmlFor="recurrence_end_date">Recurrence End Date (Optional)</Label>
+                  <Input
+                    id="recurrence_end_date"
+                    type="date"
+                    value={formData.recurrence_end_date}
+                    onChange={(e) => handleInputChange("recurrence_end_date", e.target.value)}
+                  />
                 </div>
               )}
 
