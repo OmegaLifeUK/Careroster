@@ -21,6 +21,22 @@ const frequencyLabels = {
   specific_times: "Specific Times",
 };
 
+const recurrenceLabels = {
+  one_off: "One-Off",
+  daily: "Daily",
+  weekly: "Weekly",
+  monthly: "Monthly",
+};
+
+const timeOfDayLabels = {
+  anytime: "Anytime",
+  morning: "Morning",
+  lunchtime: "Lunchtime",
+  afternoon: "Afternoon",
+  evening: "Evening",
+  dinner_time: "Dinner Time",
+};
+
 export default function TaskCard({ task, qualifications = [], onEdit, onDelete }) {
   if (!task) return null;
 
@@ -67,6 +83,33 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
             </div>
           )}
 
+          {task.scheduled_date && (
+            <div className="flex items-center gap-2 text-blue-700">
+              <Calendar className="w-3 h-3" />
+              <span className="font-medium">
+                {task.scheduled_date}
+                {task.scheduled_time && ` at ${task.scheduled_time}`}
+              </span>
+            </div>
+          )}
+
+          {task.time_of_day && task.time_of_day !== "anytime" && (
+            <div className="flex items-center gap-2">
+              <Clock className="w-3 h-3" />
+              <span>{timeOfDayLabels[task.time_of_day]}</span>
+            </div>
+          )}
+
+          {task.recurrence_type && task.recurrence_type !== "one_off" && (
+            <div className="flex items-center gap-2 text-indigo-700">
+              <Calendar className="w-3 h-3" />
+              <span className="font-medium">{recurrenceLabels[task.recurrence_type]}</span>
+              {task.recurrence_days && task.recurrence_days.length > 0 && (
+                <span className="text-xs">({task.recurrence_days.map(d => d.substring(0, 3)).join(", ")})</span>
+              )}
+            </div>
+          )}
+
           {task.requires_two_staff && (
             <div className="flex items-center gap-2 text-purple-700">
               <Users className="w-3 h-3" />
@@ -80,19 +123,6 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
               <span>
                 Alerts: {task.alerts_if_missed && "Missed"} {task.alerts_if_missed && task.alerts_if_refused && "/"} {task.alerts_if_refused && "Refused"}
               </span>
-            </div>
-          )}
-
-          {task.specific_times && task.specific_times.length > 0 && (
-            <div className="flex items-center gap-2">
-              <Calendar className="w-3 h-3" />
-              <div className="flex flex-wrap gap-1">
-                {task.specific_times.map(time => (
-                  <Badge key={time} variant="outline" className="text-xs px-1 py-0">
-                    {time}
-                  </Badge>
-                ))}
-              </div>
             </div>
           )}
 
