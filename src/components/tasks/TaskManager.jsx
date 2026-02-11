@@ -8,6 +8,7 @@ import { Plus, Sparkles, ListChecks, AlertCircle, Clock } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 
 import TaskCard from "./TaskCard";
+import TaskDialog from "./TaskDialog";
 import GenerateTasksDialog from "./GenerateTasksDialog";
 import { useNavigate } from "react-router-dom";
 import { createPageUrl } from "@/utils";
@@ -15,6 +16,7 @@ import { createPageUrl } from "@/utils";
 export default function TaskManager({ client }) {
   const navigate = useNavigate();
   const [editingTask, setEditingTask] = useState(null);
+  const [showDialog, setShowDialog] = useState(false);
   const [showGenerateDialog, setShowGenerateDialog] = useState(false);
 
   const queryClient = useQueryClient();
@@ -104,7 +106,10 @@ export default function TaskManager({ client }) {
                 AI Generate from Care Needs
               </Button>
               <Button
-                onClick={() => navigate(createPageUrl("AddCareTask"))}
+                onClick={() => {
+                  setEditingTask(null);
+                  setShowDialog(true);
+                }}
                 size="sm"
                 className="bg-blue-600 hover:bg-blue-700"
               >
@@ -151,7 +156,10 @@ export default function TaskManager({ client }) {
                   <Sparkles className="w-4 h-4 mr-2" />
                   Generate from Care Needs
                 </Button>
-                <Button onClick={() => navigate(createPageUrl("AddCareTask"))}>
+                <Button onClick={() => {
+                  setEditingTask(null);
+                  setShowDialog(true);
+                }}>
                   <Plus className="w-4 h-4 mr-2" />
                   Add Manually
                 </Button>
@@ -190,6 +198,18 @@ export default function TaskManager({ client }) {
         <GenerateTasksDialog
           client={client}
           onClose={() => setShowGenerateDialog(false)}
+        />
+      )}
+
+      {showDialog && (
+        <TaskDialog
+          task={editingTask}
+          client={client}
+          qualifications={qualifications}
+          onClose={() => {
+            setShowDialog(false);
+            setEditingTask(null);
+          }}
         />
       )}
     </div>
