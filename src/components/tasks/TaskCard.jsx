@@ -47,7 +47,7 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
   const handleCardClick = (e) => {
     // Don't trigger card click if clicking a button
     if (e.target.closest('button')) return;
-    onEdit();
+    onEdit(task);
   };
 
   return (
@@ -146,7 +146,7 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
             size="sm"
             onClick={(e) => {
               e.stopPropagation();
-              onEdit();
+              onEdit(task);
             }}
             className="flex-1"
           >

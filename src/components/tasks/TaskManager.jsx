@@ -179,8 +179,8 @@ export default function TaskManager({ client }) {
                         key={task.id}
                         task={task}
                         qualifications={qualifications}
-                        onEdit={() => {
-                          setEditingTask(task);
+                        onEdit={(taskToEdit) => {
+                          setEditingTask(taskToEdit);
                           setShowDialog(true);
                         }}
                         onDelete={() => handleDelete(task.id)}
