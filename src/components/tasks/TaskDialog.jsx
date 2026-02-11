@@ -20,28 +20,21 @@ import { useToast } from "@/components/ui/toast";
 export default function TaskDialog({ task, client, qualifications = [], onClose }) {
   const [formData, setFormData] = useState({
     client_id: client?.id || task?.client_id || "",
-    task_name: task?.task_name || "",
-    description: task?.description || "",
-    category: task?.category || "personal_care",
-    frequency: task?.frequency || "every_visit",
-    specific_times: task?.specific_times || [],
-    priority: task?.priority || "medium",
-    estimated_duration_minutes: task?.estimated_duration_minutes || 15,
-    requires_two_staff: task?.requires_two_staff || false,
-    required_qualifications: task?.required_qualifications || [],
-    instructions: task?.instructions || "",
-    alerts_if_missed: task?.alerts_if_missed || false,
-    alerts_if_refused: task?.alerts_if_refused || false,
-    is_active: task?.is_active !== undefined ? task.is_active : true,
-    start_date: task?.start_date || new Date().toISOString().split('T')[0],
-    end_date: task?.end_date || "",
-    source: task?.source || "manual",
+    task_title: task?.task_title || task?.task_name || "",
+    task_description: task?.task_description || task?.description || "",
+    task_type: task?.task_type || "personal_care",
+    task_category: task?.task_category || task?.category || "personal_care",
+    priority_level: task?.priority_level || task?.priority || "medium",
+    duration_estimate_minutes: task?.duration_estimate_minutes || task?.estimated_duration_minutes || 15,
     scheduled_date: task?.scheduled_date || "",
     scheduled_time: task?.scheduled_time || "",
     time_of_day: task?.time_of_day || "anytime",
     recurrence_type: task?.recurrence_type || "one_off",
     recurrence_days: task?.recurrence_days || [],
     recurrence_end_date: task?.recurrence_end_date || "",
+    frequency: task?.frequency || "once",
+    location: task?.location || "home",
+    task_status: task?.task_status || "scheduled",
   });
 
   const [timeInput, setTimeInput] = useState("");
@@ -105,13 +98,8 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
   const handleSubmit = (e) => {
     e.preventDefault();
     
-    if (!formData.task_name) {
-      toast.error("Validation Error", "Please enter a task name");
-      return;
-    }
-    
-    if (formData.frequency === "specific_times" && formData.specific_times.length === 0) {
-      toast.error("Validation Error", "Please add at least one specific time");
+    if (!formData.task_title) {
+      toast.error("Validation Error", "Please enter a task title");
       return;
     }
     
@@ -129,30 +117,51 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
           <div className="space-y-6 py-4">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="md:col-span-2">
-                <Label htmlFor="task_name">Task Name *</Label>
+                <Label htmlFor="task_title">Task Title *</Label>
                 <Input
-                  id="task_name"
-                  value={formData.task_name}
-                  onChange={(e) => handleInputChange("task_name", e.target.value)}
+                  id="task_title"
+                  value={formData.task_title}
+                  onChange={(e) => handleInputChange("task_title", e.target.value)}
                   placeholder="e.g., Assist with morning wash, Administer medication"
                   required
                 />
               </div>
 
               <div className="md:col-span-2">
-                <Label htmlFor="description">Description</Label>
+                <Label htmlFor="task_description">Description</Label>
                 <Textarea
-                  id="description"
-                  value={formData.description}
-                  onChange={(e) => handleInputChange("description", e.target.value)}
+                  id="task_description"
+                  value={formData.task_description}
+                  onChange={(e) => handleInputChange("task_description", e.target.value)}
                   placeholder="Detailed description of the task"
                   className="h-20"
                 />
               </div>
 
               <div>
-                <Label htmlFor="category">Category *</Label>
-                <Select value={formData.category} onValueChange={(value) => handleInputChange("category", value)}>
+                <Label htmlFor="task_type">Task Type *</Label>
+                <Select value={formData.task_type} onValueChange={(value) => handleInputChange("task_type", value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="personal_care">Personal Care</SelectItem>
+                    <SelectItem value="medication">Medication</SelectItem>
+                    <SelectItem value="nutrition_meals">Nutrition & Meals</SelectItem>
+                    <SelectItem value="mobility_support">Mobility Support</SelectItem>
+                    <SelectItem value="clinical_support">Clinical Support</SelectItem>
+                    <SelectItem value="emotional_support">Emotional Support</SelectItem>
+                    <SelectItem value="domestic_support">Domestic Support</SelectItem>
+                    <SelectItem value="child_supervision">Child Supervision</SelectItem>
+                    <SelectItem value="education_development">Education & Development</SelectItem>
+                    <SelectItem value="community_access">Community Access</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="task_category">Category *</Label>
+                <Select value={formData.task_category} onValueChange={(value) => handleInputChange("task_category", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -173,8 +182,8 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
               </div>
 
               <div>
-                <Label htmlFor="priority">Priority *</Label>
-                <Select value={formData.priority} onValueChange={(value) => handleInputChange("priority", value)}>
+                <Label htmlFor="priority_level">Priority *</Label>
+                <Select value={formData.priority_level} onValueChange={(value) => handleInputChange("priority_level", value)}>
                   <SelectTrigger>
                     <SelectValue />
                   </SelectTrigger>
@@ -183,6 +192,21 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
                     <SelectItem value="medium">Medium</SelectItem>
                     <SelectItem value="high">High</SelectItem>
                     <SelectItem value="critical">Critical</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div>
+                <Label htmlFor="frequency">Frequency *</Label>
+                <Select value={formData.frequency} onValueChange={(value) => handleInputChange("frequency", value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="once">Once</SelectItem>
+                    <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="weekly">Weekly</SelectItem>
+                    <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
                 </Select>
               </div>
@@ -275,114 +299,28 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
               )}
 
               <div>
-                <Label htmlFor="estimated_duration_minutes">Estimated Duration (minutes)</Label>
+                <Label htmlFor="duration_estimate_minutes">Estimated Duration (minutes)</Label>
                 <Input
-                  id="estimated_duration_minutes"
+                  id="duration_estimate_minutes"
                   type="number"
-                  value={formData.estimated_duration_minutes}
-                  onChange={(e) => handleInputChange("estimated_duration_minutes", parseInt(e.target.value))}
+                  value={formData.duration_estimate_minutes}
+                  onChange={(e) => handleInputChange("duration_estimate_minutes", parseInt(e.target.value))}
                   min="1"
                 />
               </div>
 
-              <div className="md:col-span-2">
-                <Label htmlFor="instructions">Instructions</Label>
-                <Textarea
-                  id="instructions"
-                  value={formData.instructions}
-                  onChange={(e) => handleInputChange("instructions", e.target.value)}
-                  placeholder="Specific instructions for completing this task"
-                  className="h-24"
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div>
-                  <Label htmlFor="start_date">Start Date</Label>
-                  <Input
-                    id="start_date"
-                    type="date"
-                    value={formData.start_date}
-                    onChange={(e) => handleInputChange("start_date", e.target.value)}
-                  />
-                </div>
-                <div>
-                  <Label htmlFor="end_date">End Date (Optional)</Label>
-                  <Input
-                    id="end_date"
-                    type="date"
-                    value={formData.end_date}
-                    onChange={(e) => handleInputChange("end_date", e.target.value)}
-                  />
-                </div>
-              </div>
-            </div>
-
-            {qualifications.length > 0 && (
               <div>
-                <Label className="mb-2 block">Required Qualifications</Label>
-                <div className="grid grid-cols-2 gap-2 p-4 border rounded-lg bg-gray-50 max-h-40 overflow-y-auto">
-                  {qualifications.map(qual => (
-                    <div key={qual.id} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`qual-${qual.id}`}
-                        checked={formData.required_qualifications?.includes(qual.id)}
-                        onCheckedChange={() => handleQualificationToggle(qual.id)}
-                      />
-                      <Label htmlFor={`qual-${qual.id}`} className="cursor-pointer text-sm">
-                        {qual.qualification_name}
-                      </Label>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            <div className="space-y-3 p-4 border rounded-lg bg-blue-50">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="requires_two_staff"
-                  checked={formData.requires_two_staff}
-                  onCheckedChange={(checked) => handleInputChange("requires_two_staff", checked)}
-                />
-                <Label htmlFor="requires_two_staff" className="cursor-pointer">
-                  Requires Two Staff Members
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="alerts_if_missed"
-                  checked={formData.alerts_if_missed}
-                  onCheckedChange={(checked) => handleInputChange("alerts_if_missed", checked)}
-                />
-                <Label htmlFor="alerts_if_missed" className="cursor-pointer flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-orange-600" />
-                  Generate Alert if Missed
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="alerts_if_refused"
-                  checked={formData.alerts_if_refused}
-                  onCheckedChange={(checked) => handleInputChange("alerts_if_refused", checked)}
-                />
-                <Label htmlFor="alerts_if_refused" className="cursor-pointer flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4 text-red-600" />
-                  Generate Alert if Refused
-                </Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  id="is_active"
-                  checked={formData.is_active}
-                  onCheckedChange={(checked) => handleInputChange("is_active", checked)}
-                />
-                <Label htmlFor="is_active" className="cursor-pointer">
-                  Task is Active
-                </Label>
+                <Label htmlFor="location">Location</Label>
+                <Select value={formData.location} onValueChange={(value) => handleInputChange("location", value)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="home">Home</SelectItem>
+                    <SelectItem value="community">Community</SelectItem>
+                    <SelectItem value="facility">Facility</SelectItem>
+                  </SelectContent>
+                </Select>
               </div>
             </div>
           </div>
