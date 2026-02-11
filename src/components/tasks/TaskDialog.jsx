@@ -28,7 +28,7 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
     duration_estimate_minutes: task?.duration_estimate_minutes || task?.estimated_duration_minutes || 15,
     scheduled_date: task?.scheduled_date || "",
     scheduled_time: task?.scheduled_time || "",
-    time_of_day: task?.time_of_day || "anytime",
+    times_of_day: task?.times_of_day || (task?.time_of_day && task.time_of_day !== "anytime" ? [task.time_of_day] : []),
     recurrence_type: task?.recurrence_type || "one_off",
     recurrence_days: task?.recurrence_days || [],
     recurrence_end_date: task?.recurrence_end_date || "",
@@ -205,6 +205,9 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
                   <SelectContent>
                     <SelectItem value="once">Once</SelectItem>
                     <SelectItem value="daily">Daily</SelectItem>
+                    <SelectItem value="twice_daily">Twice Daily</SelectItem>
+                    <SelectItem value="three_times_daily">Three Times Daily</SelectItem>
+                    <SelectItem value="four_times_daily">Four Times Daily</SelectItem>
                     <SelectItem value="weekly">Weekly</SelectItem>
                     <SelectItem value="custom">Custom</SelectItem>
                   </SelectContent>
@@ -269,21 +272,25 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
                 />
               </div>
 
-              <div>
-                <Label htmlFor="time_of_day">Time of Day</Label>
-                <Select value={formData.time_of_day} onValueChange={(value) => handleInputChange("time_of_day", value)}>
-                  <SelectTrigger>
-                    <SelectValue />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="anytime">Anytime</SelectItem>
-                    <SelectItem value="morning">Morning</SelectItem>
-                    <SelectItem value="lunchtime">Lunchtime</SelectItem>
-                    <SelectItem value="afternoon">Afternoon</SelectItem>
-                    <SelectItem value="evening">Evening</SelectItem>
-                    <SelectItem value="dinner_time">Dinner Time</SelectItem>
-                  </SelectContent>
-                </Select>
+              <div className="md:col-span-2">
+                <Label>Times of Day</Label>
+                <div className="flex flex-wrap gap-2 mt-2">
+                  {["morning", "lunchtime", "afternoon", "evening", "dinner_time", "night"].map(time => (
+                    <label key={time} className="flex items-center gap-2 px-3 py-2 border rounded-lg cursor-pointer hover:bg-gray-50">
+                      <Checkbox
+                        checked={formData.times_of_day?.includes(time)}
+                        onCheckedChange={(checked) => {
+                          const times = formData.times_of_day || [];
+                          handleInputChange("times_of_day", checked 
+                            ? [...times, time]
+                            : times.filter(t => t !== time)
+                          );
+                        }}
+                      />
+                      <span className="text-sm capitalize">{time.replace('_', ' ')}</span>
+                    </label>
+                  ))}
+                </div>
               </div>
 
               {formData.recurrence_type !== "one_off" && (
