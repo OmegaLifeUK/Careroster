@@ -52,6 +52,7 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
     notes: shift?.notes || "",
     attached_documents: shift?.attached_documents || [],
     assessment_documents: shift?.assessment_documents || [],
+    linked_care_task_ids: shift?.linked_care_task_ids || [],
   });
 
   const [isUploading, setIsUploading] = useState(false);
@@ -76,6 +77,20 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
       return Array.isArray(data) ? data : [];
     },
     enabled: formData.care_type === "supported_living"
+  });
+
+  // Fetch care tasks for the client
+  const { data: careTasks = [] } = useQuery({
+    queryKey: ['care-tasks', formData.client_id],
+    queryFn: async () => {
+      if (!formData.client_id) return [];
+      const data = await base44.entities.CareTask.filter({ 
+        client_id: formData.client_id,
+        task_status: 'scheduled'
+      });
+      return Array.isArray(data) ? data : [];
+    },
+    enabled: Boolean(formData.client_id)
   });
 
   // Pre-defined locations for residential care / day centre
@@ -607,6 +622,53 @@ export default function ShiftDialog({ shift, carers = [], clients = [], shifts =
                   className="h-24"
                 />
               </div>
+
+              {/* Linked Care Tasks */}
+              {formData.client_id && careTasks.length > 0 && (
+                <div className="border rounded-lg p-4 bg-gray-50">
+                  <Label className="mb-2 block">Link Care Tasks to Shift</Label>
+                  <p className="text-xs text-gray-500 mb-3">
+                    Select tasks from the client's care plan to link to this shift
+                  </p>
+                  <div className="space-y-2 max-h-48 overflow-y-auto">
+                    {careTasks.map((task) => (
+                      <label key={task.id} className="flex items-start gap-2 p-2 hover:bg-white rounded cursor-pointer">
+                        <Checkbox
+                          checked={formData.linked_care_task_ids?.includes(task.id)}
+                          onCheckedChange={(checked) => {
+                            const taskIds = formData.linked_care_task_ids || [];
+                            handleInputChange("linked_care_task_ids", checked 
+                              ? [...taskIds, task.id]
+                              : taskIds.filter(id => id !== task.id)
+                            );
+                          }}
+                        />
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium">{task.task_title}</p>
+                          {task.task_description && (
+                            <p className="text-xs text-gray-500 truncate">{task.task_description}</p>
+                          )}
+                          <div className="flex gap-2 mt-1">
+                            <span className={`text-xs px-2 py-0.5 rounded ${
+                              task.priority_level === 'critical' ? 'bg-red-100 text-red-700' :
+                              task.priority_level === 'high' ? 'bg-orange-100 text-orange-700' :
+                              task.priority_level === 'medium' ? 'bg-yellow-100 text-yellow-700' :
+                              'bg-gray-100 text-gray-700'
+                            }`}>
+                              {task.priority_level}
+                            </span>
+                            {task.times_of_day && task.times_of_day.length > 0 && (
+                              <span className="text-xs px-2 py-0.5 rounded bg-blue-100 text-blue-700">
+                                {task.times_of_day.join(', ')}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </label>
+                    ))}
+                  </div>
+                </div>
+              )}
 
               <div>
                 <Label htmlFor="notes">Notes</Label>
