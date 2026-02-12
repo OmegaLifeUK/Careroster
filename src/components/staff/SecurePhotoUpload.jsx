@@ -61,26 +61,105 @@ export default function SecurePhotoUpload({ user }) {
     queryFn: async () => {
       if (!user?.email) return [];
       
-      const carers = await base44.entities.Carer.filter({ email: user.email });
-      const staff = await base44.entities.Staff.filter({ email: user.email });
+      let staffIds = [];
       
-      const staffIds = [
-        ...(Array.isArray(carers) ? carers.map(c => c.id) : []),
-        ...(Array.isArray(staff) ? staff.map(s => s.id) : [])
-      ];
-
-      if (staffIds.length === 0) return [];
-
-      // Get shifts to find associated clients
-      const allShifts = await base44.entities.Shift.list();
-      const myShifts = (Array.isArray(allShifts) ? allShifts : []).filter(s => 
-        staffIds.includes(s.carer_id)
-      );
-
-      const clientIds = [...new Set(myShifts.map(s => s.client_id).filter(Boolean))];
+      // Try Carer entity
+      try {
+        const carers = await base44.entities.Carer.filter({ email: user.email });
+        if (Array.isArray(carers) && carers.length > 0) {
+          staffIds.push(...carers.map(c => c.id));
+        }
+      } catch (error) {
+        console.log("Carer check:", error);
+      }
       
-      const allClients = await base44.entities.Client.list();
-      return (Array.isArray(allClients) ? allClients : []).filter(c => clientIds.includes(c.id));
+      // Try Staff entity
+      try {
+        const staff = await base44.entities.Staff.filter({ email: user.email });
+        if (Array.isArray(staff) && staff.length > 0) {
+          staffIds.push(...staff.map(s => s.id));
+        }
+      } catch (error) {
+        console.log("Staff check:", error);
+      }
+
+      // Collect client IDs from all sources
+      let clientIds = new Set();
+
+      // Try Shifts (residential care)
+      try {
+        const allShifts = await base44.entities.Shift.list();
+        if (Array.isArray(allShifts)) {
+          allShifts.forEach(s => {
+            if (staffIds.includes(s.carer_id) && s.client_id) {
+              clientIds.add(s.client_id);
+            }
+          });
+        }
+      } catch (error) {
+        console.log("Shift check:", error);
+      }
+
+      // Try Visits (domiciliary care)
+      try {
+        const allVisits = await base44.entities.Visit.list();
+        if (Array.isArray(allVisits)) {
+          allVisits.forEach(v => {
+            if (staffIds.includes(v.assigned_staff_id) && v.client_id) {
+              clientIds.add(v.client_id);
+            }
+          });
+        }
+      } catch (error) {
+        console.log("Visit check:", error);
+      }
+
+      // Fetch all client types
+      let allClientsData = [];
+      
+      // Try Client entity (residential)
+      try {
+        const clients = await base44.entities.Client.list();
+        if (Array.isArray(clients)) {
+          allClientsData.push(...clients.filter(c => clientIds.has(c.id)));
+        }
+      } catch (error) {
+        console.log("Client check:", error);
+      }
+      
+      // Try DomCareClient entity (domiciliary)
+      try {
+        const domClients = await base44.entities.DomCareClient.list();
+        if (Array.isArray(domClients)) {
+          allClientsData.push(...domClients.filter(c => clientIds.has(c.id)));
+        }
+      } catch (error) {
+        console.log("DomCareClient check:", error);
+      }
+      
+      // Try SupportedLivingClient
+      try {
+        const slClients = await base44.entities.SupportedLivingClient.list();
+        if (Array.isArray(slClients)) {
+          allClientsData.push(...slClients.filter(c => clientIds.has(c.id)));
+        }
+      } catch (error) {
+        console.log("SupportedLivingClient check:", error);
+      }
+      
+      // Try DayCentreClient
+      try {
+        const dcClients = await base44.entities.DayCentreClient.list();
+        if (Array.isArray(dcClients)) {
+          allClientsData.push(...dcClients.filter(c => clientIds.has(c.id)));
+        }
+      } catch (error) {
+        console.log("DayCentreClient check:", error);
+      }
+
+      // Remove duplicates based on ID
+      const uniqueClients = Array.from(new Map(allClientsData.map(c => [c.id, c])).values());
+      return uniqueClients;
     },
     enabled: !!user?.email,
   });
@@ -274,14 +353,20 @@ export default function SecurePhotoUpload({ user }) {
                 <SelectValue placeholder="Select client..." />
               </SelectTrigger>
               <SelectContent>
-                {clients.map((client) => (
-                  <SelectItem key={client.id} value={client.id}>
-                    <div className="flex items-center gap-2">
-                      <User className="w-4 h-4 text-gray-400" />
-                      {client.full_name}
-                    </div>
-                  </SelectItem>
-                ))}
+                {clients.length === 0 ? (
+                  <div className="px-2 py-6 text-center text-sm text-gray-500">
+                    No clients found. You need to be assigned to shifts/visits first.
+                  </div>
+                ) : (
+                  clients.map((client) => (
+                    <SelectItem key={client.id} value={client.id}>
+                      <div className="flex items-center gap-2">
+                        <User className="w-4 h-4 text-gray-400" />
+                        {client.full_name}
+                      </div>
+                    </SelectItem>
+                  ))
+                )}
               </SelectContent>
             </Select>
           </div>
