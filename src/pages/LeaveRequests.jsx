@@ -64,15 +64,75 @@ export default function LeaveRequests() {
         });
       }
 
+      // Automatically unschedule affected shifts
+      const allShifts = await base44.entities.Shift.list();
+      const affectedShifts = allShifts.filter(shift => {
+        if (shift.carer_id !== request.carer_id) return false;
+        if (!shift.date) return false;
+        
+        const shiftDate = new Date(shift.date);
+        const startDate = new Date(request.start_date);
+        const endDate = new Date(request.end_date);
+        
+        return shiftDate >= startDate && shiftDate <= endDate;
+      });
+
+      // Update each affected shift
+      for (const shift of affectedShifts) {
+        await base44.entities.Shift.update(shift.id, {
+          carer_id: null,
+          status: "unfilled",
+          notes: `${shift.notes || ''}\n[System] Carer on ${request.leave_type} leave ${format(parseISO(request.start_date), "MMM d")} - ${format(parseISO(request.end_date), "MMM d")}`.trim()
+        });
+      }
+
+      // Automatically unschedule affected visits (domiciliary care)
+      try {
+        const allVisits = await base44.entities.Visit.list();
+        const affectedVisits = allVisits.filter(visit => {
+          if (visit.assigned_staff_id !== request.carer_id) return false;
+          if (!visit.scheduled_start) return false;
+          
+          const visitDate = new Date(visit.scheduled_start);
+          const startDate = new Date(request.start_date);
+          const endDate = new Date(request.end_date);
+          
+          return visitDate >= startDate && visitDate <= endDate;
+        });
+
+        // Update each affected visit
+        for (const visit of affectedVisits) {
+          await base44.entities.Visit.update(visit.id, {
+            assigned_staff_id: null,
+            status: "unfilled",
+            visit_notes: `${visit.visit_notes || ''}\n[System] Staff on ${request.leave_type} leave ${format(parseISO(request.start_date), "MMM d")} - ${format(parseISO(request.end_date), "MMM d")}`.trim()
+          });
+        }
+      } catch (error) {
+        console.log("No visits to update");
+      }
+
       // Send notification to carer
       const carer = carers.find(c => c.id === request.carer_id);
       if (carer) {
         await base44.entities.Notification.create({
           recipient_id: carer.email,
           title: "Leave Request Approved",
-          message: `Your ${request.leave_type} leave request from ${format(parseISO(request.start_date), "MMM d")} to ${format(parseISO(request.end_date), "MMM d")} has been approved.${notes ? ` Manager notes: ${notes}` : ''}`,
+          message: `Your ${request.leave_type} leave request from ${format(parseISO(request.start_date), "MMM d")} to ${format(parseISO(request.end_date), "MMM d")} has been approved.${notes ? ` Manager notes: ${notes}` : ''} Your shifts during this period have been automatically unscheduled.`,
           type: "leave_request",
           priority: "normal",
+          is_read: false,
+        });
+      }
+
+      // Notify managers about unscheduled shifts
+      if (affectedShifts.length > 0) {
+        await base44.entities.Notification.create({
+          recipient_id: user.email,
+          title: "Shifts Unscheduled Due to Leave",
+          message: `${affectedShifts.length} shift(s) have been automatically unscheduled due to approved leave for ${carer?.full_name || 'staff member'}. Please reassign these shifts.`,
+          type: "shift_changed",
+          priority: "high",
           is_read: false,
         });
       }
@@ -81,6 +141,8 @@ export default function LeaveRequests() {
       queryClient.invalidateQueries({ queryKey: ['leave-requests'] });
       queryClient.invalidateQueries({ queryKey: ['carers'] });
       queryClient.invalidateQueries({ queryKey: ['notifications'] });
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
     },
   });
 
