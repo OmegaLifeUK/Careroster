@@ -294,97 +294,97 @@ export default function ComplianceDashboard() {
       {/* Key Metrics */}
       <div className="grid md:grid-cols-3 gap-6 mb-6">
         {/* Organisation */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Shield className="w-5 h-5 text-purple-600" />
-              Organisation
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Setup Complete</span>
-              {orgCompliant ? (
-                <CheckCircle className="w-5 h-5 text-green-600" />
-              ) : (
-                <AlertTriangle className="w-5 h-5 text-amber-600" />
-              )}
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Mandatory Policies</span>
-              <Badge>{approvedMandatory.length}/{mandatoryPolicies.length}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Total Policies</span>
-              <Badge variant="outline">{policies.length}</Badge>
-            </div>
-            <Link to={createPageUrl("OrganisationSetup")}>
+        <Link to={createPageUrl("OrganisationSetup")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Shield className="w-5 h-5 text-purple-600" />
+                Organisation
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Setup Complete</span>
+                {orgCompliant ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : (
+                  <AlertTriangle className="w-5 h-5 text-amber-600" />
+                )}
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Mandatory Policies</span>
+                <Badge>{approvedMandatory.length}/{mandatoryPolicies.length}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Policies</span>
+                <Badge variant="outline">{policies.length}</Badge>
+              </div>
               <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
                 View Details →
               </div>
-            </Link>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Staff */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <Users className="w-5 h-5 text-blue-600" />
-              Staff
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Total Staff</span>
-              <Badge>{allStaff.length}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Fit to Work</span>
-              <Badge className="bg-green-600">{staffFitToWork}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">DBS Expired</span>
-              <Badge className={dbsExpired > 0 ? 'bg-red-600' : 'bg-green-600'}>{dbsExpired}</Badge>
-            </div>
-            <Link to={createPageUrl("StaffOnboarding")}>
+        <Link to={createPageUrl("StaffOnboarding")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <Users className="w-5 h-5 text-blue-600" />
+                Staff
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Staff</span>
+                <Badge>{allStaff.length}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Fit to Work</span>
+                <Badge className="bg-green-600">{staffFitToWork}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">DBS Expired</span>
+                <Badge className={dbsExpired > 0 ? 'bg-red-600' : 'bg-green-600'}>{dbsExpired}</Badge>
+              </div>
               <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
                 View Details →
               </div>
-            </Link>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
 
         {/* Clients */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2 text-lg">
-              <UserCircle className="w-5 h-5 text-green-600" />
-              Clients
-            </CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Total Clients</span>
-              <Badge>{allClients.length}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Active</span>
-              <Badge className="bg-green-600">{clientsActive}</Badge>
-            </div>
-            <div className="flex justify-between items-center">
-              <span className="text-sm">Overdue Reviews</span>
-              <Badge className={carePlansOverdueReview > 0 ? 'bg-red-600' : 'bg-green-600'}>
-                {carePlansOverdueReview}
-              </Badge>
-            </div>
-            <Link to={createPageUrl("ClientOnboarding")}>
+        <Link to={createPageUrl("ClientOnboarding")}>
+          <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105 h-full">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2 text-lg">
+                <UserCircle className="w-5 h-5 text-green-600" />
+                Clients
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Total Clients</span>
+                <Badge>{allClients.length}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Active</span>
+                <Badge className="bg-green-600">{clientsActive}</Badge>
+              </div>
+              <div className="flex justify-between items-center">
+                <span className="text-sm">Overdue Reviews</span>
+                <Badge className={carePlansOverdueReview > 0 ? 'bg-red-600' : 'bg-green-600'}>
+                  {carePlansOverdueReview}
+                </Badge>
+              </div>
               <div className="pt-2 border-t text-sm text-blue-600 hover:underline">
                 View Details →
               </div>
-            </Link>
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        </Link>
       </div>
 
       {/* Quick Links */}

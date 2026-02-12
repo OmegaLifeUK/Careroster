@@ -355,50 +355,58 @@ COMMUNICATION
 
         {/* Quick Summary Cards */}
         <div className="grid grid-cols-1 md:grid-cols-4 gap-3 mb-4">
-          <Card>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Active Clients</p>
-                  <p className="text-xl font-bold">{clients.filter(c => c && c.status === 'active').length}</p>
+          <Link to={createPageUrl("Clients")}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-0.5">Active Clients</p>
+                    <p className="text-xl font-bold">{clients.filter(c => c && c.status === 'active').length}</p>
+                  </div>
+                  <UserCircle className="w-7 h-7 text-blue-500" />
                 </div>
-                <UserCircle className="w-7 h-7 text-blue-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Active Carers</p>
-                  <p className="text-xl font-bold">{carers.filter(c => c && c.status === 'active').length}</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to={createPageUrl("Carers")}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-0.5">Active Carers</p>
+                    <p className="text-xl font-bold">{carers.filter(c => c && c.status === 'active').length}</p>
+                  </div>
+                  <Users className="w-7 h-7 text-green-500" />
                 </div>
-                <Users className="w-7 h-7 text-green-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Today's Shifts</p>
-                  <p className="text-xl font-bold">{todayShifts.length}</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to={createPageUrl("Schedule")}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-0.5">Today's Shifts</p>
+                    <p className="text-xl font-bold">{todayShifts.length}</p>
+                  </div>
+                  <Calendar className="w-7 h-7 text-purple-500" />
                 </div>
-                <Calendar className="w-7 h-7 text-purple-500" />
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-3">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-xs text-gray-600 mb-0.5">Unfilled Shifts</p>
-                  <p className="text-xl font-bold text-orange-600">{unfilledShifts}</p>
+              </CardContent>
+            </Card>
+          </Link>
+          <Link to={createPageUrl("Schedule")}>
+            <Card className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105">
+              <CardContent className="p-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <p className="text-xs text-gray-600 mb-0.5">Unfilled Shifts</p>
+                    <p className="text-xl font-bold text-orange-600">{unfilledShifts}</p>
+                  </div>
+                  <AlertTriangle className="w-7 h-7 text-orange-500" />
                 </div>
-                <AlertTriangle className="w-7 h-7 text-orange-500" />
-              </div>
-            </CardContent>
-          </Card>
+              </CardContent>
+            </Card>
+          </Link>
         </div>
 
         {/* Dynamic Widgets Based on Preferences */}
