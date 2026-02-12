@@ -50,6 +50,62 @@ export default function ClientDialog({ client, carers = [], onClose }) {
   const saveMutation = useMutation({
     mutationFn: async (data) => {
       if (client?.id) {
+        // If client status changed to inactive/archived, unschedule future shifts
+        if (client.status === 'active' && (data.status === 'inactive' || data.status === 'archived')) {
+          const allShifts = await base44.entities.Shift.list();
+          const today = new Date();
+          today.setHours(0, 0, 0, 0);
+          
+          const futureShifts = allShifts.filter(shift => {
+            if (shift.client_id !== client.id) return false;
+            if (!shift.date) return false;
+            const shiftDate = new Date(shift.date);
+            return shiftDate >= today;
+          });
+          
+          // Unschedule all future shifts
+          for (const shift of futureShifts) {
+            await base44.entities.Shift.update(shift.id, {
+              client_id: null,
+              carer_id: null,
+              status: 'cancelled',
+              notes: `${shift.notes || ''}\n[System] Client ${data.status === 'archived' ? 'archived' : 'discharged'} - shift cancelled`.trim()
+            });
+          }
+          
+          // Cancel future visits (domiciliary)
+          try {
+            const allVisits = await base44.entities.Visit.list();
+            const futureVisits = allVisits.filter(visit => {
+              if (visit.client_id !== client.id) return false;
+              if (!visit.scheduled_start) return false;
+              const visitDate = new Date(visit.scheduled_start);
+              return visitDate >= today;
+            });
+            
+            for (const visit of futureVisits) {
+              await base44.entities.Visit.update(visit.id, {
+                status: 'cancelled',
+                visit_notes: `${visit.visit_notes || ''}\n[System] Client ${data.status === 'archived' ? 'archived' : 'discharged'} - visit cancelled`.trim()
+              });
+            }
+          } catch (error) {
+            console.log("No visits to update");
+          }
+          
+          // Notify managers
+          if (futureShifts.length > 0) {
+            await base44.entities.Notification.create({
+              recipient_id: 'admin',
+              title: `Shifts Cancelled - Client ${data.status === 'archived' ? 'Archived' : 'Discharged'}`,
+              message: `${futureShifts.length} future shift(s) cancelled for ${data.full_name} due to ${data.status} status.`,
+              type: 'shift_changed',
+              priority: 'high',
+              is_read: false,
+            });
+          }
+        }
+        
         return await base44.entities.Client.update(client.id, data);
       } else {
         const newClient = await base44.entities.Client.create(data);

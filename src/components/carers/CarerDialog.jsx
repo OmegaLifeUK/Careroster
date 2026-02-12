@@ -83,6 +83,63 @@ export default function CarerDialog({ carer, qualifications, onClose }) {
       try {
         if (carer) {
           console.log("Updating existing carer:", carer.id);
+          
+          // If status changed to inactive, unschedule future shifts
+          if (carer.status !== 'inactive' && data.status === 'inactive') {
+            const allShifts = await base44.entities.Shift.list();
+            const today = new Date();
+            today.setHours(0, 0, 0, 0);
+            
+            const futureShifts = allShifts.filter(shift => {
+              if (shift.carer_id !== carer.id) return false;
+              if (!shift.date) return false;
+              const shiftDate = new Date(shift.date);
+              return shiftDate >= today;
+            });
+            
+            // Unschedule all future shifts
+            for (const shift of futureShifts) {
+              await base44.entities.Shift.update(shift.id, {
+                carer_id: null,
+                status: 'unfilled',
+                notes: `${shift.notes || ''}\n[System] Staff member set to inactive - automatically unscheduled`.trim()
+              });
+            }
+            
+            // Unschedule future visits (domiciliary)
+            try {
+              const allVisits = await base44.entities.Visit.list();
+              const futureVisits = allVisits.filter(visit => {
+                if (visit.assigned_staff_id !== carer.id) return false;
+                if (!visit.scheduled_start) return false;
+                const visitDate = new Date(visit.scheduled_start);
+                return visitDate >= today;
+              });
+              
+              for (const visit of futureVisits) {
+                await base44.entities.Visit.update(visit.id, {
+                  assigned_staff_id: null,
+                  status: 'unfilled',
+                  visit_notes: `${visit.visit_notes || ''}\n[System] Staff member set to inactive - automatically unscheduled`.trim()
+                });
+              }
+            } catch (error) {
+              console.log("No visits to update");
+            }
+            
+            // Notify managers
+            if (futureShifts.length > 0) {
+              await base44.entities.Notification.create({
+                recipient_id: 'admin',
+                title: 'Shifts Unscheduled - Staff Inactive',
+                message: `${futureShifts.length} future shift(s) have been automatically unscheduled because ${data.full_name} was set to inactive. Please reassign these shifts.`,
+                type: 'shift_changed',
+                priority: 'high',
+                is_read: false,
+              });
+            }
+          }
+          
           return await base44.entities.Carer.update(carer.id, data);
         } else {
           console.log("Creating new carer...");
