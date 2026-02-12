@@ -110,10 +110,12 @@ export default function UserManagement() {
     inviteUserMutation.mutate({ email: inviteEmail, role: inviteRole });
   };
 
-  const filteredUsers = allUsers.filter(u => 
-    u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
-    u.email?.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const filteredUsers = allUsers.filter(u => {
+    const matchesSearch = u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      u.email?.toLowerCase().includes(searchQuery.toLowerCase());
+    const matchesRole = roleFilter === "all" || u.role === roleFilter;
+    return matchesSearch && matchesRole;
+  });
 
   const adminUsers = allUsers.filter(u => u.role === 'admin');
   const regularUsers = allUsers.filter(u => u.role === 'user');
