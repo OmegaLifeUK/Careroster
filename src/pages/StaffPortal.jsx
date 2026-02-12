@@ -33,6 +33,7 @@ import SafeguardingInfo from "../components/staff/SafeguardingInfo";
 import ConfidentialIssue from "../components/staff/ConfidentialIssue";
 import MyAvailability from "../components/staff/MyAvailability";
 import MyCareTasks from "../components/staff/MyCareTasks";
+import MyLeaveRequests from "../components/staff/MyLeaveRequests";
 
 export default function StaffPortal() {
   const [activeTab, setActiveTab] = useState("shifts");
@@ -136,7 +137,7 @@ export default function StaffPortal() {
 
         <Card>
           <Tabs value={activeTab} onValueChange={setActiveTab}>
-            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-11 h-auto p-1">
+            <TabsList className="grid w-full grid-cols-3 lg:grid-cols-12 h-auto p-1">
               <TabsTrigger value="shifts" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Calendar className="w-4 h-4" />
                 <span className="hidden sm:inline">My</span> Shifts
@@ -152,6 +153,10 @@ export default function StaffPortal() {
               <TabsTrigger value="availability" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <Calendar className="w-4 h-4" />
                 Availability
+              </TabsTrigger>
+              <TabsTrigger value="leave" className="flex items-center gap-1 text-xs md:text-sm py-2">
+                <Calendar className="w-4 h-4" />
+                Leave
               </TabsTrigger>
               <TabsTrigger value="requests" className="flex items-center gap-1 text-xs md:text-sm py-2">
                 <MessageSquare className="w-4 h-4" />
@@ -200,6 +205,10 @@ export default function StaffPortal() {
 
             <TabsContent value="availability" className="p-4 md:p-6">
               <MyAvailability user={user} />
+            </TabsContent>
+
+            <TabsContent value="leave" className="p-4 md:p-6">
+              <MyLeaveRequests user={user} />
             </TabsContent>
 
             <TabsContent value="requests" className="p-4 md:p-6">
