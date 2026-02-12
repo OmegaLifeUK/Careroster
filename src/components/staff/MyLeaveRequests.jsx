@@ -23,36 +23,86 @@ export default function MyLeaveRequests({ user }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Fetch carer record
-  const { data: carerRecord } = useQuery({
-    queryKey: ['my-carer-record', user?.email],
+  // Fetch carer or staff record
+  const { data: staffRecord } = useQuery({
+    queryKey: ['my-staff-record', user?.email],
     queryFn: async () => {
       if (!user?.email) return null;
-      const carers = await base44.entities.Carer.filter({ email: user.email });
-      return Array.isArray(carers) && carers.length > 0 ? carers[0] : null;
+      
+      // Try Carer entity first
+      try {
+        const carers = await base44.entities.Carer.filter({ email: user.email });
+        if (Array.isArray(carers) && carers.length > 0) {
+          return { ...carers[0], entity_type: 'Carer' };
+        }
+      } catch (error) {
+        console.log("Carer record not found");
+      }
+      
+      // Try Staff entity
+      try {
+        const staff = await base44.entities.Staff.filter({ email: user.email });
+        if (Array.isArray(staff) && staff.length > 0) {
+          return { ...staff[0], entity_type: 'Staff' };
+        }
+      } catch (error) {
+        console.log("Staff record not found");
+      }
+      
+      return null;
     },
     enabled: !!user?.email,
   });
 
   const { data: leaveRequests = [] } = useQuery({
-    queryKey: ['my-leave-requests', carerRecord?.id],
+    queryKey: ['my-leave-requests', staffRecord?.id],
     queryFn: async () => {
-      if (!carerRecord?.id) return [];
-      const requests = await base44.entities.LeaveRequest.filter({ carer_id: carerRecord.id });
-      return Array.isArray(requests) ? requests.sort((a, b) => 
-        new Date(b.created_date) - new Date(a.created_date)
-      ) : [];
+      if (!staffRecord?.id) return [];
+      
+      // Try LeaveRequest entity (for Carer)
+      try {
+        const requests = await base44.entities.LeaveRequest.filter({ carer_id: staffRecord.id });
+        if (Array.isArray(requests) && requests.length > 0) {
+          return requests.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        }
+      } catch (error) {
+        console.log("LeaveRequest not found");
+      }
+      
+      // Try TimeOffRequest entity (for Staff)
+      try {
+        const requests = await base44.entities.TimeOffRequest.filter({ staff_id: staffRecord.id });
+        if (Array.isArray(requests) && requests.length > 0) {
+          return requests.sort((a, b) => new Date(b.created_date) - new Date(a.created_date));
+        }
+      } catch (error) {
+        console.log("TimeOffRequest not found");
+      }
+      
+      return [];
     },
-    enabled: !!carerRecord?.id,
+    enabled: !!staffRecord?.id,
   });
 
   const createRequestMutation = useMutation({
     mutationFn: async (data) => {
-      return await base44.entities.LeaveRequest.create({
-        ...data,
-        carer_id: carerRecord.id,
-        status: "pending",
-      });
+      if (staffRecord.entity_type === 'Carer') {
+        return await base44.entities.LeaveRequest.create({
+          ...data,
+          carer_id: staffRecord.id,
+          status: "pending",
+        });
+      } else {
+        // Staff entity uses TimeOffRequest
+        return await base44.entities.TimeOffRequest.create({
+          staff_id: staffRecord.id,
+          start_date: data.start_date,
+          end_date: data.end_date,
+          type: data.leave_type,
+          reason: data.reason,
+          status: "pending",
+        });
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['my-leave-requests'] });
@@ -76,7 +126,7 @@ export default function MyLeaveRequests({ user }) {
       toast.error("Please fill in all required fields");
       return;
     }
-    if (!carerRecord?.id) {
+    if (!staffRecord?.id) {
       toast.error("Unable to submit request", "No staff record found for your account. Please contact your administrator.");
       return;
     }
@@ -99,7 +149,7 @@ export default function MyLeaveRequests({ user }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">My Leave Requests</h2>
-        {carerRecord?.id ? (
+        {staffRecord?.id ? (
           <Button onClick={() => setShowForm(!showForm)}>
             {showForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
             {showForm ? "Cancel" : "Request Leave"}
@@ -192,7 +242,7 @@ export default function MyLeaveRequests({ user }) {
                 <div className="flex items-start justify-between mb-4">
                   <div>
                     <div className="flex items-center gap-2 mb-2">
-                      <h3 className="font-semibold text-lg capitalize">{request.leave_type.replace('_', ' ')}</h3>
+                      <h3 className="font-semibold text-lg capitalize">{(request.leave_type || request.type || '').replace('_', ' ')}</h3>
                       <Badge className={statusColors[request.status]}>
                         <span className="flex items-center gap-1">
                           {statusIcons[request.status]}
