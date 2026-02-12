@@ -76,6 +76,10 @@ export default function MyLeaveRequests({ user }) {
       toast.error("Please fill in all required fields");
       return;
     }
+    if (!carerRecord?.id) {
+      toast.error("Unable to submit request", "No staff record found for your account. Please contact your administrator.");
+      return;
+    }
     createRequestMutation.mutate(formData);
   };
 
@@ -95,10 +99,16 @@ export default function MyLeaveRequests({ user }) {
     <div className="space-y-6">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">My Leave Requests</h2>
-        <Button onClick={() => setShowForm(!showForm)}>
-          {showForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
-          {showForm ? "Cancel" : "Request Leave"}
-        </Button>
+        {carerRecord?.id ? (
+          <Button onClick={() => setShowForm(!showForm)}>
+            {showForm ? <X className="w-4 h-4 mr-2" /> : <Plus className="w-4 h-4 mr-2" />}
+            {showForm ? "Cancel" : "Request Leave"}
+          </Button>
+        ) : (
+          <div className="text-sm text-red-600 font-medium">
+            No staff record found. Contact administrator.
+          </div>
+        )}
       </div>
 
       {showForm && (
