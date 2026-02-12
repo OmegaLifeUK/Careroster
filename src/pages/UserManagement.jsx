@@ -30,6 +30,7 @@ export default function UserManagement() {
   const [showInviteDialog, setShowInviteDialog] = useState(false);
   const [inviteEmail, setInviteEmail] = useState("");
   const [inviteRole, setInviteRole] = useState("user");
+  const [roleFilter, setRoleFilter] = useState("all"); // all, admin, user
 
   const queryClient = useQueryClient();
   const { toast } = useToast();

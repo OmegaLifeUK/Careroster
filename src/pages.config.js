@@ -113,6 +113,7 @@ import PayrollDashboard from './pages/PayrollDashboard';
 import PayrollProcessing from './pages/PayrollProcessing';
 import PermissionsPage from './pages/PermissionsPage';
 import PolicyLibrary from './pages/PolicyLibrary';
+import ReferenceForm from './pages/ReferenceForm';
 import RegulatoryNotifications from './pages/RegulatoryNotifications';
 import ReportingEngine from './pages/ReportingEngine';
 import Reports from './pages/Reports';
@@ -136,7 +137,6 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import ReferenceForm from './pages/ReferenceForm';
 import __Layout from './Layout.jsx';
 
 
@@ -207,6 +207,7 @@ export const PAGES = {
     "PayrollProcessing": PayrollProcessing,
     "PermissionsPage": PermissionsPage,
     "PolicyLibrary": PolicyLibrary,
+    "ReferenceForm": ReferenceForm,
     "RegulatoryNotifications": RegulatoryNotifications,
     "ReportingEngine": ReportingEngine,
     "Reports": Reports,
@@ -230,7 +231,6 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "ReferenceForm": ReferenceForm,
 }
 
 export const pagesConfig = {
