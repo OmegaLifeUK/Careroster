@@ -169,43 +169,58 @@ export default function UserManagement() {
 
         {/* Stats */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+            onClick={() => setRoleFilter("all")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-100 rounded-lg">
-                  <Users className="w-5 h-5 text-blue-600" />
+                <div className={`p-2 rounded-lg ${roleFilter === "all" ? "bg-blue-600" : "bg-blue-100"}`}>
+                  <Users className={`w-5 h-5 ${roleFilter === "all" ? "text-white" : "text-blue-600"}`} />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Total Users</p>
-                  <p className="text-2xl font-bold text-blue-600">{allUsers.length}</p>
+                  <p className={`text-2xl font-bold ${roleFilter === "all" ? "text-blue-700" : "text-blue-600"}`}>
+                    {allUsers.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+            onClick={() => setRoleFilter("admin")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-100 rounded-lg">
-                  <Crown className="w-5 h-5 text-purple-600" />
+                <div className={`p-2 rounded-lg ${roleFilter === "admin" ? "bg-purple-600" : "bg-purple-100"}`}>
+                  <Crown className={`w-5 h-5 ${roleFilter === "admin" ? "text-white" : "text-purple-600"}`} />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Administrators</p>
-                  <p className="text-2xl font-bold text-purple-600">{adminUsers.length}</p>
+                  <p className={`text-2xl font-bold ${roleFilter === "admin" ? "text-purple-700" : "text-purple-600"}`}>
+                    {adminUsers.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
           </Card>
 
-          <Card>
+          <Card 
+            className="cursor-pointer hover:shadow-lg transition-all duration-200 hover:scale-105"
+            onClick={() => setRoleFilter("user")}
+          >
             <CardContent className="p-4">
               <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-100 rounded-lg">
-                  <UserIcon className="w-5 h-5 text-green-600" />
+                <div className={`p-2 rounded-lg ${roleFilter === "user" ? "bg-green-600" : "bg-green-100"}`}>
+                  <UserIcon className={`w-5 h-5 ${roleFilter === "user" ? "text-white" : "text-green-600"}`} />
                 </div>
                 <div>
                   <p className="text-sm text-gray-600">Regular Users</p>
-                  <p className="text-2xl font-bold text-green-600">{regularUsers.length}</p>
+                  <p className={`text-2xl font-bold ${roleFilter === "user" ? "text-green-700" : "text-green-600"}`}>
+                    {regularUsers.length}
+                  </p>
                 </div>
               </div>
             </CardContent>
