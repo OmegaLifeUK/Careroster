@@ -137,6 +137,8 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
+import DayCentreCRM from './pages/DayCentreCRM';
+import SafeguardingDashboard from './pages/SafeguardingDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -231,6 +233,8 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
+    "DayCentreCRM": DayCentreCRM,
+    "SafeguardingDashboard": SafeguardingDashboard,
 }
 
 export const pagesConfig = {
