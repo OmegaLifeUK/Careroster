@@ -56,9 +56,56 @@ export default function SessionDialog({ session, activities = [], staff = [], cl
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.DayCentreSession.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      // If session cancelled, notify registered clients
+      if (session.status !== 'cancelled' && data.status === 'cancelled') {
+        const registeredClients = data.registered_clients || session.registered_clients || [];
+        
+        // Notify each registered client
+        for (const clientId of registeredClients) {
+          try {
+            const client = await base44.entities.DayCentreClient.filter({ id: clientId });
+            if (client && client.length > 0 && client[0].email) {
+              await base44.entities.Notification.create({
+                recipient_id: client[0].email,
+                title: 'Session Cancelled',
+                message: `The session scheduled for ${data.session_date} at ${data.start_time} has been cancelled. We apologize for any inconvenience.`,
+                type: 'general',
+                priority: 'high',
+                is_read: false,
+              });
+            }
+          } catch (error) {
+            console.log("Could not notify client:", error);
+          }
+        }
+        
+        // Notify facilitators
+        const facilitators = data.facilitator_staff_ids || session.facilitator_staff_ids || [];
+        for (const staffId of facilitators) {
+          try {
+            const staffMember = await base44.entities.Staff.filter({ id: staffId });
+            if (staffMember && staffMember.length > 0 && staffMember[0].email) {
+              await base44.entities.Notification.create({
+                recipient_id: staffMember[0].email,
+                title: 'Session Cancelled',
+                message: `The session you were facilitating on ${data.session_date} at ${data.start_time} has been cancelled.`,
+                type: 'general',
+                priority: 'normal',
+                is_read: false,
+              });
+            }
+          } catch (error) {
+            console.log("Could not notify staff:", error);
+          }
+        }
+      }
+      
+      return await base44.entities.DayCentreSession.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['daycentre-sessions'] });
+      queryClient.invalidateQueries({ queryKey: ['notifications'] });
       toast.success("Session Updated", "Changes saved successfully");
       onClose();
     },

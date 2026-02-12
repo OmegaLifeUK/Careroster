@@ -46,9 +46,47 @@ export default function PropertyDialog({ property, staff = [], onClose }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.SupportedLivingProperty.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      // If property status changed to closed/maintenance, unschedule future shifts
+      if (property.status === 'active' && (data.status === 'closed' || data.status === 'maintenance')) {
+        const allShifts = await base44.entities.Shift.list();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const futureShifts = allShifts.filter(shift => {
+          if (shift.property_id !== property.id) return false;
+          if (!shift.date) return false;
+          const shiftDate = new Date(shift.date);
+          return shiftDate >= today;
+        });
+        
+        // Unschedule all future shifts
+        for (const shift of futureShifts) {
+          await base44.entities.Shift.update(shift.id, {
+            carer_id: null,
+            status: 'cancelled',
+            notes: `${shift.notes || ''}\n[System] Property ${data.status === 'closed' ? 'closed' : 'under maintenance'} - shift cancelled`.trim()
+          });
+        }
+        
+        // Notify managers
+        if (futureShifts.length > 0) {
+          await base44.entities.Notification.create({
+            recipient_id: 'admin',
+            title: `Shifts Cancelled - Property ${data.status === 'closed' ? 'Closed' : 'Maintenance'}`,
+            message: `${futureShifts.length} future shift(s) cancelled for ${data.property_name} due to ${data.status} status.`,
+            type: 'shift_changed',
+            priority: 'high',
+            is_read: false,
+          });
+        }
+      }
+      
+      return await base44.entities.SupportedLivingProperty.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['supported-living-properties'] });
+      queryClient.invalidateQueries({ queryKey: ['shifts'] });
       toast.success("Property Updated", "Changes saved successfully");
       onClose();
     },

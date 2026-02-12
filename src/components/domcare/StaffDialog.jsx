@@ -43,9 +43,47 @@ export default function StaffDialog({ staff, onClose, defaultCareSetting }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.Staff.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      // If staff set to inactive, unschedule future visits
+      if (staff.is_active && !data.is_active) {
+        const allVisits = await base44.entities.Visit.list();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const futureVisits = allVisits.filter(visit => {
+          if (visit.assigned_staff_id !== staff.id) return false;
+          if (!visit.scheduled_start) return false;
+          const visitDate = new Date(visit.scheduled_start);
+          return visitDate >= today;
+        });
+        
+        // Unschedule all future visits
+        for (const visit of futureVisits) {
+          await base44.entities.Visit.update(visit.id, {
+            assigned_staff_id: null,
+            status: 'unfilled',
+            visit_notes: `${visit.visit_notes || ''}\n[System] Staff member set to inactive - automatically unscheduled`.trim()
+          });
+        }
+        
+        // Notify managers
+        if (futureVisits.length > 0) {
+          await base44.entities.Notification.create({
+            recipient_id: 'admin',
+            title: 'Visits Unscheduled - Staff Inactive',
+            message: `${futureVisits.length} future visit(s) unscheduled because ${data.full_name} was set to inactive. Please reassign these visits.`,
+            type: 'general',
+            priority: 'high',
+            is_read: false,
+          });
+        }
+      }
+      
+      return await base44.entities.Staff.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['staff'] });
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
       toast.success("Staff Updated", "Changes saved successfully");
       onClose();
     },

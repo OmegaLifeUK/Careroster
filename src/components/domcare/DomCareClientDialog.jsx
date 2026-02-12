@@ -44,9 +44,46 @@ export default function DomCareClientDialog({ client, staff = [], onClose }) {
   });
 
   const updateMutation = useMutation({
-    mutationFn: ({ id, data }) => base44.entities.DomCareClient.update(id, data),
+    mutationFn: async ({ id, data }) => {
+      // If client status changed to inactive/archived, cancel future visits
+      if (client.status === 'active' && (data.status === 'inactive' || data.status === 'archived')) {
+        const allVisits = await base44.entities.Visit.list();
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        const futureVisits = allVisits.filter(visit => {
+          if (visit.client_id !== client.id) return false;
+          if (!visit.scheduled_start) return false;
+          const visitDate = new Date(visit.scheduled_start);
+          return visitDate >= today;
+        });
+        
+        // Cancel all future visits
+        for (const visit of futureVisits) {
+          await base44.entities.Visit.update(visit.id, {
+            status: 'cancelled',
+            visit_notes: `${visit.visit_notes || ''}\n[System] Client ${data.status === 'archived' ? 'archived' : 'discharged'} - visit cancelled`.trim()
+          });
+        }
+        
+        // Notify managers
+        if (futureVisits.length > 0) {
+          await base44.entities.Notification.create({
+            recipient_id: 'admin',
+            title: `Visits Cancelled - Client ${data.status === 'archived' ? 'Archived' : 'Discharged'}`,
+            message: `${futureVisits.length} future visit(s) cancelled for ${data.full_name} due to ${data.status} status.`,
+            type: 'general',
+            priority: 'high',
+            is_read: false,
+          });
+        }
+      }
+      
+      return await base44.entities.DomCareClient.update(id, data);
+    },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['domcare-clients'] });
+      queryClient.invalidateQueries({ queryKey: ['visits'] });
       toast.success("Client Updated", "Changes saved successfully");
       onClose();
     },
