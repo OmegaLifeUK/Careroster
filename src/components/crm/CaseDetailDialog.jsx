@@ -5,14 +5,22 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar, User, FileText, Shield, AlertTriangle, Target, Archive } from "lucide-react";
+import { FileText, Shield, Archive } from "lucide-react";
 import TherapeuticProgressTracker from "./TherapeuticProgressTracker";
 import RiskScreeningForm from "./RiskScreeningForm";
 import CaseClosureForm from "./CaseClosureForm";
+import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 
 export default function CaseDetailDialog({ case: caseData, onClose }) {
   const [showRiskForm, setShowRiskForm] = useState(false);
   const [showClosureForm, setShowClosureForm] = useState(false);
+
+  const { data: riskAssessments = [] } = useQuery({
+    queryKey: ['case-risk-assessments', caseData.id],
+    queryFn: () => base44.entities.CaseRiskAssessment.filter({ case_id: caseData.id }),
+  });
+
   const getStatusColor = (status) => {
     const colors = {
       pending_documentation: "bg-yellow-100 text-yellow-800",
@@ -121,19 +129,52 @@ export default function CaseDetailDialog({ case: caseData, onClose }) {
 
           <TabsContent value="risk" className="space-y-4">
             {!showRiskForm ? (
-              <Card>
-                <CardContent className="p-6 text-center">
-                  <Shield className="w-12 h-12 text-orange-600 mx-auto mb-3" />
-                  <h3 className="font-semibold text-lg mb-2">Risk Screening Assessment</h3>
-                  <p className="text-sm text-gray-600 mb-4">
-                    Complete structured risk screening with automatic escalation for high-risk cases
-                  </p>
+              <>
+                <div className="flex justify-end mb-4">
                   <Button onClick={() => setShowRiskForm(true)} className="bg-orange-600 hover:bg-orange-700">
                     <Shield className="w-4 h-4 mr-2" />
-                    Start Risk Screening
+                    New Risk Assessment
                   </Button>
-                </CardContent>
-              </Card>
+                </div>
+                
+                <Card>
+                  <CardContent className="p-4 space-y-4">
+                    <h3 className="font-semibold">Risk Assessment History</h3>
+                    
+                    {riskAssessments.map((assessment) => (
+                      <div key={assessment.id} className="p-4 border rounded-lg">
+                        <div className="flex items-start justify-between mb-2">
+                          <div>
+                            <Badge className={
+                              assessment.risk_level === 'critical' ? 'bg-red-100 text-red-800' :
+                              assessment.risk_level === 'high' ? 'bg-orange-100 text-orange-800' :
+                              assessment.risk_level === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                              'bg-green-100 text-green-800'
+                            }>
+                              {assessment.risk_level?.toUpperCase()}
+                            </Badge>
+                            <p className="font-medium mt-2">{assessment.risk_category?.replace(/_/g, ' ')}</p>
+                          </div>
+                          {assessment.audit_locked && (
+                            <Badge variant="outline" className="flex items-center gap-1">
+                              <Shield className="w-3 h-3" />
+                              Audit Locked
+                            </Badge>
+                          )}
+                        </div>
+                        <p className="text-sm text-gray-700 mt-2">{assessment.risk_description}</p>
+                        <p className="text-xs text-gray-500 mt-2">
+                          Assessed by {assessment.assessed_by} on {format(new Date(assessment.assessment_date), 'MMM d, yyyy')}
+                        </p>
+                      </div>
+                    ))}
+
+                    {riskAssessments.length === 0 && (
+                      <p className="text-center text-gray-500 py-8">No risk assessments completed yet</p>
+                    )}
+                  </CardContent>
+                </Card>
+              </>
             ) : (
               <RiskScreeningForm caseId={caseData.id} onComplete={() => setShowRiskForm(false)} />
             )}
@@ -186,9 +227,8 @@ export default function CaseDetailDialog({ case: caseData, onClose }) {
               </Card>
             ) : (
               <CaseClosureForm 
-                caseId={caseData.id} 
                 caseData={caseData}
-                onComplete={() => {
+                onClose={() => {
                   setShowClosureForm(false);
                   onClose();
                 }} 
