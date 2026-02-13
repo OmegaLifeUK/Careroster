@@ -3,130 +3,158 @@ import { base44 } from "@/api/base44Client";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Archive, AlertTriangle, CheckCircle } from "lucide-react";
+import { Archive, AlertTriangle } from "lucide-react";
 import { useToast } from "@/components/ui/toast";
 import { format } from "date-fns";
 
-export default function CaseClosureForm({ caseId, caseData, onComplete }) {
+export default function CaseClosureForm({ caseData, onClose }) {
   const [formData, setFormData] = useState({
     closure_reason: "",
     closure_outcome: "",
     final_summary: "",
-    funding_reconciled: false,
+    funding_reconciliation_complete: false,
     funding_reconciliation_notes: "",
-    data_retention_years: "7",
-    final_risk_level: caseData?.risk_level || "medium",
-    objectives_achieved_count: 0,
-    total_sessions_count: 0,
-    recommendations: "",
+    data_retention_period_years: "7",
+    archive_date: "",
   });
 
-  const [confirmationChecks, setConfirmationChecks] = useState({
-    allDocumentsReviewed: false,
-    fundingReconciled: false,
-    retentionPolicyApplied: false,
-  });
-
+  const [errors, setErrors] = useState({});
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const closeCaseMutation = useMutation({
     mutationFn: async (data) => {
-      // Validate mandatory fields
-      if (!data.closure_outcome || !data.final_summary || !data.funding_reconciled) {
-        throw new Error("All mandatory fields must be completed");
-      }
-
-      if (!confirmationChecks.allDocumentsReviewed || !confirmationChecks.retentionPolicyApplied) {
-        throw new Error("All confirmation checks must be completed");
-      }
-
-      // Calculate retention date
-      const retentionDate = new Date();
-      retentionDate.setFullYear(retentionDate.getFullYear() + parseInt(data.data_retention_years));
-
+      const user = await base44.auth.me();
+      
       // Update case
-      await base44.entities.Case.update(caseId, {
+      await base44.entities.Case.update(caseData.id, {
         status: 'closed',
         closure_date: format(new Date(), 'yyyy-MM-dd'),
         closure_reason: data.closure_reason,
         closure_outcome: data.closure_outcome,
-        final_summary: data.final_summary,
-        funding_reconciled: data.funding_reconciled,
-        funding_reconciliation_notes: data.funding_reconciliation_notes,
-        data_retention_date: format(retentionDate, 'yyyy-MM-dd'),
-        final_risk_level: data.final_risk_level,
-        audit_locked: true,
+        audit_locked: true, // Lock case on closure
       });
 
-      // Create closure document record
+      // Create closure document
       await base44.entities.CaseDocument.create({
-        case_id: caseId,
+        case_id: caseData.id,
         document_type: 'closure_summary',
         document_name: `Case Closure Summary - ${caseData.case_number}`,
         status: 'reviewed',
-        received_date: format(new Date(), 'yyyy-MM-dd'),
+        reviewed_by: user.full_name,
         reviewed_date: format(new Date(), 'yyyy-MM-dd'),
-        reviewed_by: (await base44.auth.me()).full_name,
         sensitivity_level: 'confidential',
-        notes: data.final_summary,
+        notes: JSON.stringify({
+          final_summary: data.final_summary,
+          funding_reconciliation_complete: data.funding_reconciliation_complete,
+          funding_reconciliation_notes: data.funding_reconciliation_notes,
+          data_retention_period_years: data.data_retention_period_years,
+          archive_date: data.archive_date,
+          closed_by: user.full_name,
+          closed_date: new Date().toISOString(),
+        }),
       });
 
-      return { success: true };
+      return true;
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['cases'] });
-      queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
-      toast.success("Case Closed", "Case has been closed and archived with data retention policy applied");
-      if (onComplete) onComplete();
+      toast.success("Case Closed", "Case has been closed and archived according to retention policy");
+      if (onClose) onClose();
     },
-    onError: (error) => {
-      toast.error("Error", error.message || "Failed to close case");
+    onError: () => {
+      toast.error("Error", "Failed to close case");
     }
   });
 
-  const allChecksComplete = 
-    confirmationChecks.allDocumentsReviewed &&
-    confirmationChecks.fundingReconciled &&
-    confirmationChecks.retentionPolicyApplied;
+  const validateForm = () => {
+    const newErrors = {};
+    
+    if (!formData.closure_reason) {
+      newErrors.closure_reason = "Closure reason is required";
+    }
+    if (!formData.closure_outcome) {
+      newErrors.closure_outcome = "Outcome category is required";
+    }
+    if (!formData.final_summary || formData.final_summary.length < 100) {
+      newErrors.final_summary = "Final summary must be at least 100 characters";
+    }
+    if (!formData.funding_reconciliation_complete) {
+      newErrors.funding_reconciliation = "Funding reconciliation must be confirmed";
+    }
+    
+    setErrors(newErrors);
+    return Object.keys(newErrors).length === 0;
+  };
 
   const handleSubmit = (e) => {
     e.preventDefault();
-    closeCaseMutation.mutate(formData);
+    
+    if (validateForm()) {
+      // Calculate archive date
+      const archiveDate = new Date();
+      archiveDate.setFullYear(archiveDate.getFullYear() + parseInt(formData.data_retention_period_years));
+      
+      closeCaseMutation.mutate({
+        ...formData,
+        archive_date: format(archiveDate, 'yyyy-MM-dd'),
+      });
+    }
   };
 
   return (
-    <Card>
+    <Card className="border-orange-200">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <Archive className="w-5 h-5 text-purple-600" />
+        <CardTitle className="flex items-center gap-2 text-orange-900">
+          <Archive className="w-5 h-5" />
           Case Closure & Archiving
         </CardTitle>
       </CardHeader>
       <CardContent>
-        <div className="mb-6 p-4 bg-amber-50 border border-amber-200 rounded-lg">
-          <div className="flex items-start gap-3">
-            <AlertTriangle className="w-5 h-5 text-amber-600 mt-0.5" />
-            <div>
-              <p className="font-semibold text-amber-900">Important: Compliance Requirements</p>
-              <p className="text-sm text-amber-800 mt-1">
-                All mandatory fields must be completed before case closure. This action will audit-lock the case and apply data retention policies.
-              </p>
-            </div>
-          </div>
+        <div className="p-4 bg-orange-50 border-l-4 border-orange-500 rounded mb-4">
+          <p className="text-sm font-medium text-orange-900">Important: Case Closure</p>
+          <p className="text-sm text-orange-800 mt-1">
+            This action will close the case, trigger audit lock, and set data retention schedule. This cannot be undone.
+          </p>
         </div>
 
-        <form onSubmit={handleSubmit} className="space-y-6">
-          {/* Closure Outcome */}
+        <form onSubmit={handleSubmit} className="space-y-4">
+          {/* Case Information */}
+          <div className="p-3 bg-gray-50 rounded-lg text-sm">
+            <p><span className="font-medium">Case:</span> {caseData.case_number}</p>
+            <p><span className="font-medium">Status:</span> {caseData.status?.replace(/_/g, ' ')}</p>
+            <p><span className="font-medium">Opened:</span> {format(new Date(caseData.referral_date || caseData.created_date), 'MMM d, yyyy')}</p>
+          </div>
+
+          {/* Closure Reason */}
           <div>
-            <Label>Closure Outcome Category * (Mandatory)</Label>
-            <Select value={formData.closure_outcome} onValueChange={(val) => setFormData({...formData, closure_outcome: val})}>
-              <SelectTrigger className="mt-2">
+            <label className="block text-sm font-medium mb-2">
+              Closure Reason *
+            </label>
+            <Textarea
+              value={formData.closure_reason}
+              onChange={(e) => setFormData({...formData, closure_reason: e.target.value})}
+              placeholder="Detailed reason for case closure..."
+              rows={3}
+              className={errors.closure_reason ? 'border-red-500' : ''}
+            />
+            {errors.closure_reason && (
+              <p className="text-sm text-red-600 mt-1">{errors.closure_reason}</p>
+            )}
+          </div>
+
+          {/* Outcome Category */}
+          <div>
+            <label className="block text-sm font-medium mb-2">
+              Outcome Category *
+            </label>
+            <Select 
+              value={formData.closure_outcome} 
+              onValueChange={(val) => setFormData({...formData, closure_outcome: val})}
+            >
+              <SelectTrigger className={errors.closure_outcome ? 'border-red-500' : ''}>
                 <SelectValue placeholder="Select outcome..." />
               </SelectTrigger>
               <SelectContent>
@@ -138,174 +166,93 @@ export default function CaseClosureForm({ caseId, caseData, onComplete }) {
                 <SelectItem value="other">Other</SelectItem>
               </SelectContent>
             </Select>
-          </div>
-
-          {/* Closure Reason */}
-          <div>
-            <Label>Closure Reason</Label>
-            <Textarea
-              value={formData.closure_reason}
-              onChange={(e) => setFormData({...formData, closure_reason: e.target.value})}
-              rows={2}
-              className="mt-2"
-              placeholder="Brief reason for closure..."
-            />
+            {errors.closure_outcome && (
+              <p className="text-sm text-red-600 mt-1">{errors.closure_outcome}</p>
+            )}
           </div>
 
           {/* Final Summary */}
           <div>
-            <Label>Final Summary * (Mandatory - Detailed case closure summary)</Label>
+            <label className="block text-sm font-medium mb-2">
+              Final Summary * (minimum 100 characters)
+            </label>
             <Textarea
               value={formData.final_summary}
               onChange={(e) => setFormData({...formData, final_summary: e.target.value})}
+              placeholder="Comprehensive summary of case journey, outcomes achieved, key sessions, and final status..."
               rows={6}
-              className="mt-2"
-              placeholder="Comprehensive summary including: objectives achieved, progress made, family engagement, outcomes, and any ongoing recommendations..."
+              className={errors.final_summary ? 'border-red-500' : ''}
             />
-            <p className="text-xs text-gray-500 mt-1">
-              This summary will be included in the final case report
+            <p className="text-xs text-gray-600 mt-1">
+              {formData.final_summary.length} / 100 characters minimum
             </p>
-          </div>
-
-          {/* Recommendations */}
-          <div>
-            <Label>Ongoing Recommendations</Label>
-            <Textarea
-              value={formData.recommendations}
-              onChange={(e) => setFormData({...formData, recommendations: e.target.value})}
-              rows={3}
-              className="mt-2"
-              placeholder="Any recommendations for ongoing support or future interventions..."
-            />
+            {errors.final_summary && (
+              <p className="text-sm text-red-600 mt-1">{errors.final_summary}</p>
+            )}
           </div>
 
           {/* Funding Reconciliation */}
-          <div className="p-4 bg-blue-50 border border-blue-200 rounded-lg space-y-3">
-            <Label className="text-base font-semibold">Funding Reconciliation * (Mandatory)</Label>
+          <div className="p-4 border rounded-lg space-y-3">
+            <label className="flex items-center gap-2 text-sm font-medium">
+              <input
+                type="checkbox"
+                checked={formData.funding_reconciliation_complete}
+                onChange={(e) => setFormData({...formData, funding_reconciliation_complete: e.target.checked})}
+                className="rounded"
+              />
+              Funding Reconciliation Complete *
+            </label>
+            {errors.funding_reconciliation && (
+              <p className="text-sm text-red-600">{errors.funding_reconciliation}</p>
+            )}
             
-            <div className="flex items-center gap-2">
-              <Checkbox
-                checked={formData.funding_reconciled}
-                onCheckedChange={(checked) => setFormData({...formData, funding_reconciled: checked})}
-              />
-              <Label>Funding has been reconciled with commissioning authority</Label>
-            </div>
-
-            <div>
-              <Label>Reconciliation Notes</Label>
-              <Textarea
-                value={formData.funding_reconciliation_notes}
-                onChange={(e) => setFormData({...formData, funding_reconciliation_notes: e.target.value})}
-                rows={2}
-                className="mt-2"
-                placeholder="Details of funding reconciliation, final invoices, etc..."
-              />
-            </div>
+            <Textarea
+              value={formData.funding_reconciliation_notes}
+              onChange={(e) => setFormData({...formData, funding_reconciliation_notes: e.target.value})}
+              placeholder="Funding reconciliation notes (invoices, payments, outstanding amounts)..."
+              rows={3}
+            />
           </div>
 
-          {/* Statistics */}
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <Label>Objectives Achieved</Label>
-              <Input
-                type="number"
-                value={formData.objectives_achieved_count}
-                onChange={(e) => setFormData({...formData, objectives_achieved_count: parseInt(e.target.value) || 0})}
-                className="mt-2"
-              />
-            </div>
-            <div>
-              <Label>Total Sessions Delivered</Label>
-              <Input
-                type="number"
-                value={formData.total_sessions_count}
-                onChange={(e) => setFormData({...formData, total_sessions_count: parseInt(e.target.value) || 0})}
-                className="mt-2"
-              />
-            </div>
-          </div>
-
-          {/* Final Risk Level */}
+          {/* Data Retention Policy */}
           <div>
-            <Label>Final Risk Level</Label>
-            <Select value={formData.final_risk_level} onValueChange={(val) => setFormData({...formData, final_risk_level: val})}>
-              <SelectTrigger className="mt-2">
+            <label className="block text-sm font-medium mb-2">
+              Data Retention Period *
+            </label>
+            <Select 
+              value={formData.data_retention_period_years} 
+              onValueChange={(val) => setFormData({...formData, data_retention_period_years: val})}
+            >
+              <SelectTrigger>
                 <SelectValue />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="low">Low</SelectItem>
-                <SelectItem value="medium">Medium</SelectItem>
-                <SelectItem value="high">High</SelectItem>
-                <SelectItem value="critical">Critical</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Data Retention */}
-          <div>
-            <Label>Data Retention Period * (Years)</Label>
-            <Select value={formData.data_retention_years} onValueChange={(val) => setFormData({...formData, data_retention_years: val})}>
-              <SelectTrigger className="mt-2">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="5">5 Years (Standard)</SelectItem>
-                <SelectItem value="7">7 Years (Recommended)</SelectItem>
-                <SelectItem value="10">10 Years (Extended)</SelectItem>
+                <SelectItem value="5">5 Years</SelectItem>
+                <SelectItem value="7">7 Years (Standard)</SelectItem>
+                <SelectItem value="10">10 Years</SelectItem>
                 <SelectItem value="25">25 Years (Safeguarding)</SelectItem>
               </SelectContent>
             </Select>
-            <p className="text-xs text-gray-500 mt-1">
-              Data will be retained until {format(new Date(new Date().setFullYear(new Date().getFullYear() + parseInt(formData.data_retention_years))), 'MMM d, yyyy')}
+            <p className="text-xs text-gray-600 mt-1">
+              Case will be eligible for archiving on: {format(
+                new Date(Date.now() + parseInt(formData.data_retention_period_years) * 365 * 24 * 60 * 60 * 1000),
+                'MMM d, yyyy'
+              )}
             </p>
           </div>
 
-          {/* Confirmation Checks */}
-          <div className="p-4 bg-purple-50 border border-purple-200 rounded-lg space-y-3">
-            <Label className="text-base font-semibold">Pre-Closure Confirmation Checks *</Label>
-            
-            <div className="space-y-2">
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={confirmationChecks.allDocumentsReviewed}
-                  onCheckedChange={(checked) => setConfirmationChecks({...confirmationChecks, allDocumentsReviewed: checked})}
-                />
-                <Label>All case documents have been reviewed and are complete</Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={confirmationChecks.fundingReconciled}
-                  onCheckedChange={(checked) => setConfirmationChecks({...confirmationChecks, fundingReconciled: checked})}
-                />
-                <Label>Funding reconciliation completed with commissioning body</Label>
-              </div>
-
-              <div className="flex items-center gap-2">
-                <Checkbox
-                  checked={confirmationChecks.retentionPolicyApplied}
-                  onCheckedChange={(checked) => setConfirmationChecks({...confirmationChecks, retentionPolicyApplied: checked})}
-                />
-                <Label>Data retention policy has been applied and documented</Label>
-              </div>
-            </div>
-          </div>
-
           {/* Submit */}
-          <div className="flex gap-3 pt-4 border-t">
-            <Button
-              type="submit"
-              disabled={closeCaseMutation.isPending || !allChecksComplete || !formData.closure_outcome || !formData.final_summary || !formData.funding_reconciled}
-              className="bg-purple-600 hover:bg-purple-700"
-            >
-              {closeCaseMutation.isPending ? "Closing Case..." : "Close & Archive Case"}
+          <div className="flex justify-end gap-3 pt-4 border-t">
+            <Button type="button" variant="outline" onClick={onClose}>
+              Cancel
             </Button>
-            {!allChecksComplete && (
-              <p className="text-sm text-red-600 flex items-center gap-2">
-                <AlertTriangle className="w-4 h-4" />
-                Complete all mandatory fields and confirmation checks
-              </p>
-            )}
+            <Button 
+              type="submit"
+              disabled={closeCaseMutation.isPending}
+              className="bg-orange-600 hover:bg-orange-700"
+            >
+              Close Case & Archive
+            </Button>
           </div>
         </form>
       </CardContent>

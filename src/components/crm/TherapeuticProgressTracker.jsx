@@ -7,127 +7,113 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Progress } from "@/components/ui/progress";
-import { Plus, Target, TrendingUp, CheckCircle, AlertTriangle } from "lucide-react";
-import { useToast } from "@/components/ui/toast";
+import { Target, Plus, TrendingUp, CheckCircle } from "lucide-react";
 import { format } from "date-fns";
+import { useToast } from "@/components/ui/toast";
 
 export default function TherapeuticProgressTracker({ caseId }) {
   const [showObjectiveForm, setShowObjectiveForm] = useState(false);
-  const [newObjective, setNewObjective] = useState({ title: "", description: "", target_date: "" });
+  const [newObjective, setNewObjective] = useState({
+    objective_title: "",
+    objective_description: "",
+    target_date: "",
+    progress_percentage: 0,
+  });
 
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
   const { data: sessions = [] } = useQuery({
     queryKey: ['case-sessions', caseId],
-    queryFn: () => base44.entities.CaseSession.filter({ case_id: caseId }, '-session_date'),
+    queryFn: () => base44.entities.CaseSession.filter({ case_id: caseId }),
+  });
+
+  // Store objectives in case notes for now
+  const { data: objectives = [] } = useQuery({
+    queryKey: ['case-objectives', caseId],
+    queryFn: async () => {
+      const caseRecord = await base44.entities.Case.filter({ id: caseId });
+      if (caseRecord[0]?.objectives) {
+        return caseRecord[0].objectives;
+      }
+      return [];
+    },
   });
 
   const addObjectiveMutation = useMutation({
     mutationFn: async (objective) => {
-      const caseData = await base44.entities.Case.filter({ id: caseId });
-      const existingObjectives = caseData[0]?.therapeutic_objectives || [];
+      const caseRecord = await base44.entities.Case.filter({ id: caseId });
+      const existingObjectives = caseRecord[0]?.objectives || [];
       
       return await base44.entities.Case.update(caseId, {
-        therapeutic_objectives: [...existingObjectives, {
-          id: Date.now().toString(),
-          ...objective,
-          status: 'active',
-          progress: 0,
-          created_date: new Date().toISOString()
-        }]
+        objectives: [...existingObjectives, { ...objective, id: Date.now(), created_date: new Date().toISOString() }]
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
-      toast.success("Success", "Objective added successfully");
-      setNewObjective({ title: "", description: "", target_date: "" });
+      queryClient.invalidateQueries({ queryKey: ['case-objectives', caseId] });
+      toast.success("Objective Added", "Therapeutic objective has been set");
       setShowObjectiveForm(false);
+      setNewObjective({ objective_title: "", objective_description: "", target_date: "", progress_percentage: 0 });
     },
   });
 
   const updateProgressMutation = useMutation({
     mutationFn: async ({ objectiveId, progress }) => {
-      const caseData = await base44.entities.Case.filter({ id: caseId });
-      const objectives = caseData[0]?.therapeutic_objectives || [];
+      const caseRecord = await base44.entities.Case.filter({ id: caseId });
+      const objectives = caseRecord[0]?.objectives || [];
       const updated = objectives.map(obj => 
-        obj.id === objectiveId ? { ...obj, progress, status: progress >= 100 ? 'achieved' : 'active' } : obj
+        obj.id === objectiveId ? { ...obj, progress_percentage: progress } : obj
       );
       
-      return await base44.entities.Case.update(caseId, {
-        therapeutic_objectives: updated
-      });
+      return await base44.entities.Case.update(caseId, { objectives: updated });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['case-detail', caseId] });
+      queryClient.invalidateQueries({ queryKey: ['case-objectives', caseId] });
+      toast.success("Progress Updated", "Objective progress has been updated");
     },
   });
 
-  const { data: caseData } = useQuery({
-    queryKey: ['case-detail', caseId],
-    queryFn: async () => {
-      const cases = await base44.entities.Case.filter({ id: caseId });
-      return cases[0];
-    },
-  });
-
-  const objectives = caseData?.therapeutic_objectives || [];
+  const recentSessions = sessions.slice(0, 5);
   const attendanceRate = sessions.length > 0 
     ? (sessions.filter(s => s.attendance_status === 'attended').length / sessions.length) * 100 
     : 0;
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-4">
       {/* Progress Overview */}
       <div className="grid md:grid-cols-3 gap-4">
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Total Sessions</p>
-                <p className="text-2xl font-bold">{sessions.length}</p>
-              </div>
-              <Target className="w-8 h-8 text-blue-600" />
-            </div>
+          <CardContent className="p-4 text-center">
+            <TrendingUp className="w-6 h-6 mx-auto text-blue-600 mb-2" />
+            <p className="text-2xl font-bold">{sessions.length}</p>
+            <p className="text-xs text-gray-600">Total Sessions</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Attendance Rate</p>
-                <p className="text-2xl font-bold">{attendanceRate.toFixed(0)}%</p>
-              </div>
-              <TrendingUp className="w-8 h-8 text-green-600" />
-            </div>
+          <CardContent className="p-4 text-center">
+            <CheckCircle className="w-6 h-6 mx-auto text-green-600 mb-2" />
+            <p className="text-2xl font-bold">{attendanceRate.toFixed(0)}%</p>
+            <p className="text-xs text-gray-600">Attendance Rate</p>
           </CardContent>
         </Card>
-
         <Card>
-          <CardContent className="p-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <p className="text-sm text-gray-600">Objectives Achieved</p>
-                <p className="text-2xl font-bold">
-                  {objectives.filter(o => o.status === 'achieved').length}/{objectives.length}
-                </p>
-              </div>
-              <CheckCircle className="w-8 h-8 text-purple-600" />
-            </div>
+          <CardContent className="p-4 text-center">
+            <Target className="w-6 h-6 mx-auto text-purple-600 mb-2" />
+            <p className="text-2xl font-bold">{objectives.length}</p>
+            <p className="text-xs text-gray-600">Active Objectives</p>
           </CardContent>
         </Card>
       </div>
 
-      {/* Therapeutic Objectives */}
+      {/* Objectives */}
       <Card>
         <CardHeader>
           <div className="flex items-center justify-between">
             <CardTitle className="flex items-center gap-2">
-              <Target className="w-5 h-5 text-blue-600" />
+              <Target className="w-5 h-5" />
               Therapeutic Objectives
             </CardTitle>
-            <Button onClick={() => setShowObjectiveForm(!showObjectiveForm)} size="sm">
+            <Button size="sm" onClick={() => setShowObjectiveForm(!showObjectiveForm)}>
               <Plus className="w-4 h-4 mr-2" />
               Add Objective
             </Button>
@@ -135,38 +121,34 @@ export default function TherapeuticProgressTracker({ caseId }) {
         </CardHeader>
         <CardContent className="space-y-4">
           {showObjectiveForm && (
-            <div className="p-4 border rounded-lg bg-blue-50">
-              <h4 className="font-semibold mb-3">New Objective</h4>
-              <div className="space-y-3">
-                <Input
-                  placeholder="Objective title"
-                  value={newObjective.title}
-                  onChange={(e) => setNewObjective({...newObjective, title: e.target.value})}
-                />
-                <Textarea
-                  placeholder="Description and success criteria"
-                  value={newObjective.description}
-                  onChange={(e) => setNewObjective({...newObjective, description: e.target.value})}
-                  rows={3}
-                />
-                <Input
-                  type="date"
-                  placeholder="Target date"
-                  value={newObjective.target_date}
-                  onChange={(e) => setNewObjective({...newObjective, target_date: e.target.value})}
-                />
-                <div className="flex gap-2">
-                  <Button 
-                    onClick={() => addObjectiveMutation.mutate(newObjective)}
-                    disabled={!newObjective.title || addObjectiveMutation.isPending}
-                    size="sm"
-                  >
-                    Save Objective
-                  </Button>
-                  <Button variant="outline" onClick={() => setShowObjectiveForm(false)} size="sm">
-                    Cancel
-                  </Button>
-                </div>
+            <div className="p-4 border rounded-lg bg-gray-50 space-y-3">
+              <Input
+                placeholder="Objective title"
+                value={newObjective.objective_title}
+                onChange={(e) => setNewObjective({...newObjective, objective_title: e.target.value})}
+              />
+              <Textarea
+                placeholder="Objective description"
+                value={newObjective.objective_description}
+                onChange={(e) => setNewObjective({...newObjective, objective_description: e.target.value})}
+                rows={3}
+              />
+              <Input
+                type="date"
+                value={newObjective.target_date}
+                onChange={(e) => setNewObjective({...newObjective, target_date: e.target.value})}
+              />
+              <div className="flex gap-2">
+                <Button 
+                  size="sm" 
+                  onClick={() => addObjectiveMutation.mutate(newObjective)}
+                  disabled={!newObjective.objective_title}
+                >
+                  Save Objective
+                </Button>
+                <Button size="sm" variant="outline" onClick={() => setShowObjectiveForm(false)}>
+                  Cancel
+                </Button>
               </div>
             </div>
           )}
@@ -174,54 +156,42 @@ export default function TherapeuticProgressTracker({ caseId }) {
           {objectives.map((obj) => (
             <div key={obj.id} className="p-4 border rounded-lg">
               <div className="flex items-start justify-between mb-3">
-                <div className="flex-1">
-                  <h4 className="font-semibold">{obj.title}</h4>
-                  <p className="text-sm text-gray-600 mt-1">{obj.description}</p>
+                <div>
+                  <h4 className="font-semibold">{obj.objective_title}</h4>
+                  <p className="text-sm text-gray-600 mt-1">{obj.objective_description}</p>
+                  {obj.target_date && (
+                    <p className="text-xs text-gray-500 mt-2">
+                      Target: {format(new Date(obj.target_date), 'MMM d, yyyy')}
+                    </p>
+                  )}
                 </div>
-                <Badge className={obj.status === 'achieved' ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
-                  {obj.status}
+                <Badge className={obj.progress_percentage >= 100 ? 'bg-green-100 text-green-800' : 'bg-blue-100 text-blue-800'}>
+                  {obj.progress_percentage}%
                 </Badge>
               </div>
-              
               <div className="space-y-2">
-                <div className="flex items-center justify-between text-sm">
-                  <span className="text-gray-600">Progress</span>
-                  <span className="font-medium">{obj.progress}%</span>
+                <Progress value={obj.progress_percentage} className="h-2" />
+                <div className="flex items-center gap-2">
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    step="10"
+                    value={obj.progress_percentage}
+                    onChange={(e) => updateProgressMutation.mutate({ 
+                      objectiveId: obj.id, 
+                      progress: parseInt(e.target.value) 
+                    })}
+                    className="flex-1"
+                  />
+                  <span className="text-sm text-gray-600 w-12">{obj.progress_percentage}%</span>
                 </div>
-                <Progress value={obj.progress} className="h-2" />
-                
-                {obj.status !== 'achieved' && (
-                  <div className="flex gap-2 mt-3">
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateProgressMutation.mutate({ objectiveId: obj.id, progress: Math.min(obj.progress + 25, 100) })}
-                    >
-                      +25%
-                    </Button>
-                    <Button 
-                      size="sm" 
-                      variant="outline"
-                      onClick={() => updateProgressMutation.mutate({ objectiveId: obj.id, progress: 100 })}
-                    >
-                      Mark Complete
-                    </Button>
-                  </div>
-                )}
               </div>
-
-              {obj.target_date && (
-                <p className="text-xs text-gray-500 mt-3">
-                  Target: {format(new Date(obj.target_date), 'MMM d, yyyy')}
-                </p>
-              )}
             </div>
           ))}
 
           {objectives.length === 0 && !showObjectiveForm && (
-            <p className="text-sm text-gray-500 text-center py-8">
-              No therapeutic objectives set yet
-            </p>
+            <p className="text-center text-gray-500 py-4">No objectives set yet</p>
           )}
         </CardContent>
       </Card>
@@ -231,36 +201,35 @@ export default function TherapeuticProgressTracker({ caseId }) {
         <CardHeader>
           <CardTitle>Recent Sessions</CardTitle>
         </CardHeader>
-        <CardContent className="space-y-3">
-          {sessions.slice(0, 5).map((session) => (
-            <div key={session.id} className="p-3 border rounded-lg">
-              <div className="flex items-start justify-between mb-2">
-                <div>
-                  <p className="font-medium">{session.session_type?.replace(/_/g, ' ')}</p>
-                  <p className="text-sm text-gray-600">{format(new Date(session.session_date), 'MMM d, yyyy')}</p>
+        <CardContent>
+          <div className="space-y-3">
+            {recentSessions.map((session) => (
+              <div key={session.id} className="p-3 border rounded-lg">
+                <div className="flex items-start justify-between mb-2">
+                  <div>
+                    <p className="font-medium">{session.session_type?.replace(/_/g, ' ')}</p>
+                    <p className="text-sm text-gray-600">{session.practitioner_name}</p>
+                  </div>
+                  <Badge className={
+                    session.attendance_status === 'attended' ? 'bg-green-100 text-green-800' :
+                    session.attendance_status === 'did_not_attend' ? 'bg-red-100 text-red-800' :
+                    'bg-yellow-100 text-yellow-800'
+                  }>
+                    {session.attendance_status?.replace(/_/g, ' ')}
+                  </Badge>
                 </div>
-                <Badge className={
-                  session.attendance_status === 'attended' ? 'bg-green-100 text-green-800' :
-                  session.attendance_status === 'did_not_attend' ? 'bg-red-100 text-red-800' :
-                  'bg-gray-100 text-gray-800'
-                }>
-                  {session.attendance_status?.replace(/_/g, ' ')}
-                </Badge>
+                <p className="text-xs text-gray-500">
+                  {format(new Date(session.session_date), 'MMM d, yyyy')}
+                </p>
+                {session.progress_indicators && (
+                  <p className="text-sm text-gray-700 mt-2">{session.progress_indicators}</p>
+                )}
               </div>
-              {session.progress_indicators && (
-                <p className="text-sm text-gray-700 mt-2">{session.progress_indicators}</p>
-              )}
-              {session.safeguarding_concerns && (
-                <div className="flex items-center gap-2 mt-2 text-red-600">
-                  <AlertTriangle className="w-4 h-4" />
-                  <span className="text-sm font-medium">Safeguarding concerns noted</span>
-                </div>
-              )}
-            </div>
-          ))}
-          {sessions.length === 0 && (
-            <p className="text-sm text-gray-500 text-center py-8">No sessions recorded yet</p>
-          )}
+            ))}
+            {recentSessions.length === 0 && (
+              <p className="text-center text-gray-500 py-4">No sessions recorded yet</p>
+            )}
+          </div>
         </CardContent>
       </Card>
     </div>
