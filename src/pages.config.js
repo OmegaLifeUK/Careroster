@@ -81,6 +81,7 @@ import DailyLog from './pages/DailyLog';
 import Dashboard from './pages/Dashboard';
 import DayCentreActivities from './pages/DayCentreActivities';
 import DayCentreAttendance from './pages/DayCentreAttendance';
+import DayCentreCRM from './pages/DayCentreCRM';
 import DayCentreClientProfile from './pages/DayCentreClientProfile';
 import DayCentreClients from './pages/DayCentreClients';
 import DayCentreDashboard from './pages/DayCentreDashboard';
@@ -118,6 +119,7 @@ import RegulatoryNotifications from './pages/RegulatoryNotifications';
 import ReportingEngine from './pages/ReportingEngine';
 import Reports from './pages/Reports';
 import RoleManagement from './pages/RoleManagement';
+import SafeguardingDashboard from './pages/SafeguardingDashboard';
 import Schedule from './pages/Schedule';
 import StaffAvailabilityCalendar from './pages/StaffAvailabilityCalendar';
 import StaffOnboarding from './pages/StaffOnboarding';
@@ -137,8 +139,6 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import DayCentreCRM from './pages/DayCentreCRM';
-import SafeguardingDashboard from './pages/SafeguardingDashboard';
 import __Layout from './Layout.jsx';
 
 
@@ -177,6 +177,7 @@ export const PAGES = {
     "Dashboard": Dashboard,
     "DayCentreActivities": DayCentreActivities,
     "DayCentreAttendance": DayCentreAttendance,
+    "DayCentreCRM": DayCentreCRM,
     "DayCentreClientProfile": DayCentreClientProfile,
     "DayCentreClients": DayCentreClients,
     "DayCentreDashboard": DayCentreDashboard,
@@ -214,6 +215,7 @@ export const PAGES = {
     "ReportingEngine": ReportingEngine,
     "Reports": Reports,
     "RoleManagement": RoleManagement,
+    "SafeguardingDashboard": SafeguardingDashboard,
     "Schedule": Schedule,
     "StaffAvailabilityCalendar": StaffAvailabilityCalendar,
     "StaffOnboarding": StaffOnboarding,
@@ -233,8 +235,6 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "DayCentreCRM": DayCentreCRM,
-    "SafeguardingDashboard": SafeguardingDashboard,
 }
 
 export const pagesConfig = {

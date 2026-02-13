@@ -1,252 +1,283 @@
 import React, { useState } from "react";
-import { base44 } from "@/api/base44Client";
 import { useQuery } from "@tanstack/react-query";
+import { base44 } from "@/api/base44Client";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import {
-  Shield,
-  AlertTriangle,
-  TrendingUp,
-  Users,
-  FileText,
-  Calendar,
-  Home,
-  Building,
-  Activity
-} from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AlertTriangle, Shield, FileText, Calendar, Activity, Lock } from "lucide-react";
 import { format } from "date-fns";
+import CrossServiceInsights from "@/components/safeguarding/CrossServiceInsights";
+import IncidentPatternAnalysis from "@/components/safeguarding/IncidentPatternAnalysis";
+import SafeguardingAuditLog from "@/components/safeguarding/SafeguardingAuditLog";
 
 export default function SafeguardingDashboard() {
-  const { data: alerts = [] } = useQuery({
+  const [user, setUser] = useState(null);
+
+  React.useEffect(() => {
+    const loadUser = async () => {
+      try {
+        const userData = await base44.auth.me();
+        setUser(userData);
+      } catch (error) {
+        console.error("Error loading user:", error);
+      }
+    };
+    loadUser();
+  }, []);
+
+  // Role-based access control
+  const hasFullAccess = user?.role === 'admin';
+  const canViewAuditLog = user?.role === 'admin';
+
+  // Fetch all safeguarding alerts
+  const { data: allAlerts = [] } = useQuery({
     queryKey: ['all-safeguarding-alerts'],
-    queryFn: () => base44.entities.SafeguardingAlert.list('-alert_date', 50),
+    queryFn: () => base44.entities.SafeguardingAlert.list('-alert_date'),
   });
 
-  const { data: cases = [] } = useQuery({
+  // Fetch court deadlines
+  const { data: courtDeadlines = [] } = useQuery({
+    queryKey: ['court-deadlines'],
+    queryFn: () => base44.entities.CourtDeadline.list('-deadline_date'),
+  });
+
+  // Fetch high-risk cases
+  const { data: highRiskCases = [] } = useQuery({
     queryKey: ['high-risk-cases'],
     queryFn: async () => {
-      const all = await base44.entities.Case.list();
-      return all.filter(c => c.risk_level === 'high' || c.risk_level === 'critical');
+      const cases = await base44.entities.Case.list();
+      return cases.filter(c => c.risk_level === 'high' || c.risk_level === 'critical');
     },
   });
 
-  const { data: courtDeadlines = [] } = useQuery({
-    queryKey: ['overdue-deadlines'],
+  // Fetch overdue documents
+  const { data: overdueDocuments = [] } = useQuery({
+    queryKey: ['overdue-documents'],
     queryFn: async () => {
-      const all = await base44.entities.CourtDeadline.list();
-      return all.filter(d => d.status === 'overdue');
+      const docs = await base44.entities.CaseDocument.list();
+      return docs.filter(d => 
+        d.status === 'outstanding' && 
+        d.due_date && 
+        new Date(d.due_date) < new Date() &&
+        d.is_mandatory
+      );
     },
   });
 
-  const { data: documents = [] } = useQuery({
-    queryKey: ['outstanding-documents'],
+  // Fetch incidents for pattern analysis
+  const { data: incidents = [] } = useQuery({
+    queryKey: ['incidents'],
     queryFn: async () => {
-      const all = await base44.entities.CaseDocument.list();
-      return all.filter(d => d.status === 'outstanding' && d.is_mandatory);
+      try {
+        return await base44.entities.Incident.list('-created_date', 100);
+      } catch {
+        return [];
+      }
     },
   });
 
-  // Cross-service statistics
-  const stats = {
-    totalAlerts: alerts.length,
-    criticalAlerts: alerts.filter(a => a.severity === 'critical').length,
-    openAlerts: alerts.filter(a => a.status === 'open' || a.status === 'investigating').length,
-    highRiskCases: cases.length,
-    overdueDeadlines: courtDeadlines.length,
-    outstandingDocs: documents.length,
-    
-    // By service
-    dayCentre: alerts.filter(a => a.service_area === 'day_centre').length,
-    childrensHome: alerts.filter(a => a.service_area === 'childrens_home').length,
-    supportedLiving: alerts.filter(a => a.service_area === 'supported_living').length,
-  };
+  // Split alerts by service area
+  const dayCentreAlerts = allAlerts.filter(a => a.service_area === 'day_centre');
+  const residentialAlerts = allAlerts.filter(a => a.service_area === 'childrens_home');
+  const supportedLivingAlerts = allAlerts.filter(a => a.service_area === 'supported_living');
+
+  const criticalAlerts = allAlerts.filter(a => a.severity === 'critical' && a.status === 'open');
+  const openAlerts = allAlerts.filter(a => a.status === 'open');
+
+  const overdueDeadlines = courtDeadlines.filter(d => 
+    new Date(d.deadline_date) < new Date() && d.status === 'upcoming'
+  );
+
+  const upcomingDeadlines = courtDeadlines.filter(d => {
+    const daysUntil = Math.ceil((new Date(d.deadline_date) - new Date()) / (1000 * 60 * 60 * 24));
+    return daysUntil > 0 && daysUntil <= 7 && d.status === 'upcoming';
+  });
 
   const getSeverityColor = (severity) => {
     const colors = {
-      low: 'bg-blue-100 text-blue-800 border-blue-200',
-      medium: 'bg-yellow-100 text-yellow-800 border-yellow-200',
-      high: 'bg-orange-100 text-orange-800 border-orange-200',
-      critical: 'bg-red-100 text-red-800 border-red-200',
+      low: "bg-green-100 text-green-800",
+      medium: "bg-yellow-100 text-yellow-800",
+      high: "bg-orange-100 text-orange-800",
+      critical: "bg-red-100 text-red-800",
     };
-    return colors[severity] || 'bg-gray-100 text-gray-800';
+    return colors[severity] || "bg-gray-100 text-gray-800";
   };
 
+  if (!hasFullAccess) {
+    return (
+      <div className="p-6">
+        <Card className="border-red-200">
+          <CardContent className="p-6 text-center">
+            <Shield className="w-12 h-12 text-red-600 mx-auto mb-3" />
+            <h3 className="font-semibold text-lg mb-2">Access Restricted</h3>
+            <p className="text-sm text-gray-600">
+              This dashboard requires administrator privileges to access safeguarding data across all services.
+            </p>
+          </CardContent>
+        </Card>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-red-50 via-white to-orange-50 p-6">
-      <div className="max-w-7xl mx-auto space-y-6">
-        {/* Header */}
+    <div className="p-6 space-y-6">
+      {/* Header */}
+      <div className="flex items-center justify-between">
         <div>
           <h1 className="text-3xl font-bold text-gray-900 flex items-center gap-3">
             <Shield className="w-8 h-8 text-red-600" />
             Cross-Service Safeguarding Dashboard
           </h1>
           <p className="text-gray-600 mt-1">
-            Unified oversight across all services: Day Centre, Children's Homes, Supported Living
+            Real-time safeguarding oversight across Day Centre, Children's Homes & Supported Living
           </p>
         </div>
+        <Badge className="bg-blue-100 text-blue-800 flex items-center gap-1">
+          <Lock className="w-3 h-3" />
+          Admin Access
+        </Badge>
+      </div>
 
-        {/* Critical Alerts Banner */}
-        {stats.criticalAlerts > 0 && (
-          <Card className="bg-red-600 text-white border-red-700">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <AlertTriangle className="w-8 h-8" />
-                <div>
-                  <p className="text-xl font-bold">{stats.criticalAlerts} Critical Alert{stats.criticalAlerts > 1 ? 's' : ''} Require Immediate Action</p>
-                  <p className="text-red-100 text-sm mt-1">Immediate management review and escalation required</p>
-                </div>
+      {/* Quick Stats */}
+      <div className="grid md:grid-cols-5 gap-4">
+        <Card className="border-red-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Critical Alerts</p>
+                <p className="text-2xl font-bold text-red-900">{criticalAlerts.length}</p>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Key Metrics */}
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
-          <Card>
-            <CardContent className="p-4 text-center">
-              <Shield className="w-6 h-6 mx-auto text-red-600 mb-2" />
-              <p className="text-2xl font-bold">{stats.totalAlerts}</p>
-              <p className="text-xs text-gray-600">Total Alerts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-orange-200">
-            <CardContent className="p-4 text-center">
-              <AlertTriangle className="w-6 h-6 mx-auto text-orange-600 mb-2" />
-              <p className="text-2xl font-bold text-orange-600">{stats.openAlerts}</p>
-              <p className="text-xs text-gray-600">Open Alerts</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-red-200">
-            <CardContent className="p-4 text-center">
-              <TrendingUp className="w-6 h-6 mx-auto text-red-600 mb-2" />
-              <p className="text-2xl font-bold text-red-600">{stats.highRiskCases}</p>
-              <p className="text-xs text-gray-600">High Risk Cases</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-purple-200">
-            <CardContent className="p-4 text-center">
-              <Calendar className="w-6 h-6 mx-auto text-purple-600 mb-2" />
-              <p className="text-2xl font-bold text-purple-600">{stats.overdueDeadlines}</p>
-              <p className="text-xs text-gray-600">Overdue Deadlines</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-yellow-200">
-            <CardContent className="p-4 text-center">
-              <FileText className="w-6 h-6 mx-auto text-yellow-600 mb-2" />
-              <p className="text-2xl font-bold text-yellow-600">{stats.outstandingDocs}</p>
-              <p className="text-xs text-gray-600">Outstanding Docs</p>
-            </CardContent>
-          </Card>
-
-          <Card className="border-red-200">
-            <CardContent className="p-4 text-center">
-              <AlertTriangle className="w-6 h-6 mx-auto text-red-600 mb-2" />
-              <p className="text-2xl font-bold text-red-600">{stats.criticalAlerts}</p>
-              <p className="text-xs text-gray-600">Critical</p>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Service Breakdown */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Alerts by Service Area</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="p-4 border rounded-lg bg-blue-50">
-                <Activity className="w-6 h-6 text-blue-600 mb-2" />
-                <p className="text-2xl font-bold text-blue-600">{stats.dayCentre}</p>
-                <p className="text-sm text-gray-600">Day Centre</p>
-              </div>
-              <div className="p-4 border rounded-lg bg-green-50">
-                <Home className="w-6 h-6 text-green-600 mb-2" />
-                <p className="text-2xl font-bold text-green-600">{stats.childrensHome}</p>
-                <p className="text-sm text-gray-600">Children's Homes</p>
-              </div>
-              <div className="p-4 border rounded-lg bg-purple-50">
-                <Building className="w-6 h-6 text-purple-600 mb-2" />
-                <p className="text-2xl font-bold text-purple-600">{stats.supportedLiving}</p>
-                <p className="text-sm text-gray-600">Supported Living</p>
-              </div>
+              <AlertTriangle className="w-8 h-8 text-red-600" />
             </div>
           </CardContent>
         </Card>
 
-        {/* Recent Alerts */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <AlertTriangle className="w-5 h-5 text-orange-600" />
-              Recent Safeguarding Alerts
-            </CardTitle>
-          </CardHeader>
-          <CardContent>
-            <div className="space-y-3">
-              {alerts.slice(0, 10).map((alert) => (
-                <div 
-                  key={alert.id} 
-                  className={`p-4 border-l-4 rounded-lg ${
-                    alert.severity === 'critical' ? 'border-red-500 bg-red-50' :
-                    alert.severity === 'high' ? 'border-orange-500 bg-orange-50' :
-                    alert.severity === 'medium' ? 'border-yellow-500 bg-yellow-50' :
-                    'border-blue-500 bg-blue-50'
-                  }`}
-                >
-                  <div className="flex items-start justify-between mb-2">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Badge className={getSeverityColor(alert.severity)}>
-                          {alert.severity?.toUpperCase()}
-                        </Badge>
-                        <Badge variant="outline">
-                          {alert.service_area?.replace(/_/g, ' ')}
-                        </Badge>
-                        <Badge variant="outline">
-                          {alert.status}
-                        </Badge>
-                      </div>
-                      <p className="font-semibold text-gray-900">{alert.alert_type?.replace(/_/g, ' ')}</p>
-                      <p className="text-sm text-gray-700 mt-1">{alert.description}</p>
-                      {alert.action_taken && (
-                        <p className="text-sm text-gray-600 mt-2">
-                          <span className="font-medium">Action Taken:</span> {alert.action_taken}
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-4 text-xs text-gray-600 mt-3">
-                    <span>Raised: {format(new Date(alert.alert_date), 'MMM d, yyyy HH:mm')}</span>
-                    {alert.reported_by && (
-                      <>
-                        <span>•</span>
-                        <span>By: {alert.reported_by}</span>
-                      </>
-                    )}
-                    {alert.escalated_to && (
-                      <>
-                        <span>•</span>
-                        <span>Escalated to: {alert.escalated_to}</span>
-                      </>
-                    )}
-                  </div>
-                </div>
-              ))}
-              {alerts.length === 0 && (
-                <div className="text-center py-8 text-gray-500">
-                  <Shield className="w-12 h-12 mx-auto mb-2 text-green-500" />
-                  <p>No safeguarding alerts recorded</p>
-                </div>
-              )}
+        <Card className="border-orange-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Open Alerts</p>
+                <p className="text-2xl font-bold text-orange-900">{openAlerts.length}</p>
+              </div>
+              <Shield className="w-8 h-8 text-orange-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-blue-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">High-Risk Cases</p>
+                <p className="text-2xl font-bold text-blue-900">{highRiskCases.length}</p>
+              </div>
+              <FileText className="w-8 h-8 text-blue-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-purple-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Overdue Deadlines</p>
+                <p className="text-2xl font-bold text-purple-900">{overdueDeadlines.length}</p>
+              </div>
+              <Calendar className="w-8 h-8 text-purple-600" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="border-gray-200">
+          <CardContent className="p-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <p className="text-sm text-gray-600">Overdue Docs</p>
+                <p className="text-2xl font-bold text-gray-900">{overdueDocuments.length}</p>
+              </div>
+              <FileText className="w-8 h-8 text-gray-600" />
             </div>
           </CardContent>
         </Card>
       </div>
+
+      {/* Tabs */}
+      <Tabs defaultValue="insights" className="space-y-4">
+        <TabsList>
+          <TabsTrigger value="insights">Cross-Service Insights</TabsTrigger>
+          <TabsTrigger value="patterns">Pattern Analysis</TabsTrigger>
+          <TabsTrigger value="alerts">All Alerts</TabsTrigger>
+          {canViewAuditLog && <TabsTrigger value="audit">Audit Log</TabsTrigger>}
+        </TabsList>
+
+        <TabsContent value="insights">
+          <CrossServiceInsights
+            dayCentreAlerts={dayCentreAlerts}
+            residentialAlerts={residentialAlerts}
+            supportedLivingAlerts={supportedLivingAlerts}
+            courtDeadlines={courtDeadlines}
+            overdueDocuments={overdueDocuments}
+          />
+        </TabsContent>
+
+        <TabsContent value="patterns">
+          <IncidentPatternAnalysis 
+            alerts={allAlerts}
+            incidents={incidents}
+          />
+        </TabsContent>
+
+        <TabsContent value="alerts">
+          <Card>
+            <CardHeader>
+              <CardTitle>All Safeguarding Alerts</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-3">
+              {allAlerts.slice(0, 20).map((alert) => (
+                <div key={alert.id} className="p-4 border rounded-lg">
+                  <div className="flex items-start justify-between mb-2">
+                    <div className="flex items-center gap-2">
+                      <Badge className={getSeverityColor(alert.severity)}>
+                        {alert.severity?.toUpperCase()}
+                      </Badge>
+                      <Badge variant="outline">
+                        {alert.service_area?.replace(/_/g, ' ')}
+                      </Badge>
+                      <Badge variant="outline" className={
+                        alert.status === 'open' ? 'bg-red-50 text-red-700' :
+                        alert.status === 'investigating' ? 'bg-yellow-50 text-yellow-700' :
+                        'bg-green-50 text-green-700'
+                      }>
+                        {alert.status}
+                      </Badge>
+                      {alert.audit_locked && (
+                        <Lock className="w-4 h-4 text-gray-500" />
+                      )}
+                    </div>
+                    <span className="text-xs text-gray-600">
+                      {format(new Date(alert.alert_date || alert.created_date), 'MMM d, yyyy HH:mm')}
+                    </span>
+                  </div>
+                  <p className="font-medium">{alert.alert_type?.replace(/_/g, ' ')}</p>
+                  <p className="text-sm text-gray-700 mt-1">{alert.description}</p>
+                  {alert.reported_by && (
+                    <p className="text-xs text-gray-600 mt-2">Reported by: {alert.reported_by}</p>
+                  )}
+                  {alert.action_taken && (
+                    <p className="text-xs text-gray-600">Action: {alert.action_taken}</p>
+                  )}
+                </div>
+              ))}
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {canViewAuditLog && (
+          <TabsContent value="audit">
+            <SafeguardingAuditLog />
+          </TabsContent>
+        )}
+      </Tabs>
     </div>
   );
 }
