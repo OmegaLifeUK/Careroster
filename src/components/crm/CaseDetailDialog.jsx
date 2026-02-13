@@ -1,12 +1,18 @@
-import React from "react";
+import React, { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Card, CardContent } from "@/components/ui/card";
+import { Button } from "@/components/ui/button";
 import { format } from "date-fns";
-import { Calendar, User, FileText, Shield, AlertTriangle } from "lucide-react";
+import { Calendar, User, FileText, Shield, AlertTriangle, Target, Archive } from "lucide-react";
+import TherapeuticProgressTracker from "./TherapeuticProgressTracker";
+import RiskScreeningForm from "./RiskScreeningForm";
+import CaseClosureForm from "./CaseClosureForm";
 
 export default function CaseDetailDialog({ case: caseData, onClose }) {
+  const [showRiskForm, setShowRiskForm] = useState(false);
+  const [showClosureForm, setShowClosureForm] = useState(false);
   const getStatusColor = (status) => {
     const colors = {
       pending_documentation: "bg-yellow-100 text-yellow-800",
@@ -37,11 +43,13 @@ export default function CaseDetailDialog({ case: caseData, onClose }) {
         </DialogHeader>
 
         <Tabs defaultValue="overview" className="mt-4">
-          <TabsList>
+          <TabsList className="grid grid-cols-6">
             <TabsTrigger value="overview">Overview</TabsTrigger>
+            <TabsTrigger value="progress">Progress</TabsTrigger>
+            <TabsTrigger value="risk">Risk</TabsTrigger>
             <TabsTrigger value="children">Children</TabsTrigger>
             <TabsTrigger value="documents">Documents</TabsTrigger>
-            <TabsTrigger value="sessions">Sessions</TabsTrigger>
+            <TabsTrigger value="closure">Closure</TabsTrigger>
           </TabsList>
 
           <TabsContent value="overview" className="space-y-4">
@@ -107,6 +115,30 @@ export default function CaseDetailDialog({ case: caseData, onClose }) {
             )}
           </TabsContent>
 
+          <TabsContent value="progress">
+            <TherapeuticProgressTracker caseId={caseData.id} />
+          </TabsContent>
+
+          <TabsContent value="risk" className="space-y-4">
+            {!showRiskForm ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Shield className="w-12 h-12 text-orange-600 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-2">Risk Screening Assessment</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Complete structured risk screening with automatic escalation for high-risk cases
+                  </p>
+                  <Button onClick={() => setShowRiskForm(true)} className="bg-orange-600 hover:bg-orange-700">
+                    <Shield className="w-4 h-4 mr-2" />
+                    Start Risk Screening
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <RiskScreeningForm caseId={caseData.id} onComplete={() => setShowRiskForm(false)} />
+            )}
+          </TabsContent>
+
           <TabsContent value="children">
             <Card>
               <CardContent className="p-4">
@@ -127,14 +159,41 @@ export default function CaseDetailDialog({ case: caseData, onClose }) {
             </Card>
           </TabsContent>
 
-          <TabsContent value="sessions">
-            <Card>
-              <CardContent className="p-4">
-                <p className="text-sm text-gray-500 text-center py-8">
-                  Session history will be displayed here
-                </p>
-              </CardContent>
-            </Card>
+          <TabsContent value="closure" className="space-y-4">
+            {caseData.status === 'closed' ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Archive className="w-12 h-12 text-gray-500 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-2">Case Closed</h3>
+                  <p className="text-sm text-gray-600">
+                    This case was closed on {caseData.closure_date ? format(new Date(caseData.closure_date), 'MMM d, yyyy') : 'N/A'}
+                  </p>
+                </CardContent>
+              </Card>
+            ) : !showClosureForm ? (
+              <Card>
+                <CardContent className="p-6 text-center">
+                  <Archive className="w-12 h-12 text-purple-600 mx-auto mb-3" />
+                  <h3 className="font-semibold text-lg mb-2">Close Case</h3>
+                  <p className="text-sm text-gray-600 mb-4">
+                    Complete mandatory closure requirements and apply data retention policy
+                  </p>
+                  <Button onClick={() => setShowClosureForm(true)} className="bg-purple-600 hover:bg-purple-700">
+                    <Archive className="w-4 h-4 mr-2" />
+                    Begin Case Closure
+                  </Button>
+                </CardContent>
+              </Card>
+            ) : (
+              <CaseClosureForm 
+                caseId={caseData.id} 
+                caseData={caseData}
+                onComplete={() => {
+                  setShowClosureForm(false);
+                  onClose();
+                }} 
+              />
+            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
