@@ -53,16 +53,16 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
   return (
     <Card 
       className="hover:shadow-lg transition-all cursor-pointer card-interactive border-l-4" 
-      style={{ borderLeftColor: task.priority === 'critical' ? '#EF4444' : task.priority === 'high' ? '#F97316' : '#3B82F6' }}
+      style={{ borderLeftColor: task.priority_level === 'critical' ? '#EF4444' : task.priority_level === 'high' ? '#F97316' : '#3B82F6' }}
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-1">{task.task_name}</h4>
+            <h4 className="font-semibold text-gray-900 mb-1">{task.task_title}</h4>
             <div className="flex flex-wrap gap-1 mb-2">
-              <Badge className={priorityColors[task.priority]}>
-                {task.priority}
+              <Badge className={priorityColors[task.priority_level]}>
+                {task.priority_level}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {frequencyLabels[task.frequency]}
@@ -71,15 +71,15 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
           </div>
         </div>
 
-        {task.description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.description}</p>
+        {task.task_description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.task_description}</p>
         )}
 
         <div className="space-y-2 text-xs text-gray-600">
-          {task.estimated_duration_minutes && (
+          {task.duration_estimate_minutes && (
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              <span>{task.estimated_duration_minutes} minutes</span>
+              <span>{task.duration_estimate_minutes} minutes</span>
             </div>
           )}
 
@@ -93,10 +93,10 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
             </div>
           )}
 
-          {task.time_of_day && task.time_of_day !== "anytime" && (
+          {task.times_of_day && task.times_of_day.length > 0 && (
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              <span>{timeOfDayLabels[task.time_of_day]}</span>
+              <span>{task.times_of_day.map(t => timeOfDayLabels[t] || t).join(", ")}</span>
             </div>
           )}
 
