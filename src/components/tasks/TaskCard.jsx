@@ -50,19 +50,25 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
     onEdit(task);
   };
 
+  // Support both old and new field names
+  const title = task.task_title || task.task_name || "";
+  const description = task.task_description || task.description || "";
+  const priority = task.priority_level || task.priority || "medium";
+  const duration = task.duration_estimate_minutes || task.estimated_duration_minutes || 0;
+
   return (
     <Card 
       className="hover:shadow-lg transition-all cursor-pointer card-interactive border-l-4" 
-      style={{ borderLeftColor: task.priority_level === 'critical' ? '#EF4444' : task.priority_level === 'high' ? '#F97316' : '#3B82F6' }}
+      style={{ borderLeftColor: priority === 'critical' ? '#EF4444' : priority === 'high' ? '#F97316' : '#3B82F6' }}
       onClick={handleCardClick}
     >
       <CardContent className="p-4">
         <div className="flex items-start justify-between mb-3">
           <div className="flex-1">
-            <h4 className="font-semibold text-gray-900 mb-1">{task.task_title}</h4>
+            <h4 className="font-semibold text-gray-900 mb-1">{title}</h4>
             <div className="flex flex-wrap gap-1 mb-2">
-              <Badge className={priorityColors[task.priority_level]}>
-                {task.priority_level}
+              <Badge className={priorityColors[priority]}>
+                {priority}
               </Badge>
               <Badge variant="outline" className="text-xs">
                 {frequencyLabels[task.frequency]}
@@ -71,15 +77,15 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
           </div>
         </div>
 
-        {task.task_description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{task.task_description}</p>
+        {description && (
+          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{description}</p>
         )}
 
         <div className="space-y-2 text-xs text-gray-600">
-          {task.duration_estimate_minutes && (
+          {duration > 0 && (
             <div className="flex items-center gap-2">
               <Clock className="w-3 h-3" />
-              <span>{task.duration_estimate_minutes} minutes</span>
+              <span>{duration} minutes</span>
             </div>
           )}
 
