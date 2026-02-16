@@ -78,7 +78,7 @@ export default function TaskCard({ task, qualifications = [], onEdit, onDelete }
         </div>
 
         {description && (
-          <p className="text-sm text-gray-600 mb-3 line-clamp-2">{description}</p>
+          <p className="text-sm text-gray-600 mb-3">{description}</p>
         )}
 
         <div className="space-y-2 text-xs text-gray-600">

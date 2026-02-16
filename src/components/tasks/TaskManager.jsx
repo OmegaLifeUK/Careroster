@@ -59,7 +59,7 @@ export default function TaskManager({ client }) {
   };
 
   const tasksByCategory = tasks.reduce((acc, task) => {
-    const category = task.task_category || 'other';
+    const category = task.task_category || task.category || 'other';
     if (!acc[category]) acc[category] = [];
     acc[category].push(task);
     return acc;
@@ -81,8 +81,8 @@ export default function TaskManager({ client }) {
 
   const stats = {
     total: tasks.length,
-    critical: tasks.filter(t => t.priority_level === 'critical').length,
-    high: tasks.filter(t => t.priority_level === 'high').length,
+    critical: tasks.filter(t => (t.priority_level || t.priority) === 'critical').length,
+    high: tasks.filter(t => (t.priority_level || t.priority) === 'high').length,
     twoStaff: tasks.filter(t => t.requires_two_staff).length,
   };
 
