@@ -103,6 +103,11 @@ export default function TaskDialog({ task, client, qualifications = [], onClose 
       return;
     }
     
+    if (!formData.client_id) {
+      toast.error("Validation Error", "Client is required");
+      return;
+    }
+    
     saveMutation.mutate(formData);
   };
 
