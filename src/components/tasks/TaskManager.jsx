@@ -26,7 +26,7 @@ export default function TaskManager({ client }) {
     queryKey: ['care-tasks', client?.id],
     queryFn: async () => {
       if (!client?.id) return [];
-      const data = await base44.entities.CareTask.filter({ client_id: client.id, is_active: true });
+      const data = await base44.entities.CareTask.filter({ client_id: client.id });
       return Array.isArray(data) ? data : [];
     },
     enabled: !!client?.id,
@@ -59,7 +59,7 @@ export default function TaskManager({ client }) {
   };
 
   const tasksByCategory = tasks.reduce((acc, task) => {
-    const category = task.category || 'other';
+    const category = task.task_category || 'other';
     if (!acc[category]) acc[category] = [];
     acc[category].push(task);
     return acc;
@@ -81,8 +81,8 @@ export default function TaskManager({ client }) {
 
   const stats = {
     total: tasks.length,
-    critical: tasks.filter(t => t.priority === 'critical').length,
-    high: tasks.filter(t => t.priority === 'high').length,
+    critical: tasks.filter(t => t.priority_level === 'critical').length,
+    high: tasks.filter(t => t.priority_level === 'high').length,
     twoStaff: tasks.filter(t => t.requires_two_staff).length,
   };
 
