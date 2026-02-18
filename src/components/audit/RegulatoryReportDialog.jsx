@@ -57,8 +57,30 @@ export default function RegulatoryReportDialog({ logs, onClose }) {
       };
 
       // Call AI to generate mock inspection report
+      const inspectorPrompt = reportType === "CQC" ? `
+You are a CQC inspector conducting a mock inspection using the Single Assessment Framework (2024). 
+
+The framework uses 5 key questions with Quality Statements (replacing previous KLOEs):
+- SAFE: Are people protected from abuse and harm?
+- EFFECTIVE: Do people's care, treatment and support achieve good outcomes?
+- CARING: Are staff caring and compassionate?
+- RESPONSIVE: Are services organised to meet people's needs?
+- WELL-LED: Is there strong leadership and governance?
+
+Quality Statements are "we statements" showing what providers should achieve.` : 
+reportType === "Ofsted" ? `
+You are an Ofsted inspector using the Social Care Common Inspection Framework (SCCIF).
+
+Focus on:
+- OVERALL EXPERIENCES AND PROGRESS OF CHILDREN
+- HOW WELL CHILDREN ARE HELPED AND PROTECTED (limiting judgement)
+- THE EFFECTIVENESS OF LEADERS AND MANAGERS (graded judgement)
+
+Key areas: quality of care, safeguarding, leadership, stability, outcomes for children.` : 
+`You are a CIW inspector conducting a mock inspection.`;
+
       const response = await base44.integrations.Core.InvokeLLM({
-        prompt: `You are a ${reportType} inspector conducting a mock inspection. Based on the audit log data provided, generate a comprehensive inspection-style report.
+        prompt: `${inspectorPrompt}
 
 Organisation: ${complianceData.organisation}
 Regulator: ${reportType}
@@ -68,22 +90,29 @@ High Priority Events: ${complianceData.high_priority_events}
 Compliance Events: ${complianceData.compliance_events}
 Safeguarding Events: ${complianceData.safeguarding_events}
 
-Generate a detailed mock inspection report including:
+Recent Audit Log Evidence:
+${JSON.stringify(complianceData.recent_logs, null, 2)}
+
+Generate a comprehensive mock inspection report including:
 1. Overall Rating (Outstanding/Good/Requires Improvement/Inadequate)
-2. Domain Ratings (Safe, Effective, Caring, Responsive, Well-led) - for CQC
-3. Key Strengths (list 3-5)
-4. Areas for Improvement (list 3-5 with priority levels)
-5. Compliance Issues (if any, with regulation references)
-6. Summary Report (detailed narrative)
+2. Domain Ratings (Safe, Effective, Caring, Responsive, Well-led) - use appropriate framework
+3. Key Strengths (list 4-6 specific evidence-based strengths)
+4. Areas for Improvement (list 4-6 with HIGH/MEDIUM/LOW priority and specific actionable recommendations)
+5. Compliance Issues (reference specific regulations if identified)
+6. Summary Report (detailed narrative covering key findings)
 7. Numeric Score (0-100)
 
-Base your ratings on the audit log data. Look for:
-- Critical/high severity events (negative indicators)
-- Compliance and quality events (positive indicators)
-- Safeguarding responses (critical for ratings)
-- Frequency and patterns of incidents
+IMPORTANT: Base ratings on actual evidence from audit logs. Look for:
+- Safeguarding responses and protective measures
+- Staff training and competence
+- Care planning and person-centred approach
+- Medication management and clinical governance
+- Leadership, policies, and quality assurance
+- Incident management and learning
+- Consent and mental capacity
+- Documentation quality
 
-Be realistic and constructive. If there are critical events, rate accordingly.`,
+Be realistic, evidence-based and constructive. Use specific examples from the logs.`,
         response_json_schema: {
           type: "object",
           properties: {
@@ -143,7 +172,8 @@ Be realistic and constructive. If there are critical events, rate accordingly.`,
     if (!generatedReport) return;
 
     try {
-      await base44.entities.MockInspection.create({
+      // Create mock inspection
+      const inspection = await base44.entities.MockInspection.create({
         inspection_type: reportType,
         inspection_date: format(new Date(), 'yyyy-MM-dd'),
         inspector_name: "AI Mock Inspector",
@@ -157,12 +187,66 @@ Be realistic and constructive. If there are critical events, rate accordingly.`,
         areas_for_improvement: generatedReport.areas_for_improvement,
         compliance_issues: generatedReport.compliance_issues,
         summary_report: generatedReport.summary_report,
-        status: 'completed'
+        status: 'action_plan_pending'
       });
 
-      toast.success("Success", "Mock inspection saved");
+      // Auto-generate action plan from areas for improvement and compliance issues
+      const allIssues = [
+        ...generatedReport.areas_for_improvement.map(a => ({
+          action: a.area,
+          recommendation: a.recommendation,
+          priority: a.priority.toLowerCase(),
+          category: 'quality'
+        })),
+        ...generatedReport.compliance_issues.map(c => ({
+          action: `${c.regulation}: ${c.issue}`,
+          recommendation: 'Ensure immediate compliance',
+          priority: c.severity === 'critical' ? 'critical' : c.severity === 'high' ? 'high' : 'medium',
+          category: 'regulatory'
+        }))
+      ];
+
+      if (allIssues.length > 0) {
+        // Calculate target date based on priority
+        const getTargetDate = (priority) => {
+          const today = new Date();
+          const daysToAdd = priority === 'critical' ? 7 : priority === 'high' ? 30 : priority === 'medium' ? 60 : 90;
+          const targetDate = new Date(today);
+          targetDate.setDate(targetDate.getDate() + daysToAdd);
+          return format(targetDate, 'yyyy-MM-dd');
+        };
+
+        const actionPlan = await base44.entities.ActionPlan.create({
+          title: `${reportType} Mock Inspection Action Plan - ${format(new Date(), 'dd/MM/yyyy')}`,
+          description: `Action plan generated from mock inspection findings. Overall rating: ${generatedReport.overall_rating}`,
+          category: 'regulatory',
+          priority: allIssues.some(i => i.priority === 'critical') ? 'critical' : 'high',
+          status: 'active',
+          target_completion_date: getTargetDate('high'),
+          related_entity_type: 'inspection',
+          related_entity_id: inspection.id,
+          actions: allIssues.map((issue, idx) => ({
+            action: issue.action,
+            responsible_person: 'Service Manager',
+            target_date: getTargetDate(issue.priority),
+            status: 'pending',
+            notes: issue.recommendation
+          })),
+          progress_percentage: 0
+        });
+
+        // Update inspection with action plan ID
+        await base44.entities.MockInspection.update(inspection.id, {
+          action_plan_id: actionPlan.id
+        });
+
+        toast.success("Success", "Mock inspection and action plan created");
+      } else {
+        toast.success("Success", "Mock inspection saved");
+      }
     } catch (error) {
       toast.error("Error", "Failed to save inspection");
+      console.error(error);
     }
   };
 
