@@ -106,9 +106,15 @@ export default function ActionPlanTracker({ actionPlan, onUpdate }) {
       notes: currentNotes ? `${currentNotes}\n${newNote}` : newNote
     };
 
-    updateActionPlanMutation.mutate({ actions: updatedActions });
-    setUpdateNotes("");
-    setShowUpdateDialog(false);
+    updateActionPlanMutation.mutate(
+      { actions: updatedActions },
+      {
+        onSuccess: () => {
+          setUpdateNotes("");
+          setShowUpdateDialog(false);
+        }
+      }
+    );
   };
 
   const handleUploadEvidence = async (file, actionIndex) => {
