@@ -104,6 +104,7 @@ const generalNav = [
   { title: "Client Onboarding", url: createPageUrl("ClientOnboarding"), icon: UserCircle },
   { title: "Policy Library", url: createPageUrl("PolicyLibrary"), icon: FileText },
   { title: "Compliance Dashboard", url: createPageUrl("ComplianceDashboard"), icon: Shield },
+  { title: "Audit Log", url: createPageUrl("AuditLog"), icon: FileText },
   { title: "Task Center", url: createPageUrl("ComplianceTaskCenter"), icon: ClipboardList },
   { title: "Action Plan Progress", url: createPageUrl("ActionPlanProgress"), icon: ClipboardList },
   { title: "Reporting Engine", url: createPageUrl("ReportingEngine"), icon: FileText },
