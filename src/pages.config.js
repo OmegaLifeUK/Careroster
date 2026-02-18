@@ -139,6 +139,7 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
+import AuditLog from './pages/AuditLog';
 import __Layout from './Layout.jsx';
 
 
@@ -235,6 +236,7 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
+    "AuditLog": AuditLog,
 }
 
 export const pagesConfig = {
