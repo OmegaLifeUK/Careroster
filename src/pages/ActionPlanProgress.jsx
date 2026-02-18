@@ -40,7 +40,9 @@ export default function ActionPlanProgress() {
     return Math.round((completedActions / plan.actions.length) * 100);
   };
 
-  const auditRelatedPlans = actionPlans.filter(p => p.related_entity_type === 'audit');
+  const auditRelatedPlans = actionPlans.filter(p => 
+    p.related_entity_type === 'audit' || p.related_entity_type === 'inspection'
+  );
 
   if (selectedPlan) {
     return (
@@ -83,7 +85,7 @@ export default function ActionPlanProgress() {
       <div className="max-w-7xl mx-auto">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-gray-900 mb-2">Action Plan Progress</h1>
-          <p className="text-gray-500">Track progress of action plans from audit failures</p>
+          <p className="text-gray-500">Track progress of action plans from audits and mock inspections</p>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
@@ -91,7 +93,7 @@ export default function ActionPlanProgress() {
             <CardContent className="p-6">
               <div className="flex items-center justify-between">
                 <div>
-                  <p className="text-sm text-gray-600">Audit-Related Plans</p>
+                  <p className="text-sm text-gray-600">Total Action Plans</p>
                   <p className="text-3xl font-bold text-blue-900">{auditRelatedPlans.length}</p>
                 </div>
                 <TrendingUp className="w-10 h-10 text-blue-600" />

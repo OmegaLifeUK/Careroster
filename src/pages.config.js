@@ -53,6 +53,7 @@ import AddAssessment from './pages/AddAssessment';
 import AddCareTask from './pages/AddCareTask';
 import AddMARSheet from './pages/AddMARSheet';
 import AnalyticsPage from './pages/AnalyticsPage';
+import AuditLog from './pages/AuditLog';
 import AuditTemplates from './pages/AuditTemplates';
 import Audits from './pages/Audits';
 import CRMDashboard from './pages/CRMDashboard';
@@ -139,7 +140,6 @@ import TimesheetReconciliation from './pages/TimesheetReconciliation';
 import TrainingMatrix from './pages/TrainingMatrix';
 import UserManagement from './pages/UserManagement';
 import WorkflowsPage from './pages/WorkflowsPage';
-import AuditLog from './pages/AuditLog';
 import __Layout from './Layout.jsx';
 
 
@@ -150,6 +150,7 @@ export const PAGES = {
     "AddCareTask": AddCareTask,
     "AddMARSheet": AddMARSheet,
     "AnalyticsPage": AnalyticsPage,
+    "AuditLog": AuditLog,
     "AuditTemplates": AuditTemplates,
     "Audits": Audits,
     "CRMDashboard": CRMDashboard,
@@ -236,7 +237,6 @@ export const PAGES = {
     "TrainingMatrix": TrainingMatrix,
     "UserManagement": UserManagement,
     "WorkflowsPage": WorkflowsPage,
-    "AuditLog": AuditLog,
 }
 
 export const pagesConfig = {
