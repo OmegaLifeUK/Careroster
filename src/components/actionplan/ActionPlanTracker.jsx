@@ -117,13 +117,25 @@ export default function ActionPlanTracker({ actionPlan, onUpdate }) {
     const timestamp = format(new Date(), 'dd/MM/yyyy HH:mm');
     const newNote = `[${timestamp}] ${updateNotes}`;
     
+    // Update action with note and mark as in_progress if currently pending
+    const currentStatus = updatedActions[actionIndex].status || 'pending';
     updatedActions[actionIndex] = {
       ...updatedActions[actionIndex],
-      notes: currentNotes ? `${currentNotes}\n${newNote}` : newNote
+      notes: currentNotes ? `${currentNotes}\n${newNote}` : newNote,
+      status: currentStatus === 'pending' ? 'in_progress' : currentStatus
     };
 
+    // Recalculate progress
+    const completedCount = updatedActions.filter(a => a.status === 'completed').length;
+    const progressPercentage = updatedActions.length > 0 
+      ? Math.round((completedCount / updatedActions.length) * 100)
+      : 0;
+
     updateActionPlanMutation.mutate(
-      { actions: updatedActions },
+      { 
+        actions: updatedActions,
+        progress_percentage: progressPercentage
+      },
       {
         onSuccess: () => {
           setUpdateNotes("");
