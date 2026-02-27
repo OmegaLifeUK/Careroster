@@ -98,85 +98,50 @@ export default function WorkingHoursEditor({ carerId, availability = [] }) {
 
   const saveMutation = useMutation({
     mutationFn: async () => {
-      const promises = [];
-
-      // Delete all existing working hours for this carer first
+      // Delete all existing working hours sequentially to avoid rate limits
       for (const existing of workingHours) {
-        promises.push(base44.entities.CarerAvailability.delete(existing.id));
+        await base44.entities.CarerAvailability.delete(existing.id);
       }
-      await Promise.all(promises);
-      promises.length = 0;
+
+      const toCreate = [];
 
       if (scheduleType === 'specific_dates') {
-        // Save specific dates with their hours
         for (const dateStr of specificDates) {
-          const hours = specificDateHours[dateStr] || { start_time: '09:00', end_time: '17:00' };
-          const data = {
+          const dateHrs = specificDateHours[dateStr] || { start_time: '09:00', end_time: '17:00' };
+          toCreate.push({
             carer_id: carerId,
             availability_type: 'working_hours',
             schedule_pattern: 'specific_date',
             specific_date: dateStr,
             is_recurring: false,
-            start_time: hours.start_time,
-            end_time: hours.end_time
-          };
-          promises.push(base44.entities.CarerAvailability.create(data));
+            start_time: dateHrs.start_time,
+            end_time: dateHrs.end_time
+          });
         }
       } else if (scheduleType === 'alternate_weeks') {
-        // Get the latest data for both weeks
-        // Current `hours` state contains the active week's latest edits
-        // hoursWeek1/hoursWeek2 contain the stored data for the other week
-        let week1Data, week2Data;
-        
-        if (selectedWeek === 'week1') {
-          week1Data = hours; // Current edits are for week 1
-          week2Data = hoursWeek2; // Week 2 from stored state
-        } else {
-          week1Data = hoursWeek1; // Week 1 from stored state
-          week2Data = hours; // Current edits are for week 2
-        }
-        
-        // Save both week patterns
-        const saveWeekPattern = (weekHours, pattern) => {
-          for (const day of DAYS_OF_WEEK) {
-            const dayHours = weekHours[day.value];
-            if (dayHours && dayHours.enabled) {
-              const data = {
-                carer_id: carerId,
-                availability_type: 'working_hours',
-                schedule_pattern: pattern,
-                day_of_week: day.value,
-                start_time: dayHours.start_time,
-                end_time: dayHours.end_time,
-                is_recurring: true
-              };
-              promises.push(base44.entities.CarerAvailability.create(data));
-            }
-          }
-        };
+        const week1Data = selectedWeek === 'week1' ? hours : hoursWeek1;
+        const week2Data = selectedWeek === 'week2' ? hours : hoursWeek2;
 
-        saveWeekPattern(week1Data, 'alternate_week_1');
-        saveWeekPattern(week2Data, 'alternate_week_2');
-      } else {
-        // Standard weekly pattern
         for (const day of DAYS_OF_WEEK) {
-          const dayHours = hours[day.value];
-          if (dayHours && dayHours.enabled) {
-            const data = {
-              carer_id: carerId,
-              availability_type: 'working_hours',
-              schedule_pattern: 'weekly',
-              day_of_week: day.value,
-              start_time: dayHours.start_time,
-              end_time: dayHours.end_time,
-              is_recurring: true
-            };
-            promises.push(base44.entities.CarerAvailability.create(data));
+          if (week1Data[day.value]?.enabled) {
+            toCreate.push({ carer_id: carerId, availability_type: 'working_hours', schedule_pattern: 'alternate_week_1', day_of_week: day.value, start_time: week1Data[day.value].start_time, end_time: week1Data[day.value].end_time, is_recurring: true });
+          }
+          if (week2Data[day.value]?.enabled) {
+            toCreate.push({ carer_id: carerId, availability_type: 'working_hours', schedule_pattern: 'alternate_week_2', day_of_week: day.value, start_time: week2Data[day.value].start_time, end_time: week2Data[day.value].end_time, is_recurring: true });
+          }
+        }
+      } else {
+        for (const day of DAYS_OF_WEEK) {
+          if (hours[day.value]?.enabled) {
+            toCreate.push({ carer_id: carerId, availability_type: 'working_hours', schedule_pattern: 'weekly', day_of_week: day.value, start_time: hours[day.value].start_time, end_time: hours[day.value].end_time, is_recurring: true });
           }
         }
       }
 
-      return Promise.all(promises);
+      // Create sequentially to avoid rate limits
+      for (const data of toCreate) {
+        await base44.entities.CarerAvailability.create(data);
+      }
     },
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['carer-availability'] });
