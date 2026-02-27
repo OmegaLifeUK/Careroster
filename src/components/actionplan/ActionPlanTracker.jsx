@@ -34,21 +34,7 @@ export default function ActionPlanTracker({ actionPlan, onUpdate }) {
   const queryClient = useQueryClient();
   const { toast } = useToast();
 
-  // Recalculate progress on mount if not set or potentially stale
-  React.useEffect(() => {
-    const actions = actionPlan.actions || [];
-    if (actions.length > 0) {
-      const completedCount = actions.filter(a => a.status === 'completed').length;
-      const calculatedProgress = Math.round((completedCount / actions.length) * 100);
-      
-      if (actionPlan.progress_percentage !== calculatedProgress) {
-        updateActionPlanMutation.mutate({ progress_percentage: calculatedProgress }, { 
-          onSuccess: () => {}, 
-          onError: () => {} 
-        });
-      }
-    }
-  }, []);
+
 
   const { data: staff = [] } = useQuery({
     queryKey: ['all-staff'],
