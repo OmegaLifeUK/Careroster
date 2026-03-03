@@ -64,7 +64,10 @@ export default function ManagerDashboard() {
           setModulePreferences({ ...DEFAULT_PREFERENCES, ...userData.dashboard_preferences });
         }
         if (userData.widget_order && Array.isArray(userData.widget_order)) {
-          setWidgetOrder(userData.widget_order);
+          // Merge saved order with any new widgets not yet in the saved order
+          const saved = userData.widget_order;
+          const newWidgets = DEFAULT_WIDGET_ORDER.filter(id => !saved.includes(id));
+          setWidgetOrder([...saved, ...newWidgets]);
         }
       } catch (error) {
         console.error("Error loading user:", error);
