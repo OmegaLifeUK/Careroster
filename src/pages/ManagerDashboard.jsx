@@ -43,9 +43,10 @@ const DEFAULT_PREFERENCES = {
   communication: true,
   alerts: true,
   dailyLog: true,
+  clockedIn: true,
 };
 
-const DEFAULT_WIDGET_ORDER = ['alerts', 'occupancy', 'staff', 'training', 'incidents', 'finance', 'communication', 'dailyLog'];
+const DEFAULT_WIDGET_ORDER = ['alerts', 'clockedIn', 'occupancy', 'staff', 'training', 'incidents', 'finance', 'communication', 'dailyLog'];
 
 export default function ManagerDashboard() {
   const [showCustomizer, setShowCustomizer] = useState(false);
