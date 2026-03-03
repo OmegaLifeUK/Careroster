@@ -31,6 +31,7 @@ import { createPageUrl } from "@/utils";
 import DashboardCustomizer from "../components/dashboard/DashboardCustomizer";
 import AlertsWidget from "../components/alerts/AlertsWidget";
 import SystemAlertMonitor from "../components/alerts/SystemAlertMonitor";
+import ClockedInWidget from "../components/dashboard/ClockedInWidget";
 import { DragDropContext, Droppable, Draggable } from "@hello-pangea/dnd";
 
 const DEFAULT_PREFERENCES = {
