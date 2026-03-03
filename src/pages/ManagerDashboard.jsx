@@ -432,6 +432,10 @@ COMMUNICATION
                           {...provided.dragHandleProps}
                           className={`cursor-grab active:cursor-grabbing ${snapshot.isDragging ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
                         >
+                          {widgetId === 'clockedIn' && (
+                            <ClockedInWidget carers={carers} staff={[]} />
+                          )}
+
                           {widgetId === 'alerts' && (
                             <AlertsWidget alerts={alerts} compact={false} showAll={false} />
                           )}
