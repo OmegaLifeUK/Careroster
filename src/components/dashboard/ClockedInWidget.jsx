@@ -9,8 +9,9 @@ import { format, parseISO, differenceInMinutes } from "date-fns";
 export default function ClockedInWidget({ carers = [], staff = [] }) {
   const { data: timeAttendance = [], refetch, isFetching } = useQuery({
     queryKey: ['time-attendance-live'],
-    queryFn: () => base44.entities.TimeAttendance.filter({ clock_out_time: null }),
+    queryFn: () => base44.entities.TimeAttendance.list('-clock_in_time', 100),
     refetchInterval: 60000,
+    staleTime: 30000,
   });
 
   const allStaff = [...carers, ...staff];
