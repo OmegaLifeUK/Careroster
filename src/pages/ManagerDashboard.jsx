@@ -426,7 +426,7 @@ COMMUNICATION
                       <div
                         ref={provided.innerRef}
                         {...provided.draggableProps}
-                        className={`${widgetId === 'alerts' ? 'md:col-span-2' : ''} ${snapshot.isDragging ? 'z-50' : ''}`}
+                        className={`${(widgetId === 'alerts' || widgetId === 'clockedIn') ? 'md:col-span-2' : ''} ${snapshot.isDragging ? 'z-50' : ''}`}
                       >
                         <div 
                           {...provided.dragHandleProps}
