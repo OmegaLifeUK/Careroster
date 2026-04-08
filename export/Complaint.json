@@ -1,0 +1,171 @@
+[
+  {
+    "complaint_reference": null,
+    "response_date": null,
+    "policy_changes": null,
+    "complainant_satisfied": null,
+    "complainant": {
+      "name": "vipin",
+      "contact_details": "vipin@appsandwebdevelopmentsolutions.com",
+      "relationship": null,
+      "preferred_contact_method": "meeting"
+    },
+    "staff_involved": [],
+    "client_id": null,
+    "cqc_notified": false,
+    "response_method": null,
+    "received_date": "2026-03-24T08:41:39.317Z",
+    "date_of_incident": null,
+    "lessons_learned": null,
+    "acknowledged_by": null,
+    "investigating_officer": "Health & Safety Officer",
+    "actions_taken": [],
+    "acknowledged_date": null,
+    "target_response_date": null,
+    "outcome": null,
+    "witnesses": [],
+    "severity": "high",
+    "complaint_category": "staff_conduct",
+    "investigation_notes": null,
+    "interviews_conducted": [],
+    "response_sent": false,
+    "evidence_gathered": [],
+    "complaint_details": "[HEALTH SAFETY] qweqw\n\nasdasdasdasdasdasd",
+    "outcome_details": null,
+    "local_authority_notified": false,
+    "status": "received",
+    "id": "69c24e43c9b5f1ed4c9534dd",
+    "created_date": "2026-03-24T08:41:39.212000",
+    "updated_date": "2026-03-24T08:41:39.212000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "complaint_reference": null,
+    "response_date": null,
+    "policy_changes": null,
+    "complainant_satisfied": null,
+    "complainant": {
+      "name": "Anonymous",
+      "contact_details": "",
+      "relationship": null,
+      "preferred_contact_method": "meeting"
+    },
+    "staff_involved": [],
+    "client_id": null,
+    "cqc_notified": false,
+    "response_method": null,
+    "received_date": "2026-03-24T08:41:33.629Z",
+    "date_of_incident": null,
+    "lessons_learned": null,
+    "acknowledged_by": null,
+    "investigating_officer": "Health & Safety Officer",
+    "actions_taken": [],
+    "acknowledged_date": null,
+    "target_response_date": null,
+    "outcome": null,
+    "witnesses": [],
+    "severity": "high",
+    "complaint_category": "staff_conduct",
+    "investigation_notes": null,
+    "interviews_conducted": [],
+    "response_sent": false,
+    "evidence_gathered": [],
+    "complaint_details": "[HEALTH SAFETY] qweqw\n\nasdasdasdasdasdasd",
+    "outcome_details": null,
+    "local_authority_notified": false,
+    "status": "received",
+    "id": "69c24e3dc16eca81c6bae512",
+    "created_date": "2026-03-24T08:41:33.778000",
+    "updated_date": "2026-03-24T08:41:33.778000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "complaint_reference": "COMP-2024-12-034",
+    "received_date": "2024-12-18T14:30:00",
+    "complainant": {
+      "name": "Robert Foster",
+      "relationship": "Father of client (Danny Foster)",
+      "contact_details": "robert.foster@email.com, 07700 900123",
+      "preferred_contact_method": "email"
+    },
+    "client_id": "6914b519444801b5d13b928e",
+    "complaint_category": "communication",
+    "complaint_details": "Mr Foster is concerned that he was not informed when his son Danny had a seizure on 10th December. He found out three days later when he visited Danny. Mr Foster feels he should have been contacted immediately as next of kin. He is upset that this important medical incident was not communicated to family",
+    "date_of_incident": "2024-12-10",
+    "staff_involved": [
+      "On-duty staff member - Sarah Williams"
+    ],
+    "witnesses": [],
+    "severity": "medium",
+    "acknowledged_date": "2024-12-19",
+    "acknowledged_by": "Emma Williams - Support Coordinator",
+    "investigating_officer": "Emma Williams",
+    "investigation_notes": "Investigation found: 1) Danny did have a seizure on 10/12 at 15:30. 2) Seizure was brief (2 minutes), Danny recovered quickly. 3) Staff member recorded in daily notes but did not phone family. 4) Policy states family should be informed of all medical incidents. 5) Staff member (newly qualified) was unaware of family notification policy. 6) Danny (who has capacity) said he didn't want to worry his parents. Staff incorrectly deferred to Danny's wishes without realizing policy requirement. 7) Incident form was completed but no family notification made",
+    "interviews_conducted": [
+      {
+        "person": "Sarah Williams - Staff member",
+        "date": "2024-12-20",
+        "summary": "Sarah acknowledged she did not call family. Danny said not to worry them. Sarah (new staff) didn't realize family must be informed regardless. Apologetic"
+      },
+      {
+        "person": "Danny Foster",
+        "date": "2024-12-21",
+        "summary": "Danny confirmed he had seizure. Felt fine afterwards. Didn't want parents worried. Understands now they need to be told"
+      }
+    ],
+    "evidence_gathered": [
+      "Daily care notes 10/12/24",
+      "Incident form",
+      "Family communication policy",
+      "Staff training records"
+    ],
+    "outcome": "upheld",
+    "outcome_details": "Complaint upheld. Family should have been informed same day. Staff member did not follow policy. Contributory factors: new staff member, training gap, Danny's preference. However, policy is clear and should have been followed",
+    "actions_taken": [
+      {
+        "action": "Apology letter sent to Mr & Mrs Foster",
+        "responsible": "Emma Williams",
+        "completed": true,
+        "completion_date": "2024-12-22"
+      },
+      {
+        "action": "Staff member given additional training on family communication policy",
+        "responsible": "Emma Williams",
+        "completed": true,
+        "completion_date": "2024-12-23"
+      },
+      {
+        "action": "Team meeting held to remind all staff of notification requirements",
+        "responsible": "Emma Williams",
+        "completed": true,
+        "completion_date": "2025-01-05"
+      },
+      {
+        "action": "Family contact protocol poster created for staff room",
+        "responsible": "Emma Williams",
+        "completed": true,
+        "completion_date": "2025-01-06"
+      }
+    ],
+    "response_sent": true,
+    "response_date": "2024-12-23",
+    "response_method": "letter",
+    "complainant_satisfied": true,
+    "lessons_learned": "Need for better induction training on communication policies. New staff need clear guidance on family notification. Even when client has capacity, certain medical events require family notification per policy",
+    "policy_changes": "Induction checklist updated to include specific training on family communication. Quick reference cards created for staff",
+    "cqc_notified": false,
+    "local_authority_notified": false,
+    "status": "closed",
+    "target_response_date": "2025-01-08",
+    "id": "69149eb41e62625d34254b6e",
+    "created_date": "2025-11-12T14:50:28.676000",
+    "updated_date": "2025-11-12T16:31:33.881000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

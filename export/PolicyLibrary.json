@@ -1,0 +1,104 @@
+[
+  {
+    "approval_date": "2026-04-07",
+    "review_date": null,
+    "approved_by": "vipin",
+    "applies_to": [
+      "managers_only"
+    ],
+    "policy_category": "safeguarding_adults",
+    "policy_name": "TEST",
+    "version_number": "1.0",
+    "is_mandatory": true,
+    "policy_file_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/f61c465ef_ggvote.pdf",
+    "status": "approved",
+    "id": "69d3aeaaba4db6090ba71abe",
+    "created_date": "2026-04-06T13:01:30.214000",
+    "updated_date": "2026-04-07T04:19:54.105000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "approval_date": null,
+    "review_date": "2026-04-06",
+    "approved_by": null,
+    "applies_to": [],
+    "policy_category": "dols_liberty_protection",
+    "policy_name": "xyz",
+    "version_number": "78",
+    "is_mandatory": true,
+    "policy_file_url": null,
+    "status": "archived",
+    "id": "69d3727e03cd1dbccec55aa8",
+    "created_date": "2026-04-06T08:44:46.684000",
+    "updated_date": "2026-04-07T07:05:38.868000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "approval_date": null,
+    "review_date": "2026-04-08",
+    "approved_by": null,
+    "applies_to": [
+      "all_staff",
+      "care_staff"
+    ],
+    "policy_category": "health_safety",
+    "policy_name": "collage policy",
+    "version_number": "56",
+    "is_mandatory": true,
+    "policy_file_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/85acb0799_billing.png",
+    "status": "under_review",
+    "id": "69d371492c4832db9d201c91",
+    "created_date": "2026-04-06T08:39:37.175000",
+    "updated_date": "2026-04-07T05:34:50.713000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "approval_date": "2026-04-06",
+    "review_date": "2026-03-30",
+    "approved_by": "vipin",
+    "applies_to": [
+      "all_staff",
+      "care_staff",
+      "managers_only",
+      "admin_staff"
+    ],
+    "policy_category": "safeguarding_adults",
+    "policy_name": "policyA",
+    "version_number": "23",
+    "is_mandatory": true,
+    "policy_file_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/c94986cdf_billing-payments.png",
+    "status": "approved",
+    "id": "69d370d5efc6aeb594b89e50",
+    "created_date": "2026-04-06T08:37:41.123000",
+    "updated_date": "2026-04-07T04:19:37.103000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "approval_date": null,
+    "review_date": "2026-03-31",
+    "approved_by": null,
+    "applies_to": [
+      "all_staff"
+    ],
+    "policy_category": "safeguarding_adults",
+    "policy_name": "Test",
+    "version_number": null,
+    "is_mandatory": false,
+    "policy_file_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/4d15bec45_care-plan-Rohan-Maurya-2026-03-25.pdf",
+    "status": "draft",
+    "id": "69cb5fb47b74ac317437ca47",
+    "created_date": "2026-03-31T05:46:28.679000",
+    "updated_date": "2026-03-31T05:46:28.679000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  }
+]

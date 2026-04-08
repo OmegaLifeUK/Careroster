@@ -1,0 +1,32 @@
+[
+  {
+    "registered_manager_email": "s.123@gmail.com",
+    "ofsted_registration_number": "34",
+    "statement_of_purpose_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/756713964_author1.jpg",
+    "mandatory_policies_uploaded": false,
+    "organisation_name": "mobapps",
+    "last_inspection_rating": null,
+    "regulators": [
+      "CQC",
+      "Ofsted"
+    ],
+    "cqc_registration_number": "123123",
+    "registration_documents": [],
+    "registered_manager_name": "Mr jhon",
+    "last_inspection_date": null,
+    "organisation_status": "incomplete",
+    "care_setting_types": [
+      "domiciliary",
+      "supported_living",
+      "day_centre",
+      "children_services",
+      "residential"
+    ],
+    "id": "697a0962d3e85de06db4e710",
+    "created_date": "2026-01-28T13:04:34.062000",
+    "updated_date": "2026-04-08T06:08:58.746000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

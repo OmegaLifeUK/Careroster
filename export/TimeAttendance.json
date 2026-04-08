@@ -1,0 +1,160 @@
+[
+  {
+    "shift_id": "69133c77af4e4410e318bcb6",
+    "carer_id": "69133c33af4e4410e318bc6b",
+    "clock_in_time": "2025-11-11T13:46:42.018Z",
+    "clock_out_time": null,
+    "clock_in_location": {
+      "latitude": 53.42797427491424,
+      "longitude": -2.8030902617644475,
+      "address": "Current location"
+    },
+    "clock_out_location": null,
+    "clock_in_location_match": "mismatch",
+    "clock_out_location_match": null,
+    "location_verified": false,
+    "total_hours": null,
+    "notes": null,
+    "id": "69133e40523e521484f3eae6",
+    "created_date": "2025-11-11T13:46:40.911000",
+    "updated_date": "2025-11-11T13:46:40.911000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "shift_id": "shift_20250121_morning",
+    "carer_id": "val_dyer_id",
+    "clock_in_time": "2025-01-21T07:00:00Z",
+    "clock_out_time": "2025-01-21T15:03:00Z",
+    "clock_in_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_out_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_in_location_match": "match",
+    "clock_out_location_match": "match",
+    "location_verified": true,
+    "total_hours": 8.05,
+    "notes": "Emma struggled this morning but got to school on time eventually.",
+    "id": "6911f25785d85a3da4017305",
+    "created_date": "2025-11-10T14:10:31.433000",
+    "updated_date": "2025-11-10T14:10:31.433000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "shift_id": "shift_20250120_evening",
+    "carer_id": "ellese_rothwell_id",
+    "clock_in_time": "2025-01-20T14:55:00Z",
+    "clock_out_time": "2025-01-20T23:10:00Z",
+    "clock_in_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_out_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_in_location_match": "match",
+    "clock_out_location_match": "match",
+    "location_verified": true,
+    "total_hours": 8.25,
+    "notes": "Evening shift. All tasks completed. Emma settled to bed on time.",
+    "id": "6911f25785d85a3da4017304",
+    "created_date": "2025-11-10T14:10:31.433000",
+    "updated_date": "2025-11-10T14:10:31.433000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "shift_id": "shift_20250121_evening",
+    "carer_id": "alex_sheffield_id",
+    "clock_in_time": "2025-01-21T14:58:00Z",
+    "clock_out_time": "2025-01-21T23:08:00Z",
+    "clock_in_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_out_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_in_location_match": "match",
+    "clock_out_location_match": "match",
+    "location_verified": true,
+    "total_hours": 8.17,
+    "notes": "Great evening. Emma engaged with gym activity - walking pad for 30 mins.",
+    "id": "6911f25785d85a3da4017306",
+    "created_date": "2025-11-10T14:10:31.433000",
+    "updated_date": "2025-11-10T14:10:31.433000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "shift_id": "shift_20250120_morning",
+    "carer_id": "katie_robinson_id",
+    "clock_in_time": "2025-01-20T06:58:00Z",
+    "clock_out_time": "2025-01-20T15:05:00Z",
+    "clock_in_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_out_location": {
+      "latitude": 53.4501,
+      "longitude": -2.7374,
+      "address": "Zeus House, St Helens"
+    },
+    "clock_in_location_match": "match",
+    "clock_out_location_match": "match",
+    "location_verified": true,
+    "total_hours": 8.12,
+    "notes": "Morning shift completed. Emma to school on time.",
+    "id": "6911f25785d85a3da4017303",
+    "created_date": "2025-11-10T14:10:31.433000",
+    "updated_date": "2025-11-10T14:10:31.433000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "shift_id": "6909d7bc7d6fdcbc4d693635",
+    "carer_id": "6909d98e1f0411d75f2e47db",
+    "clock_in_time": "2025-11-04T16:17:05.909Z",
+    "clock_out_time": "2025-11-04T18:24:17.852Z",
+    "clock_in_location": {
+      "latitude": 53.42796841355355,
+      "longitude": -2.8030855948110864,
+      "address": "Current location"
+    },
+    "clock_out_location": {
+      "latitude": 53.41446952257516,
+      "longitude": -2.2162755419822497,
+      "address": "Current location"
+    },
+    "clock_in_location_match": "not_available",
+    "clock_out_location_match": "not_available",
+    "location_verified": false,
+    "total_hours": 2.119984166666667,
+    "notes": null,
+    "id": "690a27021d768519115c80dd",
+    "created_date": "2025-11-04T16:17:06.230000",
+    "updated_date": "2025-11-04T18:24:18.940000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  }
+]

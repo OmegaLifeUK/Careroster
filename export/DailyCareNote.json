@@ -1,0 +1,264 @@
+[
+  {
+    "client_id": "6914b519444801b5d13b928e",
+    "date": "2025-01-12",
+    "shift_time": "morning",
+    "staff_id": "Lucy Thompson",
+    "mood_behaviour": {
+      "mood": "anxious",
+      "behaviour_noted": "Initially anxious as wasn't expecting me (different staff). Settled after visual schedule reminder",
+      "triggers_identified": "Unexpected change in staff member"
+    },
+    "personal_care": {
+      "bathing_showering": {
+        "completed": true,
+        "assistance_level": "supervision",
+        "notes": "Danny completed shower independently with verbal prompts for each step"
+      },
+      "oral_care": {
+        "completed": true,
+        "notes": "Completed with checklist. Thorough job"
+      },
+      "continence": {
+        "continent": true,
+        "pad_changes": 0,
+        "notes": "Independent"
+      },
+      "skin_integrity": {
+        "concerns": false,
+        "location": "",
+        "action_taken": "No concerns"
+      }
+    },
+    "nutrition_hydration": {
+      "breakfast": {
+        "offered": true,
+        "amount_consumed": "all",
+        "menu": "Made toast and cereal with minimal prompting. Good independent skills shown"
+      },
+      "lunch": null,
+      "dinner": null,
+      "snacks": null,
+      "fluid_intake_ml": 300,
+      "concerns": "None"
+    },
+    "medication": {
+      "administered": true,
+      "all_given_as_prescribed": true,
+      "refused_medications": [],
+      "side_effects": "Epilepsy medication taken with breakfast as prescribed. Danny used his photo chart without prompting"
+    },
+    "mobility_activities": {
+      "mobilised": true,
+      "walking_distance": "Independent",
+      "equipment_used": [],
+      "falls_incidents": false,
+      "activities_participated": [
+        "Morning routine",
+        "Fed and played with Whiskers (cat)",
+        "Planned to play Minecraft after I left"
+      ],
+      "engagement_level": "fully_engaged"
+    },
+    "social_interaction": {
+      "visitors": [],
+      "interactions_with_others": "Waved to neighbor when leaving for shop. Discussed gaming clan activities",
+      "group_activities": []
+    },
+    "health_observations": null,
+    "sleep_pattern": null,
+    "incidents_concerns": [],
+    "handover_notes": "Initial anxiety about staff change - note for future: try to give Danny advance notice when possible. Otherwise excellent morning. Personal care skills improving. Medication management perfect",
+    "overall_wellbeing": "good",
+    "id": "69149b878d1185f5f116687c",
+    "created_date": "2025-11-12T14:36:55.864000",
+    "updated_date": "2025-11-12T16:32:16.681000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928d",
+    "date": "2025-01-12",
+    "shift_time": "morning",
+    "staff_id": "James Wilson",
+    "mood_behaviour": {
+      "mood": "happy",
+      "behaviour_noted": "Cheerful this morning, excited about work project he's starting",
+      "triggers_identified": "None"
+    },
+    "personal_care": {
+      "bathing_showering": {
+        "completed": true,
+        "assistance_level": "partial_assistance",
+        "notes": "Assisted with bed to shower chair transfer, upper body wash. John completed lower body care independently"
+      },
+      "oral_care": {
+        "completed": true,
+        "notes": "Completed independently"
+      },
+      "continence": {
+        "continent": true,
+        "pad_changes": 0,
+        "notes": "Catheter checked and draining well, no concerns"
+      },
+      "skin_integrity": {
+        "concerns": false,
+        "location": "",
+        "action_taken": "Skin check completed - all pressure areas clear and healthy"
+      }
+    },
+    "nutrition_hydration": {
+      "breakfast": {
+        "offered": true,
+        "amount_consumed": "all",
+        "menu": "Self-prepared: scrambled eggs and toast. Assistance with kettle only"
+      },
+      "lunch": null,
+      "dinner": null,
+      "snacks": null,
+      "fluid_intake_ml": 400,
+      "concerns": "None - John managing nutrition well independently"
+    },
+    "medication": {
+      "administered": false,
+      "all_given_as_prescribed": true,
+      "refused_medications": [],
+      "side_effects": "Verbal reminder given - John self-administered all morning medications correctly"
+    },
+    "mobility_activities": {
+      "mobilised": true,
+      "walking_distance": "N/A - wheelchair user",
+      "equipment_used": [
+        "Powered wheelchair",
+        "Transfer board"
+      ],
+      "falls_incidents": false,
+      "activities_participated": [
+        "Upper body exercises completed",
+        "Plans to go to local shops later"
+      ],
+      "engagement_level": "fully_engaged"
+    },
+    "social_interaction": null,
+    "health_observations": null,
+    "sleep_pattern": null,
+    "incidents_concerns": [],
+    "handover_notes": "Excellent visit. John in great spirits and managing well. Skin all clear. Continue current support level",
+    "overall_wellbeing": "excellent",
+    "id": "69149b878d1185f5f116687b",
+    "created_date": "2025-11-12T14:36:55.864000",
+    "updated_date": "2025-11-12T16:32:19.445000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928c",
+    "date": "2025-01-12",
+    "shift_time": "morning",
+    "staff_id": "Anna Martinez",
+    "mood_behaviour": {
+      "mood": "content",
+      "behaviour_noted": "Greeted staff warmly, engaged in conversation about family visit yesterday",
+      "triggers_identified": "None"
+    },
+    "personal_care": {
+      "bathing_showering": {
+        "completed": true,
+        "assistance_level": "full_assistance",
+        "notes": "Shower completed with two staff. Betty chatted throughout, seemed to enjoy the warm water"
+      },
+      "oral_care": {
+        "completed": true,
+        "notes": "Dentures cleaned, mouth care completed"
+      },
+      "continence": {
+        "continent": false,
+        "pad_changes": 2,
+        "notes": "Pad wet on waking, changed after shower. No skin concerns"
+      },
+      "skin_integrity": {
+        "concerns": false,
+        "location": "",
+        "action_taken": "Full skin check completed during shower - all clear"
+      }
+    },
+    "nutrition_hydration": {
+      "breakfast": {
+        "offered": true,
+        "amount_consumed": "most",
+        "menu": "Porridge with honey, toast, cup of tea"
+      },
+      "lunch": {
+        "offered": true,
+        "amount_consumed": "half",
+        "menu": "Chicken soup, bread roll, yogurt"
+      },
+      "dinner": {
+        "offered": true,
+        "amount_consumed": "three_quarters",
+        "menu": "Fish pie, peas, mashed potato, apple crumble"
+      },
+      "snacks": "Chocolate biscuits at 11am and 3pm, both enjoyed",
+      "fluid_intake_ml": 1350,
+      "concerns": "Lunch not fully eaten - said wasn't very hungry. Otherwise good intake"
+    },
+    "medication": {
+      "administered": true,
+      "all_given_as_prescribed": true,
+      "refused_medications": [],
+      "side_effects": "None noted"
+    },
+    "mobility_activities": {
+      "mobilised": true,
+      "walking_distance": "To dining room and lounge with frame, approx 50 meters total",
+      "equipment_used": [
+        "Walking frame"
+      ],
+      "falls_incidents": false,
+      "activities_participated": [
+        "Music therapy session",
+        "Bingo",
+        "Sitting in garden with other residents"
+      ],
+      "engagement_level": "fully_engaged"
+    },
+    "social_interaction": {
+      "visitors": [
+        "Daughter Margaret - visited 3pm-4:30pm"
+      ],
+      "interactions_with_others": "Chatted with other residents during activities. Particularly friendly with Joan and Maureen",
+      "group_activities": [
+        "Music therapy",
+        "Bingo"
+      ]
+    },
+    "health_observations": {
+      "temperature": 36.8,
+      "blood_pressure": "128/82",
+      "pulse": 76,
+      "respiration_rate": null,
+      "oxygen_saturation": null,
+      "blood_sugar": 6.2,
+      "weight": null,
+      "concerns": "All observations within normal range for Betty"
+    },
+    "sleep_pattern": {
+      "time_to_bed": "21:30",
+      "settled_time": "22:00",
+      "sleep_quality": "good",
+      "wake_ups": 1,
+      "time_woke": "03:00 for bathroom, resettled quickly"
+    },
+    "incidents_concerns": [],
+    "handover_notes": "Good day overall. Continue to monitor lunch intake. Family visit went well - Betty very happy after. Continue current care plan",
+    "overall_wellbeing": "good",
+    "id": "69149b878d1185f5f116687a",
+    "created_date": "2025-11-12T14:36:55.864000",
+    "updated_date": "2025-11-12T16:32:21.107000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

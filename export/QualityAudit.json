@@ -1,0 +1,111 @@
+[
+  {
+    "audit_type": "medication",
+    "audit_date": "2025-01-05",
+    "auditor": "Sarah Johnson - Care Manager",
+    "audit_period": "December 2024",
+    "areas_checked": [
+      {
+        "area": "MAR Sheet Completion",
+        "compliant": true,
+        "score": 98,
+        "evidence": "15 MAR sheets reviewed. 1 minor error found (signature unclear)",
+        "good_practice": [
+          "All administrations recorded promptly",
+          "Clear coding system used",
+          "No missed signatures"
+        ],
+        "issues_identified": [
+          "One staff member's signature illegible on 2 occasions"
+        ],
+        "recommendations": [
+          "Remind staff to print name alongside signature if signature unclear"
+        ]
+      },
+      {
+        "area": "Medication Storage",
+        "compliant": true,
+        "score": 100,
+        "evidence": "Medicine trolley and cupboard inspected",
+        "good_practice": [
+          "All medications stored correctly",
+          "Temperature monitoring up to date",
+          "Controlled drugs double-signed",
+          "Stock levels appropriate"
+        ],
+        "issues_identified": [],
+        "recommendations": []
+      },
+      {
+        "area": "Medication Ordering",
+        "compliant": true,
+        "score": 95,
+        "evidence": "Ordering records reviewed for December",
+        "good_practice": [
+          "Regular ordering system in place",
+          "Good communication with pharmacy"
+        ],
+        "issues_identified": [
+          "One occasion where stock ran low before reorder"
+        ],
+        "recommendations": [
+          "Review reorder levels for high-use medications"
+        ]
+      },
+      {
+        "area": "Staff Competency",
+        "compliant": true,
+        "score": 100,
+        "evidence": "All staff administering medications have current competency",
+        "good_practice": [
+          "Regular competency assessments",
+          "Good supervision system"
+        ],
+        "issues_identified": [],
+        "recommendations": []
+      }
+    ],
+    "overall_score": 98,
+    "overall_rating": "excellent",
+    "key_findings": "Excellent medication management practices. High compliance with policies. Minor improvements needed on signature clarity and stock management",
+    "actions_required": [
+      {
+        "action": "Team reminder about signature legibility",
+        "priority": "low",
+        "responsible_person": "Sarah Johnson",
+        "target_date": "2025-01-15",
+        "status": "completed",
+        "completion_date": "2025-01-12",
+        "completion_evidence": "Team meeting held, reminder given"
+      },
+      {
+        "action": "Review reorder levels with pharmacy",
+        "priority": "medium",
+        "responsible_person": "Sarah Johnson",
+        "target_date": "2025-01-31",
+        "status": "in_progress",
+        "completion_date": null,
+        "completion_evidence": null
+      }
+    ],
+    "comparison_to_previous": {
+      "previous_score": 96,
+      "improvement": true,
+      "trend": "Positive trend - scores improving"
+    },
+    "regulatory_compliance": {
+      "cqc_compliant": true,
+      "breaches_identified": [],
+      "notification_required": false
+    },
+    "follow_up_audit_date": "2025-04-05",
+    "manager_reviewed": true,
+    "manager_comments": "Very pleased with medication audit results. Team working well. Continue current high standards",
+    "id": "69149eb41e62625d34254b6d",
+    "created_date": "2025-11-12T14:50:28.664000",
+    "updated_date": "2025-11-12T14:50:28.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

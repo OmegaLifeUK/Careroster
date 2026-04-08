@@ -1,0 +1,224 @@
+[
+  {
+    "workflow_status": "in_progress",
+    "documents_uploaded": false,
+    "welcome_email_sent": false,
+    "onboarding_task_id": null,
+    "notes": null,
+    "initial_assessment_completed": false,
+    "progress_percentage": 0,
+    "steps": [
+      {
+        "notes": "Failed to send email",
+        "completed_by": null,
+        "step_name": "Send Welcome Email",
+        "step_type": "email",
+        "status": "failed",
+        "completed_date": null
+      },
+      {
+        "notes": "Failed to create task",
+        "completed_by": null,
+        "step_name": "Create Onboarding Task",
+        "step_type": "task",
+        "status": "failed",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Initial Assessment",
+        "step_type": "assessment",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Create Care Plan",
+        "step_type": "document",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Upload Required Documents",
+        "step_type": "document",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Schedule First Visit",
+        "step_type": "system",
+        "status": "pending",
+        "completed_date": null
+      }
+    ],
+    "crm_record_created": true,
+    "client_id": "69ce031f2a3c12269506ccff",
+    "onboarding_task_created": false,
+    "care_plan_created": false,
+    "completion_date": null,
+    "welcome_email_sent_date": null,
+    "assigned_staff_id": "69cce91cb07ca131f82ce18a",
+    "expected_completion_date": "2026-04-09",
+    "start_date": "2026-04-02T05:48:16.052Z",
+    "id": "69ce03209d83af1102c82bd2",
+    "created_date": "2026-04-02T05:48:16.271000",
+    "updated_date": "2026-04-02T05:48:17.926000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "workflow_status": "in_progress",
+    "documents_uploaded": false,
+    "welcome_email_sent": false,
+    "onboarding_task_id": null,
+    "notes": null,
+    "initial_assessment_completed": false,
+    "progress_percentage": 0,
+    "steps": [
+      {
+        "notes": "Failed to send email",
+        "completed_by": null,
+        "step_name": "Send Welcome Email",
+        "step_type": "email",
+        "status": "failed",
+        "completed_date": null
+      },
+      {
+        "notes": "Failed to create task",
+        "completed_by": null,
+        "step_name": "Create Onboarding Task",
+        "step_type": "task",
+        "status": "failed",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Initial Assessment",
+        "step_type": "assessment",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Create Care Plan",
+        "step_type": "document",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Upload Required Documents",
+        "step_type": "document",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "notes": null,
+        "completed_by": null,
+        "step_name": "Schedule First Visit",
+        "step_type": "system",
+        "status": "pending",
+        "completed_date": null
+      }
+    ],
+    "crm_record_created": true,
+    "client_id": "69ce00c93d1f2d28910c1849",
+    "onboarding_task_created": false,
+    "care_plan_created": false,
+    "completion_date": null,
+    "welcome_email_sent_date": null,
+    "assigned_staff_id": "69cce91cb07ca131f82ce18a",
+    "expected_completion_date": "2026-04-09",
+    "start_date": "2026-04-02T05:38:19.830Z",
+    "id": "69ce00cc0e34629946a8fb54",
+    "created_date": "2026-04-02T05:38:20.302000",
+    "updated_date": "2026-04-02T05:38:22.539000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "assigned_staff_id": "697a39a421dd05afc4c37460",
+    "care_plan_created": false,
+    "client_id": "69c0ff4222faba6a5b96513f",
+    "completion_date": null,
+    "crm_record_created": true,
+    "documents_uploaded": false,
+    "expected_completion_date": "2026-03-30",
+    "initial_assessment_completed": false,
+    "notes": null,
+    "onboarding_task_created": false,
+    "onboarding_task_id": null,
+    "progress_percentage": 0,
+    "start_date": "2026-03-23T08:52:20.539Z",
+    "steps": [
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": "Failed to send email",
+        "status": "failed",
+        "step_name": "Send Welcome Email",
+        "step_type": "email"
+      },
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": "Failed to create task",
+        "status": "failed",
+        "step_name": "Create Onboarding Task",
+        "step_type": "task"
+      },
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": null,
+        "status": "pending",
+        "step_name": "Initial Assessment",
+        "step_type": "assessment"
+      },
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": null,
+        "status": "pending",
+        "step_name": "Create Care Plan",
+        "step_type": "document"
+      },
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": null,
+        "status": "pending",
+        "step_name": "Upload Required Documents",
+        "step_type": "document"
+      },
+      {
+        "completed_by": null,
+        "completed_date": null,
+        "notes": null,
+        "status": "pending",
+        "step_name": "Schedule First Visit",
+        "step_type": "system"
+      }
+    ],
+    "welcome_email_sent": false,
+    "welcome_email_sent_date": null,
+    "workflow_status": "in_progress",
+    "id": "69c0ff45c33db17c4d0f2ce6",
+    "created_date": "2026-03-23T08:52:21.151000",
+    "updated_date": "2026-03-23T08:52:23.282000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  }
+]

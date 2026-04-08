@@ -1,0 +1,349 @@
+[
+  {
+    "scheduled_report_id": null,
+    "report_name": "Report - Jan 6, 2026",
+    "report_type": "occupancy",
+    "generated_date": "2026-01-06T15:21:08.300Z",
+    "generated_by": "p.holt@omegalife.uk",
+    "parameters_used": {
+      "dateRange": "custom",
+      "startDate": "2025-09-09",
+      "endDate": "2026-01-06",
+      "clientIds": [],
+      "staffIds": [],
+      "includeCharts": true,
+      "includeSummary": true,
+      "includeDetails": true,
+      "outputFormat": "pdf",
+      "emailRecipients": ""
+    },
+    "report_data": {
+      "summary": "Report type not implemented"
+    },
+    "file_url": null,
+    "status": "completed",
+    "error_message": null,
+    "sent_to": [],
+    "id": "695d28646fd6262c4738df7f",
+    "created_date": "2026-01-06T15:21:08.522000",
+    "updated_date": "2026-01-06T15:21:08.522000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "scheduled_report_id": null,
+    "report_name": "Client Progress Report - Jan 6, 2026",
+    "report_type": "client_progress",
+    "generated_date": "2026-01-06T15:20:01.306Z",
+    "generated_by": "p.holt@omegalife.uk",
+    "parameters_used": {
+      "dateRange": "last_30_days",
+      "startDate": "2025-12-07",
+      "endDate": "2026-01-06",
+      "clientIds": [
+        "694146c3b47d88b4898e0e0d"
+      ],
+      "staffIds": [],
+      "includeCharts": true,
+      "includeSummary": true,
+      "includeDetails": true,
+      "outputFormat": "pdf",
+      "emailRecipients": ""
+    },
+    "report_data": {
+      "summary": {
+        "total_records": 1,
+        "clients_tracked": 1,
+        "improvements": 0,
+        "stable": 0,
+        "declines": 0,
+        "average_rating": "2.0"
+      },
+      "by_client": {
+        "694146c3b47d88b4898e0e0d": {
+          "name": "Logan Jones",
+          "records": [
+            {
+              "client_id": "694146c3b47d88b4898e0e0d",
+              "record_date": "2025-12-19",
+              "record_type": "weekly",
+              "recorded_by": "m.carter@omegalife.uk",
+              "behaviour": {
+                "overall_rating": 3,
+                "trend": "Declining",
+                "positive_behaviours": [],
+                "challenging_behaviours": [
+                  "Self-harm",
+                  "Struggling to get up for school",
+                  "Refusing to attend education",
+                  "Vaping in school",
+                  "Abusive language towards teachers",
+                  "Multiple school exclusions",
+                  "Struggling to maintain personal hygiene",
+                  "Struggling to take medication consistently",
+                  "Excessive snacking on crisps and chocolate",
+                  "Struggling to engage in physical activities",
+                  "Selectivity with food",
+                  "Making unkind remarks towards the team",
+                  "Substance misuse",
+                  "Refusing dental and optical appointments"
+                ],
+                "incidents_count": null,
+                "notes": "Engagement in de-briefs and reflections after incidents is noted, signaling some awareness of behaviours."
+              },
+              "education_schooling": {
+                "overall_rating": 1,
+                "trend": "Consistently Poor",
+                "attendance_percentage": null,
+                "punctuality": null,
+                "academic_progress": null,
+                "engagement_level": null,
+                "homework_completion": null,
+                "subjects_excelling": [],
+                "subjects_struggling": [],
+                "school_feedback": null,
+                "notes": "Logan has been refusing to attend school and has received multiple exclusions, severely limiting educational progress."
+              },
+              "social_emotional": {
+                "overall_rating": 2,
+                "trend": "Declining",
+                "peer_relationships": null,
+                "family_contact": null,
+                "emotional_regulation": null,
+                "self_esteem": null,
+                "communication_skills": null,
+                "friendships": null,
+                "notes": "Logan is struggling with emotional management, requiring immediate counseling support."
+              },
+              "health_wellbeing": {
+                "overall_rating": 2,
+                "trend": "Declining",
+                "physical_health": null,
+                "mental_health": null,
+                "sleep_quality": null,
+                "appetite": null,
+                "medication_compliance": null,
+                "appointments_attended": null,
+                "appointments_missed": null,
+                "notes": "Logan's physical health is a concern due to substance misuse and lack of proper nutrition."
+              },
+              "independence_skills": {
+                "overall_rating": 2,
+                "trend": "Stagnant",
+                "personal_care": null,
+                "domestic_skills": null,
+                "money_management": null,
+                "travel_independence": null,
+                "skills_developed": [],
+                "goals_achieved": [],
+                "notes": "There is a lack of progress in independence skills, particularly concerning personal hygiene and self-care routines."
+              },
+              "activities_engagement": {
+                "overall_rating": 2,
+                "trend": "Declining",
+                "activities_participated": [],
+                "hobbies_interests": [],
+                "community_involvement": null,
+                "notes": "Logan is not engaging in physical activities, which is affecting overall health and well-being."
+              },
+              "care_plan_goals": [],
+              "key_achievements": [],
+              "concerns": [
+                "Logan exhibits multiple challenging behaviours that impede educational attendance and emotional stability.",
+                "There is a lack of consistent engagement in healthcare appointments, both dental and optical.",
+                "Substance misuse and the refusal to attend school are critical areas of concern."
+              ],
+              "recommendations": [
+                "Immediate engagement with school support services to address attendance issues.",
+                "Initiate counseling sessions as soon as possible to begin emotional skills development.",
+                "Work with nutritionists to create a meal plan that encourages a balanced diet, especially focusing on incorporating fruits and vegetables.",
+                "Encourage gradual involvement in physical activities to promote overall health.",
+                "Develop a structured daily routine that emphasizes a proper sleep schedule."
+              ],
+              "overall_progress": "Logan is currently facing significant challenges across several areas, with minimal progress on active care plan goals. Immediate interventions and support are necessary to address these issues.",
+              "overall_rating": 2,
+              "next_review_date": null,
+              "shared_with": [],
+              "id": "69453dfb532f0dd6a84aa75a",
+              "created_date": "2025-12-19T11:58:51.699000",
+              "updated_date": "2025-12-19T11:58:51.699000",
+              "created_by_id": "6909d012185f56ea55d9e5a3",
+              "created_by": "m.carter@omegalife.uk",
+              "is_sample": false
+            }
+          ]
+        }
+      },
+      "period": {
+        "start": "2025-12-07",
+        "end": "2026-01-06"
+      }
+    },
+    "file_url": null,
+    "status": "completed",
+    "error_message": null,
+    "sent_to": [],
+    "id": "695d2822113b5af9ffc6ea55",
+    "created_date": "2026-01-06T15:20:02.202000",
+    "updated_date": "2026-01-06T15:20:02.202000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "scheduled_report_id": null,
+    "report_name": "Client Progress Report - Dec 15, 2025",
+    "report_type": "client_progress",
+    "generated_date": "2025-12-15T16:35:58.899Z",
+    "generated_by": "p.holt@omegalife.uk",
+    "parameters_used": {
+      "dateRange": "last_30_days",
+      "startDate": "2025-11-15",
+      "endDate": "2025-12-15",
+      "clientIds": [
+        "692f03f12961d743e9f36465"
+      ],
+      "staffIds": [],
+      "includeCharts": true,
+      "includeSummary": true,
+      "includeDetails": true,
+      "outputFormat": "pdf",
+      "emailRecipients": "flipholt72@yahoo.co.uk"
+    },
+    "report_data": {
+      "summary": {
+        "total_records": 1,
+        "clients_tracked": 1,
+        "improvements": 0,
+        "stable": 0,
+        "declines": 0,
+        "average_rating": "2.0"
+      },
+      "by_client": {
+        "692f03f12961d743e9f36465": {
+          "name": "Jenny Carter",
+          "records": [
+            {
+              "client_id": "692f03f12961d743e9f36465",
+              "record_date": "2025-12-02",
+              "record_type": "weekly",
+              "recorded_by": "p.holt@omegalife.uk",
+              "behaviour": {
+                "overall_rating": 2,
+                "trend": "improving",
+                "positive_behaviours": [],
+                "challenging_behaviours": [
+                  "Self-harm",
+                  "Substance misuse",
+                  "Aggressive outbursts",
+                  "Disengagement",
+                  "Property damage"
+                ],
+                "incidents_count": null,
+                "notes": "Logan's behavior shows a pattern of escalation, particularly when she feels emotionally triggered."
+              },
+              "education_schooling": {
+                "overall_rating": 4,
+                "trend": "Negative",
+                "attendance_percentage": null,
+                "punctuality": null,
+                "academic_progress": null,
+                "engagement_level": null,
+                "homework_completion": null,
+                "subjects_excelling": [],
+                "subjects_struggling": [],
+                "school_feedback": null,
+                "notes": "Logan's academic engagement is hindered by her emotional state and behavioral issues, leading to missed educational opportunities."
+              },
+              "social_emotional": {
+                "overall_rating": 2,
+                "trend": "Negative",
+                "peer_relationships": null,
+                "family_contact": null,
+                "emotional_regulation": null,
+                "self_esteem": null,
+                "communication_skills": null,
+                "friendships": null,
+                "notes": "Logan's social interactions are strained; she exhibits aggressive behaviors and struggles to maintain relationships."
+              },
+              "health_wellbeing": {
+                "overall_rating": 3,
+                "trend": "Negative",
+                "physical_health": null,
+                "mental_health": null,
+                "sleep_quality": null,
+                "appetite": null,
+                "medication_compliance": null,
+                "appointments_attended": null,
+                "appointments_missed": null,
+                "notes": "Logan's health is a significant concern, particularly regarding substance misuse and emotional self-harm."
+              },
+              "independence_skills": {
+                "overall_rating": 3,
+                "trend": "Negative",
+                "personal_care": null,
+                "domestic_skills": null,
+                "money_management": null,
+                "travel_independence": null,
+                "skills_developed": [],
+                "goals_achieved": [],
+                "notes": "Logan demonstrates limited independence skills, particularly with self-regulation and adhering to safety guidelines."
+              },
+              "activities_engagement": {
+                "overall_rating": 3,
+                "trend": "Negative",
+                "activities_participated": [],
+                "hobbies_interests": [],
+                "community_involvement": null,
+                "notes": "Logan shows little interest in structured activities and often refuses participation."
+              },
+              "care_plan_goals": [],
+              "key_achievements": [],
+              "concerns": [
+                "Self-harm behaviors and suicide ideation history.",
+                "Substance misuse, including illegal substances.",
+                "Disengagement from the support team and refusal of care.",
+                "Aggressive behaviors towards peers and staff.",
+                "Property damage and physical confrontations."
+              ],
+              "recommendations": [
+                "Establish active care plan goals that focus on mental health support and coping strategies.",
+                "Engage Logan in setting her personal goals to enhance her sense of agency.",
+                "Provide regular check-ins with mental health professionals to monitor progress.",
+                "Incorporate more structured activities to help channel her energy positively.",
+                "Explore therapy options focusing on emotional regulation and substance misuse."
+              ],
+              "overall_progress": "Logan has demonstrated significant challenges in her behavior and emotional regulation recently. Her engagement with the team is inconsistent, and there are notable concerns regarding her mental health and well-being. The lack of active care plan goals may contribute to the ongoing issues. It is essential to establish clear objectives to support her development and address her needs effectively.",
+              "overall_rating": 2,
+              "next_review_date": null,
+              "shared_with": [],
+              "id": "692f05619894e965ff0ff460",
+              "created_date": "2025-12-02T15:27:29.320000",
+              "updated_date": "2025-12-02T15:27:29.320000",
+              "created_by_id": "6909e61b89f26ef7fa768434",
+              "created_by": "p.holt@omegalife.uk",
+              "is_sample": false
+            }
+          ]
+        }
+      },
+      "period": {
+        "start": "2025-11-15",
+        "end": "2025-12-15"
+      }
+    },
+    "file_url": null,
+    "status": "completed",
+    "error_message": null,
+    "sent_to": [
+      "flipholt72@yahoo.co.uk"
+    ],
+    "id": "694038ee521ad1c8502227b1",
+    "created_date": "2025-12-15T16:35:58.586000",
+    "updated_date": "2025-12-15T16:35:59.705000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  }
+]

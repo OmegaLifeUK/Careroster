@@ -1,0 +1,73 @@
+[
+  {
+    "client_id": "6914b519444801b5d13b928c",
+    "chart_date": "2025-01-12",
+    "repositioning_frequency_hours": 2,
+    "pressure_relieving_equipment": [
+      "Pressure-relieving mattress",
+      "Heel protectors",
+      "Positioning pillows"
+    ],
+    "at_risk_areas": [
+      "Sacrum",
+      "Heels",
+      "Hips"
+    ],
+    "repositioning_records": [
+      {
+        "time": "08:00",
+        "position": "left_side",
+        "position_details": "30-degree tilt, pillow between knees",
+        "skin_condition": "intact",
+        "areas_checked": [
+          "Sacrum",
+          "Right hip",
+          "Both heels"
+        ],
+        "concerns_noted": "",
+        "staff_initials": "AM",
+        "pillows_used": 3,
+        "comfort_checked": true
+      },
+      {
+        "time": "10:00",
+        "position": "semi_recumbent",
+        "position_details": "Head of bed raised 30 degrees",
+        "skin_condition": "intact",
+        "areas_checked": [
+          "Sacrum",
+          "Both hips"
+        ],
+        "concerns_noted": "",
+        "staff_initials": "JB",
+        "pillows_used": 2,
+        "comfort_checked": true
+      },
+      {
+        "time": "12:00",
+        "position": "right_side",
+        "position_details": "30-degree tilt, pillow between knees",
+        "skin_condition": "intact",
+        "areas_checked": [
+          "Sacrum",
+          "Left hip",
+          "Both heels"
+        ],
+        "concerns_noted": "",
+        "staff_initials": "TC",
+        "pillows_used": 3,
+        "comfort_checked": true
+      }
+    ],
+    "pressure_ulcers_present": false,
+    "pressure_ulcer_details": null,
+    "daily_summary": "All repositioning completed as per care plan. Skin remained intact throughout. Betty cooperative with all position changes",
+    "reviewed_by": "Sarah Johnson",
+    "id": "69149eb41e62625d34254b65",
+    "created_date": "2025-11-12T14:50:28.549000",
+    "updated_date": "2025-11-12T16:31:49.009000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

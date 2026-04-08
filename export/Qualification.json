@@ -1,0 +1,123 @@
+[
+  {
+    "qualification_name": "NVQ Level 3 Health & Social Care",
+    "description": "Advanced care qualification",
+    "level": "intermediate",
+    "id": "6909e7f22522fdf33fb86ebf",
+    "created_date": "2025-11-04T11:48:02.797000",
+    "updated_date": "2025-11-04T11:48:02.797000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Dementia Care Specialist",
+    "description": "Specialized dementia care training",
+    "level": "specialist",
+    "id": "6909e7f22522fdf33fb86ec1",
+    "created_date": "2025-11-04T11:48:02.797000",
+    "updated_date": "2025-11-04T11:48:02.797000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Medication Administration",
+    "description": "Qualified to administer medications",
+    "level": "intermediate",
+    "id": "6909e7f22522fdf33fb86ec2",
+    "created_date": "2025-11-04T11:48:02.797000",
+    "updated_date": "2025-11-04T11:48:02.797000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "First Aid Certificate",
+    "description": "Emergency first aid training",
+    "level": "basic",
+    "id": "6909e7f22522fdf33fb86ec0",
+    "created_date": "2025-11-04T11:48:02.797000",
+    "updated_date": "2025-11-04T11:48:02.797000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "NVQ Level 2 Health & Social Care",
+    "description": "Basic care qualification",
+    "level": "basic",
+    "id": "6909e7f22522fdf33fb86ebe",
+    "created_date": "2025-11-04T11:48:02.797000",
+    "updated_date": "2025-11-04T11:48:02.797000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Care Certificate",
+    "description": "Standard UK care qualification",
+    "level": "basic",
+    "id": "6909d76f3b6d86e51e0806a6",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "NVQ Level 3 Health & Social Care",
+    "description": "Advanced care qualification",
+    "level": "advanced",
+    "id": "6909d76f3b6d86e51e0806a8",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Dementia Care",
+    "description": "Specialized dementia care training",
+    "level": "specialist",
+    "id": "6909d76f3b6d86e51e0806ab",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Medication Administration",
+    "description": "Certified to administer medications",
+    "level": "specialist",
+    "id": "6909d76f3b6d86e51e0806a9",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "First Aid",
+    "description": "Emergency first aid training",
+    "level": "basic",
+    "id": "6909d76f3b6d86e51e0806aa",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "NVQ Level 2 Health & Social Care",
+    "description": "National Vocational Qualification",
+    "level": "intermediate",
+    "id": "6909d76f3b6d86e51e0806a7",
+    "created_date": "2025-11-04T10:37:35.328000",
+    "updated_date": "2025-11-04T10:37:35.328000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

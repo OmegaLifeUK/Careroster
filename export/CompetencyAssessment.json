@@ -1,0 +1,77 @@
+[
+  {
+    "staff_id": "carer_anna_martinez",
+    "assessor_id": "sarah_johnson",
+    "assessment_date": "2024-11-15",
+    "competency_area": "medication_administration",
+    "assessment_method": "direct_observation",
+    "competency_criteria": [
+      {
+        "criterion": "Correctly identifies client before administration",
+        "met": true,
+        "evidence": "Anna checked client name, photo, and DOB before administering",
+        "assessor_notes": "Thorough checking process"
+      },
+      {
+        "criterion": "Checks medication against MAR sheet",
+        "met": true,
+        "evidence": "Anna carefully checked medication name, dose, and time against MAR sheet",
+        "assessor_notes": "Good attention to detail"
+      },
+      {
+        "criterion": "Administers medication safely",
+        "met": true,
+        "evidence": "Medication given correctly with water, client observed swallowing",
+        "assessor_notes": "Safe technique demonstrated"
+      },
+      {
+        "criterion": "Records administration accurately",
+        "met": true,
+        "evidence": "MAR sheet completed immediately with signature and time",
+        "assessor_notes": "Prompt and accurate recording"
+      },
+      {
+        "criterion": "Recognizes when not to administer",
+        "met": true,
+        "evidence": "Anna correctly identified that PRN painkiller could not be given (too soon since last dose)",
+        "assessor_notes": "Good clinical judgment"
+      },
+      {
+        "criterion": "Understands medication side effects",
+        "met": true,
+        "evidence": "Anna able to explain potential side effects of medications being administered",
+        "assessor_notes": "Good knowledge"
+      }
+    ],
+    "overall_outcome": "competent",
+    "strengths": [
+      "Very thorough checking process",
+      "Good rapport with clients during administration",
+      "Excellent record keeping",
+      "Good clinical knowledge"
+    ],
+    "development_areas": [
+      "Build confidence with more complex medications",
+      "Continue to develop knowledge of drug interactions"
+    ],
+    "action_plan": [
+      {
+        "action": "Shadow senior staff during specialist medication rounds (e.g., injections, patches)",
+        "support_required": "Senior staff mentoring",
+        "target_date": "2025-01-31"
+      }
+    ],
+    "reassessment_required": false,
+    "reassessment_date": null,
+    "valid_until": "2025-11-15",
+    "staff_comments": "Feel much more confident with medications now. Would like to learn about more specialist routes",
+    "assessor_signature": "S. Johnson",
+    "staff_signature": "A. Martinez",
+    "id": "69149eb41e62625d34254b6c",
+    "created_date": "2025-11-12T14:50:28.649000",
+    "updated_date": "2025-11-12T14:50:28.649000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

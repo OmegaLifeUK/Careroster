@@ -1,0 +1,71 @@
+[
+  {
+    "received_date": "2025-01-11",
+    "from_name": "John Matthews",
+    "relationship": "Client",
+    "client_id": "6914b519444801b5d13b928d",
+    "compliment_category": "professionalism",
+    "staff_mentioned": [
+      "James Wilson"
+    ],
+    "compliment_text": "Just wanted to say thanks to James. He's my regular carer and he's brilliant. Totally respects my independence, never makes me feel like I'm being 'looked after' - just helps with what I need. We have great chats about football and tech. He spotted that pressure sore developing and got the district nurse involved quickly. Professional but also feels like a mate. Makes a real difference to my days. Top bloke.",
+    "method_received": "email",
+    "shared_with_team": true,
+    "shared_date": "2025-01-11",
+    "used_in_marketing": true,
+    "added_to_staff_files": true,
+    "id": "69149eb41e62625d34254b70",
+    "created_date": "2025-11-12T14:50:28.686000",
+    "updated_date": "2025-11-12T16:32:48.632000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "received_date": "2025-01-09",
+    "from_name": "Mrs Foster",
+    "relationship": "Mother of client (Danny Foster)",
+    "client_id": "6914b519444801b5d13b928e",
+    "compliment_category": "compassion",
+    "staff_mentioned": [
+      "Emma Williams",
+      "Lucy Thompson"
+    ],
+    "compliment_text": "Thank you so much for the care and support you give Danny. Emma, you have been amazing at coordinating his care and always keeping us in the loop. Lucy handled that situation with the staff change really well - Danny told us how kind she was. We appreciate the recent communication issue was dealt with so professionally. Danny is thriving in his flat and that's down to your team. You help him build independence while keeping him safe. We're very grateful.",
+    "method_received": "card",
+    "shared_with_team": true,
+    "shared_date": "2025-01-10",
+    "used_in_marketing": false,
+    "added_to_staff_files": true,
+    "id": "69149eb41e62625d34254b71",
+    "created_date": "2025-11-12T14:50:28.686000",
+    "updated_date": "2025-11-12T16:31:29.129000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "received_date": "2025-01-08",
+    "from_name": "Margaret Thompson",
+    "relationship": "Daughter of client (Elizabeth Barrett)",
+    "client_id": "6914b519444801b5d13b928c",
+    "compliment_category": "staff_excellence",
+    "staff_mentioned": [
+      "Anna Martinez",
+      "Sarah Johnson",
+      "All care team"
+    ],
+    "compliment_text": "I wanted to write and thank the wonderful team at the home for the exceptional care you provide for my mother Betty. Anna in particular has been absolutely wonderful - she has such patience and kindness with Mum. Mum lights up when Anna arrives. I also want to thank Sarah for managing everything so well and for keeping me informed about everything. The whole team goes above and beyond. When I visit, Mum is always clean, well-dressed, and happy. The recent safeguarding issue was handled with such professionalism - you protected my mother and kept me fully informed throughout. I can't thank you enough for giving me peace of mind that Mum is in the best possible hands. You are all angels.",
+    "method_received": "letter",
+    "shared_with_team": true,
+    "shared_date": "2025-01-10",
+    "used_in_marketing": true,
+    "added_to_staff_files": true,
+    "id": "69149eb41e62625d34254b6f",
+    "created_date": "2025-11-12T14:50:28.686000",
+    "updated_date": "2025-11-12T16:31:32.065000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

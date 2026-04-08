@@ -1,0 +1,104 @@
+[
+  {
+    "notes": null,
+    "legal_authority_document_url": null,
+    "consent_form_url": null,
+    "capacity_assessment_date": null,
+    "mental_capacity_assessed": true,
+    "mental_capacity_outcome": "fluctuating_capacity",
+    "client_id": "693aada092e58aacc76fb2d6",
+    "restrictions_or_conditions": null,
+    "review_date": null,
+    "consent_types": [
+      "care_provision",
+      "information_sharing",
+      "medical_treatment"
+    ],
+    "capacity_assessed_by": null,
+    "consent_relationship": "next_of_kin",
+    "consent_date": "2026-01-29",
+    "gdpr_compliance": {
+      "data_sharing_explained": null,
+      "right_to_withdraw_explained": null,
+      "privacy_notice_provided": null
+    },
+    "consent_given_by": "Sarah Williams",
+    "status": "obtained",
+    "id": "697b7df39ca2c5a328037be4",
+    "created_date": "2026-01-29T15:34:11.844000",
+    "updated_date": "2026-01-29T15:34:11.844000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "mental_capacity_assessed": true,
+    "mental_capacity_outcome": "has_capacity",
+    "capacity_assessment_date": null,
+    "capacity_assessed_by": null,
+    "consent_given_by": "John Whitfield",
+    "consent_relationship": "next_of_kin",
+    "consent_types": [
+      "care_provision",
+      "information_sharing",
+      "medical_treatment",
+      "data_processing",
+      "photography",
+      "personal_care"
+    ],
+    "legal_authority_document_url": null,
+    "consent_date": "2026-01-27",
+    "consent_form_url": "https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/public/6909d012185f56ea55d9e5a2/6fe423302_thumbnail_20250901_111610.jpg",
+    "restrictions_or_conditions": null,
+    "review_date": null,
+    "gdpr_compliance": {
+      "privacy_notice_provided": null,
+      "data_sharing_explained": null,
+      "right_to_withdraw_explained": null
+    },
+    "status": "obtained",
+    "notes": null,
+    "id": "6978be7bb918b84744afd945",
+    "created_date": "2026-01-27T13:32:43.944000",
+    "updated_date": "2026-01-27T13:32:43.944000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "mental_capacity_assessed": true,
+    "mental_capacity_outcome": null,
+    "capacity_assessment_date": null,
+    "capacity_assessed_by": null,
+    "consent_given_by": "ph",
+    "consent_relationship": "lasting_power_of_attorney",
+    "consent_types": [
+      "care_provision",
+      "information_sharing",
+      "medical_treatment",
+      "data_processing",
+      "photography",
+      "personal_care"
+    ],
+    "legal_authority_document_url": null,
+    "consent_date": "2026-01-09",
+    "consent_form_url": null,
+    "restrictions_or_conditions": null,
+    "review_date": null,
+    "gdpr_compliance": {
+      "privacy_notice_provided": null,
+      "data_sharing_explained": null,
+      "right_to_withdraw_explained": null
+    },
+    "status": "obtained",
+    "notes": null,
+    "id": "69613eec8a9191fe658b6fba",
+    "created_date": "2026-01-09T17:46:20.971000",
+    "updated_date": "2026-01-09T17:46:20.971000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  }
+]

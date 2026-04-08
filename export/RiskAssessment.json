@@ -1,0 +1,1863 @@
+[
+  {
+    "severity": null,
+    "existing_controls": [],
+    "monitoring_frequency": null,
+    "assessment_type": "general",
+    "equipment_required": [],
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "additional_controls": [],
+    "communication_requirements": null,
+    "residual_risk_level": null,
+    "assessed_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "risk_level": "Medium",
+    "review_date": null,
+    "environmental_factors": null,
+    "persons_at_risk": [],
+    "likelihood": null,
+    "reviews": [],
+    "incident_history": [],
+    "risk_identified": null,
+    "assessment_date": "2026-03-30",
+    "status": "active",
+    "id": "69ca18227e200cb7b3b327dc",
+    "created_date": "2026-03-30T06:28:50.079000",
+    "updated_date": "2026-03-30T06:28:50.079000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "severity": null,
+    "existing_controls": [],
+    "monitoring_frequency": null,
+    "assessment_type": "general",
+    "equipment_required": [],
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "additional_controls": [],
+    "communication_requirements": null,
+    "residual_risk_level": null,
+    "assessed_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "risk_level": "Medium",
+    "review_date": null,
+    "environmental_factors": null,
+    "persons_at_risk": [],
+    "likelihood": null,
+    "reviews": [],
+    "incident_history": [],
+    "risk_identified": null,
+    "assessment_date": "2026-03-30",
+    "status": "active",
+    "id": "69ca18212e766269084d7c82",
+    "created_date": "2026-03-30T06:28:49.735000",
+    "updated_date": "2026-03-30T06:28:49.735000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "Low to Moderate",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69677e0c3af857d3d4f73592",
+    "created_date": "2026-01-14T11:29:16.810000",
+    "updated_date": "2026-01-14T11:29:16.810000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "Medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69677e0c5759b2854462651c",
+    "created_date": "2026-01-14T11:29:16.383000",
+    "updated_date": "2026-01-14T11:29:16.383000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "High",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69677e0b3278b55374130bbb",
+    "created_date": "2026-01-14T11:29:15.971000",
+    "updated_date": "2026-01-14T11:29:15.971000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "Low",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696767ff72167207c50f90df",
+    "created_date": "2026-01-14T09:55:11.405000",
+    "updated_date": "2026-01-14T09:55:11.405000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "Low to Moderate",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696767fe1fa40160732c56a4",
+    "created_date": "2026-01-14T09:55:10.979000",
+    "updated_date": "2026-01-14T09:55:10.979000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "High",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696767fe7046d8e99b1bdf7d",
+    "created_date": "2026-01-14T09:55:10.331000",
+    "updated_date": "2026-01-14T09:55:10.331000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "High",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696767fda1b351bf82ccd2d6",
+    "created_date": "2026-01-14T09:55:09.792000",
+    "updated_date": "2026-01-14T09:55:09.792000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "Low to moderate",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "6967668abf26720408440147",
+    "created_date": "2026-01-14T09:48:58.085000",
+    "updated_date": "2026-01-14T09:48:58.085000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "High",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69676689262c44131a213a21",
+    "created_date": "2026-01-14T09:48:57.728000",
+    "updated_date": "2026-01-14T09:48:57.728000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-14",
+    "assessed_by": "m.carter@omegalife.uk",
+    "review_date": null,
+    "risk_identified": null,
+    "risk_level": "High",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69676689ae0b1f845f4da26f",
+    "created_date": "2026-01-14T09:48:57.340000",
+    "updated_date": "2026-01-14T09:48:57.340000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6911ec1d6eb7990d30ea4f8b",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Health complications from dental surgery recovery",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Regular monitoring of recovery and ensuring pain management strategies are followed.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696622cfedf681e6f2abd789",
+    "created_date": "2026-01-13T10:47:43.647000",
+    "updated_date": "2026-01-13T10:47:43.647000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6911ec1d6eb7990d30ea4f8b",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Potential for social isolation if not engaged in activities",
+    "risk_level": "high",
+    "likelihood": "possible",
+    "severity": "moderate",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Facilitate inclusion in peer groups or community activities.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696622cfab9312277c55304b",
+    "created_date": "2026-01-13T10:47:43.168000",
+    "updated_date": "2026-01-13T10:47:43.168000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6911ec1d6eb7990d30ea4f8b",
+    "assessment_type": "mental_capacity",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Sleep disruption impacting mental health",
+    "risk_level": "critical",
+    "likelihood": "likely",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Consistent administration of Melatonin and sleep hygiene practices; monitor sleep patterns.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696622ceced8e2c1ff2c8de1",
+    "created_date": "2026-01-13T10:47:42.730000",
+    "updated_date": "2026-01-13T10:47:42.730000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6911ec1d6eb7990d30ea4f8b",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Substance misuse relapse due to social influences",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Ongoing education about substance misuse and coping strategies; parental involvement in discussions.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696622ced7e4539d6e7ff389",
+    "created_date": "2026-01-13T10:47:42.303000",
+    "updated_date": "2026-01-13T10:47:42.303000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6911ec1d6eb7990d30ea4f8b",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Risk of self-harm due to anxiety or emotional distress",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Regular check-ins after therapy sessions and encouraging open communication about feelings.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "696622cdfc93c9db3f46f0bb",
+    "created_date": "2026-01-13T10:47:41.932000",
+    "updated_date": "2026-01-13T10:47:41.932000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Risk of emotional distress from social isolation.",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Encourage participation in community activities and provide emotional support sessions.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69661fd4170e91c971df66c8",
+    "created_date": "2026-01-13T10:35:00.781000",
+    "updated_date": "2026-01-13T10:35:00.781000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_type": "medication",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Potential medication mismanagement.",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Use medication reminders and charts; continuous education on the importance of adherence.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69661fd4c75df8fbcdf73373",
+    "created_date": "2026-01-13T10:35:00.401000",
+    "updated_date": "2026-01-13T10:35:00.401000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_type": "general",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Nutritional deficiencies from poor diet management.",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Regular monitoring of dietary intake, meal planning with a nutritionist, and encourage participation in meal preparations.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69661fd3258971a6c1ccb221",
+    "created_date": "2026-01-13T10:34:59.312000",
+    "updated_date": "2026-01-13T10:34:59.312000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_type": "falls",
+    "assessment_date": "2026-01-13",
+    "assessed_by": "flipholt72",
+    "review_date": "2026-04-13",
+    "risk_identified": "Risk of falls due to mobility difficulties.",
+    "risk_level": "critical",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Implement regular mobility assessments, use assistive devices, and ensure the home is free of trip hazards.",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": "low",
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": "weekly",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69661fd2170e91c971df66c7",
+    "created_date": "2026-01-13T10:34:58.910000",
+    "updated_date": "2026-01-13T10:34:58.910000",
+    "created_by_id": "695fc3e6b9e1541955c0a4fb",
+    "created_by": "flipholt72@yahoo.co.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Dental health: Overdue for dental check-ups and has refused recent reviews due to a fear of the dentist. History of multiple dental procedures.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Rebooking dental appointments",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offering incentives to attend appointments",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Team support for daily dental hygiene",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Discussions on the importance of dental hygiene",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "694146c83a2e5fdd5dee04c7",
+    "created_date": "2025-12-16T11:47:20.651000",
+    "updated_date": "2025-12-16T11:47:20.651000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Substance misuse: Concerns around purchasing and taking various substances, an incident regarding substance misuse in July. Vaping (e-cigarette use) with declining cessation support. ADHD medication is withheld due to substance concerns.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Ongoing YPDAAT support and keywork sessions",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Education on risks of substance misuse",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Support attending health appointments related to substance misuse",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Liaison with Alex Fanning from YPDAAT",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Withholding ADHD medication",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Not supporting time with certain friends (Liv, Sophie, Lilly, Maggie, Stevie, Mia, Ellie)",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "694146c65954bae78fd157f0",
+    "created_date": "2025-12-16T11:47:18.694000",
+    "updated_date": "2025-12-16T11:47:18.694000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Self-neglect: Risk of self-neglect if unsupported.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Ensure comprehensive care and support",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e19fc23da42b01d06cc",
+    "created_date": "2025-12-16T10:02:01.245000",
+    "updated_date": "2025-12-16T10:02:01.245000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Absconsion Risk: No history of leaving property unsafely.",
+    "risk_level": "low",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Standard monitoring",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e180674e3c05f7cf962",
+    "created_date": "2025-12-16T10:02:00.940000",
+    "updated_date": "2025-12-16T10:02:00.940000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Medication Risk: Cognitive impairment, polypharmacy, risk of omission or overdose if self-administered. Unable to self-administer safely.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Locked medication trolley",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Trained staff only",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Regular MAR audits",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "All medication administered by trained staff",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e18deb13c05de10bc3e",
+    "created_date": "2025-12-16T10:02:00.472000",
+    "updated_date": "2025-12-16T10:02:00.472000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Nutrition Risk: Moderate risk of weight loss due to small appetite and reduced intake.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Food and fluid charts",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Fortified meals",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Encouragement",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e18783c3a1172bb488f",
+    "created_date": "2025-12-16T10:02:00.136000",
+    "updated_date": "2025-12-16T10:02:00.136000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Pressure Ulcer Risk: At risk due to reduced mobility.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Repositioning schedule",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Pressure-relieving equipment",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Regular repositioning",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e1754d7e612d7b2c210",
+    "created_date": "2025-12-16T10:01:59.808000",
+    "updated_date": "2025-12-16T10:01:59.808000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-16",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-16",
+    "risk_identified": "Falls Risk: Poor balance, osteoporosis, cognitive impairment.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Mobility aids",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Supervision",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Environment checks",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Supervised transfers",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Zimmer frame",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Clear walkways",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Use of bed rails",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69412e179a5fe1d9a7cdf869",
+    "created_date": "2025-12-16T10:01:59.514000",
+    "updated_date": "2025-12-16T10:01:59.514000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-09",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-09",
+    "risk_identified": "Unauthorised Absences: Ruby's unauthorized absences from home, leading to concerns about safeguarding and potential removal from placement. She has been removed from college due to lack of engagement.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Requesting support from Catch 22",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Staff training on managing unauthorised absences",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Internal escalation for CAWN consideration",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Sourcing support from complex safeguarding team (Joanne Lethbridge)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Action plan upon return: encouraging engagement, returning home each night, paediatrician appointment, medication review, establishing 8am routine, pet care responsibilities, promoting activities, continuing employment, PFAL sessions for supported accommodation",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Contacting police and recording concern for welfare if Ruby does not answer the door for collection",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Staff to attend Emma's address to encourage Ruby to return home",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69381b462a2214aa4e043873",
+    "created_date": "2025-12-09T12:51:18.862000",
+    "updated_date": "2025-12-09T12:51:18.862000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Education and Attendance: Struggling with school attendance, punctuality, and engagement in lessons. Exhibits challenging behaviors at school including vaping, abusive language towards teachers, physical behaviors (pushing, blocking), resulting in multiple exclusions and refusals to attend.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Team encourages attendance and provides incentives",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Discuss informed choices about attending school (Keywork sessions)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Provide schoolwork if not attending",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Limit internet access to educational purposes if not attending school",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Implement a behavior support plan (sent to school)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Allocate a 1:1 support tutor in school",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Team supports GCSE preparation",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Encourage 1 piece of revision or educational discussion daily",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f03f5d8b58aa2d3508711",
+    "created_date": "2025-12-02T15:21:25.473000",
+    "updated_date": "2025-12-02T15:21:25.473000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Substance Misuse: History of using substances to suppress thoughts, including a previous substance misuse incident (26.04.2025), disclosed ketamine use (July), use of illegal substances, and vaping (disposable e-cigarettes).",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Engage with YPDDAT workers (sessions completed, but ongoing education needed)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Complete regular Keywork sessions on dangers and education around substances",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Support attendance at health appointments for substance misuse",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Keywork sessions on peer pressure, positive relationships, and healthy lifestyle choices",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f03f4ea71fdcbe0cd143c",
+    "created_date": "2025-12-02T15:21:24.989000",
+    "updated_date": "2025-12-02T15:21:24.989000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Self-Harm, Mental Health and Suicidal Ideation: History of self-harm, emotional struggles, and suicidal ideation, with incidents decreasing but still occurring (e.g., superficial scratches). Anticipated low mood and emotional sensitivity due to family relationship troubles and nan's dementia. Previously required hospital admissions.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Redirect self-harm thoughts (TV, driving, music for sleep)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Agreed phrase 'I want to make a cheesecake' for seeking support",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offer time with Logan and encourage environment change",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offer regulating activities (walk, drive, diamond art, listening to music)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Increase supervision with regular welfare checks (5-10 min)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Discuss support strategies with Logan (Keywork sessions)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Provide access to CAMHS crisis line (01244 393200 Mon-Fri 9-5, 0800 1456485 24/7)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Lock sharp knives/scissors in COSHH cupboard",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Dispose of broken/damaged items safely",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Escalate health and safety issues to maintenance",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Professional curiosity when Logan listens to 'Suicide' song",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Provide redirection/sleep box items (fidget toys, coloring, drawing, music, TV, lavender spray, heated teddy, weighted blanket)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Conduct Keywork sessions on coping techniques and managing emotions (using elastic bands)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Support engagement with Barnardo's/CAMHS",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Encourage use of relaxing bedroom items",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Discuss self-harm incidents and support needed",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Team to research additional coping techniques",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Provide first aid following incidents",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Support to A&E (consult NHS Direct 111 if refusal)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Contact on-call manager after incidents",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Conduct room search if significant harm concerns present (document disposal)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Keywork sessions on coping with self-harm and using clean objects to prevent infection",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Contact social worker/EDT (0345 0500148) after incidents",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Complete incident report with body map and reflection/chain analysis",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f03f4b5976300c387a80d",
+    "created_date": "2025-12-02T15:21:24.694000",
+    "updated_date": "2025-12-02T15:21:24.694000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Sleep Hygiene Issues: Struggles with sleep hygiene, settling times, and sometimes refuses medication. This impacts daily routine and education engagement.",
+    "risk_level": "low",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Robust evening routine",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Administration of Melatonin 6mg each evening",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Consistent boundaries around bedtime",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "De-escalation techniques for resistance",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f0224d88c6f550cf85c28",
+    "created_date": "2025-12-02T15:13:40.622000",
+    "updated_date": "2025-12-02T15:13:40.622000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Property Damage: Historically known to damage property when frustrated, including punching walls and throwing items around her bedroom and the lounge.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "De-escalation strategies",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Consistent boundaries",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Providing outlets for frustration",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Therapeutic support for emotional regulation",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f0224490d6261d6429f9c",
+    "created_date": "2025-12-02T15:13:40.260000",
+    "updated_date": "2025-12-02T15:13:40.260000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Absconding/Missing From Care (MFC): Multiple incidents of MFC, including leaving home with peers for inappropriate activities (e.g., substance use, festivals, unsafe locations). Threats to walk out of the home and to local bridge.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Team vigilance",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Door sensors (previously installed)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Consistent boundaries and routines",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "De-escalation strategies when unsettled",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Engaging Logan in positive activities",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f0223bfd44d0a72b049f4",
+    "created_date": "2025-12-02T15:13:39.765000",
+    "updated_date": "2025-12-02T15:13:39.765000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Aggressive and Challenging Behaviour: Exhibits impulsivity, shouting, swearing, throwing items, punching walls, and physical behaviours towards teachers (pushing past, blocking). Can make unkind remarks and create tension.",
+    "risk_level": "medium",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Consistent de-escalation techniques",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Clear and consistent boundaries and routines",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Key work sessions",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Open dialogue",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "De-briefs after incidents",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Functional assessments",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Chain analysis",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Self-regulation techniques",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Restorative work",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "1:1 talks",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offering drives/walks",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Providing space for reflection",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Using Spotify playlist",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Calm talking with active listening",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offering hugs",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Delayed engagement strategies",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "PRICE holds (as last resort for physical aggression/property damage/danger to life)",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f0223aae6717ab0618b59",
+    "created_date": "2025-12-02T15:13:39.444000",
+    "updated_date": "2025-12-02T15:13:39.444000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Substance Misuse: Disclosed use of ketamine and other illegal substances. Has been involved in gang-related activities and potential sexual exploitation risks. History of Missing From Care (MFC) linked to substance misuse.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Completion of YPDAAT course",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "CAMHS discussions",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Exploration of EMDR & CBT therapy",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Team vigilance for absconding",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Consistent boundaries and routines",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Functional assessments of behaviours",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f02235eb62e214c2d415c",
+    "created_date": "2025-12-02T15:13:39.152000",
+    "updated_date": "2025-12-02T15:13:39.152000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f0220e99fe1060f8e3d07",
+    "assessment_type": "general",
+    "assessment_date": "2025-12-02",
+    "assessed_by": "AI Import",
+    "review_date": "2026-03-02",
+    "risk_identified": "Self-harm and Suicide Ideation: History of superficial self-harm and suicide ideations. Expresses feelings of distress with phrases like 'I really don't like cheesecakes' or 'I want to make a cheesecake'.",
+    "risk_level": "high",
+    "likelihood": null,
+    "severity": null,
+    "persons_at_risk": [],
+    "existing_controls": [
+      {
+        "control_measure": "Consistent de-escalation techniques",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Key work sessions",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "CAMHS involvement",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Barnardo's sessions",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Exploring EMDR & CBT therapy",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "1:1 talks",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Offering time/space away from others",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Referring to Self-Help and Ask a Question facilities",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Contacting CAMHS Duty Professional/Crisis Line",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Contacting GP/Social Care/999/A&E if unable to keep safe",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [],
+    "residual_risk_level": null,
+    "environmental_factors": null,
+    "equipment_required": [],
+    "communication_requirements": null,
+    "monitoring_frequency": null,
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "692f0222a50b9a383662c414",
+    "created_date": "2025-12-02T15:13:38.552000",
+    "updated_date": "2025-12-02T15:13:38.552000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928e",
+    "assessment_type": "safeguarding",
+    "assessment_date": "2025-01-10",
+    "assessed_by": "Emma Williams",
+    "review_date": "2025-07-10",
+    "risk_identified": "Potential vulnerability to online exploitation due to autism and desire for social connection",
+    "risk_level": "medium",
+    "likelihood": "possible",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client - Daniel Foster"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Internet safety training completed (accessible format)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Gaming accounts set to private with parental controls",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Trusted contact list agreed",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Regular conversations about online safety",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Family aware and involved in monitoring",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [
+      {
+        "action": "Set up regular online safety refresher sessions",
+        "responsible_person": "Key worker",
+        "completion_date": "2025-02-10",
+        "status": "in_progress"
+      },
+      {
+        "action": "Support to join moderated autism-friendly online community",
+        "responsible_person": "Social inclusion officer",
+        "completion_date": "2025-03-10",
+        "status": "pending"
+      }
+    ],
+    "residual_risk_level": "low",
+    "environmental_factors": "Danny uses gaming as main social outlet. Positive aspect but requires safeguarding",
+    "equipment_required": [
+      "Parental control software",
+      "Written online safety guidelines (visual format)"
+    ],
+    "communication_requirements": "Use concrete examples. Danny responds well to 'what if' scenarios and role-play",
+    "monitoring_frequency": "weekly",
+    "incident_history": [
+      {
+        "date": "2024-08-12",
+        "incident": "Gave out personal address in online chat - immediately supported to understand risks"
+      }
+    ],
+    "reviews": [],
+    "status": "active",
+    "id": "69149b878d1185f5f1166879",
+    "created_date": "2025-11-12T14:36:55.797000",
+    "updated_date": "2025-11-12T16:32:23.926000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928d",
+    "assessment_type": "pressure_ulcer",
+    "assessment_date": "2025-01-08",
+    "assessed_by": "District Nurse Sarah Palmer",
+    "review_date": "2025-02-08",
+    "risk_identified": "High risk of pressure ulcers due to wheelchair use, limited repositioning ability",
+    "risk_level": "high",
+    "likelihood": "likely",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client - John Matthews"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Pressure-relieving wheelchair cushion (JAY cushion)",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Client able to perform pressure reliefs independently",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Regular skin checks during personal care visits",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "High-protein diet maintained",
+        "effectiveness": "effective"
+      }
+    ],
+    "additional_controls": [
+      {
+        "action": "Provide education on importance of regular pressure reliefs",
+        "responsible_person": "District Nurse",
+        "completion_date": "2025-01-15",
+        "status": "completed"
+      },
+      {
+        "action": "Install reminder system for pressure reliefs",
+        "responsible_person": "OT team",
+        "completion_date": "2025-01-25",
+        "status": "pending"
+      }
+    ],
+    "residual_risk_level": "medium",
+    "environmental_factors": "Client spends most of day in wheelchair. Adapted bed allows independent transfers",
+    "equipment_required": [
+      "Pressure-relieving wheelchair cushion",
+      "Mirror for self-skin checks",
+      "Moisturizing cream"
+    ],
+    "communication_requirements": "John is fully aware of risks and takes responsibility. Empowering approach essential",
+    "monitoring_frequency": "daily",
+    "incident_history": [],
+    "reviews": [],
+    "status": "active",
+    "id": "69149b878d1185f5f1166878",
+    "created_date": "2025-11-12T14:36:55.797000",
+    "updated_date": "2025-11-12T16:32:25.701000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928c",
+    "assessment_type": "falls",
+    "assessment_date": "2025-01-05",
+    "assessed_by": "Sarah Johnson",
+    "review_date": "2025-04-05",
+    "risk_identified": "Risk of falls due to mobility issues, dementia-related disorientation, and use of walking frame",
+    "risk_level": "high",
+    "likelihood": "likely",
+    "severity": "major",
+    "persons_at_risk": [
+      "Client - Elizabeth Barrett",
+      "Staff during transfers"
+    ],
+    "existing_controls": [
+      {
+        "control_measure": "Walking frame provided and within easy reach",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Non-slip footwear worn at all times",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Clear, well-lit pathways maintained",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Regular physiotherapy to maintain strength",
+        "effectiveness": "effective"
+      },
+      {
+        "control_measure": "Call bell within reach when seated/in bed",
+        "effectiveness": "partially_effective"
+      }
+    ],
+    "additional_controls": [
+      {
+        "action": "Install additional motion sensor lights in bathroom",
+        "responsible_person": "Maintenance team",
+        "completion_date": "2025-01-20",
+        "status": "in_progress"
+      },
+      {
+        "action": "Review and adjust bed height for easier transfers",
+        "responsible_person": "Sarah Johnson",
+        "completion_date": "2025-01-15",
+        "status": "completed"
+      }
+    ],
+    "residual_risk_level": "medium",
+    "environmental_factors": "Room on ground floor, bathroom close by. Carpeted floors provide cushioning but may increase trip hazard",
+    "equipment_required": [
+      "Walking frame with seat",
+      "Non-slip footwear",
+      "Low-rise bed",
+      "Motion sensor lights",
+      "Hip protectors"
+    ],
+    "communication_requirements": "Remind Elizabeth to use walking frame. She may forget due to dementia. Calm approach essential",
+    "monitoring_frequency": "daily",
+    "incident_history": [
+      {
+        "date": "2024-11-15",
+        "incident": "Small fall when attempting to reach window without frame. No injury"
+      },
+      {
+        "date": "2024-10-02",
+        "incident": "Near-miss - caught by staff when attempting to stand without frame"
+      }
+    ],
+    "reviews": [],
+    "status": "active",
+    "id": "69149b878d1185f5f1166877",
+    "created_date": "2025-11-12T14:36:55.797000",
+    "updated_date": "2025-11-12T16:32:26.880000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

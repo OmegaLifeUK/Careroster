@@ -1,0 +1,457 @@
+[
+  {
+    "activity_name": "Basket Weaving",
+    "description": "Testing",
+    "category": "arts_crafts",
+    "max_participants": 20,
+    "staff_required": 2,
+    "location": "main_hall",
+    "equipment_needed": [],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "sensory_friendly",
+      "low_mobility_suitable",
+      "adapted_equipment"
+    ],
+    "benefits": [],
+    "is_active": true,
+    "id": "695d2c781edd74de8c6155b6",
+    "created_date": "2026-01-06T15:38:32.318000",
+    "updated_date": "2026-01-06T15:38:32.318000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Music & Singing",
+    "description": "Interactive music session with singing and instruments",
+    "category": "social",
+    "max_participants": 12,
+    "staff_required": 1,
+    "location": "main_hall",
+    "equipment_needed": [
+      "Instruments",
+      "Music player",
+      "Song sheets"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "sensory_friendly",
+      "wheelchair_accessible"
+    ],
+    "benefits": [
+      "Memory stimulation",
+      "Mood improvement",
+      "Social bonding"
+    ],
+    "is_active": true,
+    "id": "6937f904fa24d72bb61e4fd6",
+    "created_date": "2025-12-09T10:25:08.664000",
+    "updated_date": "2025-12-09T10:25:08.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Life Skills - Cooking",
+    "description": "Practical cooking skills and meal preparation",
+    "category": "life_skills",
+    "max_participants": 6,
+    "staff_required": 2,
+    "location": "kitchen",
+    "equipment_needed": [
+      "Cooking equipment",
+      "Ingredients",
+      "Safety equipment"
+    ],
+    "risk_level": "high",
+    "accessibility": [
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Independence",
+      "Nutrition knowledge",
+      "Confidence"
+    ],
+    "is_active": true,
+    "id": "6937f904fa24d72bb61e4fd7",
+    "created_date": "2025-12-09T10:25:08.664000",
+    "updated_date": "2025-12-09T10:25:08.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Art & Crafts Workshop",
+    "description": "Creative painting and craft activities",
+    "category": "arts_crafts",
+    "max_participants": 8,
+    "staff_required": 2,
+    "location": "art_room",
+    "equipment_needed": [
+      "Paint brushes",
+      "Canvas",
+      "Aprons",
+      "Paint"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "low_mobility_suitable"
+    ],
+    "benefits": [
+      "Fine motor skills",
+      "Self expression",
+      "Social interaction"
+    ],
+    "is_active": true,
+    "id": "6937f904fa24d72bb61e4fd4",
+    "created_date": "2025-12-09T10:25:08.664000",
+    "updated_date": "2025-12-09T10:25:08.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Gentle Exercise Class",
+    "description": "Low-impact exercise for mobility and fitness",
+    "category": "physical",
+    "max_participants": 10,
+    "staff_required": 2,
+    "location": "main_hall",
+    "equipment_needed": [
+      "Exercise mats",
+      "Resistance bands",
+      "Chairs"
+    ],
+    "risk_level": "medium",
+    "accessibility": [
+      "wheelchair_accessible",
+      "low_mobility_suitable",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Improved mobility",
+      "Cardiovascular health",
+      "Strength"
+    ],
+    "is_active": true,
+    "id": "6937f904fa24d72bb61e4fd5",
+    "created_date": "2025-12-09T10:25:08.664000",
+    "updated_date": "2025-12-09T10:25:08.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Garden Club",
+    "description": "Gardening and outdoor activities",
+    "category": "therapeutic",
+    "max_participants": 8,
+    "staff_required": 2,
+    "location": "garden",
+    "equipment_needed": [
+      "Gardening tools",
+      "Gloves",
+      "Seeds",
+      "Watering cans"
+    ],
+    "risk_level": "medium",
+    "accessibility": [
+      "wheelchair_accessible",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Physical activity",
+      "Mental wellbeing",
+      "Sense of achievement"
+    ],
+    "is_active": true,
+    "id": "6937f904fa24d72bb61e4fd8",
+    "created_date": "2025-12-09T10:25:08.664000",
+    "updated_date": "2025-12-09T10:25:08.664000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Parental 1-2-1 session",
+    "description": "Parent and child session set up by social worker",
+    "category": "social",
+    "max_participants": 2,
+    "staff_required": 2,
+    "location": "main_hall",
+    "equipment_needed": [],
+    "risk_level": "high",
+    "accessibility": [],
+    "benefits": [],
+    "is_active": true,
+    "id": "6937f55b52cf29431604c2cf",
+    "created_date": "2025-12-09T10:09:31.724000",
+    "updated_date": "2025-12-09T10:09:31.724000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Gardening Club",
+    "description": "Outdoor gardening activities including planting, weeding, harvesting vegetables and maintaining flower beds.",
+    "category": "recreational",
+    "max_participants": 8,
+    "staff_required": 2,
+    "location": "garden",
+    "equipment_needed": [
+      "Gardening tools",
+      "Seeds/plants",
+      "Gloves",
+      "Watering cans",
+      "Wheelbarrow"
+    ],
+    "risk_level": "medium",
+    "accessibility": [
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Physical activity",
+      "Connection with nature",
+      "Responsibility",
+      "Patience"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d6",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Arts & Crafts Workshop",
+    "description": "Creative art sessions including painting, drawing, card making, and seasonal crafts. Develops fine motor skills and self-expression.",
+    "category": "arts_crafts",
+    "max_participants": 10,
+    "staff_required": 2,
+    "location": "art_room",
+    "equipment_needed": [
+      "Paints",
+      "Brushes",
+      "Paper",
+      "Craft supplies",
+      "Aprons",
+      "Easels"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Fine motor skills",
+      "Creative expression",
+      "Confidence building",
+      "Social interaction"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364cf",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "IT Skills Workshop",
+    "description": "Computer and tablet skills training covering email, internet safety, social media, and video calls. Tailored to individual ability.",
+    "category": "educational",
+    "max_participants": 6,
+    "staff_required": 2,
+    "location": "quiet_room",
+    "equipment_needed": [
+      "Computers/tablets",
+      "Internet access",
+      "Headphones",
+      "Training materials"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Digital literacy",
+      "Communication",
+      "Independence",
+      "Modern skills"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d4",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Community Trips",
+    "description": "Supported trips to local shops, cafes, parks, or attractions. Develops travel skills and community integration.",
+    "category": "community_access",
+    "max_participants": 4,
+    "staff_required": 2,
+    "location": "community",
+    "equipment_needed": [
+      "Transport",
+      "Emergency contacts",
+      "First aid kit",
+      "Money for activities"
+    ],
+    "risk_level": "high",
+    "accessibility": [
+      "wheelchair_accessible"
+    ],
+    "benefits": [
+      "Community integration",
+      "Social skills",
+      "Travel independence",
+      "Real-world experience"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d5",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Music Therapy Session",
+    "description": "Therapeutic music session with singing, instrument playing, and music appreciation. Led by qualified music therapist.",
+    "category": "therapeutic",
+    "max_participants": 8,
+    "staff_required": 2,
+    "location": "quiet_room",
+    "equipment_needed": [
+      "Musical instruments",
+      "Music player",
+      "Song sheets",
+      "Recording equipment"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "sensory_friendly",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Emotional wellbeing",
+      "Self-expression",
+      "Memory stimulation",
+      "Relaxation"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d3",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Gentle Exercise Class",
+    "description": "Low-impact exercise session including chair exercises, stretching, and gentle movement to music. Suitable for all mobility levels.",
+    "category": "physical",
+    "max_participants": 12,
+    "staff_required": 2,
+    "location": "main_hall",
+    "equipment_needed": [
+      "Exercise mats",
+      "Chairs",
+      "Resistance bands",
+      "Light weights",
+      "Music system"
+    ],
+    "risk_level": "medium",
+    "accessibility": [
+      "wheelchair_accessible",
+      "low_mobility_suitable",
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Physical fitness",
+      "Flexibility",
+      "Balance improvement",
+      "Energy levels"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d0",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Social Coffee Morning",
+    "description": "Informal social gathering with refreshments, conversation, and games. Focuses on building friendships and community.",
+    "category": "social",
+    "max_participants": 15,
+    "staff_required": 1,
+    "location": "main_hall",
+    "equipment_needed": [
+      "Coffee machine",
+      "Cups",
+      "Board games",
+      "Comfortable seating"
+    ],
+    "risk_level": "low",
+    "accessibility": [
+      "wheelchair_accessible",
+      "sensory_friendly"
+    ],
+    "benefits": [
+      "Social connection",
+      "Reduce isolation",
+      "Communication skills",
+      "Peer support"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d1",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_name": "Life Skills Cooking",
+    "description": "Practical cooking sessions teaching meal preparation, nutrition, and kitchen safety. Participants prepare meals to take home.",
+    "category": "life_skills",
+    "max_participants": 6,
+    "staff_required": 2,
+    "location": "kitchen",
+    "equipment_needed": [
+      "Kitchen equipment",
+      "Ingredients",
+      "Recipe cards",
+      "Aprons",
+      "Safety equipment"
+    ],
+    "risk_level": "medium",
+    "accessibility": [
+      "adapted_equipment"
+    ],
+    "benefits": [
+      "Independence",
+      "Nutrition knowledge",
+      "Kitchen skills",
+      "Confidence"
+    ],
+    "is_active": true,
+    "id": "6912fb16a5af9a0b245364d2",
+    "created_date": "2025-11-11T09:00:06.130000",
+    "updated_date": "2025-11-11T09:00:06.130000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

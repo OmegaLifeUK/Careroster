@@ -1,0 +1,56 @@
+[
+  {
+    "report_name": "Weekly report",
+    "report_type": "client_progress",
+    "parameters": {
+      "date_range_type": "last_period",
+      "include_summary": true,
+      "include_details": true
+    },
+    "schedule_frequency": "weekly",
+    "schedule_day": 1,
+    "schedule_time": "08:00",
+    "next_run_date": "2026-01-12T08:00:00.000Z",
+    "last_run_date": null,
+    "last_run_status": null,
+    "recipients": [],
+    "output_format": "email_summary",
+    "is_active": false,
+    "include_charts": true,
+    "notes": "",
+    "id": "695d289b4ce94f075bf94c87",
+    "created_date": "2026-01-06T15:22:03.886000",
+    "updated_date": "2026-01-06T15:22:15.394000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "report_name": "Training Compliance",
+    "report_type": "training_compliance",
+    "parameters": {
+      "date_range_type": "last_period",
+      "include_summary": true,
+      "include_details": true
+    },
+    "schedule_frequency": "fortnightly",
+    "schedule_day": 2,
+    "schedule_time": "12:00",
+    "next_run_date": "2025-12-09T12:00:00.000Z",
+    "last_run_date": null,
+    "last_run_status": null,
+    "recipients": [
+      "p.holt@omegalife.uk"
+    ],
+    "output_format": "email_summary",
+    "is_active": true,
+    "include_charts": true,
+    "notes": "",
+    "id": "6937fc5365a2551384d17f63",
+    "created_date": "2025-12-09T10:39:15.017000",
+    "updated_date": "2025-12-09T10:39:15.017000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  }
+]

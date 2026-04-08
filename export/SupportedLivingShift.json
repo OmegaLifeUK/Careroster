@@ -1,0 +1,283 @@
+[
+  {
+    "property_id": "6912fa8cf870c1e81f210c04",
+    "staff_id": "6937f904fa24d72bb61e4fe0",
+    "date": "2025-12-19",
+    "start_time": "07:00",
+    "end_time": "17:00",
+    "shift_type": "visiting_support",
+    "clients_supported": [],
+    "planned_activities": [],
+    "status": "published",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": "",
+    "completion_notes": null,
+    "id": "6944238ae784506b9481f2cb",
+    "created_date": "2025-12-18T15:53:46.326000",
+    "updated_date": "2025-12-19T09:16:17.575000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "6912fa8cf870c1e81f210c04",
+    "staff_id": "6909eb733d50d37c98f3e44c",
+    "date": "2025-12-02",
+    "start_time": "16:20",
+    "end_time": "06:30",
+    "shift_type": "visiting_support",
+    "clients_supported": [],
+    "planned_activities": [
+      "Activity 01",
+      "Activity 02"
+    ],
+    "status": "published",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": "This shift create only for testing purposes ",
+    "completion_notes": null,
+    "id": "692eaa8eda02d0a62c1bc3d9",
+    "created_date": "2025-12-02T08:59:58.309000",
+    "updated_date": "2025-12-02T08:59:58.309000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "property_id": "6912fa8cf870c1e81f210c04",
+    "staff_id": null,
+    "date": "2025-12-01",
+    "start_time": "09:00",
+    "end_time": "17:00",
+    "shift_type": "core_hours",
+    "clients_supported": [],
+    "planned_activities": [],
+    "status": "draft",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": "",
+    "completion_notes": null,
+    "id": "692d479016f98c90fc4a3da4",
+    "created_date": "2025-12-01T07:45:20.490000",
+    "updated_date": "2025-12-01T07:45:28.263000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "6912fa8cf870c1e81f210c04",
+    "staff_id": "6909eb733d50d37c98f3e44c",
+    "date": "2025-11-20",
+    "start_time": "19:59",
+    "end_time": "21:59",
+    "shift_type": "visiting_support",
+    "clients_supported": [],
+    "planned_activities": [],
+    "status": "draft",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": "test",
+    "completion_notes": null,
+    "id": "691f09c0febf0e45d9121dff",
+    "created_date": "2025-11-20T12:29:52.823000",
+    "updated_date": "2025-11-20T12:29:52.823000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "property_id": "riverside_bungalow_id",
+    "staff_id": "staff_sarah_wilson",
+    "date": "2025-01-23",
+    "start_time": "22:00",
+    "end_time": "08:00",
+    "shift_type": "sleep_in",
+    "clients_supported": [
+      "olivia_harris_id"
+    ],
+    "planned_activities": [
+      "Overnight support",
+      "Personal care if needed",
+      "Epilepsy monitoring"
+    ],
+    "status": "completed",
+    "clock_in_time": "2025-01-23T22:00:00Z",
+    "clock_out_time": "2025-01-24T08:05:00Z",
+    "shift_notes": null,
+    "completion_notes": "Quiet night. No seizures. Olivia slept well. Morning personal care completed. Medication given at 08:00. Breakfast prepared.",
+    "id": "6912fa8cf870c1e81f210c10",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "oak_court_flat_id",
+    "staff_id": "staff_john_davies",
+    "date": "2025-01-24",
+    "start_time": "10:00",
+    "end_time": "11:30",
+    "shift_type": "visiting_support",
+    "clients_supported": [
+      "james_patterson_id"
+    ],
+    "planned_activities": [
+      "Morning check-in",
+      "Medication supervision",
+      "Encourage breakfast",
+      "Plan day activities"
+    ],
+    "status": "completed",
+    "clock_in_time": "2025-01-24T10:00:00Z",
+    "clock_out_time": "2025-01-24T11:35:00Z",
+    "shift_notes": null,
+    "completion_notes": "James in good spirits. Medication taken with breakfast. Discussed attending local community center group tomorrow. Flat tidy, James has been maintaining well.",
+    "id": "6912fa8cf870c1e81f210c0f",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "liberty_gardens_id",
+    "staff_id": "staff_emily_clarke",
+    "date": "2025-01-24",
+    "start_time": "08:00",
+    "end_time": "20:00",
+    "shift_type": "on_site_support",
+    "clients_supported": [
+      "daniel_foster_id"
+    ],
+    "planned_activities": [
+      "Morning check-ins",
+      "Support with getting to work",
+      "Afternoon group activity",
+      "Evening meals support"
+    ],
+    "status": "scheduled",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": null,
+    "completion_notes": null,
+    "id": "6912fa8cf870c1e81f210c12",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "riverside_bungalow_id",
+    "staff_id": "staff_ellese_rothwell",
+    "date": "2025-01-24",
+    "start_time": "08:00",
+    "end_time": "16:00",
+    "shift_type": "core_hours",
+    "clients_supported": [
+      "olivia_harris_id"
+    ],
+    "planned_activities": [
+      "Personal care",
+      "Physiotherapy exercises",
+      "Communication practice",
+      "Lunch preparation",
+      "Afternoon activity"
+    ],
+    "status": "in_progress",
+    "clock_in_time": "2025-01-24T08:00:00Z",
+    "clock_out_time": null,
+    "shift_notes": null,
+    "completion_notes": null,
+    "id": "6912fa8cf870c1e81f210c11",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "maple_house_property_id",
+    "staff_id": "staff_katie_robinson",
+    "date": "2025-01-24",
+    "start_time": "09:00",
+    "end_time": "12:00",
+    "shift_type": "visiting_support",
+    "clients_supported": [
+      "michael_thompson_id",
+      "sophie_bennett_id"
+    ],
+    "planned_activities": [
+      "Medication supervision",
+      "Shopping trip support",
+      "Budget review",
+      "Meal planning"
+    ],
+    "status": "completed",
+    "clock_in_time": "2025-01-24T09:05:00Z",
+    "clock_out_time": "2025-01-24T12:10:00Z",
+    "shift_notes": null,
+    "completion_notes": "Both clients well. Michael anxious about upcoming dentist appointment - provided reassurance. Sophie excited about job interview next week - practiced interview questions. Shopping completed for week.",
+    "id": "6912fa8cf870c1e81f210c0d",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "maple_house_property_id",
+    "staff_id": "staff_georgia_ashmore",
+    "date": "2025-01-24",
+    "start_time": "14:00",
+    "end_time": "17:00",
+    "shift_type": "visiting_support",
+    "clients_supported": [
+      "sophie_bennett_id"
+    ],
+    "planned_activities": [
+      "Interview preparation",
+      "CV review",
+      "Clothing selection for interview"
+    ],
+    "status": "in_progress",
+    "clock_in_time": "2025-01-24T14:00:00Z",
+    "clock_out_time": null,
+    "shift_notes": null,
+    "completion_notes": null,
+    "id": "6912fa8cf870c1e81f210c0e",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_id": "maple_house_property_id",
+    "staff_id": "staff_alex_sheffield",
+    "date": "2025-01-25",
+    "start_time": "10:00",
+    "end_time": "13:00",
+    "shift_type": "visiting_support",
+    "clients_supported": [
+      "michael_thompson_id"
+    ],
+    "planned_activities": [
+      "Accompany to dentist appointment",
+      "Medication collection from pharmacy"
+    ],
+    "status": "published",
+    "clock_in_time": null,
+    "clock_out_time": null,
+    "shift_notes": null,
+    "completion_notes": null,
+    "id": "6912fa8cf870c1e81f210c13",
+    "created_date": "2025-11-11T08:57:48.656000",
+    "updated_date": "2025-11-11T08:57:48.656000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

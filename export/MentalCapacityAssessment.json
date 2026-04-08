@@ -1,0 +1,387 @@
+[
+  {
+    "functional_test": null,
+    "people_involved": [],
+    "communication_support": [],
+    "specific_decision": "General capacity assessment",
+    "assessor": "vipin@appsandwebdevelopmentsolutions.com",
+    "best_interests_decision": null,
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "steps_taken": [],
+    "timing_considerations": null,
+    "reasons_for_conclusion": null,
+    "conclusion": "has_capacity",
+    "review_date": null,
+    "diagnostic_test": null,
+    "deprivation_of_liberty": null,
+    "reason_for_assessment": null,
+    "assessment_date": "2026-03-30",
+    "id": "69ca1823245caa215dc5a8dd",
+    "created_date": "2026-03-30T06:28:51.661000",
+    "updated_date": "2026-03-30T06:28:51.661000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_date": "2026-01-14",
+    "assessor": "m.carter@omegalife.uk",
+    "specific_decision": "General capacity assessment",
+    "reason_for_assessment": null,
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "has_capacity",
+    "reasons_for_conclusion": null,
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": null,
+    "people_involved": [],
+    "id": "69677e0fee5814f54c659ab6",
+    "created_date": "2026-01-14T11:29:19.105000",
+    "updated_date": "2026-01-14T11:29:19.105000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_date": "2026-01-14",
+    "assessor": "m.carter@omegalife.uk",
+    "specific_decision": "General capacity assessment",
+    "reason_for_assessment": null,
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "has_capacity",
+    "reasons_for_conclusion": null,
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": null,
+    "people_involved": [],
+    "id": "69676803b3d9f073161ac362",
+    "created_date": "2026-01-14T09:55:15.220000",
+    "updated_date": "2026-01-14T09:55:15.220000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6909e7f22522fdf33fb86ec6",
+    "assessment_date": "2026-01-14",
+    "assessor": "m.carter@omegalife.uk",
+    "specific_decision": "General capacity assessment",
+    "reason_for_assessment": null,
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "has_capacity",
+    "reasons_for_conclusion": null,
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": null,
+    "people_involved": [],
+    "id": "6967668c4383130503187315",
+    "created_date": "2026-01-14T09:49:00.180000",
+    "updated_date": "2026-01-14T09:49:00.180000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "assessment_date": "2025-12-16",
+    "assessor": "AI Import",
+    "specific_decision": "School attendance and engagement, Engagement in care planning, Medication adherence, Family time arrangements, Substance misuse decisions, Health appointments (dental, optical, EKG, blood tests), Lifestyle choices (diet, exercise), Emotional wellbeing, Overnight stays at mum's home, Declining advocate services, Declining smoking cessation support",
+    "reason_for_assessment": "Imported from client documentation",
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [
+      "School attendance and engagement",
+      "Engagement in care planning",
+      "Medication adherence",
+      "Family time arrangements",
+      "Substance misuse decisions",
+      "Health appointments (dental, optical, EKG, blood tests)",
+      "Lifestyle choices (diet, exercise)",
+      "Emotional wellbeing",
+      "Overnight stays at mum's home",
+      "Declining advocate services",
+      "Declining smoking cessation support"
+    ],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "lacks_capacity",
+    "reasons_for_conclusion": "Logan is 15 years old and under a Section 20 care order, meaning her Mum retains full parental responsibility. The care team actively supports Logan's participation in decision-making and encourages her to make informed choices, particularly regarding education. However, final decisions on certain matters are made in Logan's best interests, reflecting her age and legal status. Specific decisions are assessed individually for her capacity to understand and retain information, and any associated risks.",
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": "2026-12-16",
+    "people_involved": [],
+    "id": "694146cb72a0b09d91adea9b",
+    "created_date": "2025-12-16T11:47:23.137000",
+    "updated_date": "2025-12-16T11:47:23.137000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69412e1429f3d1b18f985498",
+    "assessment_date": "2025-12-16",
+    "assessor": "AI Import",
+    "specific_decision": "Consent to Accommodation and Care, Managing Medication, Use of Bed Rails",
+    "reason_for_assessment": "Imported from client documentation",
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [
+      "Consent to Accommodation and Care",
+      "Managing Medication",
+      "Use of Bed Rails"
+    ],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "lacks_capacity",
+    "reasons_for_conclusion": "Lacks capacity due to moderate dementia affecting understanding and retention. Unable to understand purpose, timing, or risks of medication for decision-specific assessments.",
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": "2026-12-16",
+    "people_involved": [],
+    "id": "69412e1acf35befaabaab46d",
+    "created_date": "2025-12-16T10:02:02.597000",
+    "updated_date": "2025-12-16T10:02:02.597000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "69381b467065d8ef6cf20ed0",
+    "assessment_date": "2025-12-09",
+    "assessor": "AI Import",
+    "specific_decision": "General capacity",
+    "reason_for_assessment": "Imported from client documentation",
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "lacks_capacity",
+    "reasons_for_conclusion": "null",
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": "2026-12-09",
+    "people_involved": [],
+    "id": "69381b472de449164f35a782",
+    "created_date": "2025-12-09T12:51:19.936000",
+    "updated_date": "2025-12-09T12:51:19.936000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "assessment_date": "2025-12-02",
+    "assessor": "AI Import",
+    "specific_decision": "Emotional wellbeing and therapy choices, Substance misuse engagement with services, Medical treatment decisions (e.g., blood tests, medication adherence), Educational engagement and choices, Family contact and relationships, General care planning",
+    "reason_for_assessment": "Imported from client documentation",
+    "diagnostic_test": null,
+    "functional_test": null,
+    "steps_taken": [
+      "Emotional wellbeing and therapy choices",
+      "Substance misuse engagement with services",
+      "Medical treatment decisions (e.g., blood tests, medication adherence)",
+      "Educational engagement and choices",
+      "Family contact and relationships",
+      "General care planning"
+    ],
+    "timing_considerations": null,
+    "communication_support": [],
+    "conclusion": "has_capacity",
+    "reasons_for_conclusion": "Logan demonstrates capacity in many areas, with her decisions generally respected. The care team provides extensive support, education, and incentives to guide her towards choices that promote her well-being, while implementing necessary restrictions for safety or legal compliance. There are no mentions of formal 'best interest' decisions being made for her without her involvement, reinforcing an assumption of her capacity to make her own decisions, with support.",
+    "best_interests_decision": null,
+    "deprivation_of_liberty": null,
+    "review_date": "2026-12-02",
+    "people_involved": [],
+    "id": "692f03f7546d4917f1da7984",
+    "created_date": "2025-12-02T15:21:27.121000",
+    "updated_date": "2025-12-02T15:21:27.121000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928e",
+    "assessment_date": "2024-06-15",
+    "assessor": "Emma Williams with Dr. James Park (Psychiatrist)",
+    "specific_decision": "Managing own finances and budgeting",
+    "reason_for_assessment": "Danny wants more independence with money. Family concerned about financial exploitation risk",
+    "diagnostic_test": {
+      "impairment_of_mind": true,
+      "impairment_details": "Moderate learning disability and autism spectrum disorder affecting executive function and abstract reasoning",
+      "temporary_or_permanent": "permanent"
+    },
+    "functional_test": {
+      "understand_information": {
+        "able": true,
+        "evidence": "With visual aids and concrete examples, Danny could understand concepts of income, expenses, and saving. Understood need to pay rent and bills"
+      },
+      "retain_information": {
+        "able": true,
+        "evidence": "Danny could recall information about budgeting when asked 15 minutes later. Could explain what rent means and why bills need paying"
+      },
+      "weigh_information": {
+        "able": true,
+        "evidence": "With structured support, Danny demonstrated ability to weigh up simple choices (e.g., buying game vs saving for bigger item). Needed support with more complex decisions"
+      },
+      "communicate_decision": {
+        "able": true,
+        "evidence": "Danny clearly communicated his wishes regarding money management"
+      }
+    },
+    "steps_taken": [
+      "Used easy-read materials",
+      "Broke down information into small steps",
+      "Used real money and props",
+      "Gave processing time",
+      "Multiple sessions over 2 weeks",
+      "Family involved"
+    ],
+    "timing_considerations": "Danny's capacity is consistent throughout day. Better when not anxious or overwhelmed",
+    "communication_support": [
+      "Visual schedules",
+      "Written information in easy-read format",
+      "Real examples with actual money",
+      "Calculator for working out"
+    ],
+    "conclusion": "has_capacity",
+    "reasons_for_conclusion": "Danny has capacity to make day-to-day financial decisions with appropriate support systems in place. He understands concepts of budgeting, can retain and weigh up information about routine financial choices, and can communicate his decisions. Assessment concluded he has capacity for everyday financial management within a supported framework. However, lacks capacity for complex financial decisions (investments, large purchases) which would require deputy involvement",
+    "best_interests_decision": {
+      "required": false,
+      "consulted_people": [],
+      "persons_wishes": "",
+      "persons_beliefs": "",
+      "persons_values": "",
+      "decision_made": "",
+      "decision_maker": "",
+      "reasons": "Not required - Danny has capacity for this decision"
+    },
+    "deprivation_of_liberty": {
+      "dols_application_needed": false,
+      "dols_application_date": null,
+      "dols_authorization_number": null
+    },
+    "review_date": "2025-06-15",
+    "people_involved": [
+      {
+        "name": "Danny Foster",
+        "relationship": "Self",
+        "views": "Wants to manage own money but happy to have help with complicated things"
+      },
+      {
+        "name": "Parents - Mr & Mrs Foster",
+        "relationship": "Parents (Property & Financial Affairs Deputies)",
+        "views": "Supportive of Danny having more independence. Agreed to supported budgeting system"
+      },
+      {
+        "name": "Emma Williams",
+        "relationship": "Support Coordinator",
+        "views": "Danny has shown he can manage daily budget with support framework. Recommend weekly budgeting sessions"
+      }
+    ],
+    "id": "69149b878d1185f5f1166881",
+    "created_date": "2025-11-12T14:36:55.920000",
+    "updated_date": "2025-11-12T16:32:00.219000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6914b519444801b5d13b928c",
+    "assessment_date": "2024-12-10",
+    "assessor": "Dr. Helen Roberts (GP) with Sarah Johnson (Care Manager)",
+    "specific_decision": "Consent to remain in care home and acceptance of personal care",
+    "reason_for_assessment": "Client has dementia and family questioned capacity to consent to care",
+    "diagnostic_test": {
+      "impairment_of_mind": true,
+      "impairment_details": "Diagnosed Alzheimer's disease (moderate stage). Short-term memory significantly impaired. Some confusion about time and place",
+      "temporary_or_permanent": "permanent"
+    },
+    "functional_test": {
+      "understand_information": {
+        "able": true,
+        "evidence": "Betty was able to understand that she lives in a care home and why. Understood that staff help her with washing and dressing. Could repeat back this information immediately after being told"
+      },
+      "retain_information": {
+        "able": false,
+        "evidence": "After 5 minute conversation about something else, Betty could not recall the discussion about care. This was repeated 3 times with same result"
+      },
+      "weigh_information": {
+        "able": false,
+        "evidence": "Due to inability to retain information, Betty cannot weigh up the pros and cons of accepting care. Cannot recall alternatives discussed"
+      },
+      "communicate_decision": {
+        "able": true,
+        "evidence": "Betty can clearly communicate her immediate wishes and feelings about care"
+      }
+    },
+    "steps_taken": [
+      "Assessment conducted during morning when Betty is most alert",
+      "Information presented in simple language",
+      "Visual aids used",
+      "Given time to process",
+      "Family present during assessment"
+    ],
+    "timing_considerations": "Betty's capacity is better in the morning. Assessment conducted at 10am when she is most settled and alert",
+    "communication_support": [
+      "Simple language",
+      "Visual picture cards",
+      "Daughter present for reassurance"
+    ],
+    "conclusion": "lacks_capacity",
+    "reasons_for_conclusion": "While Betty can understand information about her care in the moment, she is unable to retain this information for long enough to weigh it up and make an informed decision. This inability is due to her Alzheimer's disease. She fails stages 2 and 3 of the functional test. Assessment conducted in accordance with MCA 2005",
+    "best_interests_decision": {
+      "required": true,
+      "consulted_people": [
+        "Margaret Thompson (daughter, LPA)",
+        "Dr. Helen Roberts (GP)",
+        "Care staff team",
+        "Betty herself"
+      ],
+      "persons_wishes": "Betty expresses she likes living at the home, likes the staff, and wants to 'stay here and be looked after'",
+      "persons_beliefs": "Was a very independent person who valued cleanliness and taking pride in appearance. Would not want to be neglected",
+      "persons_values": "Family very important. Faith important. Dignity and respect paramount",
+      "decision_made": "It is in Betty's best interests to remain in residential care and receive personal care support from staff",
+      "decision_maker": "Margaret Thompson (LPA) in consultation with care team and GP",
+      "reasons": "Betty is safe, well-cared for, and appears content. She has expressed she wants to stay. She cannot safely manage at home even with domiciliary support. Her values of cleanliness and dignity are being upheld. Decision is least restrictive option"
+    },
+    "deprivation_of_liberty": {
+      "dols_application_needed": true,
+      "dols_application_date": "2024-12-11",
+      "dols_authorization_number": "DOLS-2024-12-1547"
+    },
+    "review_date": "2025-06-10",
+    "people_involved": [
+      {
+        "name": "Margaret Thompson",
+        "relationship": "Daughter, LPA for Health & Welfare",
+        "views": "Wants mother to remain in care home where she is safe and happy. Very supportive of care team"
+      },
+      {
+        "name": "Dr. Helen Roberts",
+        "relationship": "GP",
+        "views": "Agrees Betty lacks capacity for this decision. Supports residential care as best option"
+      }
+    ],
+    "id": "69149b878d1185f5f1166880",
+    "created_date": "2025-11-12T14:36:55.920000",
+    "updated_date": "2025-11-12T16:32:03.363000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

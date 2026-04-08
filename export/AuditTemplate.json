@@ -1,0 +1,281 @@
+[
+  {
+    "template_name": "Test",
+    "is_active": true,
+    "scoring_system": null,
+    "description": "xczxc",
+    "language": "english",
+    "category": "hygiene",
+    "sections": [],
+    "audit_type": "monthly",
+    "id": "69d61e5b23e04c9e62f61bf4",
+    "created_date": "2026-04-08T09:22:35.327000",
+    "updated_date": "2026-04-08T09:22:35.327000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "template_name": "Weekly Care Home Compliance & Quality Audit",
+    "description": "A comprehensive audit tool for ensuring care home compliance across health and safety, person-centred care, staffing, documentation, and feedback.",
+    "audit_type": "weekly",
+    "category": "other",
+    "sections": [
+      {
+        "section_name": "Health & Safety & Environment",
+        "checklist_items": [
+          {
+            "item": "Cleanliness & Infection Control: All common areas are clean, tidy, and free from odours.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Score C (Compliant), A (Action Required), or NA."
+          },
+          {
+            "item": "Hand sanitisers/soap dispensers are full and functional.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Check all dispensers in common and staff areas."
+          },
+          {
+            "item": "PPE is available and correctly stored in key areas.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Ensure gloves, aprons, and masks are accessible."
+          },
+          {
+            "item": "Cleaning schedules are signed off for the week.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Verify cleaning records are complete."
+          },
+          {
+            "item": "Environment & Maintenance: No evident environmental hazards (loose carpets, wet floors, clutter).",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Perform a walk-through of all accessible floors."
+          },
+          {
+            "item": "All equipment is in good working order (hoists, beds, wheelchairs).",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Check for visual damage or missing parts."
+          },
+          {
+            "item": "Temperature checks recorded (living areas & water).",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Ensure water and room temperatures are within safe limits."
+          },
+          {
+            "item": "Gardens/pathways are safe and accessible.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Ensure no trip hazards in outdoor areas."
+          },
+          {
+            "item": "Fire Safety: Fire exits are clear and self-closing devices functional.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Essential for emergency preparedness."
+          },
+          {
+            "item": "Fire alarm panel is clear of faults. Weekly alarm test conducted & logged.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Check alarm panel status and maintenance logs."
+          },
+          {
+            "item": "Fire doors are not wedged open.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Ensure compliance with fire safety regulations."
+          },
+          {
+            "item": "Medication: Spot Check: Medication trolley/cupboard is locked and tidy.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Verify security of medication storage."
+          },
+          {
+            "item": "Temperature of storage area is within range and logged.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Medication must be stored at correct temperatures."
+          },
+          {
+            "item": "No out-of-date medications visible.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Check expiry dates during spot check."
+          }
+        ]
+      },
+      {
+        "section_name": "Person-Centred Care & Wellbeing",
+        "checklist_items": [
+          {
+            "item": "Residents are dressed in their own choice of clothing and are well-groomed.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Focus on dignity and choice."
+          },
+          {
+            "item": "Staff interactions are kind, respectful, and promote choice.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Observation-based check."
+          },
+          {
+            "item": "If Nutrition Focus: Food/drink charts are completed and reflect intake.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Required if this is the week's rotating focus."
+          },
+          {
+            "item": "If Nutrition Focus: Mealtime experience is positive, supportive, and social.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Required if this is the week's rotating focus."
+          },
+          {
+            "item": "Activity plans are reflective of resident interests and attendance is encouraged.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Review activity logs and resident engagement."
+          },
+          {
+            "item": "Evidence of meaningful engagement seen (conversations, hobbies, outings).",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Capture feedback from residents/staff."
+          }
+        ]
+      },
+      {
+        "section_name": "Staffing & Practice",
+        "checklist_items": [
+          {
+            "item": "Staffing levels match the planned roster and meet needs.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Compare actual staff on duty with the roster."
+          },
+          {
+            "item": "Staff are identifiable (wearing badges/ uniform).",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Ensure professionalism and identification."
+          },
+          {
+            "item": "Supervisions & appraisals are up to date (spot check training matrix).",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Spot check training compliance for on-shift staff."
+          },
+          {
+            "item": "Agency staff are appropriately inducted for the shift.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Check induction records for agency personnel."
+          }
+        ]
+      },
+      {
+        "section_name": "Documentation & Governance",
+        "checklist_items": [
+          {
+            "item": "Care Plans: One updated and reviewed in line with change.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Note the name of the resident sample checked."
+          },
+          {
+            "item": "Risk Assessments: One reviewed and contemporaneous.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Ensure assessments reflect current risk status."
+          },
+          {
+            "item": "Daily Records: Are they personalised, factual, and timely.",
+            "response_type": "yes_no",
+            "is_critical": false,
+            "guidance": "Review logs for a specific timeframe."
+          },
+          {
+            "item": "Accidents & Incidents: All from past week reported, actions closed.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Verify the accident log and closure of items."
+          },
+          {
+            "item": "Safeguarding: Concerns logged, reported, and managed appropriately.",
+            "response_type": "yes_no",
+            "is_critical": true,
+            "guidance": "Review safeguarding logs."
+          }
+        ]
+      },
+      {
+        "section_name": "Resident & Relative Feedback",
+        "checklist_items": [
+          {
+            "item": "Positive Feedback / Concerns from Resident 1",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Record informal conversation details."
+          },
+          {
+            "item": "Positive Feedback / Concerns from Resident 2",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Record informal conversation details."
+          },
+          {
+            "item": "Positive Feedback / Concerns from Relative or Advocate",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Capture feedback from family calls or visits."
+          },
+          {
+            "item": "Findings from Comments Book or Survey",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Summarize recent entries from the comments book."
+          }
+        ]
+      },
+      {
+        "section_name": "Summary & Action Plan",
+        "checklist_items": [
+          {
+            "item": "High Priority Actions Required",
+            "response_type": "text",
+            "is_critical": true,
+            "guidance": "Detail immediate issues and person responsible."
+          },
+          {
+            "item": "Medium Priority Actions Required",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Detail issues to be resolved by a due date."
+          },
+          {
+            "item": "Low Priority Actions Required",
+            "response_type": "text",
+            "is_critical": false,
+            "guidance": "Detail minor improvement points."
+          }
+        ]
+      }
+    ],
+    "scoring_system": null,
+    "is_active": true,
+    "language": "english",
+    "id": "695facf8aed2a2fbaab4d8ad",
+    "created_date": "2026-01-08T13:11:20.584000",
+    "updated_date": "2026-01-08T13:12:57.663000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  }
+]

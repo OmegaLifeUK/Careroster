@@ -1,0 +1,702 @@
+[
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "high",
+    "predicted_incident_types": [
+      "accident"
+    ],
+    "risk_factors": [
+      {
+        "factor": "high number of incidents at the same location",
+        "confidence": 0.8
+      },
+      {
+        "factor": "critical severity of past incidents",
+        "confidence": 0.8
+      },
+      {
+        "factor": "same time of day for incidents",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase staff supervision during high-risk hours",
+        "priority": "high",
+        "rationale": "Most incidents occur around 2 PM and 5 PM when staff presence may be lacking."
+      },
+      {
+        "action": "Implement fall prevention training for staff",
+        "priority": "medium",
+        "rationale": "Falls are occurring and pose critical risk, training could mitigate this risk."
+      },
+      {
+        "action": "Conduct safety audits of Wocanda and Noida",
+        "priority": "high",
+        "rationale": "These locations have reported the most incidents and require further analysis to identify hazards."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Repeated incidents in Wocanda signal ongoing risk.",
+        "Specific times like 2 PM and 5 PM are critical for safety measures.",
+        "Understanding client behaviors may reveal underlying causes for incidents."
+      ],
+      "temporal_patterns": "Incidents occur predominantly during the afternoon, especially around 2 PM and 5 PM, with a notable frequency on Wednesdays and Fridays.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-23T13:00:12.860Z",
+    "id": "6989da5d503cabfc89c876d1",
+    "created_date": "2026-02-09T13:00:13.352000",
+    "updated_date": "2026-02-09T13:00:13.352000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "medium",
+    "predicted_incident_types": [
+      "fall"
+    ],
+    "risk_factors": [
+      {
+        "factor": "previous fall incident",
+        "confidence": 0.8
+      },
+      {
+        "factor": "similar time of day",
+        "confidence": 0.8
+      },
+      {
+        "factor": "inexperienced individuals in high-risk areas",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase staff supervision during high-risk hours",
+        "priority": "high",
+        "rationale": "Most incidents occur around 2 PM and 5 PM when staff presence may be lacking."
+      },
+      {
+        "action": "Implement fall prevention training for staff",
+        "priority": "medium",
+        "rationale": "Falls are occurring and pose critical risk, training could mitigate this risk."
+      },
+      {
+        "action": "Conduct safety audits of Wocanda and Noida",
+        "priority": "high",
+        "rationale": "These locations have reported the most incidents and require further analysis to identify hazards."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Repeated incidents in Wocanda signal ongoing risk.",
+        "Specific times like 2 PM and 5 PM are critical for safety measures.",
+        "Understanding client behaviors may reveal underlying causes for incidents."
+      ],
+      "temporal_patterns": "Incidents occur predominantly during the afternoon, especially around 2 PM and 5 PM, with a notable frequency on Wednesdays and Fridays.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-23T13:00:12.860Z",
+    "id": "6989da5d503cabfc89c876d2",
+    "created_date": "2026-02-09T13:00:13.352000",
+    "updated_date": "2026-02-09T13:00:13.352000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "temporal_risk",
+    "risk_level": "medium",
+    "predicted_incident_types": [],
+    "risk_factors": [],
+    "location": null,
+    "time_window": {
+      "start": "14",
+      "end": "17"
+    },
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase staff supervision during high-risk hours",
+        "priority": "high",
+        "rationale": "Incidents occur predominantly during the afternoon, especially around 2 PM and 5 PM, with a notable frequency on Wednesdays and Fridays."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [],
+      "temporal_patterns": "Incidents occur predominantly during the afternoon, especially around 2 PM and 5 PM, with a notable frequency on Wednesdays and Fridays.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-23T13:00:12.860Z",
+    "id": "6989da5d503cabfc89c876d3",
+    "created_date": "2026-02-09T13:00:13.352000",
+    "updated_date": "2026-02-09T13:00:13.352000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "location_risk",
+    "risk_level": "high",
+    "predicted_incident_types": [
+      "accidents",
+      "falls"
+    ],
+    "risk_factors": [],
+    "location": "Wocanda",
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Conduct risk assessment for Wocanda",
+        "priority": "high",
+        "rationale": "High frequency of incidents at this location"
+      }
+    ],
+    "pattern_analysis": null,
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-03-02T13:00:12.860Z",
+    "id": "6989da5d503cabfc89c876d4",
+    "created_date": "2026-02-09T13:00:13.352000",
+    "updated_date": "2026-02-09T13:00:13.352000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "mitigation_actions": [
+      "Reviewed by staff"
+    ],
+    "predicted_incident_types": [
+      "medication_error"
+    ],
+    "affected_staff": [],
+    "risk_factors": [
+      {
+        "factor": "staff training gaps",
+        "confidence": 0.8
+      },
+      {
+        "factor": "systematic errors",
+        "confidence": 0.8
+      },
+      {
+        "factor": "client's complex medication regimen",
+        "confidence": 0.8
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "high",
+        "action": "Increase supervision during high-risk hours, especially on Wednesdays at 14:00.",
+        "rationale": "Previous incidents show peaks in fall and medication errors at this time."
+      },
+      {
+        "priority": "high",
+        "action": "Implement mandatory training refreshers for staff on medication management.",
+        "rationale": "Repeated medication errors suggest gaps in staff training and knowledge."
+      },
+      {
+        "priority": "medium",
+        "action": "Conduct safety audits in high-risk locations such as noida and kitchen areas to identify hazards.",
+        "rationale": "Identifying and mitigating physical risks can prevent future incidents."
+      }
+    ],
+    "alert_type": "high_risk_pattern",
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent and severe incidents reported.",
+        "Medication errors occur regularly but have medium severity.",
+        "High-risk days are Tuesday and Wednesday, particularly around 14:00."
+      ],
+      "location_patterns": null,
+      "temporal_patterns": "Incidents primarily occur in the afternoons on Wednesday and Tuesday, indicating these specific times may require increased oversight."
+    },
+    "risk_level": "medium",
+    "expires_at": "2026-02-03T04:22:23.188Z",
+    "time_window": null,
+    "affected_clients": [],
+    "location": null,
+    "acknowledged_by": "Current User",
+    "acknowledged_at": "2026-02-02T05:48:53.561Z",
+    "status": "acknowledged",
+    "id": "696f0301bcd5b34abde99a30",
+    "created_date": "2026-01-20T04:22:25.024000",
+    "updated_date": "2026-02-02T05:48:55.203000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "location_risk",
+    "risk_level": "high",
+    "predicted_incident_types": [
+      "fall",
+      "medication_error"
+    ],
+    "risk_factors": [],
+    "location": "noida",
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Conduct risk assessment for noida",
+        "priority": "high",
+        "rationale": "High frequency of incidents at this location"
+      }
+    ],
+    "pattern_analysis": null,
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-10T04:22:23.188Z",
+    "id": "696f0301bcd5b34abde99a33",
+    "created_date": "2026-01-20T04:22:25.024000",
+    "updated_date": "2026-01-20T04:22:25.024000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "high",
+    "predicted_incident_types": [
+      "fall"
+    ],
+    "risk_factors": [
+      {
+        "factor": "client health conditions",
+        "confidence": 0.8
+      },
+      {
+        "factor": "previous fall incidents",
+        "confidence": 0.8
+      },
+      {
+        "factor": "high mobility risk",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase supervision during high-risk hours, especially on Wednesdays at 14:00.",
+        "priority": "high",
+        "rationale": "Previous incidents show peaks in fall and medication errors at this time."
+      },
+      {
+        "action": "Implement mandatory training refreshers for staff on medication management.",
+        "priority": "high",
+        "rationale": "Repeated medication errors suggest gaps in staff training and knowledge."
+      },
+      {
+        "action": "Conduct safety audits in high-risk locations such as noida and kitchen areas to identify hazards.",
+        "priority": "medium",
+        "rationale": "Identifying and mitigating physical risks can prevent future incidents."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent and severe incidents reported.",
+        "Medication errors occur regularly but have medium severity.",
+        "High-risk days are Tuesday and Wednesday, particularly around 14:00."
+      ],
+      "temporal_patterns": "Incidents primarily occur in the afternoons on Wednesday and Tuesday, indicating these specific times may require increased oversight.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-03T04:22:23.188Z",
+    "id": "696f0301bcd5b34abde99a2f",
+    "created_date": "2026-01-20T04:22:25.024000",
+    "updated_date": "2026-01-20T04:22:25.024000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "temporal_risk",
+    "risk_level": "medium",
+    "predicted_incident_types": [],
+    "risk_factors": [],
+    "location": null,
+    "time_window": {
+      "start": "14:00",
+      "end": "18:00"
+    },
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase staff supervision during high-risk hours",
+        "priority": "high",
+        "rationale": "Incidents primarily occur in the afternoons on Wednesday and Tuesday, indicating these specific times may require increased oversight."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [],
+      "temporal_patterns": "Incidents primarily occur in the afternoons on Wednesday and Tuesday, indicating these specific times may require increased oversight.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-03T04:22:23.188Z",
+    "id": "696f0301bcd5b34abde99a32",
+    "created_date": "2026-01-20T04:22:25.024000",
+    "updated_date": "2026-01-20T04:22:25.024000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "medium",
+    "predicted_incident_types": [
+      "injury"
+    ],
+    "risk_factors": [
+      {
+        "factor": "non-adherence to safety protocols",
+        "confidence": 0.8
+      },
+      {
+        "factor": "high-risk environments",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase supervision during high-risk hours, especially on Wednesdays at 14:00.",
+        "priority": "high",
+        "rationale": "Previous incidents show peaks in fall and medication errors at this time."
+      },
+      {
+        "action": "Implement mandatory training refreshers for staff on medication management.",
+        "priority": "high",
+        "rationale": "Repeated medication errors suggest gaps in staff training and knowledge."
+      },
+      {
+        "action": "Conduct safety audits in high-risk locations such as noida and kitchen areas to identify hazards.",
+        "priority": "medium",
+        "rationale": "Identifying and mitigating physical risks can prevent future incidents."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent and severe incidents reported.",
+        "Medication errors occur regularly but have medium severity.",
+        "High-risk days are Tuesday and Wednesday, particularly around 14:00."
+      ],
+      "temporal_patterns": "Incidents primarily occur in the afternoons on Wednesday and Tuesday, indicating these specific times may require increased oversight.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-03T04:22:23.188Z",
+    "id": "696f0301bcd5b34abde99a31",
+    "created_date": "2026-01-20T04:22:25.024000",
+    "updated_date": "2026-01-20T04:22:25.024000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "temporal_risk",
+    "risk_level": "medium",
+    "predicted_incident_types": [],
+    "risk_factors": [],
+    "location": null,
+    "time_window": {
+      "start": "14:00",
+      "end": "18:00"
+    },
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Increase staff supervision during high-risk hours",
+        "priority": "high",
+        "rationale": "Incidents occur most often in the afternoon on Wednesdays and early evening on Tuesdays."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [],
+      "temporal_patterns": "Incidents occur most often in the afternoon on Wednesdays and early evening on Tuesdays.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-03T04:18:38.418Z",
+    "id": "696f0220e53b4a8164df64bf",
+    "created_date": "2026-01-20T04:18:40.525000",
+    "updated_date": "2026-01-20T04:18:40.525000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "medium",
+    "predicted_incident_types": [
+      "medication_error"
+    ],
+    "risk_factors": [
+      {
+        "factor": "staff training",
+        "confidence": 0.8
+      },
+      {
+        "factor": "communication issues",
+        "confidence": 0.8
+      },
+      {
+        "factor": "complicated medication regimes",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Implement regular training for staff on fall prevention strategies",
+        "priority": "high",
+        "rationale": "Staff training can significantly reduce fall incidents by ensuring knowledge of proper supervision and environment management."
+      },
+      {
+        "action": "Conduct a safety audit of the kitchen and other high-risk areas",
+        "priority": "medium",
+        "rationale": "Identifying and addressing physical hazards in frequent incident zones can prevent injuries."
+      },
+      {
+        "action": "Increase frequency of medication management audits to ensure compliance",
+        "priority": "medium",
+        "rationale": "Monitoring medication administration will help reduce errors occurring during medication distribution."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent incidents, representing a critical risk to clients in the care setting.",
+        "Injuries related to physical environments are emerging as a concern and warrant immediate attention.",
+        "Medication errors, while less frequent, represent a significant risk and potential harm."
+      ],
+      "temporal_patterns": "Incidents occur most often in the afternoon on Wednesdays and early evening on Tuesdays.",
+      "location_patterns": null
+    },
+    "status": "active",
+    "acknowledged_by": null,
+    "acknowledged_at": null,
+    "mitigation_actions": [],
+    "expires_at": "2026-02-03T04:18:38.418Z",
+    "id": "696f0220e53b4a8164df64bd",
+    "created_date": "2026-01-20T04:18:40.525000",
+    "updated_date": "2026-01-20T04:18:40.525000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "alert_type": "high_risk_pattern",
+    "risk_level": "medium",
+    "predicted_incident_types": [
+      "injury"
+    ],
+    "risk_factors": [
+      {
+        "factor": "physical environment hazards",
+        "confidence": 0.8
+      },
+      {
+        "factor": "client behavior issues",
+        "confidence": 0.8
+      }
+    ],
+    "location": null,
+    "time_window": null,
+    "affected_clients": [],
+    "affected_staff": [],
+    "recommendations": [
+      {
+        "action": "Implement regular training for staff on fall prevention strategies",
+        "priority": "high",
+        "rationale": "Staff training can significantly reduce fall incidents by ensuring knowledge of proper supervision and environment management."
+      },
+      {
+        "action": "Conduct a safety audit of the kitchen and other high-risk areas",
+        "priority": "medium",
+        "rationale": "Identifying and addressing physical hazards in frequent incident zones can prevent injuries."
+      },
+      {
+        "action": "Increase frequency of medication management audits to ensure compliance",
+        "priority": "medium",
+        "rationale": "Monitoring medication administration will help reduce errors occurring during medication distribution."
+      }
+    ],
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent incidents, representing a critical risk to clients in the care setting.",
+        "Injuries related to physical environments are emerging as a concern and warrant immediate attention.",
+        "Medication errors, while less frequent, represent a significant risk and potential harm."
+      ],
+      "temporal_patterns": "Incidents occur most often in the afternoon on Wednesdays and early evening on Tuesdays.",
+      "location_patterns": null
+    },
+    "status": "acknowledged",
+    "acknowledged_by": "Current User",
+    "acknowledged_at": "2026-01-20T04:19:03.285Z",
+    "mitigation_actions": [
+      "Reviewed by staff"
+    ],
+    "expires_at": "2026-02-03T04:18:38.418Z",
+    "id": "696f0220e53b4a8164df64be",
+    "created_date": "2026-01-20T04:18:40.525000",
+    "updated_date": "2026-01-20T04:19:05.371000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "mitigation_actions": [
+      "Reviewed by staff"
+    ],
+    "predicted_incident_types": [
+      "fall"
+    ],
+    "affected_staff": [],
+    "risk_factors": [
+      {
+        "factor": "client age",
+        "confidence": 0.8
+      },
+      {
+        "factor": "slippery surfaces",
+        "confidence": 0.8
+      },
+      {
+        "factor": "lack of supervision",
+        "confidence": 0.8
+      }
+    ],
+    "recommendations": [
+      {
+        "priority": "high",
+        "action": "Implement regular training for staff on fall prevention strategies",
+        "rationale": "Staff training can significantly reduce fall incidents by ensuring knowledge of proper supervision and environment management."
+      },
+      {
+        "priority": "medium",
+        "action": "Conduct a safety audit of the kitchen and other high-risk areas",
+        "rationale": "Identifying and addressing physical hazards in frequent incident zones can prevent injuries."
+      },
+      {
+        "priority": "medium",
+        "action": "Increase frequency of medication management audits to ensure compliance",
+        "rationale": "Monitoring medication administration will help reduce errors occurring during medication distribution."
+      }
+    ],
+    "alert_type": "high_risk_pattern",
+    "pattern_analysis": {
+      "common_patterns": [
+        "Falls are the most frequent incidents, representing a critical risk to clients in the care setting.",
+        "Injuries related to physical environments are emerging as a concern and warrant immediate attention.",
+        "Medication errors, while less frequent, represent a significant risk and potential harm."
+      ],
+      "location_patterns": null,
+      "temporal_patterns": "Incidents occur most often in the afternoon on Wednesdays and early evening on Tuesdays."
+    },
+    "risk_level": "high",
+    "expires_at": "2026-02-03T04:18:38.418Z",
+    "time_window": null,
+    "affected_clients": [],
+    "location": null,
+    "acknowledged_by": "Current User",
+    "acknowledged_at": "2026-02-04T12:15:31.503Z",
+    "status": "acknowledged",
+    "id": "696f0220e53b4a8164df64bc",
+    "created_date": "2026-01-20T04:18:40.525000",
+    "updated_date": "2026-02-04T12:15:31.331000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  },
+  {
+    "mitigation_actions": [
+      "Reviewed by staff"
+    ],
+    "predicted_incident_types": [
+      "fall",
+      "medication_error"
+    ],
+    "affected_staff": [],
+    "risk_factors": [],
+    "recommendations": [
+      {
+        "priority": "high",
+        "action": "Conduct risk assessment for noida",
+        "rationale": "High frequency of incidents at this location"
+      }
+    ],
+    "alert_type": "location_risk",
+    "pattern_analysis": null,
+    "risk_level": "high",
+    "expires_at": "2026-02-10T04:18:38.418Z",
+    "time_window": null,
+    "affected_clients": [],
+    "location": "noida",
+    "acknowledged_by": "Current User",
+    "acknowledged_at": "2026-02-04T12:15:24.496Z",
+    "status": "acknowledged",
+    "id": "696f0220e53b4a8164df64c0",
+    "created_date": "2026-01-20T04:18:40.525000",
+    "updated_date": "2026-02-04T12:15:24.284000",
+    "created_by_id": "69578dc85ffbccbf237c772e",
+    "created_by": "mobappssolutions169@gmail.com",
+    "is_sample": false
+  }
+]

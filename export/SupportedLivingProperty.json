@@ -1,0 +1,163 @@
+[
+  {
+    "property_name": "Greenfield House Supported Living",
+    "address": {
+      "street": "42 Greenfield Road",
+      "city": "Manchester",
+      "postcode": "M21 8RJ",
+      "latitude": 53.4397,
+      "longitude": -2.2869
+    },
+    "property_type": "cluster_flat",
+    "total_capacity": 6,
+    "current_occupancy": 4,
+    "property_manager_id": "emma_williams",
+    "access_instructions": "Main entrance code: 4782. Each flat has individual key. Fire exits on each floor.",
+    "facilities": [
+      "Communal lounge",
+      "Shared laundry",
+      "Individual kitchenettes",
+      "Garden",
+      "Staff office"
+    ],
+    "support_model": "visiting_support",
+    "landlord": "Greenfield Housing Association",
+    "rent_amount": 650,
+    "status": "active",
+    "id": "6914b519444801b5d13b928f",
+    "created_date": "2025-11-12T16:26:01.182000",
+    "updated_date": "2025-11-12T16:26:01.182000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_name": "Liberty Gardens Cluster",
+    "address": {
+      "street": "Liberty Gardens Complex",
+      "city": "Manchester",
+      "postcode": "M16 8QR",
+      "latitude": 53.4598,
+      "longitude": -2.2756
+    },
+    "property_type": "cluster_flat",
+    "total_capacity": 6,
+    "current_occupancy": 5,
+    "property_manager_id": "staff_emily_clarke",
+    "access_instructions": "Main entrance fob access. Individual flat keys. Staff office on ground floor.",
+    "facilities": [
+      "Individual kitchenettes",
+      "Shared communal lounge",
+      "On-site laundry",
+      "Staff office",
+      "Secure parking",
+      "Garden area"
+    ],
+    "support_model": "on_site_support",
+    "landlord": "Liberty Housing Trust",
+    "rent_amount": 400,
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c07",
+    "created_date": "2025-11-11T08:57:48.610000",
+    "updated_date": "2025-11-11T08:57:48.610000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_name": "Maple House",
+    "address": {
+      "street": "45 Maple Avenue",
+      "city": "Manchester",
+      "postcode": "M14 5PR",
+      "latitude": 53.4584,
+      "longitude": -2.2324
+    },
+    "property_type": "shared_house",
+    "total_capacity": 4,
+    "current_occupancy": 3,
+    "property_manager_id": "staff_sarah_wilson",
+    "access_instructions": "Main door code: 2468. Key safe in porch - code 9753",
+    "facilities": [
+      "Kitchen",
+      "Shared lounge",
+      "Garden",
+      "Laundry room",
+      "Parking"
+    ],
+    "support_model": "visiting_support",
+    "landlord": "Manchester Housing Association",
+    "rent_amount": 450,
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c04",
+    "created_date": "2025-11-11T08:57:48.610000",
+    "updated_date": "2025-11-11T08:57:48.610000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_name": "Oak Court Flat 2B",
+    "address": {
+      "street": "Oak Court, 2B",
+      "city": "Manchester",
+      "postcode": "M15 6JY",
+      "latitude": 53.4675,
+      "longitude": -2.2445
+    },
+    "property_type": "single_flat",
+    "total_capacity": 1,
+    "current_occupancy": 1,
+    "property_manager_id": "staff_john_davies",
+    "access_instructions": "Intercom entry. Client has own key.",
+    "facilities": [
+      "Kitchen",
+      "Bathroom",
+      "Living room",
+      "Bedroom"
+    ],
+    "support_model": "visiting_support",
+    "landlord": "Self-owned",
+    "rent_amount": 650,
+    "status": "full",
+    "id": "6912fa8cf870c1e81f210c05",
+    "created_date": "2025-11-11T08:57:48.610000",
+    "updated_date": "2025-11-11T08:57:48.610000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "property_name": "Riverside Bungalow",
+    "address": {
+      "street": "12 Riverside Close",
+      "city": "Salford",
+      "postcode": "M5 4WT",
+      "latitude": 53.4875,
+      "longitude": -2.2901
+    },
+    "property_type": "bungalow",
+    "total_capacity": 2,
+    "current_occupancy": 2,
+    "property_manager_id": "staff_sarah_wilson",
+    "access_instructions": "Side gate access. Key safe code: 1234. Emergency key with neighbour at No.14",
+    "facilities": [
+      "Kitchen",
+      "2 Bedrooms",
+      "Bathroom",
+      "Living room",
+      "Garden",
+      "Wheelchair accessible"
+    ],
+    "support_model": "sleep_in",
+    "landlord": "Salford Council",
+    "rent_amount": 550,
+    "status": "full",
+    "id": "6912fa8cf870c1e81f210c06",
+    "created_date": "2025-11-11T08:57:48.610000",
+    "updated_date": "2025-11-11T08:57:48.610000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

@@ -1,0 +1,263 @@
+[
+  {
+    "assigned_to_staff_ids": [],
+    "target_completion_date": "2026-03-20",
+    "actual_completion_date": null,
+    "evidence": [],
+    "review_notes": null,
+    "progress_percentage": 0,
+    "description": "Action plan generated from mock inspection findings. Overall rating: Requires Improvement",
+    "related_entity_type": "inspection",
+    "title": "CQC Mock Inspection Action Plan - 18/02/2026",
+    "priority": "high",
+    "related_entity_id": "6995b1f92618313da1d3ffb4",
+    "category": "regulatory",
+    "actions": [
+      {
+        "action": "Medication Management",
+        "notes": "Improve processes to prevent medication errors and ensure all staff are retrained in safe administration practices.\n[18/02/2026 13:30] We have now switched to bar coded medications, that have to be scanned\n[18/02/2026 15:06] Test\n[18/02/2026 16:01] test",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "in_progress",
+        "completed_date": null
+      },
+      {
+        "action": "Safeguarding Procedures",
+        "notes": "Establish a more robust response mechanism for safeguarding alerts, ensuring timely and thorough investigations.",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Leadership and Governance",
+        "notes": "Enhance communication and accountability structures in management to address incidents and inform improvements.\n[30/03/2026 10:42] notes add here\n",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "in_progress",
+        "completed_date": null
+      },
+      {
+        "action": "Monitoring and Learning from Incidents",
+        "notes": "Develop a detailed learning framework that incorporates analysis of incidents and feedback loops into practice.",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "in_progress",
+        "completed_date": null
+      },
+      {
+        "action": "Care Plan Updates",
+        "notes": "Ensure that all care plans are updated in a timely manner reflective of the most recent assessments.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Client Complaints Handling",
+        "notes": "Streamline the process for addressing and resolving client complaints to improve response times.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 12: Safe care and treatment: Medication administration errors noted, posing risks to service users",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 13: Safeguarding service users from abuse and improper treatment: High number of safeguarding alerts raised without timely evidence of action taken",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      }
+    ],
+    "status": "active",
+    "id": "6995b1f9eb0b47a53af7eae6",
+    "created_date": "2026-02-18T12:35:05.905000",
+    "updated_date": "2026-04-08T07:00:52.022000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "assigned_to_staff_ids": [],
+    "target_completion_date": "2026-03-20",
+    "actual_completion_date": null,
+    "evidence": [],
+    "review_notes": null,
+    "progress_percentage": 0,
+    "description": "Action plan generated from mock inspection findings. Overall rating: Requires Improvement",
+    "related_entity_type": "inspection",
+    "title": "CQC Mock Inspection Action Plan - 18/02/2026",
+    "priority": "high",
+    "related_entity_id": "6995b1f78113398b561eba3c",
+    "category": "regulatory",
+    "actions": [
+      {
+        "action": "Medication Management",
+        "notes": "Improve processes to prevent medication errors and ensure all staff are retrained in safe administration practices.",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Safeguarding Procedures",
+        "notes": "Establish a more robust response mechanism for safeguarding alerts, ensuring timely and thorough investigations.",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Leadership and Governance",
+        "notes": "Enhance communication and accountability structures in management to address incidents and inform improvements.",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Monitoring and Learning from Incidents",
+        "notes": "Develop a detailed learning framework that incorporates analysis of incidents and feedback loops into practice.",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Care Plan Updates",
+        "notes": "Ensure that all care plans are updated in a timely manner reflective of the most recent assessments.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Client Complaints Handling",
+        "notes": "Streamline the process for addressing and resolving client complaints to improve response times.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 12: Safe care and treatment: Medication administration errors noted, posing risks to service users",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 13: Safeguarding service users from abuse and improper treatment: High number of safeguarding alerts raised without timely evidence of action taken",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      }
+    ],
+    "status": "active",
+    "id": "6995b1f7627aceca486568f8",
+    "created_date": "2026-02-18T12:35:03.652000",
+    "updated_date": "2026-02-18T12:35:03.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "assigned_to_staff_ids": [],
+    "target_completion_date": "2026-03-20",
+    "actual_completion_date": null,
+    "evidence": [],
+    "review_notes": null,
+    "progress_percentage": 0,
+    "description": "Action plan generated from mock inspection findings. Overall rating: Good",
+    "related_entity_type": "inspection",
+    "title": "CQC Mock Inspection Action Plan - 18/02/2026",
+    "priority": "high",
+    "related_entity_id": "6995a2e10aa0a2a523fcac3d",
+    "category": "regulatory",
+    "actions": [
+      {
+        "action": "Leadership and Governance",
+        "notes": "Strengthen leadership oversight by implementing regular management meetings to review safeguarding incidents and risk assessments.",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Incident Management",
+        "notes": "Develop and communicate a comprehensive incident management policy that includes follow-up actions after a critical incident.",
+        "target_date": "2026-03-20",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Care Planning Documentation",
+        "notes": "Enhance the documentation quality in care planning to ensure all risk assessments reflect current needs accurately and are easily accessible to staff.",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Responsive Care",
+        "notes": "Improve responsiveness to complaints by establishing a clear timeframe for responses and better communication with clients and their families.",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Risk Assessment",
+        "notes": "Consider integrating electronic systems for risk assessments to enhance accuracy and efficiency of updates.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Staff Engagement",
+        "notes": "Encourage more staff feedback during quarterly supervisions to promote a culture of learning and improvement.",
+        "target_date": "2026-05-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 13 - Safeguarding Service Users from Abuse and Improper Treatment: Two critical safeguarding alerts raised, demonstrating the need for immediate corrective action and oversight.",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "pending",
+        "completed_date": null
+      },
+      {
+        "action": "Regulation 17 - Good Governance: Inconsistent management oversight related to incident reporting and responsive action plans.",
+        "notes": "Ensure immediate compliance",
+        "target_date": "2026-04-19",
+        "responsible_person": "Service Manager",
+        "status": "in_progress",
+        "completed_date": null
+      }
+    ],
+    "status": "active",
+    "id": "6995a2e1380647c74bb26109",
+    "created_date": "2026-02-18T11:30:41.998000",
+    "updated_date": "2026-04-08T07:00:37.626000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

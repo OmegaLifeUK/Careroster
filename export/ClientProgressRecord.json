@@ -1,0 +1,1110 @@
+[
+  {
+    "record_date": "2026-03-25",
+    "activities_engagement": {
+      "community_involvement": null,
+      "overall_rating": 5,
+      "notes": "",
+      "trend": "stable",
+      "activities_participated": [],
+      "hobbies_interests": []
+    },
+    "overall_progress": "stable",
+    "independence_skills": {
+      "notes": "",
+      "trend": "stable",
+      "skills_developed": [],
+      "goals_achieved": [],
+      "travel_independence": null,
+      "domestic_skills": null,
+      "money_management": null,
+      "overall_rating": 5,
+      "personal_care": null
+    },
+    "key_achievements": [
+      "fgnfgnf"
+    ],
+    "concerns": [
+      "gfhfghfg"
+    ],
+    "social_emotional": {
+      "notes": "",
+      "emotional_regulation": null,
+      "trend": "stable",
+      "communication_skills": null,
+      "family_contact": null,
+      "self_esteem": null,
+      "friendships": null,
+      "overall_rating": 5,
+      "peer_relationships": null
+    },
+    "recommendations": [
+      "fghfgh"
+    ],
+    "client_id": "69c0ff4222faba6a5b96513f",
+    "record_type": "weekly",
+    "next_review_date": null,
+    "shared_with": [],
+    "care_plan_goals": [],
+    "recorded_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "education_schooling": {
+      "attendance_percentage": null,
+      "notes": "",
+      "engagement_level": null,
+      "trend": "stable",
+      "punctuality": null,
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "overall_rating": 5,
+      "academic_progress": null,
+      "homework_completion": null,
+      "subjects_excelling": []
+    },
+    "behaviour": {
+      "incidents_count": null,
+      "overall_rating": 5,
+      "positive_behaviours": [],
+      "notes": "gnfgnfgnfg",
+      "trend": "stable",
+      "challenging_behaviours": []
+    },
+    "overall_rating": 5,
+    "health_wellbeing": {
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "notes": "",
+      "trend": "stable",
+      "sleep_quality": null,
+      "appointments_missed": null,
+      "appetite": null,
+      "overall_rating": 5,
+      "mental_health": null,
+      "physical_health": null
+    },
+    "id": "69c37804c5a38a83eba535a6",
+    "created_date": "2026-03-25T05:52:04.599000",
+    "updated_date": "2026-03-25T05:52:04.599000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "record_date": "2026-01-09",
+    "record_type": "weekly",
+    "recorded_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "behaviour": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "positive_behaviours": [],
+      "challenging_behaviours": [],
+      "incidents_count": null,
+      "notes": ""
+    },
+    "education_schooling": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "attendance_percentage": null,
+      "punctuality": null,
+      "academic_progress": null,
+      "engagement_level": null,
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": ""
+    },
+    "social_emotional": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "peer_relationships": null,
+      "family_contact": null,
+      "emotional_regulation": null,
+      "self_esteem": null,
+      "communication_skills": null,
+      "friendships": null,
+      "notes": ""
+    },
+    "health_wellbeing": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "physical_health": null,
+      "mental_health": null,
+      "sleep_quality": null,
+      "appetite": null,
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": ""
+    },
+    "independence_skills": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "personal_care": null,
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": ""
+    },
+    "activities_engagement": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": null,
+      "notes": ""
+    },
+    "care_plan_goals": [],
+    "key_achievements": [],
+    "concerns": [],
+    "recommendations": [],
+    "overall_progress": "stable",
+    "overall_rating": 5,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69609350bd19de0c69b92b5a",
+    "created_date": "2026-01-09T05:34:08.379000",
+    "updated_date": "2026-01-09T05:34:08.379000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "client_id": "694146c3b47d88b4898e0e0d",
+    "record_date": "2025-12-19",
+    "record_type": "weekly",
+    "recorded_by": "m.carter@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 3,
+      "trend": "Declining",
+      "positive_behaviours": [],
+      "challenging_behaviours": [
+        "Self-harm",
+        "Struggling to get up for school",
+        "Refusing to attend education",
+        "Vaping in school",
+        "Abusive language towards teachers",
+        "Multiple school exclusions",
+        "Struggling to maintain personal hygiene",
+        "Struggling to take medication consistently",
+        "Excessive snacking on crisps and chocolate",
+        "Struggling to engage in physical activities",
+        "Selectivity with food",
+        "Making unkind remarks towards the team",
+        "Substance misuse",
+        "Refusing dental and optical appointments"
+      ],
+      "incidents_count": null,
+      "notes": "Engagement in de-briefs and reflections after incidents is noted, signaling some awareness of behaviours."
+    },
+    "education_schooling": {
+      "overall_rating": 1,
+      "trend": "Consistently Poor",
+      "attendance_percentage": null,
+      "punctuality": null,
+      "academic_progress": null,
+      "engagement_level": null,
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Logan has been refusing to attend school and has received multiple exclusions, severely limiting educational progress."
+    },
+    "social_emotional": {
+      "overall_rating": 2,
+      "trend": "Declining",
+      "peer_relationships": null,
+      "family_contact": null,
+      "emotional_regulation": null,
+      "self_esteem": null,
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "Logan is struggling with emotional management, requiring immediate counseling support."
+    },
+    "health_wellbeing": {
+      "overall_rating": 2,
+      "trend": "Declining",
+      "physical_health": null,
+      "mental_health": null,
+      "sleep_quality": null,
+      "appetite": null,
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Logan's physical health is a concern due to substance misuse and lack of proper nutrition."
+    },
+    "independence_skills": {
+      "overall_rating": 2,
+      "trend": "Stagnant",
+      "personal_care": null,
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "There is a lack of progress in independence skills, particularly concerning personal hygiene and self-care routines."
+    },
+    "activities_engagement": {
+      "overall_rating": 2,
+      "trend": "Declining",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": null,
+      "notes": "Logan is not engaging in physical activities, which is affecting overall health and well-being."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [],
+    "concerns": [
+      "Logan exhibits multiple challenging behaviours that impede educational attendance and emotional stability.",
+      "There is a lack of consistent engagement in healthcare appointments, both dental and optical.",
+      "Substance misuse and the refusal to attend school are critical areas of concern."
+    ],
+    "recommendations": [
+      "Immediate engagement with school support services to address attendance issues.",
+      "Initiate counseling sessions as soon as possible to begin emotional skills development.",
+      "Work with nutritionists to create a meal plan that encourages a balanced diet, especially focusing on incorporating fruits and vegetables.",
+      "Encourage gradual involvement in physical activities to promote overall health.",
+      "Develop a structured daily routine that emphasizes a proper sleep schedule."
+    ],
+    "overall_progress": "Logan is currently facing significant challenges across several areas, with minimal progress on active care plan goals. Immediate interventions and support are necessary to address these issues.",
+    "overall_rating": 2,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69453dfb532f0dd6a84aa75a",
+    "created_date": "2025-12-19T11:58:51.699000",
+    "updated_date": "2025-12-19T11:58:51.699000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "6925cd17c40f16dba6560a3a",
+    "record_date": "2025-12-11",
+    "record_type": "weekly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "positive_behaviours": [],
+      "challenging_behaviours": [],
+      "incidents_count": null,
+      "notes": "No specific behaviours were reported in recent charts."
+    },
+    "education_schooling": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "attendance_percentage": null,
+      "punctuality": null,
+      "academic_progress": null,
+      "engagement_level": null,
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "No new educational activities noted; lack of engagement."
+    },
+    "social_emotional": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "peer_relationships": null,
+      "family_contact": null,
+      "emotional_regulation": null,
+      "self_esteem": null,
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "Limited data; absence of recorded social interactions or emotional assessments."
+    },
+    "health_wellbeing": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "physical_health": null,
+      "mental_health": null,
+      "sleep_quality": null,
+      "appetite": null,
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "No recent health concerns reported; need for ongoing health monitoring."
+    },
+    "independence_skills": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "personal_care": null,
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "No indications of skill development in recent assessments."
+    },
+    "activities_engagement": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": null,
+      "notes": "No new activities reported; need for increased engagement opportunities."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [],
+    "concerns": [],
+    "recommendations": [
+      "Consider setting new active goals for monitoring progress.",
+      "Regular check-ins to assess engagement and overall wellbeing."
+    ],
+    "overall_progress": "No significant progress noted; ongoing observation and potential goal setting recommended.",
+    "overall_rating": 8,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "693a968ee2bc0a80da0141e1",
+    "created_date": "2025-12-11T10:01:50.564000",
+    "updated_date": "2025-12-11T10:01:50.564000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-11-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "positive_behaviours": [
+        "Consistent routines",
+        "Self-regulation",
+        "Helping others",
+        "Positive outlook"
+      ],
+      "challenging_behaviours": [
+        "Minor anxiety before appointments"
+      ],
+      "incidents_count": 0,
+      "notes": "No incidents this month. Consistently using coping strategies. Helping newer residents settle in."
+    },
+    "education_schooling": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "attendance_percentage": 80,
+      "punctuality": "excellent",
+      "academic_progress": "at_expected",
+      "engagement_level": "fully_engaged",
+      "homework_completion": null,
+      "subjects_excelling": [
+        "Art",
+        "Food Technology",
+        "English"
+      ],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "80% attendance achieved. Engaging fully in lessons. Considering future career in beauty."
+    },
+    "social_emotional": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "peer_relationships": "good",
+      "family_contact": null,
+      "emotional_regulation": "good",
+      "self_esteem": "healthy",
+      "communication_skills": "good",
+      "friendships": null,
+      "notes": "Strong progress in CAMHS. Processing past trauma. Good friendships developing. More confident."
+    },
+    "health_wellbeing": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "physical_health": "good",
+      "mental_health": "good",
+      "sleep_quality": "good",
+      "appetite": "good",
+      "medication_compliance": "full",
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Excellent health. Nicotine down to 10mg. Taking all medications consistently. Awaiting dermatology referral."
+    },
+    "independence_skills": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "personal_care": "independent",
+      "domestic_skills": "minimal_support",
+      "money_management": "minimal_support",
+      "travel_independence": "mostly_independent",
+      "skills_developed": [
+        "Budgeting basics",
+        "Cooking simple meals",
+        "Public transport use"
+      ],
+      "goals_achieved": [],
+      "notes": "Significant growth in independence. Managing money better. Cooking own snacks."
+    },
+    "activities_engagement": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "activities_participated": [
+        "Nail art course",
+        "Art club",
+        "Shopping trips",
+        "Cinema",
+        "Swimming"
+      ],
+      "hobbies_interests": [
+        "Nail art",
+        "Art",
+        "Fashion"
+      ],
+      "community_involvement": "active",
+      "notes": "Started formal nail art course. Active in community activities. Exploring beauty career options."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [
+      "Zero incidents",
+      "80% school attendance",
+      "Started nail art course",
+      "Nicotine reduced to 10mg",
+      "Independent living skills growing"
+    ],
+    "concerns": [
+      "Dermatology referral still pending (48 month wait)"
+    ],
+    "recommendations": [
+      "Continue current support plan",
+      "Explore beauty apprenticeship options",
+      "Plan for future placement"
+    ],
+    "overall_progress": "significant_improvement",
+    "overall_rating": 7,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea5",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-07-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 4,
+      "trend": "stable",
+      "positive_behaviours": [
+        "Some engagement with keyworker",
+        "Reduced verbal aggression"
+      ],
+      "challenging_behaviours": [
+        "Self-harm continues",
+        "Substance concerns",
+        "Mood swings"
+      ],
+      "incidents_count": 5,
+      "notes": "Slight stabilisation. Self-harm incidents reduced but still concerning. Beginning to build relationship with staff."
+    },
+    "education_schooling": {
+      "overall_rating": 2,
+      "trend": "stable",
+      "attendance_percentage": 20,
+      "punctuality": "poor",
+      "academic_progress": "significantly_below",
+      "engagement_level": "rarely_engaged",
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Attendance remains very low. Some discussion about alternative provision."
+    },
+    "social_emotional": {
+      "overall_rating": 3,
+      "trend": "stable",
+      "peer_relationships": "poor",
+      "family_contact": null,
+      "emotional_regulation": "needs_support",
+      "self_esteem": "very_low",
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "Starting weekly CAMHS sessions. Early days but attending consistently."
+    },
+    "health_wellbeing": {
+      "overall_rating": 4,
+      "trend": "stable",
+      "physical_health": "fair",
+      "mental_health": "requires_attention",
+      "sleep_quality": "poor",
+      "appetite": "variable",
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Sleep remains poor. Dental issues identified - surgery planned. Started Melatonin trial."
+    },
+    "independence_skills": {
+      "overall_rating": 4,
+      "trend": "stable",
+      "personal_care": "moderate_support",
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Personal hygiene still requires significant prompting."
+    },
+    "activities_engagement": {
+      "overall_rating": 3,
+      "trend": "stable",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": "none",
+      "notes": "Beginning to show interest in nail art. Some positive engagement."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [
+      "Engaging with CAMHS",
+      "Reduced incidents from previous month"
+    ],
+    "concerns": [
+      "Self-harm ongoing",
+      "School attendance",
+      "Substance use"
+    ],
+    "recommendations": [
+      "Continue CAMHS support",
+      "Melatonin for sleep",
+      "Explore creative activities"
+    ],
+    "overall_progress": "stable",
+    "overall_rating": 3,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea1",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-09-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "positive_behaviours": [
+        "Coping strategies in use",
+        "Communicating feelings",
+        "Following routines"
+      ],
+      "challenging_behaviours": [
+        "Anxiety around school",
+        "Some mood dips"
+      ],
+      "incidents_count": 2,
+      "notes": "Maintained progress despite school anxiety. Using learned strategies to manage emotions."
+    },
+    "education_schooling": {
+      "overall_rating": 4,
+      "trend": "improving",
+      "attendance_percentage": 55,
+      "punctuality": "good",
+      "academic_progress": "below_expected",
+      "engagement_level": "mostly_engaged",
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Returned to school with reduced timetable. Attending more consistently. New glasses helping."
+    },
+    "social_emotional": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "peer_relationships": "fair",
+      "family_contact": null,
+      "emotional_regulation": "developing",
+      "self_esteem": "low",
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "CAMHS exploring EMDR therapy. Building peer connections at school. Opening up more in sessions."
+    },
+    "health_wellbeing": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "physical_health": "good",
+      "mental_health": "fair",
+      "sleep_quality": "fair",
+      "appetite": "good",
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Stable health. Managing migraines with Zolmitriptan. Continuing Melatonin for sleep."
+    },
+    "independence_skills": {
+      "overall_rating": 5,
+      "trend": "stable",
+      "personal_care": "minimal_support",
+      "domestic_skills": "moderate_support",
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Good personal care. Learning some cooking skills."
+    },
+    "activities_engagement": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "activities_participated": [
+        "Nail art",
+        "Cooking",
+        "Swimming once"
+      ],
+      "hobbies_interests": [],
+      "community_involvement": "some",
+      "notes": "Trying new activities. Went swimming for first time in months."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [
+      "Returned to school",
+      "Using coping strategies",
+      "Trying new activities",
+      "Maintaining hygiene independently"
+    ],
+    "concerns": [
+      "Self-esteem still low",
+      "School attendance could improve"
+    ],
+    "recommendations": [
+      "Continue reduced timetable",
+      "Build on EMDR exploration",
+      "Encourage social activities"
+    ],
+    "overall_progress": "improvement",
+    "overall_rating": 5,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea3",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-06-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 3,
+      "trend": "declining",
+      "positive_behaviours": [
+        "Occasional moments of cooperation"
+      ],
+      "challenging_behaviours": [
+        "Self-harm incidents",
+        "Substance misuse",
+        "Verbal aggression",
+        "Refusal to engage"
+      ],
+      "incidents_count": 8,
+      "notes": "Significant challenges this month. Multiple self-harm incidents requiring intervention. Substance use concerns ongoing. Struggling to manage emotions."
+    },
+    "education_schooling": {
+      "overall_rating": 2,
+      "trend": "declining",
+      "attendance_percentage": 15,
+      "punctuality": "poor",
+      "academic_progress": "significantly_below",
+      "engagement_level": "rarely_engaged",
+      "homework_completion": "never",
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Very low school attendance. Refusing to attend most days. No engagement with schoolwork."
+    },
+    "social_emotional": {
+      "overall_rating": 3,
+      "trend": "declining",
+      "peer_relationships": "poor",
+      "family_contact": null,
+      "emotional_regulation": "needs_support",
+      "self_esteem": "very_low",
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "Isolating from peers. Struggling significantly with emotional regulation. Low self-esteem evident."
+    },
+    "health_wellbeing": {
+      "overall_rating": 4,
+      "trend": "stable",
+      "physical_health": "fair",
+      "mental_health": "requires_attention",
+      "sleep_quality": "poor",
+      "appetite": "variable",
+      "medication_compliance": "poor",
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Sleep very disturbed. ADHD medication paused. Mental health support beginning with CAMHS."
+    },
+    "independence_skills": {
+      "overall_rating": 4,
+      "trend": "stable",
+      "personal_care": "moderate_support",
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Requires significant prompting for personal hygiene and self-care."
+    },
+    "activities_engagement": {
+      "overall_rating": 3,
+      "trend": "declining",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": "none",
+      "notes": "Not engaging in activities. Preferring to isolate in room."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [],
+    "concerns": [
+      "Frequent self-harm",
+      "Substance misuse",
+      "School refusal",
+      "Social isolation"
+    ],
+    "recommendations": [
+      "Intensive CAMHS support",
+      "Explore alternative education options",
+      "Substance misuse intervention"
+    ],
+    "overall_progress": "significant_decline",
+    "overall_rating": 3,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea0",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-08-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "positive_behaviours": [
+        "Better engagement with staff",
+        "Using coping strategies",
+        "Asking for help more"
+      ],
+      "challenging_behaviours": [
+        "Occasional self-harm",
+        "Mood fluctuations"
+      ],
+      "incidents_count": 3,
+      "notes": "Positive progress. Self-harm significantly reduced. Starting to use coping strategies learned in CAMHS."
+    },
+    "education_schooling": {
+      "overall_rating": 3,
+      "trend": "improving",
+      "attendance_percentage": 35,
+      "punctuality": "fair",
+      "academic_progress": "below_expected",
+      "engagement_level": "sometimes_engaged",
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Summer holidays - engaged with some online learning. More positive about returning in September."
+    },
+    "social_emotional": {
+      "overall_rating": 4,
+      "trend": "improving",
+      "peer_relationships": "fair",
+      "family_contact": null,
+      "emotional_regulation": "developing",
+      "self_esteem": "low",
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "CAMHS therapy progressing well. Starting to open up more. Made one friend at home."
+    },
+    "health_wellbeing": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "physical_health": "good",
+      "mental_health": "fair",
+      "sleep_quality": "fair",
+      "appetite": "good",
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Dental surgery completed successfully. Melatonin helping with sleep. Eating more regularly."
+    },
+    "independence_skills": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "personal_care": "minimal_support",
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Taking more pride in appearance. Less prompting needed for hygiene."
+    },
+    "activities_engagement": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "activities_participated": [
+        "Nail art",
+        "Cooking sessions",
+        "Shopping trips"
+      ],
+      "hobbies_interests": [],
+      "community_involvement": "minimal",
+      "notes": "Enjoying nail art and showing real skill. Participated in cooking sessions."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [
+      "Significant reduction in self-harm",
+      "Dental surgery completed",
+      "Engaging in hobbies",
+      "Improved sleep"
+    ],
+    "concerns": [
+      "School return anxiety",
+      "Ongoing mental health support needed"
+    ],
+    "recommendations": [
+      "Continue current support",
+      "Transition plan for school return",
+      "Encourage creative activities"
+    ],
+    "overall_progress": "improvement",
+    "overall_rating": 5,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea2",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-10-01",
+    "record_type": "monthly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "positive_behaviours": [
+        "Self-advocacy",
+        "Positive relationships with staff",
+        "Reduced nicotine use"
+      ],
+      "challenging_behaviours": [
+        "Occasional anxiety spikes"
+      ],
+      "incidents_count": 1,
+      "notes": "Excellent progress. Only one minor incident. Actively working on reducing vape nicotine levels."
+    },
+    "education_schooling": {
+      "overall_rating": 5,
+      "trend": "improving",
+      "attendance_percentage": 70,
+      "punctuality": "good",
+      "academic_progress": "at_expected",
+      "engagement_level": "mostly_engaged",
+      "homework_completion": null,
+      "subjects_excelling": [
+        "Art",
+        "Food Technology"
+      ],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Significant improvement in attendance. Engaging well in practical subjects. Showing talent in art."
+    },
+    "social_emotional": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "peer_relationships": "good",
+      "family_contact": null,
+      "emotional_regulation": "good",
+      "self_esteem": "healthy",
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "EMDR sessions helping process trauma. Building friendships. More confident."
+    },
+    "health_wellbeing": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "physical_health": "good",
+      "mental_health": "good",
+      "sleep_quality": "good",
+      "appetite": "good",
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Overall health good. Reduced vape nicotine from 20mg to 15mg. Sleeping much better."
+    },
+    "independence_skills": {
+      "overall_rating": 6,
+      "trend": "improving",
+      "personal_care": "independent",
+      "domestic_skills": "minimal_support",
+      "money_management": "moderate_support",
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Managing personal care independently. Learning money skills."
+    },
+    "activities_engagement": {
+      "overall_rating": 7,
+      "trend": "improving",
+      "activities_participated": [
+        "Nail art",
+        "Art classes",
+        "Shopping",
+        "Cinema trip"
+      ],
+      "hobbies_interests": [],
+      "community_involvement": "some",
+      "notes": "Active participation in activities. Went to cinema with peers. Enjoying creative outlets."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [
+      "70% school attendance",
+      "Only 1 incident",
+      "Reducing nicotine",
+      "Making friends",
+      "Independent personal care"
+    ],
+    "concerns": [
+      "Continued support needed for substance reduction"
+    ],
+    "recommendations": [
+      "Increase school hours gradually",
+      "Continue EMDR",
+      "Support nicotine reduction"
+    ],
+    "overall_progress": "significant_improvement",
+    "overall_rating": 6,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "69305d0022b1e6d511fcfea4",
+    "created_date": "2025-12-03T15:53:36.652000",
+    "updated_date": "2025-12-03T15:53:36.652000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "client_id": "692f03f12961d743e9f36465",
+    "record_date": "2025-12-02",
+    "record_type": "weekly",
+    "recorded_by": "p.holt@omegalife.uk",
+    "behaviour": {
+      "overall_rating": 2,
+      "trend": "improving",
+      "positive_behaviours": [],
+      "challenging_behaviours": [
+        "Self-harm",
+        "Substance misuse",
+        "Aggressive outbursts",
+        "Disengagement",
+        "Property damage"
+      ],
+      "incidents_count": null,
+      "notes": "Logan's behavior shows a pattern of escalation, particularly when she feels emotionally triggered."
+    },
+    "education_schooling": {
+      "overall_rating": 4,
+      "trend": "Negative",
+      "attendance_percentage": null,
+      "punctuality": null,
+      "academic_progress": null,
+      "engagement_level": null,
+      "homework_completion": null,
+      "subjects_excelling": [],
+      "subjects_struggling": [],
+      "school_feedback": null,
+      "notes": "Logan's academic engagement is hindered by her emotional state and behavioral issues, leading to missed educational opportunities."
+    },
+    "social_emotional": {
+      "overall_rating": 2,
+      "trend": "Negative",
+      "peer_relationships": null,
+      "family_contact": null,
+      "emotional_regulation": null,
+      "self_esteem": null,
+      "communication_skills": null,
+      "friendships": null,
+      "notes": "Logan's social interactions are strained; she exhibits aggressive behaviors and struggles to maintain relationships."
+    },
+    "health_wellbeing": {
+      "overall_rating": 3,
+      "trend": "Negative",
+      "physical_health": null,
+      "mental_health": null,
+      "sleep_quality": null,
+      "appetite": null,
+      "medication_compliance": null,
+      "appointments_attended": null,
+      "appointments_missed": null,
+      "notes": "Logan's health is a significant concern, particularly regarding substance misuse and emotional self-harm."
+    },
+    "independence_skills": {
+      "overall_rating": 3,
+      "trend": "Negative",
+      "personal_care": null,
+      "domestic_skills": null,
+      "money_management": null,
+      "travel_independence": null,
+      "skills_developed": [],
+      "goals_achieved": [],
+      "notes": "Logan demonstrates limited independence skills, particularly with self-regulation and adhering to safety guidelines."
+    },
+    "activities_engagement": {
+      "overall_rating": 3,
+      "trend": "Negative",
+      "activities_participated": [],
+      "hobbies_interests": [],
+      "community_involvement": null,
+      "notes": "Logan shows little interest in structured activities and often refuses participation."
+    },
+    "care_plan_goals": [],
+    "key_achievements": [],
+    "concerns": [
+      "Self-harm behaviors and suicide ideation history.",
+      "Substance misuse, including illegal substances.",
+      "Disengagement from the support team and refusal of care.",
+      "Aggressive behaviors towards peers and staff.",
+      "Property damage and physical confrontations."
+    ],
+    "recommendations": [
+      "Establish active care plan goals that focus on mental health support and coping strategies.",
+      "Engage Logan in setting her personal goals to enhance her sense of agency.",
+      "Provide regular check-ins with mental health professionals to monitor progress.",
+      "Incorporate more structured activities to help channel her energy positively.",
+      "Explore therapy options focusing on emotional regulation and substance misuse."
+    ],
+    "overall_progress": "Logan has demonstrated significant challenges in her behavior and emotional regulation recently. Her engagement with the team is inconsistent, and there are notable concerns regarding her mental health and well-being. The lack of active care plan goals may contribute to the ongoing issues. It is essential to establish clear objectives to support her development and address her needs effectively.",
+    "overall_rating": 2,
+    "next_review_date": null,
+    "shared_with": [],
+    "id": "692f05619894e965ff0ff460",
+    "created_date": "2025-12-02T15:27:29.320000",
+    "updated_date": "2025-12-02T15:27:29.320000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  }
+]

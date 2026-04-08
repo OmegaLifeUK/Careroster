@@ -1,0 +1,50 @@
+[
+  {
+    "qualification_name": "NVQ Level 2 Health & Social Care",
+    "description": "Basic care qualification",
+    "color_code": "#3B82F6",
+    "level": "basic",
+    "id": "6909eb733d50d37c98f3e448",
+    "created_date": "2025-11-04T12:02:59.971000",
+    "updated_date": "2025-11-04T12:02:59.971000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "NVQ Level 3 Health & Social Care",
+    "description": "Advanced care qualification",
+    "color_code": "#10B981",
+    "level": "intermediate",
+    "id": "6909eb733d50d37c98f3e449",
+    "created_date": "2025-11-04T12:02:59.971000",
+    "updated_date": "2025-11-04T12:02:59.971000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Medication Administration",
+    "description": "Qualified to administer medications",
+    "color_code": "#F59E0B",
+    "level": "intermediate",
+    "id": "6909eb733d50d37c98f3e44a",
+    "created_date": "2025-11-04T12:02:59.971000",
+    "updated_date": "2025-11-04T12:02:59.971000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "qualification_name": "Moving & Handling",
+    "description": "Manual handling certification",
+    "color_code": "#8B5CF6",
+    "level": "basic",
+    "id": "6909eb733d50d37c98f3e44b",
+    "created_date": "2025-11-04T12:02:59.971000",
+    "updated_date": "2025-11-04T12:02:59.971000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

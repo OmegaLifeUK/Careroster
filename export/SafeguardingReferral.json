@@ -1,0 +1,271 @@
+[
+  {
+    "capacity_to_make_decisions": null,
+    "police_notified": false,
+    "family_notification_details": null,
+    "closed_date": null,
+    "date_of_concern": "2026-03-24T10:58:12.483Z",
+    "advocate_involved": false,
+    "client_id": "more risk asdasdasdasdasdasd",
+    "safeguarding_type": [
+      "other"
+    ],
+    "cqc_notified": false,
+    "ongoing_risk": false,
+    "details_of_concern": "descriptionasdasdasd",
+    "lessons_learned": null,
+    "reported_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "location_of_incident": null,
+    "client_wishes": null,
+    "cqc_notification_date": null,
+    "outcome": null,
+    "witnesses": [
+      {
+        "name": "surbhi",
+        "statement": "",
+        "role": ""
+      }
+    ],
+    "strategy_meeting": null,
+    "family_notified": false,
+    "advocate_details": null,
+    "safeguarding_plan": null,
+    "immediate_action_taken": "",
+    "police_reference": null,
+    "reference_number": null,
+    "police_notification_date": null,
+    "local_authority_reference": null,
+    "risk_level": "high",
+    "local_authority_notification_date": null,
+    "outcome_details": null,
+    "alleged_perpetrator": null,
+    "local_authority_notified": false,
+    "status": "reported",
+    "id": "69c26e4424d35f404ca5a490",
+    "created_date": "2026-03-24T10:58:12.367000",
+    "updated_date": "2026-03-24T10:58:12.367000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "capacity_to_make_decisions": null,
+    "police_notified": false,
+    "family_notification_details": null,
+    "closed_date": null,
+    "date_of_concern": "2026-03-24T10:57:57.339Z",
+    "advocate_involved": false,
+    "client_id": "more risk",
+    "safeguarding_type": [
+      "modern_slavery"
+    ],
+    "cqc_notified": false,
+    "ongoing_risk": false,
+    "details_of_concern": "description",
+    "lessons_learned": null,
+    "reported_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "location_of_incident": null,
+    "client_wishes": null,
+    "cqc_notification_date": null,
+    "outcome": null,
+    "witnesses": [
+      {
+        "name": "surbhi",
+        "statement": "",
+        "role": ""
+      }
+    ],
+    "strategy_meeting": null,
+    "family_notified": false,
+    "advocate_details": null,
+    "safeguarding_plan": null,
+    "immediate_action_taken": "",
+    "police_reference": null,
+    "reference_number": null,
+    "police_notification_date": null,
+    "local_authority_reference": null,
+    "risk_level": "high",
+    "local_authority_notification_date": null,
+    "outcome_details": null,
+    "alleged_perpetrator": null,
+    "local_authority_notified": false,
+    "status": "reported",
+    "id": "69c26e35aba09f82fd4304f8",
+    "created_date": "2026-03-24T10:57:57.233000",
+    "updated_date": "2026-03-24T10:57:57.233000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "capacity_to_make_decisions": null,
+    "police_notified": false,
+    "family_notification_details": null,
+    "closed_date": null,
+    "date_of_concern": "2026-03-24T10:57:50.371Z",
+    "advocate_involved": false,
+    "client_id": "more risk",
+    "safeguarding_type": [
+      "modern_slavery"
+    ],
+    "cqc_notified": false,
+    "ongoing_risk": true,
+    "details_of_concern": "description",
+    "lessons_learned": null,
+    "reported_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "location_of_incident": null,
+    "client_wishes": null,
+    "cqc_notification_date": null,
+    "outcome": null,
+    "witnesses": [
+      {
+        "name": "surbhi",
+        "statement": "",
+        "role": ""
+      }
+    ],
+    "strategy_meeting": null,
+    "family_notified": false,
+    "advocate_details": null,
+    "safeguarding_plan": null,
+    "immediate_action_taken": "Urgent - immediate danger reported",
+    "police_reference": null,
+    "reference_number": null,
+    "police_notification_date": null,
+    "local_authority_reference": null,
+    "risk_level": "critical",
+    "local_authority_notification_date": null,
+    "outcome_details": null,
+    "alleged_perpetrator": null,
+    "local_authority_notified": false,
+    "status": "reported",
+    "id": "69c26e2e229201bb9c3db464",
+    "created_date": "2026-03-24T10:57:50.525000",
+    "updated_date": "2026-03-24T10:57:50.525000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "capacity_to_make_decisions": null,
+    "police_notified": false,
+    "family_notification_details": null,
+    "closed_date": null,
+    "date_of_concern": "2026-03-24T08:40:24.829Z",
+    "advocate_involved": false,
+    "client_id": "sadasd",
+    "safeguarding_type": [
+      "emotional_abuse"
+    ],
+    "cqc_notified": false,
+    "ongoing_risk": true,
+    "details_of_concern": "sdsdadadasdas",
+    "lessons_learned": null,
+    "reported_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "location_of_incident": null,
+    "client_wishes": null,
+    "cqc_notification_date": null,
+    "outcome": null,
+    "witnesses": [
+      {
+        "name": "ddasdad aaaa",
+        "statement": "",
+        "role": ""
+      }
+    ],
+    "strategy_meeting": null,
+    "family_notified": false,
+    "advocate_details": null,
+    "safeguarding_plan": null,
+    "immediate_action_taken": "Urgent - immediate danger reported",
+    "police_reference": null,
+    "reference_number": null,
+    "police_notification_date": null,
+    "local_authority_reference": null,
+    "risk_level": "critical",
+    "local_authority_notification_date": null,
+    "outcome_details": null,
+    "alleged_perpetrator": null,
+    "local_authority_notified": false,
+    "status": "reported",
+    "id": "69c24df913286f391d1b89c4",
+    "created_date": "2026-03-24T08:40:25.001000",
+    "updated_date": "2026-03-24T08:40:25.001000",
+    "created_by_id": "690d9c240a34ca4023dc316e",
+    "created_by": "vipin@appsandwebdevelopmentsolutions.com",
+    "is_sample": false
+  },
+  {
+    "reference_number": "SAFE-2024-11-087",
+    "client_id": "6914b519444801b5d13b928c",
+    "date_of_concern": "2024-11-22T14:30:00",
+    "reported_by": "Anna Martinez - Care Assistant",
+    "safeguarding_type": [
+      "financial_abuse"
+    ],
+    "location_of_incident": "Care home - Betty's room",
+    "details_of_concern": "Betty's daughter mentioned that Betty had been asking to withdraw £500 cash each week for the past month from her bank account. This is unusual as Betty has dementia and rarely needs cash. When asked what the money was for, Betty became vague and mentioned 'a nice man who visits'. Staff have noticed an unfamiliar male visitor (not family) visiting Betty 2-3 times per week. Concern that Betty may be being financially exploited",
+    "alleged_perpetrator": {
+      "name": "Unknown male - approximately 40-50 years old",
+      "relationship": "Claims to be 'old friend'",
+      "details": "Male visitor, smartly dressed, visits 2-3 times per week. Not previously known to staff or family"
+    },
+    "witnesses": [
+      {
+        "name": "Margaret Thompson",
+        "role": "Daughter (LPA)",
+        "statement": "Noticed unusual cash withdrawals on mother's bank statement. Mother can't explain where money went. Very concerned"
+      }
+    ],
+    "immediate_action_taken": "1) Matter discussed with manager immediately 2) Visitor log checked - visitor has been signing in as 'Tom Miller - friend' 3) Manager has instructed reception not to allow visitor access until matter resolved 4) Betty's LPA (daughter) notified 5) Bank contacted to freeze unusual transactions",
+    "client_wishes": "Betty says 'Tom is a lovely friend and helps her'. Betty has capacity issues and cannot fully understand the concern",
+    "capacity_to_make_decisions": false,
+    "risk_level": "high",
+    "ongoing_risk": false,
+    "police_notified": true,
+    "police_reference": "LOG-2024-11-22-5473",
+    "police_notification_date": "2024-11-22T16:00:00",
+    "local_authority_notified": true,
+    "local_authority_reference": "SA-2024-0891",
+    "local_authority_notification_date": "2024-11-22T15:30:00",
+    "cqc_notified": true,
+    "cqc_notification_date": "2024-11-23T09:00:00",
+    "family_notified": true,
+    "family_notification_details": "Daughter (LPA) fully informed and involved throughout",
+    "advocate_involved": false,
+    "advocate_details": null,
+    "strategy_meeting": {
+      "required": true,
+      "date": "2024-11-25T14:00:00",
+      "outcome": "Police investigation ongoing. Care home to maintain visitor restrictions. LPA to review bank accounts and implement safeguards. Betty to be supported to understand situation at her level"
+    },
+    "safeguarding_plan": {
+      "agreed_actions": [
+        "Visitor restrictions remain in place",
+        "All visitors to be verified with family",
+        "Betty's finances reviewed by LPA",
+        "Staff to monitor for any signs of distress",
+        "Police investigation to continue"
+      ],
+      "responsible_persons": [
+        "Care Home Manager",
+        "LPA",
+        "Police",
+        "Safeguarding Team"
+      ],
+      "timescales": "Ongoing - review in 2 weeks",
+      "monitoring_arrangements": "Weekly safeguarding review meetings. Daily welfare checks on Betty"
+    },
+    "status": "safeguarding_plan",
+    "outcome": "partially_substantiated",
+    "outcome_details": "Investigation found that visitor had been asking Betty for money for various 'emergencies'. Betty, due to dementia, was not able to assess the legitimacy. Total of £2000 given over 4-week period. Police investigation ongoing. Visitor has been barred from property. Financial safeguards put in place",
+    "lessons_learned": "Need for more robust visitor verification system. Staff training on financial abuse signs enhanced. LPAs to be encouraged to monitor bank accounts more frequently",
+    "closed_date": "",
+    "id": "69149eb41e62625d34254b6a",
+    "created_date": "2025-11-12T14:50:28.617000",
+    "updated_date": "2025-11-12T16:31:36.457000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

@@ -1,0 +1,364 @@
+[
+  {
+    "activity_id": "6937f55b52cf29431604c2cf",
+    "session_date": "2025-12-09",
+    "start_time": "09:00",
+    "end_time": "16:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fe1"
+    ],
+    "registered_clients": [
+      "6912fb16a5af9a0b245364db",
+      "6937f904fa24d72bb61e4fd9"
+    ],
+    "max_capacity": 2,
+    "location": "Kitchen",
+    "session_notes": "",
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": "weekly",
+    "id": "69381987b5b938863663c046",
+    "created_date": "2025-12-09T12:43:51.816000",
+    "updated_date": "2025-12-09T12:43:51.816000",
+    "created_by_id": "6909e61b89f26ef7fa768434",
+    "created_by": "p.holt@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd5",
+    "session_date": "2025-12-16",
+    "start_time": "11:30",
+    "end_time": "12:30",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdc"
+    ],
+    "max_capacity": 10,
+    "location": "Main Hall",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1ce",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd7",
+    "session_date": "2025-12-10",
+    "start_time": "11:00",
+    "end_time": "13:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb"
+    ],
+    "max_capacity": 6,
+    "location": "Kitchen",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1c9",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd5",
+    "session_date": "2025-12-11",
+    "start_time": "10:00",
+    "end_time": "11:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf",
+      "6937f904fa24d72bb61e4fe1"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 10,
+    "location": "Main Hall",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1ca",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd6",
+    "session_date": "2025-12-12",
+    "start_time": "11:00",
+    "end_time": "12:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdc"
+    ],
+    "max_capacity": 12,
+    "location": "Main Hall",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1cc",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd5",
+    "session_date": "2025-12-09",
+    "start_time": "11:30",
+    "end_time": "12:30",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdc"
+    ],
+    "max_capacity": 10,
+    "location": "Main Hall",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1c6",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6912fb16a5af9a0b245364d2",
+    "session_date": "2025-12-10",
+    "start_time": "09:30",
+    "end_time": "11:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde",
+      "6937f904fa24d72bb61e4fdf"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdc"
+    ],
+    "max_capacity": 8,
+    "location": "Art Room",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1c8",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T11:02:25.892000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd6",
+    "session_date": "2025-12-09",
+    "start_time": "14:00",
+    "end_time": "15:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdc",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 12,
+    "location": "Main Hall",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1c7",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd8",
+    "session_date": "2025-12-18",
+    "start_time": "14:00",
+    "end_time": "16:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 8,
+    "location": "Garden",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1d0",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd8",
+    "session_date": "2025-12-10",
+    "start_time": "09:30",
+    "end_time": "11:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde",
+      "6937f904fa24d72bb61e4fdf"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 8,
+    "location": "Art Room",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1c5",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T11:03:14.788000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd7",
+    "session_date": "2025-12-17",
+    "start_time": "11:00",
+    "end_time": "13:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fdf",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 6,
+    "location": "Kitchen",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1cf",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd4",
+    "session_date": "2025-12-13",
+    "start_time": "09:30",
+    "end_time": "11:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde",
+      "6937f904fa24d72bb61e4fdf"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fda",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 8,
+    "location": "Art Room",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1cd",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "activity_id": "6937f904fa24d72bb61e4fd8",
+    "session_date": "2025-12-11",
+    "start_time": "14:00",
+    "end_time": "16:00",
+    "facilitator_staff_ids": [
+      "6937f904fa24d72bb61e4fde",
+      "6937f904fa24d72bb61e4fe0"
+    ],
+    "registered_clients": [
+      "6937f904fa24d72bb61e4fd9",
+      "6937f904fa24d72bb61e4fdb",
+      "6937f904fa24d72bb61e4fdd"
+    ],
+    "max_capacity": 8,
+    "location": "Garden",
+    "session_notes": null,
+    "status": "scheduled",
+    "completion_notes": null,
+    "is_recurring": false,
+    "recurrence_pattern": null,
+    "id": "6937faad9e97abee7c62c1cb",
+    "created_date": "2025-12-09T10:32:13.804000",
+    "updated_date": "2025-12-09T10:32:13.804000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]

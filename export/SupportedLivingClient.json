@@ -1,0 +1,250 @@
+[
+  {
+    "full_name": "Daniel Foster",
+    "date_of_birth": "1998-07-22",
+    "property_id": "property_greenfield_house",
+    "tenancy_start_date": "2023-06-01",
+    "phone": "07700 900321",
+    "email": "danny.foster@email.com",
+    "emergency_contact": {
+      "name": "Mr & Mrs Foster",
+      "phone": "07700 900123",
+      "relationship": "Parents"
+    },
+    "support_level": "medium",
+    "support_hours_per_week": 20,
+    "care_needs": [
+      "Life skills development",
+      "Meal preparation support",
+      "Social skills coaching",
+      "Medication prompting",
+      "Emotional support"
+    ],
+    "life_skills_goals": [
+      "Independent cooking",
+      "Independent travel",
+      "Money management",
+      "Social confidence"
+    ],
+    "preferred_staff": [],
+    "medical_notes": "Autism Spectrum Disorder. Moderate learning disability. Epilepsy (well controlled with medication - no seizures for 8 months). Benefits from visual supports and routine. Can become anxious with unexpected changes.",
+    "risk_assessment_date": "2025-01-10",
+    "funding_type": "personal_budget",
+    "key_worker_id": "emma_williams",
+    "status": "active",
+    "id": "6914b519444801b5d13b928e",
+    "created_date": "2025-11-12T16:26:01.179000",
+    "updated_date": "2025-11-12T16:26:01.179000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "full_name": "Olivia Harris",
+    "date_of_birth": "1999-07-08",
+    "property_id": "riverside_bungalow_id",
+    "tenancy_start_date": "2024-01-10",
+    "phone": "07XXX 456789",
+    "email": null,
+    "emergency_contact": {
+      "name": "Sarah Harris (Sister)",
+      "phone": "07XXX 765432",
+      "relationship": "Sister"
+    },
+    "support_level": "intensive",
+    "support_hours_per_week": 35,
+    "care_needs": [
+      "Physical care support",
+      "Mobility assistance",
+      "Medication management",
+      "Personal care",
+      "Meal preparation"
+    ],
+    "life_skills_goals": [
+      "Independence in wheelchair use",
+      "Communication device skills",
+      "Making choices",
+      "Social engagement"
+    ],
+    "preferred_staff": [
+      "staff_sarah_wilson",
+      "staff_ellese_rothwell"
+    ],
+    "medical_notes": "Cerebral palsy affecting all limbs. Uses powered wheelchair. Communication via tablet device. Epilepsy - takes Lamotrigine 200mg twice daily. Requires hoisting for transfers.",
+    "risk_assessment_date": "2025-01-08",
+    "funding_type": "nhs",
+    "key_worker_id": "staff_sarah_wilson",
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c0b",
+    "created_date": "2025-11-11T08:57:48.638000",
+    "updated_date": "2025-11-11T08:57:48.638000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "full_name": "Daniel Foster",
+    "date_of_birth": "1997-05-19",
+    "property_id": "liberty_gardens_id",
+    "tenancy_start_date": "2023-11-01",
+    "phone": "07XXX 567890",
+    "email": null,
+    "emergency_contact": {
+      "name": "Mark Foster (Brother)",
+      "phone": "07XXX 654321",
+      "relationship": "Brother"
+    },
+    "support_level": "medium",
+    "support_hours_per_week": 12,
+    "care_needs": [
+      "Life skills coaching",
+      "Employment support",
+      "Social skills",
+      "Health management"
+    ],
+    "life_skills_goals": [
+      "Maintaining part-time job",
+      "Saving money",
+      "Cooking healthy meals",
+      "Joining social groups"
+    ],
+    "preferred_staff": [
+      "staff_emily_clarke"
+    ],
+    "medical_notes": "Mild learning disability. Type 1 Diabetes - manages own insulin with monitoring support. Very motivated to be independent.",
+    "risk_assessment_date": "2024-10-15",
+    "funding_type": "direct_payment",
+    "key_worker_id": "staff_emily_clarke",
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c0c",
+    "created_date": "2025-11-11T08:57:48.638000",
+    "updated_date": "2025-11-11T08:57:48.638000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "full_name": "James Patterson",
+    "date_of_birth": "1992-03-30",
+    "property_id": "oak_court_flat_id",
+    "tenancy_start_date": "2022-06-20",
+    "phone": "07XXX 345678",
+    "email": "james.p@email.com",
+    "emergency_contact": {
+      "name": "Care Coordinator - Lisa Ahmed",
+      "phone": "0161 XXX XXXX",
+      "relationship": "Social Worker"
+    },
+    "support_level": "high",
+    "support_hours_per_week": 20,
+    "care_needs": [
+      "Mental health support",
+      "Medication supervision",
+      "Activity coordination",
+      "Hygiene prompts"
+    ],
+    "life_skills_goals": [
+      "Maintaining tenancy",
+      "Self-care routines",
+      "Engaging with community",
+      "Managing anxiety"
+    ],
+    "preferred_staff": [
+      "staff_john_davies",
+      "staff_alex_sheffield"
+    ],
+    "medical_notes": "Schizophrenia - stable on Olanzapine 10mg daily and Aripiprazole 15mg. Monthly depot injection. Attends CMHT fortnightly. History of isolation.",
+    "risk_assessment_date": "2024-11-20",
+    "funding_type": "local_authority",
+    "key_worker_id": "staff_john_davies",
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c0a",
+    "created_date": "2025-11-11T08:57:48.638000",
+    "updated_date": "2025-11-11T08:57:48.638000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "full_name": "Michael Thompson",
+    "date_of_birth": "1995-08-14",
+    "property_id": "maple_house_property_id",
+    "tenancy_start_date": "2023-03-15",
+    "phone": "07XXX 123456",
+    "email": "m.thompson@email.com",
+    "emergency_contact": {
+      "name": "Janet Thompson (Mother)",
+      "phone": "07XXX 987654",
+      "relationship": "Mother"
+    },
+    "support_level": "medium",
+    "support_hours_per_week": 15,
+    "care_needs": [
+      "Medication management",
+      "Budgeting support",
+      "Meal planning",
+      "Appointment attendance"
+    ],
+    "life_skills_goals": [
+      "Independent shopping",
+      "Cooking skills",
+      "Managing bills",
+      "Using public transport"
+    ],
+    "preferred_staff": [
+      "staff_katie_robinson",
+      "staff_alex_sheffield"
+    ],
+    "medical_notes": "Autism Spectrum Disorder. Anxiety in social situations. Takes Sertraline 50mg daily. Prefers routine and advance notice of changes.",
+    "risk_assessment_date": "2024-12-10",
+    "funding_type": "local_authority",
+    "key_worker_id": "staff_katie_robinson",
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c08",
+    "created_date": "2025-11-11T08:57:48.638000",
+    "updated_date": "2025-11-11T08:57:48.638000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  },
+  {
+    "full_name": "Sophie Bennett",
+    "date_of_birth": "1998-11-22",
+    "property_id": "maple_house_property_id",
+    "tenancy_start_date": "2023-09-01",
+    "phone": "07XXX 234567",
+    "email": null,
+    "emergency_contact": {
+      "name": "David Bennett (Father)",
+      "phone": "07XXX 876543",
+      "relationship": "Father"
+    },
+    "support_level": "low",
+    "support_hours_per_week": 8,
+    "care_needs": [
+      "Life skills development",
+      "Emotional support",
+      "Social activities"
+    ],
+    "life_skills_goals": [
+      "Job search support",
+      "Interview skills",
+      "Time management",
+      "Building friendships"
+    ],
+    "preferred_staff": [
+      "staff_georgia_ashmore"
+    ],
+    "medical_notes": "Learning disability. Good physical health. No regular medications.",
+    "risk_assessment_date": "2025-01-05",
+    "funding_type": "personal_budget",
+    "key_worker_id": "staff_georgia_ashmore",
+    "status": "active",
+    "id": "6912fa8cf870c1e81f210c09",
+    "created_date": "2025-11-11T08:57:48.638000",
+    "updated_date": "2025-11-11T08:57:48.638000",
+    "created_by_id": "6909d012185f56ea55d9e5a3",
+    "created_by": "m.carter@omegalife.uk",
+    "is_sample": false
+  }
+]
