@@ -1,0 +1,7 @@
+# CRMFollowUp Data Export
+
+**Total records:** 1
+
+| id | document_sent_name | contact_name | notes | external_contact_organisation | reminder_date | assigned_to_email | overdue_alert_sent_date | recipient_type | sent_date | status | created_by_email | related_entity_type | description | updated_date | next_action | response_received | related_entity_id | external_contact_role | priority | created_by_id | is_sample | escalation_after_days | created_by_staff_id | overdue_alert_sent | external_contact_name | reminder_sent | document_sent_url | outcome | follow_up_type | title | assigned_to | external_contact_email | created_by | reminder_sent_date | response_received_date | contact_method | created_date | escalation_sent | due_date | completed_date | reminder_days_before |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 692d93824aa841c4a23e2d3a |  | Peter Simms | [] |  |  |  | 2025-12-09T11:05:21.170Z | internal |  | completed |  | enquiry | Test | 2025-12-22T13:48:40.446000 |  | False |  |  | high | 6909e61b89f26ef7fa768434 | False | 3 |  | True |  | False |  |  | document_chase | Test | 69133c33af4e4410e318bc6b |  | p.holt@omegalife.uk |  |  | email | 2025-12-01T13:09:22.041000 | True | 2025-12-02T13:09 | 2025-12-22T13:48:40.153Z | 1 |

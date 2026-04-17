@@ -1,0 +1,11 @@
+# PolicyLibrary Data Export
+
+**Total records:** 5
+
+| created_by_id | policy_name | policy_category | created_by | id | is_sample | version_number | updated_date | is_mandatory | created_date | approval_date | approved_by | review_date | policy_file_url | status | applies_to |
+| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
+| 690d9c240a34ca4023dc316e | TEST | safeguarding_adults | vipin@appsandwebdevelopmentsolutions.com | 69d3aeaaba4db6090ba71abe | False | 1.0 | 2026-04-07T04:19:54.105000 | True | 2026-04-06T13:01:30.214000 | 2026-04-07 | vipin |  | https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/f61c465ef_ggvote.pdf | approved | ["managers_only"] |
+| 690d9c240a34ca4023dc316e | xyz | dols_liberty_protection | vipin@appsandwebdevelopmentsolutions.com | 69d3727e03cd1dbccec55aa8 | False | 78 | 2026-04-07T07:05:38.868000 | True | 2026-04-06T08:44:46.684000 |  |  | 2026-04-06 |  | archived | [] |
+| 690d9c240a34ca4023dc316e | collage policy | health_safety | vipin@appsandwebdevelopmentsolutions.com | 69d371492c4832db9d201c91 | False | 56 | 2026-04-07T05:34:50.713000 | True | 2026-04-06T08:39:37.175000 |  |  | 2026-04-08 | https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/85acb0799_billing.png | under_review | ["all_staff", "care_staff"] |
+| 690d9c240a34ca4023dc316e | policyA | safeguarding_adults | vipin@appsandwebdevelopmentsolutions.com | 69d370d5efc6aeb594b89e50 | False | 23 | 2026-04-07T04:19:37.103000 | True | 2026-04-06T08:37:41.123000 | 2026-04-06 | vipin | 2026-03-30 | https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/c94986cdf_billing-payments.png | approved | ["all_staff", "care_staff", "managers_only", "admin_staff"] |
+| 690d9c240a34ca4023dc316e | Test | safeguarding_adults | vipin@appsandwebdevelopmentsolutions.com | 69cb5fb47b74ac317437ca47 | False |  | 2026-03-31T05:46:28.679000 | False | 2026-03-31T05:46:28.679000 |  |  | 2026-03-31 | https://base44.app/api/apps/6909d012185f56ea55d9e5a2/files/mp/public/6909d012185f56ea55d9e5a2/4d15bec45_care-plan-Rohan-Maurya-2026-03-25.pdf | draft | ["all_staff"] |
