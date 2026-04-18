@@ -13,3 +13,10 @@
   - Read-only analysis session: compared v2-scroll-journey, v3-hero-sarah, and v3.5-hero-sarah landing pages
   - Identified evolution: v2 (full) → v3 (added scene screenshots) → v3.5 (removed scene screenshots)
   - No files modified
+- **Session 3 saved** → `sessions/session3.md`
+  - Built v4-sasnio-style.html — Sasnio-inspired landing page with phone mockups
+  - Integrated real mobile app screenshots (WhatsApp images) into phone frames
+  - Redesigned modules section (Sasnio-style cards around central phone)
+  - Soft diffused card shadows, removed Trusted By + Care Settings sections
+  - Full mobile responsive audit and fixes (360px–1440px+)
+  - Pushed to GitHub: commit f539b17
