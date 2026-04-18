@@ -1,0 +1,3485 @@
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Care One OS — The Operating System Built From Within Care</title>
+    <meta
+      name="description"
+      content="Care One OS is a connected digital care management platform. Built from within care for children's residential care, supported living and wider care services."
+    />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              brand: {
+                50: "#f0f7fb",
+                100: "#dbedf6",
+                200: "#b8dbed",
+                300: "#85c2de",
+                400: "#4da3c9",
+                500: "#3A7CA5",
+                600: "#2E6A91",
+                700: "#265879",
+                800: "#224B65",
+                900: "#1D3F55",
+                950: "#142b3d",
+              },
+              teal: { 400: "#6EC5B8", 500: "#5BB8AA", 600: "#4AA89A" },
+              accent: {
+                orange: "#E8873A",
+                rose: "#B8557A",
+                lime: "#B8C83A",
+                teal: "#6EC5B8",
+              },
+              navy: { 800: "#1a2e3f", 900: "#122231", 950: "#0b1722" },
+            },
+            fontFamily: {
+              sans: ['"Plus Jakarta Sans"', "system-ui", "sans-serif"],
+            },
+          },
+        },
+      };
+    </script>
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <style>
+      body {
+        font-family: "Plus Jakarta Sans", system-ui, sans-serif;
+        overflow-x: hidden;
+      }
+      section[id] {
+        scroll-margin-top: 80px;
+      }
+
+      /* ═══ Nav ═══ */
+      .nav-glass {
+        background: rgba(255, 255, 255, 0.95);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border-bottom: 1px solid rgba(0, 0, 0, 0.04);
+        transition:
+          box-shadow 0.3s ease,
+          background 0.3s ease;
+      }
+      .nav-glass.scrolled {
+        box-shadow: 0 4px 30px rgba(0, 0, 0, 0.08);
+      }
+      .nav-link {
+        position: relative;
+      }
+      .nav-link::after {
+        content: "";
+        position: absolute;
+        bottom: -4px;
+        left: 0;
+        width: 0;
+        height: 2px;
+        background: linear-gradient(90deg, #3a7ca5, #6ec5b8);
+        transition: width 0.3s ease;
+        border-radius: 2px;
+      }
+      .nav-link:hover::after,
+      .nav-link.active::after {
+        width: 100%;
+      }
+
+      /* Mobile menu */
+      .mobile-menu {
+        max-height: 0;
+        overflow: hidden;
+        transition: max-height 0.35s ease;
+      }
+      .mobile-menu.open {
+        max-height: 500px;
+      }
+
+      /* ═══ Hero ═══ */
+      .hero-gradient {
+        background:
+          radial-gradient(
+            ellipse 80% 60% at 70% 40%,
+            rgba(110, 197, 184, 0.12) 0%,
+            transparent 60%
+          ),
+          radial-gradient(
+            ellipse 60% 50% at 20% 60%,
+            rgba(58, 124, 165, 0.08) 0%,
+            transparent 60%
+          ),
+          linear-gradient(180deg, #f8fbfd 0%, #eef5fa 100%);
+      }
+
+      /* ═══ Buttons ═══ */
+      .btn-primary {
+        background: linear-gradient(135deg, #3a7ca5 0%, #2e6a91 100%);
+        position: relative;
+        overflow: hidden;
+        transition:
+          transform 0.3s ease,
+          box-shadow 0.3s ease;
+      }
+      .btn-primary::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(
+          90deg,
+          transparent,
+          rgba(255, 255, 255, 0.15),
+          transparent
+        );
+        transition: left 0.5s ease;
+      }
+      .btn-primary:hover::before {
+        left: 100%;
+      }
+      .btn-primary:hover {
+        transform: translateY(-3px);
+        box-shadow: 0 12px 35px rgba(58, 124, 165, 0.35);
+      }
+
+      .btn-outline {
+        position: relative;
+        overflow: hidden;
+        transition: all 0.3s ease;
+      }
+      .btn-outline::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(135deg, #3a7ca5, #6ec5b8);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        z-index: -1;
+      }
+      .btn-outline:hover::before {
+        opacity: 1;
+      }
+      .btn-outline:hover {
+        color: white;
+        border-color: transparent;
+      }
+
+      /* ═══ Browser frame ═══ */
+      .browser-frame {
+        border-radius: 12px;
+        overflow: hidden;
+        box-shadow:
+          0 25px 60px rgba(0, 0, 0, 0.15),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+        transition:
+          transform 0.5s ease,
+          box-shadow 0.5s ease;
+      }
+      .browser-frame:hover {
+        transform: translateY(-4px);
+        box-shadow:
+          0 35px 80px rgba(0, 0, 0, 0.18),
+          0 0 0 1px rgba(0, 0, 0, 0.05);
+      }
+      .browser-bar {
+        background: #1e293b;
+        padding: 10px 16px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+      .browser-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+      }
+      .browser-url {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 6px;
+        padding: 5px 12px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-left: 8px;
+      }
+      .browser-frame img {
+        display: block;
+        width: 100%;
+        height: auto;
+      }
+
+      /* ═══ Phone frame (iPhone-style) ═══ */
+      .phone-frame {
+        position: relative;
+        width: 260px;
+        border-radius: 36px;
+        background: #1a1a1a;
+        padding: 12px;
+        box-shadow:
+          0 25px 60px rgba(0, 0, 0, 0.25),
+          inset 0 0 0 2px rgba(255, 255, 255, 0.1);
+        transition:
+          transform 0.5s ease,
+          box-shadow 0.5s ease;
+      }
+      .phone-frame:hover {
+        transform: translateY(-6px);
+        box-shadow:
+          0 35px 80px rgba(0, 0, 0, 0.3),
+          inset 0 0 0 2px rgba(255, 255, 255, 0.12);
+      }
+      .phone-frame::before {
+        content: "";
+        position: absolute;
+        top: 14px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 80px;
+        height: 22px;
+        background: #1a1a1a;
+        border-radius: 0 0 14px 14px;
+        z-index: 10;
+      }
+      .phone-frame::after {
+        content: "";
+        position: absolute;
+        top: 22px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 8px;
+        height: 8px;
+        background: #2a2a2a;
+        border-radius: 50%;
+        z-index: 11;
+        box-shadow: inset 0 0 2px rgba(0, 0, 0, 0.5);
+      }
+      .phone-screen {
+        border-radius: 24px;
+        overflow: hidden;
+        position: relative;
+      }
+      .phone-screen img {
+        display: block;
+        width: 100%;
+        height: auto;
+        aspect-ratio: 9/19;
+        object-fit: cover;
+        object-position: top;
+      }
+      .phone-frame.phone-sm {
+        width: 220px;
+      }
+      .phone-frame.phone-lg {
+        width: 280px;
+      }
+
+      /* Hero phone arrangement */
+      .hero-phones {
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 0;
+        min-height: 480px;
+      }
+      .hero-phones .phone-frame:nth-child(1) {
+        transform: rotate(-8deg) translateX(30px);
+        z-index: 1;
+      }
+      .hero-phones .phone-frame:nth-child(2) {
+        z-index: 3;
+        transform: translateY(-20px);
+      }
+      .hero-phones .phone-frame:nth-child(3) {
+        transform: rotate(8deg) translateX(-30px);
+        z-index: 2;
+      }
+      .hero-phones:hover .phone-frame:nth-child(1) {
+        transform: rotate(-12deg) translateX(20px) translateY(-8px);
+      }
+      .hero-phones:hover .phone-frame:nth-child(2) {
+        transform: translateY(-28px);
+      }
+      .hero-phones:hover .phone-frame:nth-child(3) {
+        transform: rotate(12deg) translateX(-20px) translateY(-8px);
+      }
+
+      /* Hero gradient blob behind phones */
+      .hero-blob {
+        position: absolute;
+        width: 130%;
+        height: 130%;
+        top: -15%;
+        left: -15%;
+        background: radial-gradient(
+          ellipse at center,
+          rgba(58, 124, 165, 0.2) 0%,
+          rgba(110, 197, 184, 0.15) 40%,
+          transparent 70%
+        );
+        border-radius: 50%;
+        z-index: 0;
+      }
+
+      /* Screenshots phone gallery */
+      .phone-gallery {
+        display: flex;
+        justify-content: center;
+        align-items: flex-end;
+        gap: 2rem;
+        flex-wrap: wrap;
+      }
+
+      /* ═══ Sasnio-style soft card shadow ═══ */
+      .card-soft {
+        background: white;
+        border-radius: 16px;
+        box-shadow:
+          0 4px 40px rgba(0, 0, 0, 0.06),
+          0 1px 3px rgba(0, 0, 0, 0.03);
+        transition:
+          transform 0.35s ease,
+          box-shadow 0.35s ease;
+      }
+      .card-soft:hover {
+        box-shadow:
+          0 8px 50px rgba(0, 0, 0, 0.1),
+          0 2px 6px rgba(0, 0, 0, 0.04);
+      }
+
+      /* ═══ Feature cards ═══ */
+      .feature-card {
+        transition:
+          transform 0.4s ease,
+          box-shadow 0.4s ease,
+          border-color 0.3s ease;
+        position: relative;
+        overflow: hidden;
+      }
+      .feature-card::before {
+        content: "";
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3px;
+        background: linear-gradient(90deg, #3a7ca5, #6ec5b8);
+        transform: scaleX(0);
+        transition: transform 0.4s ease;
+        transform-origin: left;
+      }
+      .feature-card:hover::before {
+        transform: scaleX(1);
+      }
+      .feature-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 60px rgba(58, 124, 165, 0.15);
+        border-color: rgba(58, 124, 165, 0.2);
+      }
+
+      /* ═══ Step number ═══ */
+      .step-number {
+        width: 64px;
+        height: 64px;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 22px;
+        font-weight: 800;
+        flex-shrink: 0;
+        position: relative;
+      }
+      .step-number::after {
+        content: "";
+        position: absolute;
+        inset: -4px;
+        border-radius: 50%;
+        border: 2px dashed currentColor;
+        opacity: 0.2;
+        animation: step-spin 12s linear infinite;
+      }
+      @keyframes step-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ═══ Step connector line ═══ */
+      .step-connector {
+        position: absolute;
+        top: 32px;
+        left: calc(50% + 40px);
+        width: calc(100% - 80px);
+        height: 2px;
+        background: repeating-linear-gradient(
+          90deg,
+          #b8dbed 0,
+          #b8dbed 8px,
+          transparent 8px,
+          transparent 16px
+        );
+      }
+
+      /* ═══ Pricing ═══ */
+      .pricing-toggle {
+        position: relative;
+        background: #e5e7eb;
+        border-radius: 999px;
+        padding: 4px;
+        display: inline-flex;
+      }
+      .pricing-toggle-btn {
+        padding: 8px 24px;
+        border-radius: 999px;
+        font-size: 14px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        position: relative;
+        z-index: 1;
+        color: #6b7280;
+      }
+      .pricing-toggle-btn.active {
+        color: white;
+      }
+      .pricing-slider {
+        position: absolute;
+        top: 4px;
+        height: calc(100% - 8px);
+        border-radius: 999px;
+        background: linear-gradient(135deg, #3a7ca5, #2e6a91);
+        transition:
+          left 0.3s ease,
+          width 0.3s ease;
+        z-index: 0;
+      }
+      .pricing-card {
+        transition:
+          transform 0.4s ease,
+          box-shadow 0.4s ease;
+      }
+      .pricing-card:hover {
+        transform: translateY(-8px);
+        box-shadow: 0 25px 60px rgba(58, 124, 165, 0.18);
+      }
+      .pricing-card.featured {
+        border: 2px solid #3a7ca5;
+        position: relative;
+      }
+      .pricing-badge {
+        position: absolute;
+        top: -14px;
+        left: 50%;
+        transform: translateX(-50%);
+        background: linear-gradient(135deg, #3a7ca5, #6ec5b8);
+        color: white;
+        font-size: 11px;
+        font-weight: 700;
+        padding: 4px 16px;
+        border-radius: 999px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+
+      /* ═══ FAQ ═══ */
+      .faq-item {
+        border-bottom: 1px solid #e5e7eb;
+      }
+      .faq-question {
+        cursor: pointer;
+        user-select: none;
+      }
+      .faq-answer {
+        max-height: 0;
+        overflow: hidden;
+        transition:
+          max-height 0.4s ease,
+          padding 0.4s ease;
+      }
+      .faq-item.open .faq-answer {
+        max-height: 300px;
+        padding-bottom: 1.25rem;
+      }
+      .faq-item.open .faq-chevron {
+        transform: rotate(180deg);
+      }
+      .faq-chevron {
+        transition: transform 0.3s ease;
+      }
+
+      /* ═══ Logos marquee ═══ */
+      .logo-track {
+        display: flex;
+        gap: 4rem;
+        animation: marquee 25s linear infinite;
+        width: max-content;
+      }
+      .logo-track:hover {
+        animation-play-state: paused;
+      }
+      @keyframes marquee {
+        0% {
+          transform: translateX(0);
+        }
+        100% {
+          transform: translateX(-50%);
+        }
+      }
+
+      /* ═══ Scroll animations ═══ */
+      .reveal {
+        opacity: 0;
+        transition:
+          opacity 0.8s ease,
+          transform 0.8s ease;
+      }
+      .reveal.fade-up {
+        transform: translateY(40px);
+      }
+      .reveal.fade-left {
+        transform: translateX(-40px);
+      }
+      .reveal.fade-right {
+        transform: translateX(40px);
+      }
+      .reveal.zoom-in {
+        transform: scale(0.9);
+      }
+      .reveal.visible {
+        opacity: 1;
+        transform: translateY(0) translateX(0) scale(1);
+      }
+
+      /* Stagger children */
+      .stagger > .reveal:nth-child(1) {
+        transition-delay: 0ms;
+      }
+      .stagger > .reveal:nth-child(2) {
+        transition-delay: 100ms;
+      }
+      .stagger > .reveal:nth-child(3) {
+        transition-delay: 200ms;
+      }
+      .stagger > .reveal:nth-child(4) {
+        transition-delay: 300ms;
+      }
+      .stagger > .reveal:nth-child(5) {
+        transition-delay: 400ms;
+      }
+      .stagger > .reveal:nth-child(6) {
+        transition-delay: 500ms;
+      }
+
+      /* ═══ Decorative shapes ═══ */
+      .deco-dots {
+        background-image: radial-gradient(
+          circle,
+          rgba(58, 124, 165, 0.12) 1.5px,
+          transparent 1.5px
+        );
+        background-size: 20px 20px;
+      }
+      .deco-ring {
+        border: 2px solid rgba(110, 197, 184, 0.15);
+        border-radius: 50%;
+        position: absolute;
+        pointer-events: none;
+      }
+
+      /* ═══ Contact form ═══ */
+      .form-input {
+        width: 100%;
+        padding: 14px 18px;
+        border: 1px solid #e5e7eb;
+        border-radius: 12px;
+        font-size: 14px;
+        transition:
+          border-color 0.3s ease,
+          box-shadow 0.3s ease;
+        outline: none;
+        font-family: inherit;
+      }
+      .form-input:focus {
+        border-color: #3a7ca5;
+        box-shadow: 0 0 0 3px rgba(58, 124, 165, 0.1);
+      }
+
+      /* ═══ Floating badge pulse ═══ */
+      .pulse-ring {
+        animation: pulse-ring 2s ease-out infinite;
+      }
+      @keyframes pulse-ring {
+        0% {
+          box-shadow: 0 0 0 0 rgba(110, 197, 184, 0.4);
+        }
+        70% {
+          box-shadow: 0 0 0 12px rgba(110, 197, 184, 0);
+        }
+        100% {
+          box-shadow: 0 0 0 0 rgba(110, 197, 184, 0);
+        }
+      }
+
+      /* ═══ Counter animation ═══ */
+      .counter {
+        font-variant-numeric: tabular-nums;
+      }
+
+      /* ═══ Parallax tilt for hero image ═══ */
+      .tilt-card {
+        transition: transform 0.15s ease-out;
+        transform-style: preserve-3d;
+        perspective: 800px;
+      }
+
+      @media (max-width: 768px) {
+        .phone-frame {
+          width: 160px;
+          padding: 8px;
+          border-radius: 26px;
+        }
+        .phone-frame::before {
+          width: 55px;
+          height: 16px;
+          top: 10px;
+          border-radius: 0 0 10px 10px;
+        }
+        .phone-frame::after {
+          top: 14px;
+          width: 6px;
+          height: 6px;
+        }
+        .phone-screen {
+          border-radius: 18px;
+        }
+        .phone-frame.phone-sm {
+          width: 135px;
+        }
+        .phone-frame.phone-lg {
+          width: 175px;
+        }
+        .hero-phones {
+          min-height: 280px;
+        }
+        .hero-phones .phone-frame:nth-child(1) {
+          transform: rotate(-8deg) translateX(18px);
+        }
+        .hero-phones .phone-frame:nth-child(3) {
+          transform: rotate(8deg) translateX(-18px);
+        }
+        .phone-gallery {
+          gap: 0.75rem;
+        }
+
+        .hero-blob {
+          width: 110%;
+          height: 110%;
+          top: -5%;
+          left: -5%;
+        }
+
+        .step-number {
+          width: 52px;
+          height: 52px;
+          font-size: 18px;
+        }
+
+        .pricing-card {
+          padding: 1.5rem !important;
+        }
+
+        .form-input {
+          padding: 12px 14px;
+        }
+      }
+
+      @media (max-width: 480px) {
+        .phone-frame {
+          width: 120px;
+          padding: 6px;
+          border-radius: 20px;
+        }
+        .phone-frame::before {
+          width: 40px;
+          height: 14px;
+          top: 8px;
+          border-radius: 0 0 8px 8px;
+        }
+        .phone-frame::after {
+          top: 11px;
+          width: 5px;
+          height: 5px;
+        }
+        .phone-screen {
+          border-radius: 14px;
+        }
+        .phone-frame.phone-sm {
+          width: 100px;
+        }
+        .phone-frame.phone-lg {
+          width: 135px;
+        }
+        .hero-phones {
+          min-height: 220px;
+        }
+        .hero-phones .phone-frame:nth-child(1) {
+          transform: rotate(-6deg) translateX(12px);
+        }
+        .hero-phones .phone-frame:nth-child(3) {
+          transform: rotate(6deg) translateX(-12px);
+        }
+        .hero-phones .phone-frame:nth-child(2) {
+          transform: translateY(-12px);
+        }
+        .phone-gallery {
+          gap: 0.5rem;
+        }
+
+        .browser-bar {
+          padding: 6px 10px;
+          gap: 5px;
+        }
+        .browser-dot {
+          width: 7px;
+          height: 7px;
+        }
+        .browser-url {
+          font-size: 9px;
+          padding: 3px 8px;
+        }
+
+        .pricing-toggle-btn {
+          padding: 6px 16px;
+          font-size: 12px;
+        }
+      }
+
+      @media (max-width: 360px) {
+        .phone-frame {
+          width: 100px;
+          padding: 5px;
+          border-radius: 18px;
+        }
+        .phone-frame::before {
+          width: 36px;
+          height: 12px;
+          top: 7px;
+        }
+        .phone-frame::after {
+          top: 10px;
+          width: 4px;
+          height: 4px;
+        }
+        .phone-screen {
+          border-radius: 13px;
+        }
+        .phone-frame.phone-sm {
+          width: 85px;
+        }
+        .phone-frame.phone-lg {
+          width: 115px;
+        }
+        .hero-phones {
+          min-height: 180px;
+        }
+      }
+
+      @media (prefers-reduced-motion: reduce) {
+        .reveal {
+          opacity: 1;
+          transform: none;
+          transition: none;
+        }
+        .logo-track {
+          animation: none;
+        }
+        .step-number::after {
+          animation: none;
+        }
+        .pulse-ring {
+          animation: none;
+        }
+      }
+    </style>
+  </head>
+  <body class="bg-white text-gray-800 antialiased">
+    <!-- ═══════════════════════════════════════ -->
+    <!--  NAVIGATION                             -->
+    <!-- ═══════════════════════════════════════ -->
+    <nav class="nav-glass fixed top-0 left-0 right-0 z-50" id="mainNav">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="flex items-center justify-between h-[60px] sm:h-[72px]">
+          <a href="#" class="flex items-center gap-2.5 flex-shrink-0">
+            <svg viewBox="0 0 40 40" fill="none" width="36" height="36">
+              <circle
+                cx="20"
+                cy="20"
+                r="12"
+                stroke="#3A7CA5"
+                stroke-width="2.5"
+                fill="none"
+              />
+              <path
+                d="M8 14 A14 14 0 0 1 20 6"
+                stroke="#6EC5B8"
+                stroke-width="3"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                d="M26 7 A14 14 0 0 1 34 20"
+                stroke="#E8873A"
+                stroke-width="3"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                d="M10 26 A14 14 0 0 0 8 18"
+                stroke="#B8557A"
+                stroke-width="3"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                d="M32 24 A14 14 0 0 1 20 34"
+                stroke="#B8C83A"
+                stroke-width="3"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </svg>
+            <span class="text-xl font-bold text-gray-900"
+              >Care One<span class="text-brand-500"> OS</span></span
+            >
+          </a>
+          <div class="hidden lg:flex items-center gap-8">
+            <a
+              href="#features"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >Features</a
+            >
+            <a
+              href="#how-it-works"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >How It Works</a
+            >
+            <a
+              href="#modules"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >Modules</a
+            >
+            <a
+              href="#screenshots"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >Screenshots</a
+            >
+            <a
+              href="#pricing"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >Pricing</a
+            >
+            <a
+              href="#faq"
+              class="nav-link text-sm font-medium text-gray-600 hover:text-brand-500 transition-colors"
+              >FAQs</a
+            >
+          </div>
+          <div class="flex items-center gap-4">
+            <a
+              href="#contact"
+              class="hidden sm:inline-flex items-center gap-2 px-6 py-2.5 btn-primary text-white font-semibold rounded-full text-sm"
+            >
+              Book a Demo
+              <svg
+                class="w-4 h-4"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M17 8l4 4m0 0l-4 4m4-4H3"
+                />
+              </svg>
+            </a>
+            <button
+              class="lg:hidden p-2 text-gray-600 hover:text-gray-900"
+              id="mobileToggle"
+              aria-label="Toggle menu"
+            >
+              <svg
+                class="w-6 h-6"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M4 6h16M4 12h16M4 18h16"
+                />
+              </svg>
+            </button>
+          </div>
+        </div>
+        <div class="mobile-menu lg:hidden" id="mobileMenu">
+          <div class="pb-4 pt-2 flex flex-col gap-1 border-t border-gray-100">
+            <a
+              href="#features"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >Features</a
+            >
+            <a
+              href="#how-it-works"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >How It Works</a
+            >
+            <a
+              href="#modules"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >Modules</a
+            >
+            <a
+              href="#screenshots"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >Screenshots</a
+            >
+            <a
+              href="#pricing"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >Pricing</a
+            >
+            <a
+              href="#faq"
+              class="block px-4 py-3 text-sm font-medium text-gray-600 hover:bg-brand-50 hover:text-brand-500 rounded-lg transition-colors"
+              >FAQs</a
+            >
+            <a
+              href="#contact"
+              class="block px-4 py-3 text-sm font-semibold text-brand-500"
+              >Book a Demo</a
+            >
+          </div>
+        </div>
+      </div>
+    </nav>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  HERO                                   -->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      class="hero-gradient pt-32 pb-16 sm:pt-40 sm:pb-24 relative overflow-hidden"
+    >
+      <!-- Decorative elements -->
+      <div
+        class="absolute top-20 right-[10%] w-72 h-72 bg-brand-200/30 rounded-full blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="absolute bottom-10 left-[5%] w-56 h-56 bg-accent-teal/10 rounded-full blur-3xl pointer-events-none"
+      ></div>
+      <div
+        class="deco-ring w-[500px] h-[500px] top-[-100px] right-[-100px] hidden lg:block"
+      ></div>
+      <div
+        class="deco-ring w-[300px] h-[300px] bottom-[5%] left-[-60px] hidden lg:block"
+      ></div>
+      <div
+        class="absolute top-[15%] right-[25%] w-24 h-24 deco-dots rounded-xl hidden lg:block"
+      ></div>
+
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-12 lg:gap-16 items-center">
+          <!-- Text -->
+          <div class="max-w-xl">
+            <div
+              class="reveal fade-up inline-flex items-center gap-2 px-4 py-1.5 bg-brand-50 border border-brand-200 rounded-full text-sm font-semibold text-brand-600 mb-6"
+            >
+              <span
+                class="w-2 h-2 bg-accent-teal rounded-full animate-pulse"
+              ></span>
+              Built From Within Care
+            </div>
+            <h1
+              class="reveal fade-up text-4xl sm:text-5xl lg:text-[3.5rem] xl:text-6xl font-extrabold text-gray-900 tracking-tight leading-[1.08] mb-6"
+            >
+              The Operating System for
+              <span
+                class="bg-gradient-to-r from-brand-500 via-brand-400 to-teal-400 bg-clip-text text-transparent"
+                >Care Management</span
+              >
+            </h1>
+            <p
+              class="reveal fade-up text-lg text-gray-500 leading-relaxed mb-8"
+            >
+              One connected platform for care plans, rostering, medication,
+              incidents, compliance, and reporting. Giving your team more time
+              for the people who matter most.
+            </p>
+            <div class="reveal fade-up flex flex-col sm:flex-row gap-4 mb-8">
+              <a
+                href="#contact"
+                class="inline-flex items-center justify-center gap-2 px-8 py-4 btn-primary text-white font-semibold rounded-full text-base"
+              >
+                Book a Demo
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </a>
+              <a
+                href="#features"
+                class="inline-flex items-center justify-center gap-2 px-8 py-4 border border-gray-300 text-gray-700 font-semibold rounded-full text-base btn-outline relative z-0"
+              >
+                Learn More
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 14l-7 7m0 0l-7-7m7 7V3"
+                  />
+                </svg>
+              </a>
+            </div>
+            <div
+              class="reveal fade-up flex items-center gap-3 text-sm text-gray-400"
+            >
+              <svg
+                class="w-5 h-5 text-accent-teal"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                />
+              </svg>
+              CQC Compliant &bull; GDPR Secure &bull; UK Cloud Hosted
+            </div>
+          </div>
+
+          <!-- Hero Phones -->
+          <div class="relative reveal zoom-in overflow-hidden pb-8">
+            <div class="hero-blob"></div>
+            <div class="hero-phones" id="heroTilt">
+              <div class="phone-frame phone-sm">
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-appointments-upcoming.jpeg"
+                    alt="Appointments"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+              <div class="phone-frame phone-lg">
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-home.jpeg"
+                    alt="Care One OS Home"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+              <div class="phone-frame phone-sm">
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-child-profile.jpeg"
+                    alt="Child Profile"
+                    loading="eager"
+                  />
+                </div>
+              </div>
+            </div>
+            <!-- Floating badges -->
+            <div
+              class="absolute -bottom-4 left-2 sm:left-0 bg-white rounded-xl sm:rounded-2xl shadow-xl px-3 sm:px-5 py-2 sm:py-3 flex items-center gap-2 sm:gap-3 border border-gray-100 pulse-ring z-10"
+            >
+              <div
+                class="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center"
+              >
+                <svg
+                  class="w-5 h-5 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] text-gray-400 font-medium">
+                  Compliance Score
+                </p>
+                <p class="text-lg font-extrabold text-gray-900 counter">96%</p>
+              </div>
+            </div>
+            <div
+              class="absolute top-4 right-2 sm:right-0 bg-white rounded-xl sm:rounded-2xl shadow-xl px-3 sm:px-4 py-2 sm:py-2.5 hidden sm:flex items-center gap-2 sm:gap-2.5 border border-gray-100 z-10"
+            >
+              <div
+                class="w-8 h-8 rounded-full bg-brand-50 flex items-center justify-center"
+              >
+                <svg
+                  class="w-4 h-4 text-brand-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 4.354a4 4 0 110 5.292M15 21H3v-1a6 6 0 0112 0v1zm0 0h6v-1a6 6 0 00-9-5.197M13 7a4 4 0 11-8 0 4 4 0 018 0z"
+                  />
+                </svg>
+              </div>
+              <div>
+                <p class="text-[10px] text-gray-400 font-medium">
+                  Staff On Shift
+                </p>
+                <p class="text-base font-extrabold text-gray-900 counter">83</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  STATS BAR                              -->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      class="bg-gradient-to-r from-brand-600 via-brand-500 to-brand-600 py-12 sm:py-14 relative overflow-hidden"
+    >
+      <div class="absolute inset-0 opacity-10">
+        <div
+          class="absolute top-0 left-[30%] w-80 h-80 bg-white rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute bottom-0 right-[20%] w-64 h-64 bg-accent-teal rounded-full blur-3xl"
+        ></div>
+      </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid grid-cols-2 md:grid-cols-4 gap-8 text-center stagger">
+          <div class="reveal fade-up">
+            <p class="text-3xl sm:text-4xl font-extrabold text-white counter">
+              15+
+            </p>
+            <p class="text-sm text-brand-200 mt-1.5 font-medium">
+              Integrated Modules
+            </p>
+          </div>
+          <div class="reveal fade-up">
+            <p class="text-3xl sm:text-4xl font-extrabold text-white counter">
+              100%
+            </p>
+            <p class="text-sm text-brand-200 mt-1.5 font-medium">
+              CQC Compliant
+            </p>
+          </div>
+          <div class="reveal fade-up">
+            <p class="text-3xl sm:text-4xl font-extrabold text-white counter">
+              24/7
+            </p>
+            <p class="text-sm text-brand-200 mt-1.5 font-medium">
+              UK-Based Support
+            </p>
+          </div>
+          <div class="reveal fade-up">
+            <p class="text-3xl sm:text-4xl font-extrabold text-white counter">
+              99.9%
+            </p>
+            <p class="text-sm text-brand-200 mt-1.5 font-medium">
+              Uptime Guarantee
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  FEATURES (About)                       -->
+    <!-- ═══════════════════════════════════════ -->
+    <section id="features" class="py-20 sm:py-28 bg-white relative">
+      <div
+        class="deco-ring w-[400px] h-[400px] -top-[50px] -left-[100px] hidden lg:block"
+      ></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div class="reveal fade-right">
+            <div class="browser-frame">
+              <div class="browser-bar">
+                <div class="browser-dot" style="background: #ff5f57"></div>
+                <div class="browser-dot" style="background: #febc2e"></div>
+                <div class="browser-dot" style="background: #28c840"></div>
+                <div class="browser-url">
+                  app.careoneos.co.uk/managerdashboard
+                </div>
+              </div>
+              <img
+                src="screenshots/dashboard-manager.png"
+                alt="Manager Dashboard"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div>
+            <p
+              class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+            >
+              Why Care One OS
+            </p>
+            <h2
+              class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-6"
+            >
+              One platform instead of five separate systems
+            </h2>
+            <p class="reveal fade-up text-gray-500 leading-relaxed mb-8">
+              Care One OS connects every part of your service — from care
+              planning and medication management to staff rostering and
+              compliance tracking. No more switching between disconnected tools,
+              no more duplicated data entry, no more gaps.
+            </p>
+            <div class="grid sm:grid-cols-2 gap-4 stagger">
+              <div
+                class="reveal fade-up bg-brand-50 rounded-2xl p-5 border border-brand-100"
+              >
+                <div
+                  class="w-10 h-10 rounded-xl bg-brand-500 flex items-center justify-center mb-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="font-bold text-gray-900 mb-1">CQC Ready</h3>
+                <p class="text-sm text-gray-500">
+                  Built-in compliance tracking aligned to CQC key lines of
+                  enquiry.
+                </p>
+              </div>
+              <div
+                class="reveal fade-up bg-brand-50 rounded-2xl p-5 border border-brand-100"
+              >
+                <div
+                  class="w-10 h-10 rounded-xl bg-accent-teal flex items-center justify-center mb-3"
+                >
+                  <svg
+                    class="w-5 h-5 text-white"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="font-bold text-gray-900 mb-1">GDPR Secure</h3>
+                <p class="text-sm text-gray-500">
+                  UK-hosted, encrypted, role-based access. Your data never
+                  leaves your control.
+                </p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  HOW IT WORKS                           -->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      id="how-it-works"
+      class="py-20 sm:py-28 bg-gray-50 relative overflow-hidden"
+    >
+      <div
+        class="absolute top-[50%] right-[-40px] w-20 h-40 deco-dots rounded-xl hidden lg:block"
+      ></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <p
+            class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+          >
+            How It Works
+          </p>
+          <h2
+            class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4"
+          >
+            Up and running in days, not months
+          </h2>
+          <p
+            class="reveal fade-up text-gray-500 max-w-2xl mx-auto leading-relaxed"
+          >
+            We handle the setup, migration, and training so your team can focus
+            on care.
+          </p>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8 lg:gap-12 relative stagger">
+          <div class="step-connector hidden md:block"></div>
+          <div
+            class="step-connector hidden md:block"
+            style="
+              left: calc(33.33% + 50% + 40px - 33.33% * 0.5);
+              width: calc(33.33% - 80px);
+            "
+          ></div>
+          <div class="text-center reveal fade-up relative">
+            <div class="step-number bg-brand-500 text-white mx-auto mb-6">
+              01
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              Discovery & Setup
+            </h3>
+            <p class="text-gray-500 leading-relaxed">
+              We learn your service, configure modules to match your workflows,
+              and import existing client data securely.
+            </p>
+          </div>
+          <div class="text-center reveal fade-up relative">
+            <div class="step-number bg-accent-teal text-white mx-auto mb-6">
+              02
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              Training & Onboarding
+            </h3>
+            <p class="text-gray-500 leading-relaxed">
+              Role-based training for managers, care staff, and admin. Everyone
+              learns the features they need — nothing more.
+            </p>
+          </div>
+          <div class="text-center reveal fade-up relative">
+            <div class="step-number bg-brand-700 text-white mx-auto mb-6">
+              03
+            </div>
+            <h3 class="text-xl font-bold text-gray-900 mb-3">
+              Go Live & Support
+            </h3>
+            <p class="text-gray-500 leading-relaxed">
+              Launch with confidence. Our UK-based team provides ongoing
+              support, updates, and compliance guidance.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  MODULES                                -->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      id="modules"
+      class="py-20 sm:py-28 relative overflow-hidden"
+      style="
+        background-image: radial-gradient(
+          circle,
+          rgba(58, 124, 165, 0.07) 1.5px,
+          transparent 1.5px
+        );
+        background-size: 24px 24px;
+      "
+    >
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <div class="reveal fade-up flex justify-center mb-4">
+            <svg
+              class="w-10 h-10 text-brand-500"
+              fill="none"
+              viewBox="0 0 40 40"
+            >
+              <circle
+                cx="20"
+                cy="20"
+                r="12"
+                stroke="currentColor"
+                stroke-width="2"
+                fill="none"
+              />
+              <path
+                d="M8 14 A14 14 0 0 1 20 6"
+                stroke="#6EC5B8"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                fill="none"
+              />
+              <path
+                d="M26 7 A14 14 0 0 1 34 20"
+                stroke="#E8873A"
+                stroke-width="2.5"
+                stroke-linecap="round"
+                fill="none"
+              />
+            </svg>
+          </div>
+          <p
+            class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+          >
+            Core Modules
+          </p>
+          <h2
+            class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4"
+          >
+            Everything your care service needs
+          </h2>
+        </div>
+
+        <!-- Desktop: Sasnio-style layout with phone in center -->
+        <div class="hidden lg:block">
+          <div class="grid grid-cols-3 gap-x-8 gap-y-6 items-center">
+            <!-- Left column cards -->
+            <div class="space-y-6">
+              <div
+                class="card-soft p-6 transition-all duration-300 reveal fade-right"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center mb-4"
+                >
+                  <svg
+                    class="w-5 h-5 text-brand-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                  Care Plans
+                </h3>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Person-centred care plans with AI-assisted drafting. Review,
+                  approve, and update — all in one place.
+                </p>
+              </div>
+              <div
+                class="card-soft p-6 transition-all duration-300 reveal fade-right"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center mb-4"
+                >
+                  <svg
+                    class="w-5 h-5 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                  Staff Rostering
+                </h3>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Smart shift scheduling with availability, qualifications, and
+                  working time compliance built in.
+                </p>
+              </div>
+            </div>
+
+            <!-- Center: Phone mockup -->
+            <div class="flex justify-center reveal zoom-in">
+              <div class="phone-frame" style="width: 240px">
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-home.jpeg"
+                    alt="Care One OS Mobile"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+
+            <!-- Right column cards -->
+            <div class="space-y-6">
+              <div
+                class="card-soft p-6 transition-all duration-300 reveal fade-left"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style="background: rgba(232, 135, 58, 0.1)"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent-orange"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                  Medication (eMAR)
+                </h3>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Digital MAR sheets, PRN tracking, controlled drug witnessing,
+                  and error reporting in real time.
+                </p>
+              </div>
+              <div
+                class="card-soft p-6 transition-all duration-300 reveal fade-left"
+              >
+                <div
+                  class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                  style="background: rgba(184, 85, 122, 0.1)"
+                >
+                  <svg
+                    class="w-5 h-5 text-accent-rose"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="1.5"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                  Incident Reporting
+                </h3>
+                <p class="text-sm text-gray-500 leading-relaxed">
+                  Structured incident capture, body maps, safeguarding
+                  workflows, and trend analysis dashboards.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Bottom row: 2 cards centered below -->
+          <div class="grid grid-cols-3 gap-x-8 mt-6">
+            <div
+              class="col-start-1 card-soft p-6 transition-all duration-300 reveal fade-up"
+            >
+              <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style="background: rgba(184, 200, 58, 0.1)"
+              >
+                <svg
+                  class="w-5 h-5 text-accent-lime"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Compliance Tracking
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                DBS checks, training expiry, supervision logs, and audit
+                readiness — all tracked automatically.
+              </p>
+            </div>
+            <div
+              class="col-start-3 card-soft p-6 transition-all duration-300 reveal fade-up"
+            >
+              <div
+                class="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center mb-4"
+              >
+                <svg
+                  class="w-5 h-5 text-brand-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Reports & Analytics
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                AI-powered reports in plain English. Incident trends, occupancy,
+                staff hours, and CQC-ready exports.
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile/Tablet: stacked cards -->
+        <div class="lg:hidden">
+          <div class="flex justify-center mb-10 reveal zoom-in">
+            <div class="phone-frame" style="width: 200px">
+              <div class="phone-screen">
+                <img
+                  src="screenshots/mobile-home.jpeg"
+                  alt="Care One OS Mobile"
+                  loading="lazy"
+                />
+              </div>
+            </div>
+          </div>
+          <div class="grid sm:grid-cols-2 gap-5 stagger">
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center mb-4"
+              >
+                <svg
+                  class="w-5 h-5 text-brand-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M9 12h3.75M9 15h3.75M9 18h3.75m3 .75H18a2.25 2.25 0 002.25-2.25V6.108c0-1.135-.845-2.098-1.976-2.192a48.424 48.424 0 00-1.123-.08m-5.801 0c-.065.21-.1.433-.1.664 0 .414.336.75.75.75h4.5a.75.75 0 00.75-.75 2.25 2.25 0 00-.1-.664m-5.8 0A2.251 2.251 0 0113.5 2.25H15c1.012 0 1.867.668 2.15 1.586m-5.8 0c-.376.023-.75.05-1.124.08C9.095 4.01 8.25 4.973 8.25 6.108V8.25m0 0H4.875c-.621 0-1.125.504-1.125 1.125v11.25c0 .621.504 1.125 1.125 1.125h9.75c.621 0 1.125-.504 1.125-1.125V9.375c0-.621-.504-1.125-1.125-1.125H8.25zM6.75 12h.008v.008H6.75V12zm0 3h.008v.008H6.75V15zm0 3h.008v.008H6.75V18z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Care Plans
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                Person-centred care plans with AI-assisted drafting. Review,
+                approve, and update — all in one place.
+              </p>
+            </div>
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl bg-green-50 flex items-center justify-center mb-4"
+              >
+                <svg
+                  class="w-5 h-5 text-green-600"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Staff Rostering
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                Smart shift scheduling with availability, qualifications, and
+                working time compliance built in.
+              </p>
+            </div>
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style="background: rgba(232, 135, 58, 0.1)"
+              >
+                <svg
+                  class="w-5 h-5 text-accent-orange"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M4.098 19.902a3.75 3.75 0 005.304 0l6.401-6.402M6.75 21A3.75 3.75 0 013 17.25V4.125C3 3.504 3.504 3 4.125 3h5.25c.621 0 1.125.504 1.125 1.125v4.072M6.75 21a3.75 3.75 0 003.75-3.75V8.197M6.75 21h13.125c.621 0 1.125-.504 1.125-1.125v-5.25c0-.621-.504-1.125-1.125-1.125h-4.072M10.5 8.197l2.88-2.88c.438-.439 1.15-.439 1.59 0l3.712 3.713c.44.44.44 1.152 0 1.59l-2.879 2.88M6.75 17.25h.008v.008H6.75v-.008z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Medication (eMAR)
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                Digital MAR sheets, PRN tracking, controlled drug witnessing,
+                and error reporting in real time.
+              </p>
+            </div>
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style="background: rgba(184, 85, 122, 0.1)"
+              >
+                <svg
+                  class="w-5 h-5 text-accent-rose"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M12 9v3.75m-9.303 3.376c-.866 1.5.217 3.374 1.948 3.374h14.71c1.73 0 2.813-1.874 1.948-3.374L13.949 3.378c-.866-1.5-3.032-1.5-3.898 0L2.697 16.126zM12 15.75h.007v.008H12v-.008z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Incident Reporting
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                Structured incident capture, body maps, safeguarding workflows,
+                and trend analysis dashboards.
+              </p>
+            </div>
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl flex items-center justify-center mb-4"
+                style="background: rgba(184, 200, 58, 0.1)"
+              >
+                <svg
+                  class="w-5 h-5 text-accent-lime"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M10.125 2.25h-4.5c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125v-9M10.125 2.25h.375a9 9 0 019 9v.375M10.125 2.25A3.375 3.375 0 0113.5 5.625v1.5c0 .621.504 1.125 1.125 1.125h1.5a3.375 3.375 0 013.375 3.375M9 15l2.25 2.25L15 12"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Compliance Tracking
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                DBS checks, training expiry, supervision logs, and audit
+                readiness — all tracked automatically.
+              </p>
+            </div>
+            <div class="card-soft p-6 reveal fade-up">
+              <div
+                class="w-11 h-11 rounded-xl bg-brand-50 flex items-center justify-center mb-4"
+              >
+                <svg
+                  class="w-5 h-5 text-brand-500"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="1.5"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M3 13.125C3 12.504 3.504 12 4.125 12h2.25c.621 0 1.125.504 1.125 1.125v6.75C7.5 20.496 6.996 21 6.375 21h-2.25A1.125 1.125 0 013 19.875v-6.75zM9.75 8.625c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125v11.25c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V8.625zM16.5 4.125c0-.621.504-1.125 1.125-1.125h2.25C20.496 3 21 3.504 21 4.125v15.75c0 .621-.504 1.125-1.125 1.125h-2.25a1.125 1.125 0 01-1.125-1.125V4.125z"
+                  />
+                </svg>
+              </div>
+              <h3 class="text-base font-bold text-gray-900 mb-1.5">
+                Reports & Analytics
+              </h3>
+              <p class="text-sm text-gray-500 leading-relaxed">
+                AI-powered reports in plain English. Incident trends, occupancy,
+                staff hours, and CQC-ready exports.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  SCREENSHOTS GALLERY                    -->
+    <!-- ═══════════════════════════════════════ -->
+    <section id="screenshots" class="py-20 sm:py-28 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-16">
+          <p
+            class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+          >
+            See It In Action
+          </p>
+          <h2
+            class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4"
+          >
+            Designed for care professionals
+          </h2>
+          <p
+            class="reveal fade-up text-gray-500 max-w-2xl mx-auto leading-relaxed"
+          >
+            Clean, intuitive interfaces that your team will actually want to
+            use.
+          </p>
+        </div>
+        <div class="phone-gallery stagger">
+          <div class="phone-frame reveal fade-up">
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-education.jpeg"
+                alt="Child Education"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div class="phone-frame phone-lg reveal fade-up">
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-home.jpeg"
+                alt="Home Dashboard"
+                loading="lazy"
+              />
+            </div>
+          </div>
+          <div class="phone-frame reveal fade-up">
+            <div class="phone-screen">
+              <img
+                src="screenshots/mobile-appointments-past.jpeg"
+                alt="Appointments History"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  AI FEATURE HIGHLIGHT                   -->
+    <!-- ═══════════════════════════════════════ -->
+    <section class="py-20 sm:py-28 bg-white relative overflow-hidden">
+      <div
+        class="absolute bottom-[10%] right-[-30px] w-20 h-40 deco-dots rounded-xl hidden lg:block"
+      ></div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div class="lg:order-2">
+            <p
+              class="reveal fade-up text-sm font-semibold text-accent-orange uppercase tracking-wider mb-3"
+            >
+              AI-Powered
+            </p>
+            <h2
+              class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-6"
+            >
+              Intelligence built in, not bolted on
+            </h2>
+            <p class="reveal fade-up text-gray-500 leading-relaxed mb-8">
+              Care One OS uses AI to reduce admin and surface insights — not to
+              replace clinical judgement. Every AI feature runs on your own data
+              and never leaves your organisation.
+            </p>
+            <div class="space-y-4 stagger">
+              <div class="reveal fade-left flex items-start gap-3">
+                <div
+                  class="w-6 h-6 rounded-full bg-accent-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-accent-teal"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <span class="text-gray-600"
+                  ><strong class="text-gray-900">AI Care Plan Generator</strong>
+                  — Upload a referral document. Get a draft person-centred care
+                  plan in minutes.</span
+                >
+              </div>
+              <div class="reveal fade-left flex items-start gap-3">
+                <div
+                  class="w-6 h-6 rounded-full bg-accent-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-accent-teal"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <span class="text-gray-600"
+                  ><strong class="text-gray-900">Predictive Alerts</strong> —
+                  Spot risk patterns before incidents happen using behavioural
+                  data.</span
+                >
+              </div>
+              <div class="reveal fade-left flex items-start gap-3">
+                <div
+                  class="w-6 h-6 rounded-full bg-accent-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-accent-teal"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <span class="text-gray-600"
+                  ><strong class="text-gray-900"
+                    >Natural Language Reports</strong
+                  >
+                  — Ask for any report in plain English and get it
+                  instantly.</span
+                >
+              </div>
+              <div class="reveal fade-left flex items-start gap-3">
+                <div
+                  class="w-6 h-6 rounded-full bg-accent-teal/20 flex items-center justify-center flex-shrink-0 mt-0.5"
+                >
+                  <svg
+                    class="w-3.5 h-3.5 text-accent-teal"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="3"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <span class="text-gray-600"
+                  ><strong class="text-gray-900">Document Importer</strong> —
+                  Extract client data from PDFs, assessments, and discharge
+                  letters automatically.</span
+                >
+              </div>
+            </div>
+          </div>
+          <div class="reveal fade-right lg:order-1">
+            <div class="browser-frame">
+              <div class="browser-bar">
+                <div class="browser-dot" style="background: #ff5f57"></div>
+                <div class="browser-dot" style="background: #febc2e"></div>
+                <div class="browser-dot" style="background: #28c840"></div>
+                <div class="browser-url">app.careoneos.co.uk/settings</div>
+              </div>
+              <img
+                src="screenshots/module-settings.png"
+                alt="AI features and module settings"
+                loading="lazy"
+              />
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  APP SHOWCASE (dark section with phones)-->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      class="py-20 sm:py-28 relative overflow-hidden"
+      style="
+        background: linear-gradient(
+          135deg,
+          #1a2e3f 0%,
+          #0b1722 40%,
+          #1a2e3f 100%
+        );
+      "
+    >
+      <div class="absolute inset-0">
+        <div
+          class="absolute top-[10%] left-[5%] w-[500px] h-[500px] rounded-full"
+          style="
+            background: radial-gradient(
+              ellipse,
+              rgba(58, 124, 165, 0.25) 0%,
+              transparent 70%
+            );
+          "
+        ></div>
+        <div
+          class="absolute bottom-[5%] right-[10%] w-[400px] h-[400px] rounded-full"
+          style="
+            background: radial-gradient(
+              ellipse,
+              rgba(110, 197, 184, 0.2) 0%,
+              transparent 70%
+            );
+          "
+        ></div>
+        <div
+          class="absolute top-[20%] right-[25%] w-16 h-32 deco-dots rounded-lg opacity-30"
+        ></div>
+        <div
+          class="absolute bottom-[15%] left-[20%] w-24 h-16 deco-dots rounded-lg opacity-20"
+        ></div>
+      </div>
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
+          <div class="flex justify-center lg:justify-center overflow-hidden">
+            <div
+              class="flex items-end gap-2 sm:gap-3 scale-[0.65] sm:scale-[0.85] lg:scale-[0.78] xl:scale-[0.88] origin-bottom"
+            >
+              <div
+                class="phone-frame phone-sm reveal fade-left"
+                style="transform: rotate(-6deg)"
+              >
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-child-profile.jpeg"
+                    alt="Child Profile"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+              <div
+                class="phone-frame reveal fade-up"
+                style="transform: translateY(-16px)"
+              >
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-home.jpeg"
+                    alt="Home Dashboard"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+              <div
+                class="phone-frame phone-sm reveal fade-right hidden sm:block"
+                style="transform: rotate(6deg)"
+              >
+                <div class="phone-screen">
+                  <img
+                    src="screenshots/mobile-education.jpeg"
+                    alt="Education Tracker"
+                    loading="lazy"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="text-white">
+            <p
+              class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+            >
+              Accessible Anywhere
+            </p>
+            <h2
+              class="reveal fade-up text-3xl sm:text-4xl font-extrabold tracking-tight mb-6"
+            >
+              Your care platform on every device
+            </h2>
+            <p class="reveal fade-up text-gray-400 leading-relaxed mb-8">
+              Access Care One OS from any browser — desktop, tablet, or mobile.
+              Your team can check rosters, log notes, and manage medication from
+              wherever they are.
+            </p>
+            <div class="space-y-3 stagger">
+              <div class="reveal fade-left flex items-center gap-3">
+                <svg
+                  class="w-5 h-5 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-gray-300"
+                  >Fully responsive — works on any screen size</span
+                >
+              </div>
+              <div class="reveal fade-left flex items-center gap-3">
+                <svg
+                  class="w-5 h-5 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-gray-300"
+                  >Real-time sync across all devices</span
+                >
+              </div>
+              <div class="reveal fade-left flex items-center gap-3">
+                <svg
+                  class="w-5 h-5 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                <span class="text-gray-300"
+                  >No app download required — pure web</span
+                >
+              </div>
+            </div>
+            <div class="reveal fade-up mt-8">
+              <a
+                href="#contact"
+                class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-navy-900 font-semibold rounded-full text-base hover:bg-gray-100 transition-colors"
+              >
+                Request a Demo
+                <svg
+                  class="w-5 h-5"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  PRICING                                -->
+    <!-- ═══════════════════════════════════════ -->
+    <section id="pricing" class="py-20 sm:py-28 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="text-center mb-12">
+          <p
+            class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+          >
+            Pricing
+          </p>
+          <h2
+            class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-4"
+          >
+            Simple, transparent pricing
+          </h2>
+          <p
+            class="reveal fade-up text-gray-500 max-w-2xl mx-auto leading-relaxed mb-8"
+          >
+            No hidden fees. No lock-in contracts. Choose the plan that fits your
+            service.
+          </p>
+          <div class="reveal fade-up flex justify-center">
+            <div class="pricing-toggle" id="pricingToggle">
+              <div class="pricing-slider" id="pricingSlider"></div>
+              <button
+                class="pricing-toggle-btn active"
+                data-period="monthly"
+                id="btnMonthly"
+              >
+                Monthly
+              </button>
+              <button
+                class="pricing-toggle-btn"
+                data-period="yearly"
+                id="btnYearly"
+              >
+                Yearly
+                <span class="text-accent-teal text-xs ml-1">Save 20%</span>
+              </button>
+            </div>
+          </div>
+        </div>
+        <div class="grid md:grid-cols-3 gap-8 max-w-5xl mx-auto stagger">
+          <!-- Starter -->
+          <div
+            class="pricing-card bg-white rounded-2xl border border-gray-200 p-8 reveal fade-up"
+          >
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Starter</h3>
+            <p class="text-sm text-gray-400 mb-6">
+              For single-site services getting started.
+            </p>
+            <div class="mb-6">
+              <span
+                class="text-4xl font-extrabold text-gray-900 price-value"
+                data-monthly="149"
+                data-yearly="119"
+                >&pound;149</span
+              >
+              <span class="text-gray-400 text-sm">/month</span>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Up to 50 clients
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Care plans & daily logs
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Staff rostering
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Email support
+              </li>
+            </ul>
+            <a
+              href="#contact"
+              class="block text-center py-3.5 border-2 border-brand-500 text-brand-500 font-semibold rounded-full hover:bg-brand-500 hover:text-white transition-all"
+              >Get Started</a
+            >
+          </div>
+          <!-- Professional -->
+          <div
+            class="pricing-card featured bg-white rounded-2xl p-8 reveal fade-up"
+          >
+            <div class="pricing-badge">Most Popular</div>
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Professional</h3>
+            <p class="text-sm text-gray-400 mb-6">
+              For growing services with multiple needs.
+            </p>
+            <div class="mb-6">
+              <span
+                class="text-4xl font-extrabold text-gray-900 price-value"
+                data-monthly="299"
+                data-yearly="239"
+                >&pound;299</span
+              >
+              <span class="text-gray-400 text-sm">/month</span>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Unlimited clients
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                All core modules
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                eMAR & medication
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                AI care plan generator
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Priority phone support
+              </li>
+            </ul>
+            <a
+              href="#contact"
+              class="block text-center py-3.5 btn-primary text-white font-semibold rounded-full"
+              >Get Started</a
+            >
+          </div>
+          <!-- Enterprise -->
+          <div
+            class="pricing-card bg-white rounded-2xl border border-gray-200 p-8 reveal fade-up"
+          >
+            <h3 class="text-lg font-bold text-gray-900 mb-1">Enterprise</h3>
+            <p class="text-sm text-gray-400 mb-6">
+              For multi-site operators needing full control.
+            </p>
+            <div class="mb-6">
+              <span class="text-4xl font-extrabold text-gray-900">Custom</span>
+            </div>
+            <ul class="space-y-3 mb-8">
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Everything in Professional
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Multi-site management
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Custom integrations
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                Dedicated account manager
+              </li>
+              <li class="flex items-center gap-2 text-sm text-gray-600">
+                <svg
+                  class="w-4 h-4 text-accent-teal flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M5 13l4 4L19 7"
+                  />
+                </svg>
+                SLA guarantee
+              </li>
+            </ul>
+            <a
+              href="#contact"
+              class="block text-center py-3.5 border-2 border-brand-500 text-brand-500 font-semibold rounded-full hover:bg-brand-500 hover:text-white transition-all"
+              >Contact Sales</a
+            >
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  FAQ                                    -->
+    <!-- ═══════════════════════════════════════ -->
+    <section id="faq" class="py-20 sm:py-28 bg-white">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16">
+          <div>
+            <p
+              class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+            >
+              FAQs
+            </p>
+            <h2
+              class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-6"
+            >
+              Frequently asked questions
+            </h2>
+            <p class="reveal fade-up text-gray-500 leading-relaxed mb-8">
+              Can't find the answer you're looking for? Get in touch and our
+              team will be happy to help.
+            </p>
+            <div class="reveal fade-up flex flex-col sm:flex-row gap-4">
+              <a
+                href="#contact"
+                class="inline-flex items-center justify-center gap-2 px-6 py-3 btn-primary text-white font-semibold rounded-full text-sm"
+              >
+                Contact Us
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M17 8l4 4m0 0l-4 4m4-4H3"
+                  />
+                </svg>
+              </a>
+              <a
+                href="tel:+441onal"
+                class="inline-flex items-center gap-2 text-sm font-semibold text-gray-600 hover:text-brand-500 transition-colors"
+              >
+                <svg
+                  class="w-4 h-4"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M2.25 6.75c0 8.284 6.716 15 15 15h2.25a2.25 2.25 0 002.25-2.25v-1.372c0-.516-.351-.966-.852-1.091l-4.423-1.106c-.44-.11-.902.055-1.173.417l-.97 1.293c-.282.376-.769.542-1.21.38a12.035 12.035 0 01-7.143-7.143c-.162-.441.004-.928.38-1.21l1.293-.97c.363-.271.527-.734.417-1.173L6.963 3.102a1.125 1.125 0 00-1.091-.852H4.5A2.25 2.25 0 002.25 4.5v2.25z"
+                  />
+                </svg>
+                Call our team
+              </a>
+            </div>
+          </div>
+          <div class="reveal fade-left">
+            <div class="faq-item open" data-faq>
+              <button
+                class="faq-question w-full flex items-center justify-between py-5 text-left"
+              >
+                <span class="text-base font-bold text-gray-900 pr-4"
+                  >Is Care One OS CQC / Ofsted compliant?</span
+                >
+                <svg
+                  class="faq-chevron w-5 h-5 text-gray-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                class="faq-answer text-sm text-gray-500 leading-relaxed pr-8"
+              >
+                Yes. Care One OS is built with CQC Key Lines of Enquiry and
+                Ofsted requirements embedded into every module. Compliance
+                tracking, audit trails, and inspection-ready reports are
+                included as standard.
+              </div>
+            </div>
+            <div class="faq-item" data-faq>
+              <button
+                class="faq-question w-full flex items-center justify-between py-5 text-left"
+              >
+                <span class="text-base font-bold text-gray-900 pr-4"
+                  >How long does it take to get set up?</span
+                >
+                <svg
+                  class="faq-chevron w-5 h-5 text-gray-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                class="faq-answer text-sm text-gray-500 leading-relaxed pr-8"
+              >
+                Most services are up and running within days. We handle data
+                migration, module configuration, and role-based training so your
+                team can hit the ground running.
+              </div>
+            </div>
+            <div class="faq-item" data-faq>
+              <button
+                class="faq-question w-full flex items-center justify-between py-5 text-left"
+              >
+                <span class="text-base font-bold text-gray-900 pr-4"
+                  >Is our data secure and GDPR compliant?</span
+                >
+                <svg
+                  class="faq-chevron w-5 h-5 text-gray-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                class="faq-answer text-sm text-gray-500 leading-relaxed pr-8"
+              >
+                Absolutely. All data is encrypted, hosted on UK cloud servers,
+                with role-based access controls and full audit logging. AI
+                features run entirely on your own data — nothing leaves your
+                organisation.
+              </div>
+            </div>
+            <div class="faq-item" data-faq>
+              <button
+                class="faq-question w-full flex items-center justify-between py-5 text-left"
+              >
+                <span class="text-base font-bold text-gray-900 pr-4"
+                  >Can Care One OS work across multiple sites?</span
+                >
+                <svg
+                  class="faq-chevron w-5 h-5 text-gray-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                class="faq-answer text-sm text-gray-500 leading-relaxed pr-8"
+              >
+                Yes. Care One OS supports multi-site management with centralised
+                reporting and per-service configuration. Managers can oversee
+                all locations from a single dashboard.
+              </div>
+            </div>
+            <div class="faq-item" data-faq>
+              <button
+                class="faq-question w-full flex items-center justify-between py-5 text-left"
+              >
+                <span class="text-base font-bold text-gray-900 pr-4"
+                  >What kind of support do you offer?</span
+                >
+                <svg
+                  class="faq-chevron w-5 h-5 text-gray-400 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19 9l-7 7-7-7"
+                  />
+                </svg>
+              </button>
+              <div
+                class="faq-answer text-sm text-gray-500 leading-relaxed pr-8"
+              >
+                We provide UK-based support via phone, email, and in-app chat.
+                All customers get onboarding training, ongoing guidance, and
+                regular platform updates at no extra cost.
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  CONTACT FORM                           -->
+    <!-- ═══════════════════════════════════════ -->
+    <section id="contact" class="py-20 sm:py-28 bg-gray-50">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid lg:grid-cols-2 gap-8 lg:gap-16 items-start">
+          <div>
+            <p
+              class="reveal fade-up text-sm font-semibold text-accent-teal uppercase tracking-wider mb-3"
+            >
+              Get In Touch
+            </p>
+            <h2
+              class="reveal fade-up text-3xl sm:text-4xl font-extrabold text-gray-900 tracking-tight mb-6"
+            >
+              Book a personalised demo
+            </h2>
+            <p class="reveal fade-up text-gray-500 leading-relaxed mb-8">
+              We'll show you how Care One OS fits your service — no generic
+              slides, no pressure. Fill in the form and we'll be in touch within
+              24 hours.
+            </p>
+            <div class="reveal fade-up space-y-5">
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-5 h-5 text-brand-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 text-sm">Email</p>
+                  <a
+                    href="mailto:hello@careoneos.co.uk"
+                    class="text-sm text-gray-500 hover:text-brand-500 transition-colors"
+                    >hello@careoneos.co.uk</a
+                  >
+                </div>
+              </div>
+              <div class="flex items-start gap-4">
+                <div
+                  class="w-10 h-10 rounded-xl bg-brand-50 flex items-center justify-center flex-shrink-0"
+                >
+                  <svg
+                    class="w-5 h-5 text-brand-500"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                    />
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <p class="font-semibold text-gray-900 text-sm">Location</p>
+                  <p class="text-sm text-gray-500">United Kingdom</p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="reveal fade-left">
+            <form
+              class="bg-white rounded-2xl shadow-xl border border-gray-100 p-5 sm:p-8 space-y-5"
+              onsubmit="
+                event.preventDefault();
+                this.querySelector('.form-success').classList.remove('hidden');
+                this.querySelector('.form-fields').classList.add('hidden');
+              "
+            >
+              <div class="form-fields space-y-5">
+                <div class="grid sm:grid-cols-2 gap-4">
+                  <div>
+                    <label
+                      class="block text-sm font-semibold text-gray-700 mb-1.5"
+                      >First Name</label
+                    >
+                    <input
+                      type="text"
+                      class="form-input"
+                      placeholder="John"
+                      required
+                    />
+                  </div>
+                  <div>
+                    <label
+                      class="block text-sm font-semibold text-gray-700 mb-1.5"
+                      >Last Name</label
+                    >
+                    <input
+                      type="text"
+                      class="form-input"
+                      placeholder="Smith"
+                      required
+                    />
+                  </div>
+                </div>
+                <div>
+                  <label
+                    class="block text-sm font-semibold text-gray-700 mb-1.5"
+                    >Work Email</label
+                  >
+                  <input
+                    type="email"
+                    class="form-input"
+                    placeholder="john@yourcare.co.uk"
+                    required
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-sm font-semibold text-gray-700 mb-1.5"
+                    >Organisation</label
+                  >
+                  <input
+                    type="text"
+                    class="form-input"
+                    placeholder="Your care service name"
+                  />
+                </div>
+                <div>
+                  <label
+                    class="block text-sm font-semibold text-gray-700 mb-1.5"
+                    >Service Type</label
+                  >
+                  <select class="form-input text-gray-500">
+                    <option value="">Select your care setting</option>
+                    <option>Residential Care</option>
+                    <option>Domiciliary Care</option>
+                    <option>Supported Living</option>
+                    <option>Children's Services</option>
+                    <option>Other</option>
+                  </select>
+                </div>
+                <div>
+                  <label
+                    class="block text-sm font-semibold text-gray-700 mb-1.5"
+                    >Message
+                    <span class="text-gray-400 font-normal"
+                      >(optional)</span
+                    ></label
+                  >
+                  <textarea
+                    class="form-input"
+                    rows="3"
+                    placeholder="Tell us about your service..."
+                  ></textarea>
+                </div>
+                <button
+                  type="submit"
+                  class="w-full py-4 btn-primary text-white font-semibold rounded-xl text-base flex items-center justify-center gap-2"
+                >
+                  Request a Demo
+                  <svg
+                    class="w-5 h-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M17 8l4 4m0 0l-4 4m4-4H3"
+                    />
+                  </svg>
+                </button>
+                <p class="text-xs text-gray-400 text-center">
+                  We'll respond within 24 hours. No spam, no selling your data.
+                </p>
+              </div>
+              <div class="form-success hidden text-center py-8">
+                <div
+                  class="w-16 h-16 rounded-full bg-green-100 flex items-center justify-center mx-auto mb-4"
+                >
+                  <svg
+                    class="w-8 h-8 text-green-600"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                    stroke-width="2"
+                  >
+                    <path
+                      stroke-linecap="round"
+                      stroke-linejoin="round"
+                      d="M5 13l4 4L19 7"
+                    />
+                  </svg>
+                </div>
+                <h3 class="text-xl font-bold text-gray-900 mb-2">Thank you!</h3>
+                <p class="text-gray-500">
+                  We've received your request and will be in touch within 24
+                  hours.
+                </p>
+              </div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  CTA BANNER                             -->
+    <!-- ═══════════════════════════════════════ -->
+    <section
+      class="py-20 sm:py-24 bg-gradient-to-r from-brand-600 via-brand-500 to-brand-600 relative overflow-hidden"
+    >
+      <div class="absolute inset-0 opacity-10">
+        <div
+          class="absolute top-0 left-[20%] w-96 h-96 bg-white rounded-full blur-3xl"
+        ></div>
+        <div
+          class="absolute bottom-0 right-[10%] w-80 h-80 bg-accent-teal rounded-full blur-3xl"
+        ></div>
+      </div>
+      <div
+        class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center relative z-10"
+      >
+        <div class="reveal zoom-in">
+          <h2
+            class="text-3xl sm:text-4xl lg:text-5xl font-extrabold text-white tracking-tight mb-6"
+          >
+            Ready to transform your care service?
+          </h2>
+          <p
+            class="text-lg text-brand-100 max-w-2xl mx-auto leading-relaxed mb-10"
+          >
+            Join care providers across the UK who are saving hours every week
+            with Care One OS.
+          </p>
+          <div
+            class="flex flex-col sm:flex-row items-center justify-center gap-4"
+          >
+            <a
+              href="#contact"
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white text-brand-600 font-bold rounded-full text-base hover:bg-gray-50 transition-all shadow-lg hover:-translate-y-1 min-w-[200px]"
+            >
+              <svg
+                class="w-5 h-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+                stroke-width="2"
+              >
+                <path
+                  stroke-linecap="round"
+                  stroke-linejoin="round"
+                  d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                />
+              </svg>
+              Book a Demo
+            </a>
+            <a
+              href="#features"
+              class="inline-flex items-center justify-center gap-2 px-8 py-4 bg-white/10 border-2 border-white/30 text-white font-bold rounded-full text-base hover:bg-white/20 transition-all min-w-[200px]"
+            >
+              Explore Features
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  FOOTER                                 -->
+    <!-- ═══════════════════════════════════════ -->
+    <footer class="bg-navy-950 text-white pt-16 pb-8">
+      <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-10 mb-12">
+          <div class="sm:col-span-2 lg:col-span-1">
+            <a href="#" class="flex items-center gap-2.5 mb-4">
+              <svg viewBox="0 0 40 40" fill="none" width="32" height="32">
+                <circle
+                  cx="20"
+                  cy="20"
+                  r="12"
+                  stroke="#3A7CA5"
+                  stroke-width="2.5"
+                  fill="none"
+                />
+                <path
+                  d="M8 14 A14 14 0 0 1 20 6"
+                  stroke="#6EC5B8"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M26 7 A14 14 0 0 1 34 20"
+                  stroke="#E8873A"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M10 26 A14 14 0 0 0 8 18"
+                  stroke="#B8557A"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+                <path
+                  d="M32 24 A14 14 0 0 1 20 34"
+                  stroke="#B8C83A"
+                  stroke-width="3"
+                  stroke-linecap="round"
+                  fill="none"
+                />
+              </svg>
+              <span class="text-lg font-bold text-white"
+                >Care One<span class="text-brand-400"> OS</span></span
+              >
+            </a>
+            <p class="text-sm text-gray-400 leading-relaxed mb-4">
+              The connected digital care management platform. Built from within
+              care for children's residential care, supported living and wider
+              care services.
+            </p>
+            <p class="text-sm text-gray-500">
+              Part of <strong class="text-gray-400">Omega Life</strong>
+            </p>
+          </div>
+          <div>
+            <h4
+              class="text-sm font-bold text-white uppercase tracking-wider mb-4"
+            >
+              Quick Links
+            </h4>
+            <ul class="space-y-2.5">
+              <li>
+                <a
+                  href="#features"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >Features</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#how-it-works"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >How It Works</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#modules"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >Modules</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#pricing"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >Pricing</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#faq"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >FAQs</a
+                >
+              </li>
+              <li>
+                <a
+                  href="#contact"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >Contact</a
+                >
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4
+              class="text-sm font-bold text-white uppercase tracking-wider mb-4"
+            >
+              Modules
+            </h4>
+            <ul class="space-y-2.5">
+              <li><span class="text-sm text-gray-400">Care Plans</span></li>
+              <li>
+                <span class="text-sm text-gray-400">Staff Rostering</span>
+              </li>
+              <li>
+                <span class="text-sm text-gray-400">Medication (eMAR)</span>
+              </li>
+              <li>
+                <span class="text-sm text-gray-400">Incident Reporting</span>
+              </li>
+              <li>
+                <span class="text-sm text-gray-400">Compliance Tracking</span>
+              </li>
+              <li>
+                <span class="text-sm text-gray-400">Reports & Analytics</span>
+              </li>
+            </ul>
+          </div>
+          <div>
+            <h4
+              class="text-sm font-bold text-white uppercase tracking-wider mb-4"
+            >
+              Contact
+            </h4>
+            <ul class="space-y-3">
+              <li class="flex items-start gap-3">
+                <svg
+                  class="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
+                  />
+                </svg>
+                <a
+                  href="mailto:hello@careoneos.co.uk"
+                  class="text-sm text-gray-400 hover:text-white transition-colors"
+                  >hello@careoneos.co.uk</a
+                >
+              </li>
+              <li class="flex items-start gap-3">
+                <svg
+                  class="w-4 h-4 text-gray-500 mt-0.5 flex-shrink-0"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  stroke-width="2"
+                >
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
+                  />
+                  <path
+                    stroke-linecap="round"
+                    stroke-linejoin="round"
+                    d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
+                  />
+                </svg>
+                <span class="text-sm text-gray-400">United Kingdom</span>
+              </li>
+            </ul>
+            <div class="mt-6">
+              <h4
+                class="text-sm font-bold text-white uppercase tracking-wider mb-3"
+              >
+                Follow Us
+              </h4>
+              <div class="flex gap-3">
+                <a
+                  href="#"
+                  class="w-9 h-9 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M24 4.557c-.883.392-1.832.656-2.828.775 1.017-.609 1.798-1.574 2.165-2.724-.951.564-2.005.974-3.127 1.195-.897-.957-2.178-1.555-3.594-1.555-3.179 0-5.515 2.966-4.797 6.045-4.091-.205-7.719-2.165-10.148-5.144-1.29 2.213-.669 5.108 1.523 6.574-.806-.026-1.566-.247-2.229-.616-.054 2.281 1.581 4.415 3.949 4.89-.693.188-1.452.232-2.224.084.626 1.956 2.444 3.379 4.6 3.419-2.07 1.623-4.678 2.348-7.29 2.04 2.179 1.397 4.768 2.212 7.548 2.212 9.142 0 14.307-7.721 13.995-14.646.962-.695 1.797-1.562 2.457-2.549z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  class="w-9 h-9 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M19 0h-14c-2.761 0-5 2.239-5 5v14c0 2.761 2.239 5 5 5h14c2.762 0 5-2.239 5-5v-14c0-2.761-2.238-5-5-5zm-11 19h-3v-11h3v11zm-1.5-12.268c-.966 0-1.75-.79-1.75-1.764s.784-1.764 1.75-1.764 1.75.79 1.75 1.764-.783 1.764-1.75 1.764zm13.5 12.268h-3v-5.604c0-3.368-4-3.113-4 0v5.604h-3v-11h3v1.765c1.396-2.586 7-2.777 7 2.476v6.759z"
+                    />
+                  </svg>
+                </a>
+                <a
+                  href="#"
+                  class="w-9 h-9 rounded-lg bg-white/[0.06] border border-white/[0.08] flex items-center justify-center text-gray-400 hover:bg-brand-500 hover:text-white hover:border-brand-500 transition-all"
+                >
+                  <svg class="w-4 h-4" fill="currentColor" viewBox="0 0 24 24">
+                    <path
+                      d="M22 12c0-5.523-4.477-10-10-10s-10 4.477-10 10c0 4.991 3.657 9.128 8.438 9.878v-6.987h-2.54v-2.891h2.54v-2.203c0-2.506 1.492-3.89 3.777-3.89 1.094 0 2.238.195 2.238.195v2.46h-1.26c-1.243 0-1.63.771-1.63 1.562v1.876h2.773l-.443 2.891h-2.33v6.988c4.781-.75 8.437-4.887 8.437-9.879z"
+                    />
+                  </svg>
+                </a>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div
+          class="border-t border-white/[0.06] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4"
+        >
+          <p class="text-sm text-gray-500">
+            &copy; 2026 Care One OS. All rights reserved.
+          </p>
+          <div class="flex items-center gap-6">
+            <a
+              href="#"
+              class="text-sm text-gray-500 hover:text-white transition-colors"
+              >Privacy Policy</a
+            >
+            <a
+              href="#"
+              class="text-sm text-gray-500 hover:text-white transition-colors"
+              >Terms of Service</a
+            >
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  BACK TO TOP                            -->
+    <!-- ═══════════════════════════════════════ -->
+    <button
+      id="backToTop"
+      class="fixed bottom-20 right-4 sm:bottom-6 sm:right-6 w-12 h-12 bg-brand-500 text-white rounded-full shadow-lg flex items-center justify-center opacity-0 pointer-events-none transition-all duration-300 hover:bg-brand-400 hover:-translate-y-1 z-40"
+      aria-label="Back to top"
+    >
+      <svg
+        class="w-5 h-5"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        stroke-width="2"
+      >
+        <path
+          stroke-linecap="round"
+          stroke-linejoin="round"
+          d="M5 10l7-7m0 0l7 7m-7-7v18"
+        />
+      </svg>
+    </button>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--  SCRIPTS                                -->
+    <!-- ═══════════════════════════════════════ -->
+    <script>
+      // ── Mobile menu ──
+      var mobileToggle = document.getElementById("mobileToggle");
+      var mobileMenu = document.getElementById("mobileMenu");
+      mobileToggle.addEventListener("click", function () {
+        mobileMenu.classList.toggle("open");
+      });
+      mobileMenu.querySelectorAll("a").forEach(function (link) {
+        link.addEventListener("click", function () {
+          mobileMenu.classList.remove("open");
+        });
+      });
+
+      // ── Nav scroll effect ──
+      var nav = document.getElementById("mainNav");
+      var backToTop = document.getElementById("backToTop");
+      window.addEventListener("scroll", function () {
+        var scrolled = window.scrollY > 20;
+        nav.classList.toggle("scrolled", scrolled);
+        if (window.scrollY > 400) {
+          backToTop.style.opacity = "1";
+          backToTop.style.pointerEvents = "auto";
+        } else {
+          backToTop.style.opacity = "0";
+          backToTop.style.pointerEvents = "none";
+        }
+      });
+      backToTop.addEventListener("click", function () {
+        window.scrollTo({ top: 0, behavior: "smooth" });
+      });
+
+      // ── Scroll reveal with direction ──
+      var revealEls = document.querySelectorAll(".reveal");
+      var revealObserver = new IntersectionObserver(
+        function (entries) {
+          entries.forEach(function (entry) {
+            if (entry.isIntersecting) {
+              entry.target.classList.add("visible");
+              revealObserver.unobserve(entry.target);
+            }
+          });
+        },
+        { threshold: 0.08, rootMargin: "0px 0px -30px 0px" },
+      );
+      revealEls.forEach(function (el) {
+        revealObserver.observe(el);
+      });
+
+      // ── FAQ accordion ──
+      document.querySelectorAll("[data-faq]").forEach(function (item) {
+        item
+          .querySelector(".faq-question")
+          .addEventListener("click", function () {
+            var wasOpen = item.classList.contains("open");
+            document.querySelectorAll("[data-faq]").forEach(function (i) {
+              i.classList.remove("open");
+            });
+            if (!wasOpen) item.classList.add("open");
+          });
+      });
+
+      // ── Pricing toggle ──
+      var btnMonthly = document.getElementById("btnMonthly");
+      var btnYearly = document.getElementById("btnYearly");
+      var slider = document.getElementById("pricingSlider");
+      function updatePricing(period) {
+        var isYearly = period === "yearly";
+        btnMonthly.classList.toggle("active", !isYearly);
+        btnYearly.classList.toggle("active", isYearly);
+        slider.style.left = isYearly
+          ? btnMonthly.offsetWidth + 4 + "px"
+          : "4px";
+        slider.style.width =
+          (isYearly ? btnYearly : btnMonthly).offsetWidth + "px";
+        document.querySelectorAll(".price-value").forEach(function (el) {
+          el.textContent = "£" + el.dataset[period];
+        });
+      }
+      btnMonthly.addEventListener("click", function () {
+        updatePricing("monthly");
+      });
+      btnYearly.addEventListener("click", function () {
+        updatePricing("yearly");
+      });
+      // Init slider position
+      requestAnimationFrame(function () {
+        updatePricing("monthly");
+      });
+
+      // ── Smooth scroll ──
+      document.querySelectorAll('a[href^="#"]').forEach(function (link) {
+        link.addEventListener("click", function (e) {
+          var target = document.querySelector(this.getAttribute("href"));
+          if (target) {
+            e.preventDefault();
+            target.scrollIntoView({ behavior: "smooth" });
+          }
+        });
+      });
+
+      // ── Hero tilt on mouse move ──
+      var heroTilt = document.getElementById("heroTilt");
+      if (heroTilt && window.innerWidth > 768) {
+        heroTilt.parentElement.addEventListener("mousemove", function (e) {
+          var rect = this.getBoundingClientRect();
+          var x = (e.clientX - rect.left) / rect.width - 0.5;
+          var y = (e.clientY - rect.top) / rect.height - 0.5;
+          heroTilt.style.transform =
+            "rotateY(" + x * 6 + "deg) rotateX(" + -y * 6 + "deg)";
+        });
+        heroTilt.parentElement.addEventListener("mouseleave", function () {
+          heroTilt.style.transform = "rotateY(0) rotateX(0)";
+        });
+      }
+
+      // ── Active nav link on scroll ──
+      var sections = document.querySelectorAll("section[id]");
+      window.addEventListener("scroll", function () {
+        var scrollPos = window.scrollY + 100;
+        sections.forEach(function (section) {
+          if (
+            scrollPos >= section.offsetTop &&
+            scrollPos < section.offsetTop + section.offsetHeight
+          ) {
+            var id = section.getAttribute("id");
+            document.querySelectorAll(".nav-link").forEach(function (link) {
+              link.classList.toggle(
+                "active",
+                link.getAttribute("href") === "#" + id,
+              );
+            });
+          }
+        });
+      });
+    </script>
+  </body>
+</html>
