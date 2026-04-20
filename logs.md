@@ -20,3 +20,19 @@
   - Soft diffused card shadows, removed Trusted By + Care Settings sections
   - Full mobile responsive audit and fixes (360px–1440px+)
   - Pushed to GitHub: commit f539b17
+- **Session 4 saved** → `sessions/session4.md`
+  - Added CodBe-style animations to v5 (preloader, floating shapes, parallax, dots, waves, glow effects)
+  - SOMA brand colour palette applied (#54C3C5, #86B73B, #8D4B84, #F28729)
+  - Multi-color text treatment on section headings
+  - Flyer-style solid-colour module cards (4 divisions)
+  - 3 app screenshots from SOMA PDF added to carousel
+  - Removed redundant sections (integrations, unique features)
+- **Session 5 saved** → `sessions/session5.md`
+  - v5 refinements: module cards reverted to Rostering/Medication/Care Plans/Incidents
+  - Colored rotating hero words per SOMA division
+  - Stats updated to 10+ Care Homes, 50+ Employees
+  - Subtle brand tint section backgrounds (teal, orange, green, purple, slate tints)
+  - Hero section expanded, sign-in text removed, button text fixes
+  - Pushed all changes to GitHub for Pages deployment
+  - Researched Seedance 2.0 for walkthrough video frames
+  - Created walkthrough memory documentation for v3.5 Day in the Life
